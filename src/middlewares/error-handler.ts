@@ -1,6 +1,6 @@
 import { HttpException } from '@/errors/error';
 import { NextFunction, Request, Response } from 'express';
-import env from '../config/env';
+import env from '../config/config';
 
 const errorHandler = (error: unknown, _req: Request, res: Response, _next: NextFunction) => {
     if (error instanceof HttpException) {

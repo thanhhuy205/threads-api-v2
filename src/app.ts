@@ -6,7 +6,7 @@ import express from 'express';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import pino from 'pino';
-import env from './config/env';
+import env from './config/config';
 import errorHandler from './middlewares/error-handler';
 import notFoundHandler from './middlewares/not-found';
 

@@ -1,4 +1,4 @@
-import env from '../../config/env';
+import env from '../../config/config';
 import prisma from '../../config/prisma';
 
 export const buildHealthPayload = () => ({
