@@ -1,3 +1,4 @@
+import { comparePassword, hashPassword } from '@/modules/auth/util/hasher-password';
 import { jwtService } from '@/modules/jwt/service/jwt.service';
 import { ensureRedisConnection } from '@/modules/redis/service/redis.service';
 import { userRepository } from '@/modules/user/repo/user.repository';
@@ -7,7 +8,8 @@ import { authRepository } from '../repo/auth.repository';
 
 class AuthService {
     async register(payload: RegisterDto): Promise<AuthSessionResponseDto> {
-        const user = await authRepository.createUser(payload);
+        const password = hashPassword(payload.password);
+        const user = await authRepository.createUser({ ...payload, password });
         const tokenPair = await jwtService.generateTokenPair({
             userId: user.id,
             status: user.status,
@@ -23,7 +25,8 @@ class AuthService {
     async login(payload: LoginDto): Promise<AuthSessionResponseDto | null> {
         const user = await authRepository.findUserByLogin(payload.login);
 
-        if (!user || user.password !== payload.password) {
+        const isPasswordValid = user && user.password ? comparePassword(payload.password, user.password) : false;
+        if (!user || !isPasswordValid) {
             return null;
         }
 
@@ -41,7 +44,6 @@ class AuthService {
 
     async me(userId: string): Promise<AuthMeResponseDto | null> {
         const user = await userRepository.findById(userId);
-
         if (!user) {
             return null;
         }
