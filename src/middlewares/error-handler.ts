@@ -2,7 +2,7 @@ import { HttpException } from '@/errors/error';
 import { NextFunction, Request, Response } from 'express';
 import env from '../config/config';
 
-const errorHandler = (error: unknown, _req: Request, res: Response, _next: NextFunction) => {
+export const errorHandler = (error: unknown, _req: Request, res: Response, _next: NextFunction) => {
     if (error instanceof HttpException) {
         return res.error(error.statusCode, error.message, undefined, { errorCode: error.errorCode });
     }
@@ -13,5 +13,3 @@ const errorHandler = (error: unknown, _req: Request, res: Response, _next: NextF
         res.error(500, 'Internal server error');
     }
 };
-
-export default errorHandler;

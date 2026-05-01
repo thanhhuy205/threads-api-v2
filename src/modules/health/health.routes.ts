@@ -1,9 +1,8 @@
+import { healthController } from '@/modules/health/health.controller';
 import { Router } from 'express';
-import { healthCheck, readinessCheck } from './health.controller';
 
 const healthRouter = Router();
 
-healthRouter.get('/', healthCheck);
-healthRouter.get('/ready', readinessCheck);
+healthRouter.get('/', healthController.getHealth);
 
 export default healthRouter;

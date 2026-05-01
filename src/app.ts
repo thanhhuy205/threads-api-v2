@@ -1,4 +1,9 @@
+// import { corsOrigin } from '@/middlewares/cors';
+import configService from '@/config/config';
 import { corsOrigin } from '@/middlewares/cors';
+import { errorHandler } from '@/middlewares/error-handler';
+import { logger } from '@/middlewares/logger';
+import { notFoundHandler } from '@/middlewares/not-found';
 import { apiLimiter } from '@/middlewares/ratelimit';
 import router from '@/routes/index';
 import compression from 'compression';
@@ -6,24 +11,19 @@ import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import pino from 'pino';
-import { env } from 'process';
-import errorHandler from './middlewares/error-handler';
-import notFoundHandler from './middlewares/not-found';
+import { responseHandler } from './middlewares/response-handler';
 
 const app = express();
-app.use(pino)
-
-
-
+app.use(logger);
 
 app.disable('x-powered-by');
 app.use(helmet());
 app.use(cors({ origin: corsOrigin }));
 app.use(compression());
-app.use(morgan(env.NODE_ENV === 'development' ? 'dev' : 'combined'));
+app.use(morgan(configService.NODE_ENV === 'development' ? 'dev' : 'combined'));
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
+app.use(responseHandler);
 
 app.use('/api/v1', apiLimiter, router);
 

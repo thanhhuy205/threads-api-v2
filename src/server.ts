@@ -4,7 +4,7 @@ import prisma from './config/prisma';
 
 
 const server = app.listen(configService.PORT, () => {
-    console.log(`Server is running on port ${configService.PORT}`);
+    console.log(`Server is running on http://localhost:${configService.PORT}`);
 });
 
 const shutdown = (signal: string) => {
@@ -12,7 +12,6 @@ const shutdown = (signal: string) => {
 
     server.close((error) => {
         if (error) {
-            console.error('Error while closing server', error);
             process.exit(1);
         }
 
