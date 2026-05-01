@@ -1,8 +1,7 @@
-import createApp from './app';
+import app from '@/app';
 import env from './config/env';
 import prisma from './config/prisma';
 
-const app = createApp();
 
 const server = app.listen(env.PORT, () => {
     console.log(`Server is running on port ${env.PORT}`);

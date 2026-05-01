@@ -1,0 +1,320 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "mysql"
+}
+
+enum UserRole {
+    USER
+    ADMIN
+}
+
+enum PostType {
+    POST
+    REPLY
+    REPOST
+    QUOTE
+}
+
+enum FollowStatus {
+    PENDING
+    ACCEPTED
+    REJECTED
+}
+
+enum QueueStatus {
+    PENDING
+    PROCESSING
+    SUCCESS
+    FAILED
+}
+
+enum VerificationCodeType {
+    FORGOT_PASSWORD
+    RESET_PASSWORD
+    VERIFY_ACCOUNT
+}
+
+enum JobStatus {
+    PENDING
+    PROCESSING
+    SUCCESS
+    FAILED
+}
+
+enum ReplyPermission {
+    EVERYONE
+    FOLLOWING
+    MENTIONED
+}
+
+enum UserStatus {
+    ACTIVE
+    SUSPENDED
+    BANNED
+    DEACTIVATED
+}
+
+model User {
+    id       Int    @id @default(autoincrement())
+    email    String @unique @db.VarChar(255)
+    username String @unique @db.VarChar(100)
+    password String @db.VarChar(255)
+
+    firstName String? @map("first_name") @db.VarChar(100)
+    lastName  String? @map("last_name") @db.VarChar(100)
+    bio       String? @db.Text
+    avatar    String? @db.VarChar(255)
+
+    role       UserRole  @default(USER)
+    verifiedAt DateTime? @map("verified_at")
+    status     Int       @default(0)
+
+    followersCount Int @default(0) @map("followers_count")
+    followingCount Int @default(0) @map("following_count")
+    postsCount     Int @default(0) @map("posts_count")
+
+    isPrivate Boolean @default(false) @map("is_private")
+    location  String? @db.VarChar(255)
+    website   String? @db.VarChar(255)
+
+    deletedAt DateTime? @map("deleted_at")
+    createdAt DateTime  @default(now()) @map("created_at")
+    updatedAt DateTime  @map("updated_at")
+
+    posts             Post[]
+    refreshTokens     RefreshToken[]
+    verificationCodes VerificationCode[]
+    follows           Follow[]           @relation("FollowUser")
+    followers         Follow[]           @relation("FollowFollowing")
+    likes             Like[]
+
+    @@index([deletedAt], map: "idx_users_deleted_at")
+    @@map("users")
+}
+
+model VerificationCode {
+    id        Int                  @id @default(autoincrement())
+    userId    Int                  @map("user_id")
+    type      VerificationCodeType
+    code      String               @db.VarChar(100)
+    expiresAt DateTime             @map("expires_at")
+    usedAt    DateTime?            @map("used_at")
+    createdAt DateTime             @default(now()) @map("created_at")
+
+    user User @relation(fields: [userId], references: [id])
+
+    @@index([userId, type, createdAt], map: "idx_verification_codes_user_type_created")
+    @@index([expiresAt], map: "idx_verification_codes_expires_at")
+    @@index([usedAt], map: "idx_verification_codes_used_at")
+    @@map("verification_codes")
+}
+
+model Post {
+    id       Int    @id @default(autoincrement())
+    publicId String @unique @default(cuid()) @map("public_id")
+
+    userId  Int      @map("user_id")
+    content String   @db.Text
+    type    PostType @default(POST)
+
+    parentId     Int? @map("parent_id") // reply -> parent
+    originPostId Int? @map("origin_post_id") // repost/quote -> original
+    rootPostId   Int? @map("root_post_id") // conversation root
+
+    userSnapshot    Json?  @map("user_snapshot")
+    replyPermission String @default("everyone") @map("reply_permission") @db.VarChar(50)
+
+    likesCount   Int @default(0) @map("likes_count")
+    repliesCount Int @default(0) @map("replies_count")
+    repostsCount Int @default(0) @map("reposts_count")
+    quotesCount  Int @default(0) @map("quotes_count")
+    viewsCount   Int @default(0) @map("views_count")
+
+    isPinned  Boolean   @default(false) @map("is_pinned")
+    isDeleted Boolean   @default(false) @map("is_deleted")
+    deletedAt DateTime? @map("deleted_at")
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @map("updated_at")
+
+    user User @relation(fields: [userId], references: [id])
+
+    parent   Post?  @relation("PostParent", fields: [parentId], references: [id])
+    children Post[] @relation("PostParent")
+
+    origin      Post?  @relation("PostOrigin", fields: [originPostId], references: [id])
+    derivatives Post[] @relation("PostOrigin")
+
+    root   Post?  @relation("PostRoot", fields: [rootPostId], references: [id])
+    thread Post[] @relation("PostRoot")
+
+    media       PostMedia[]
+    mentions    PostMention[]
+    likes       Like[]
+    topicsPosts TopicsPost[]
+
+    @@index([userId, createdAt])
+    @@index([parentId])
+    @@index([originPostId])
+    @@index([rootPostId])
+    @@index([createdAt])
+    @@map("posts")
+}
+
+model PostMedia {
+    id        Int      @id @default(autoincrement())
+    postId    Int      @map("post_id")
+    url       String   @db.VarChar(2048)
+    type      String?  @db.VarChar(50)
+    width     Int?
+    height    Int?
+    createdAt DateTime @default(now()) @map("created_at")
+
+    post Post @relation(fields: [postId], references: [id])
+
+    @@index([postId], map: "idx_post_media_post_id")
+    @@map("post_media")
+}
+
+model PostMention {
+    id        Int      @id @default(autoincrement())
+    postId    Int      @map("post_id")
+    userId    Int      @map("user_id")
+    createdAt DateTime @default(now()) @map("created_at")
+
+    post Post @relation(fields: [postId], references: [id])
+
+    @@unique([postId, userId], map: "uq_post_mentions_post_user")
+    @@index([postId], map: "idx_post_mentions_post_id")
+    @@index([userId], map: "idx_post_mentions_user_id")
+    @@map("post_mentions")
+}
+
+model Follow {
+    id          Int          @id @default(autoincrement())
+    userId      Int          @map("user_id")
+    followingId Int          @map("following_id")
+    status      FollowStatus @default(PENDING)
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @map("updated_at")
+
+    user      User @relation("FollowUser", fields: [userId], references: [id])
+    following User @relation("FollowFollowing", fields: [followingId], references: [id])
+
+    @@unique([userId, followingId])
+    @@index([userId])
+    @@index([followingId])
+    @@index([followingId, status])
+    @@map("follows")
+}
+
+model Like {
+    id        Int      @id @default(autoincrement())
+    userId    Int      @map("user_id")
+    postId    Int      @map("post_id")
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @map("updated_at")
+
+    user User @relation(fields: [userId], references: [id])
+    post Post @relation(fields: [postId], references: [id])
+
+    @@unique([userId, postId], map: "uq_likes_user_post")
+    @@index([userId], map: "idx_likes_user_id")
+    @@index([postId], map: "idx_likes_post_id")
+    @@map("likes")
+}
+
+model Topic {
+    id        Int      @id @default(autoincrement())
+    name      String   @unique @db.VarChar(255)
+    count     Int      @default(1)
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @map("updated_at")
+
+    topicsPosts        TopicsPost[] @relation("TopicPublic")
+    privateTopicsPosts TopicsPost[] @relation("TopicPrivate")
+
+    @@index([count], map: "idx_topics_count")
+    @@map("topics")
+}
+
+model TopicsPost {
+    id             Int      @id @default(autoincrement())
+    postId         Int      @map("post_id")
+    topicId        Int?     @map("topic_id")
+    privateTopicId Int?     @map("private_topic_id")
+    isPublic       Boolean  @default(true) @map("is_public")
+    createdAt      DateTime @default(now()) @map("created_at")
+
+    post         Post   @relation(fields: [postId], references: [id])
+    topic        Topic? @relation("TopicPublic", fields: [topicId], references: [id])
+    privateTopic Topic? @relation("TopicPrivate", fields: [privateTopicId], references: [id])
+
+    @@index([postId], map: "idx_topics_posts_post_id")
+    @@index([topicId], map: "idx_topics_posts_topic_id")
+    @@index([privateTopicId], map: "idx_topics_posts_private_topic_id")
+    @@index([postId, topicId], map: "idx_topics_posts_post_topic")
+    @@index([postId, privateTopicId], map: "idx_topics_posts_post_private_topic")
+    @@map("topics_posts")
+}
+
+model RefreshToken {
+    id        Int      @id @default(autoincrement())
+    userId    Int      @map("user_id")
+    token     String   @unique @db.VarChar(512)
+    expireAt  DateTime @map("expire_at")
+    sessionId String   @map("session_id") @db.VarChar(255)
+
+    revoked   Boolean   @default(false)
+    revokedAt DateTime? @map("revoked_at")
+
+    userAgent String @default("unknown") @map("user_agent") @db.VarChar(512)
+    ip        String @default("unknown") @db.VarChar(45)
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @map("updated_at")
+
+    user User @relation(fields: [userId], references: [id])
+
+    @@index([userId], map: "idx_refresh_tokens_user_id")
+    @@index([expireAt], map: "idx_refresh_tokens_expire_at")
+    @@index([sessionId], map: "idx_refresh_tokens_session_id")
+    @@map("refresh_tokens")
+}
+
+model Job {
+    id             Int       @id @default(autoincrement())
+    uuid           String    @unique @db.VarChar(255)
+    queue          String    @db.Text
+    payload        String    @db.LongText
+    recipientEmail String?   @map("recipient_email") @db.VarChar(255)
+    hashToken      String?   @map("hash_token") @db.VarChar(255)
+    status         JobStatus @default(PENDING)
+    createdAt      DateTime  @default(now()) @map("created_at")
+    availableAt    DateTime? @map("available_at")
+    expiresAt      DateTime? @map("expires_at")
+
+    @@index([uuid], map: "idx_jobs_uuid")
+    @@index([status], map: "idx_jobs_status")
+    @@index([createdAt], map: "idx_jobs_created_at")
+    @@index([expiresAt], map: "idx_jobs_expires_at")
+    @@map("jobs")
+}
+
+model FailedJob {
+    id         Int      @id @default(autoincrement())
+    uuid       String   @unique @db.VarChar(255)
+    connection String   @db.Text
+    queue      String   @db.Text
+    payload    String   @db.LongText
+    exception  String   @db.LongText
+    failedAt   DateTime @map("failed_at") @db.Timestamp(0)
+
+    @@index([uuid], map: "idx_failed_jobs_uuid")
+    @@index([failedAt], map: "idx_failed_jobs_failed_at")
+    @@map("failed_jobs")
+}
