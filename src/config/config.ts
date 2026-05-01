@@ -1,4 +1,5 @@
 import { databaseConfig } from '@/config/database';
+import { jwtConfig } from '@/config/jwt';
 import { rateLimitConfig } from '@/config/ratelimit';
 import { redisConfig } from '@/config/redis';
 import dotenv from 'dotenv';
@@ -13,6 +14,7 @@ const envSchema = z.object({
     ...databaseConfig.shape,
     ...rateLimitConfig.shape,
     ...redisConfig.shape,
+    ...jwtConfig.shape,
 
 });
 
