@@ -1,6 +1,15 @@
 
+import type { UserRole } from '@prisma/client';
+import type { JwtPayload } from 'jsonwebtoken';
+
 declare global {
     namespace Express {
+        interface Request {
+            user?: JwtPayload;
+            accessToken?: string;
+            isAdmin?: UserRole;
+        }
+
         interface Response {
             success(status: HttpsCode, message?: string, data?: any, passProps = {}): Response;
             error(status: HttpsCode, message?: string, errors?: any, passProps = {}): Response;
@@ -14,6 +23,8 @@ declare global {
             PORT?: string;
             DATABASE_URL?: string;
             JWT_SECRET?: string;
+            ACCESS_EXPIRES?: string;
+            REDIS_URL?: string;
         }
     }
 }

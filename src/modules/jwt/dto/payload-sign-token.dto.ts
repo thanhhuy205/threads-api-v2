@@ -1,5 +1,7 @@
+import type { UserStatus } from '@prisma/client';
+
 export interface PayloadSignTokenDto {
     userId: string;
-    status: number;
+    status: UserStatus;
     sessionId?: string;
 }

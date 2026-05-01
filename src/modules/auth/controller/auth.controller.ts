@@ -16,6 +16,27 @@ class AuthController {
 
         return res.success(200, 'Login success', user);
     }
+
+    async me(req: Request, res: Response) {
+        const userId = req.user?.sub;
+
+        if (!userId) {
+            return res.error(401, 'TOKEN_INVALID');
+        }
+
+        const user = await authService.me(userId);
+
+        if (!user) {
+            return res.error(404, 'User not found');
+        }
+
+        return res.success(200, 'Get me success', user);
+    }
+
+    async logout(req: Request, res: Response) {
+        await authService.logout(req.body);
+        return res.success(200, 'Logout success');
+    }
 }
 
 export const authController = new AuthController();

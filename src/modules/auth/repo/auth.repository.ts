@@ -2,31 +2,21 @@ import prisma from '@/config/prisma';
 import type { Prisma } from '@prisma/client';
 import { RegisterDto } from '../dto/request/auth.request';
 
-const authUserSelect = {
+const authSessionUserSelect = {
     id: true,
     email: true,
     username: true,
     name: true,
     bio: true,
     avatar: true,
-    role: true,
-    verifiedAt: true,
     status: true,
-    followersCount: true,
-    followingCount: true,
-    postsCount: true,
-    isPrivate: true,
-    location: true,
-    website: true,
-    deletedAt: true,
-    createdAt: true,
-    updatedAt: true,
+    password: true,
 } as const;
 
-export type AuthUser = Prisma.UserGetPayload<{ select: typeof authUserSelect }>;
+export type AuthSessionUser = Prisma.UserGetPayload<{ select: typeof authSessionUserSelect }>;
 
 class AuthRepository {
-    async createUser(payload: RegisterDto): Promise<AuthUser> {
+    async createUser(payload: RegisterDto): Promise<AuthSessionUser> {
         const loginValue = payload.login.trim();
         const user = await prisma.user.create({
             data: {
@@ -34,18 +24,18 @@ class AuthRepository {
                 username: loginValue,
                 password: payload.password,
             },
-            select: authUserSelect,
+            select: authSessionUserSelect,
         });
 
         return user;
     }
 
-    async findUserByLogin(login: string): Promise<AuthUser | null> {
+    async findUserByLogin(login: string): Promise<AuthSessionUser | null> {
         const user = await prisma.user.findFirst({
             where: {
                 OR: [{ email: login }, { username: login }],
             },
-            select: authUserSelect,
+            select: authSessionUserSelect,
         });
 
         return user;

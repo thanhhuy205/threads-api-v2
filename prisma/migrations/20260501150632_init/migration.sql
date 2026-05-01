@@ -1,11 +1,10 @@
 -- CreateTable
 CREATE TABLE `users` (
-    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `id` VARCHAR(191) NOT NULL,
     `email` VARCHAR(255) NOT NULL,
     `username` VARCHAR(100) NOT NULL,
     `password` VARCHAR(255) NOT NULL,
-    `first_name` VARCHAR(100) NULL,
-    `last_name` VARCHAR(100) NULL,
+    `name` VARCHAR(100) NULL,
     `bio` TEXT NULL,
     `avatar` VARCHAR(255) NULL,
     `role` ENUM('USER', 'ADMIN') NOT NULL DEFAULT 'USER',
@@ -30,7 +29,7 @@ CREATE TABLE `users` (
 -- CreateTable
 CREATE TABLE `verification_codes` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `user_id` INTEGER NOT NULL,
+    `user_id` VARCHAR(191) NOT NULL,
     `type` ENUM('FORGOT_PASSWORD', 'RESET_PASSWORD', 'VERIFY_ACCOUNT') NOT NULL,
     `code` VARCHAR(100) NOT NULL,
     `expires_at` DATETIME(3) NOT NULL,
@@ -47,7 +46,7 @@ CREATE TABLE `verification_codes` (
 CREATE TABLE `posts` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `public_id` VARCHAR(191) NOT NULL,
-    `user_id` INTEGER NOT NULL,
+    `user_id` VARCHAR(191) NOT NULL,
     `content` TEXT NOT NULL,
     `type` ENUM('POST', 'REPLY', 'REPOST', 'QUOTE') NOT NULL DEFAULT 'POST',
     `parent_id` INTEGER NULL,
@@ -105,8 +104,8 @@ CREATE TABLE `post_mentions` (
 -- CreateTable
 CREATE TABLE `follows` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `user_id` INTEGER NOT NULL,
-    `following_id` INTEGER NOT NULL,
+    `user_id` VARCHAR(191) NOT NULL,
+    `following_id` VARCHAR(191) NOT NULL,
     `status` ENUM('PENDING', 'ACCEPTED', 'REJECTED') NOT NULL DEFAULT 'PENDING',
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NOT NULL,
@@ -121,7 +120,7 @@ CREATE TABLE `follows` (
 -- CreateTable
 CREATE TABLE `likes` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `user_id` INTEGER NOT NULL,
+    `user_id` VARCHAR(191) NOT NULL,
     `post_id` INTEGER NOT NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NOT NULL,
@@ -165,7 +164,7 @@ CREATE TABLE `topics_posts` (
 -- CreateTable
 CREATE TABLE `refresh_tokens` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `user_id` INTEGER NOT NULL,
+    `user_id` VARCHAR(191) NOT NULL,
     `token` VARCHAR(512) NOT NULL,
     `expire_at` DATETIME(3) NOT NULL,
     `session_id` VARCHAR(255) NOT NULL,

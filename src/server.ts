@@ -1,10 +1,12 @@
 import app from '@/app';
 import configService from './config/config';
 import prisma from './config/prisma';
+import { redisService } from './modules/redis/service/redis.service';
 
 
 const server = app.listen(configService.PORT, () => {
     console.log(`Server is running on http://localhost:${configService.PORT}`);
+    console.log(`Swagger docs available at http://localhost:${configService.PORT}/api-docs`);
 });
 
 const shutdown = (signal: string) => {
@@ -15,7 +17,10 @@ const shutdown = (signal: string) => {
             process.exit(1);
         }
 
-        void prisma.$disconnect().finally(() => {
+        void Promise.allSettled([
+            prisma.$disconnect(),
+            redisService.isOpen ? redisService.disconnect() : Promise.resolve(),
+        ]).finally(() => {
             process.exit(0);
         });
     });
