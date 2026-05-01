@@ -1,24 +1,17 @@
+import { HttpException } from '@/errors/error';
 import { NextFunction, Request, Response } from 'express';
 import env from '../config/env';
 
 const errorHandler = (error: unknown, _req: Request, res: Response, _next: NextFunction) => {
-    const statusCode = res.statusCode >= 400 ? res.statusCode : 500;
-    const message = error instanceof Error ? error.message : 'Internal server error';
-
-    const payload: {
-        success: false;
-        message: string;
-        stack?: string;
-    } = {
-        success: false,
-        message,
-    };
-
-    if (env.NODE_ENV === 'development' && error instanceof Error && error.stack) {
-        payload.stack = error.stack;
+    if (error instanceof HttpException) {
+        return res.error(error.statusCode, error.message, undefined, { errorCode: error.errorCode });
     }
 
-    res.status(statusCode).json(payload);
+    if (env.NODE_ENV === 'development' && error instanceof Error && error.stack) {
+        res.error(500, 'Internal server error', undefined, { stack: error.stack });
+    } else {
+        res.error(500, 'Internal server error');
+    }
 };
 
 export default errorHandler;

@@ -32,7 +32,7 @@
         "http-status-codes": "^2.3.0",
         "mariadb": "^3.4.5",
         "morgan": "^1.10.0",
-        "zod": "^3.25.0"
+        "zod": "^3.25.76"
     },
     "devDependencies": {
         "@types/compression": "^1.7.5",
