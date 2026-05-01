@@ -1,4 +1,3 @@
-// import { corsOrigin } from '@/middlewares/cors';
 import configService from '@/config/config';
 import { corsOrigin } from '@/middlewares/cors';
 import { errorHandler } from '@/middlewares/error-handler';
