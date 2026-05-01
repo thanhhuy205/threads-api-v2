@@ -1,11 +1,29 @@
 import prisma from '@/config/prisma';
-import { RegisterDto } from '../dto/auth.dto';
+import type { Prisma } from '@prisma/client';
+import { RegisterDto } from '../dto/request/auth.request';
 
-export type AuthUser = {
-    id: number;
-    email: string;
-    username: string;
-};
+const authUserSelect = {
+    id: true,
+    email: true,
+    username: true,
+    name: true,
+    bio: true,
+    avatar: true,
+    role: true,
+    verifiedAt: true,
+    status: true,
+    followersCount: true,
+    followingCount: true,
+    postsCount: true,
+    isPrivate: true,
+    location: true,
+    website: true,
+    deletedAt: true,
+    createdAt: true,
+    updatedAt: true,
+} as const;
+
+export type AuthUser = Prisma.UserGetPayload<{ select: typeof authUserSelect }>;
 
 class AuthRepository {
     async createUser(payload: RegisterDto): Promise<AuthUser> {
@@ -16,11 +34,7 @@ class AuthRepository {
                 username: loginValue,
                 password: payload.password,
             },
-            select: {
-                id: true,
-                email: true,
-                username: true,
-            },
+            select: authUserSelect,
         });
 
         return user;
@@ -31,11 +45,7 @@ class AuthRepository {
             where: {
                 OR: [{ email: login }, { username: login }],
             },
-            select: {
-                id: true,
-                email: true,
-                username: true,
-            },
+            select: authUserSelect,
         });
 
         return user;

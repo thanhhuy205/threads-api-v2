@@ -1,9 +1,10 @@
 import configService from '@/config/config';
 import { PayloadSignTokenDto, SignTokenDto, VerifyTokenDto } from '@/modules/jwt/dto';
+import { TokenPairResponse } from '@/modules/jwt/dto/response/token-pair.response';
 import crypto from 'crypto';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import ms from 'ms';
-
+import { v4 as uuidv4 } from 'uuid';
 class JwtService {
     private readonly JWT_SECRET: string = configService.JWT_SECRET;
     private readonly ACCESS_EXPIRES: string = configService.ACCESS_EXPIRES;
@@ -18,13 +19,13 @@ class JwtService {
         return crypto.randomBytes(64).toString('hex');
     }
 
-    async generateTokenPair({ userId, status, sessionId }: PayloadSignTokenDto) {
+    async generateTokenPair({ userId, status, sessionId = uuidv4() }: PayloadSignTokenDto): Promise<TokenPairResponse> {
         const [accessToken, refreshToken] = await Promise.all([
             this.signAccessToken({ userId, status, sessionId }),
             this.signRefreshToken()
         ]);
 
-        return { accessToken, refreshToken };
+        return { accessToken, refreshToken, sessionId };
     }
 
     signToken = ({

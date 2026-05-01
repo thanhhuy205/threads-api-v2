@@ -4,7 +4,7 @@ import { CreatePostDto } from '../dto/post.dto';
 export type PostRecord = {
     id: number;
     content: string;
-    authorId: number;
+    authorId: string;
     createdAt: string;
 };
 

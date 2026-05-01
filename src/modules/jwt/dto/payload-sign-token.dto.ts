@@ -1,5 +1,5 @@
 export interface PayloadSignTokenDto {
-    userId: number;
+    userId: string;
     status: number;
-    sessionId: string;
+    sessionId?: string;
 }
