@@ -1,10 +1,10 @@
 import app from '@/app';
-import env from './config/config';
+import configService from './config/config';
 import prisma from './config/prisma';
 
 
-const server = app.listen(env.PORT, () => {
-    console.log(`Server is running on port ${env.PORT}`);
+const server = app.listen(configService.PORT, () => {
+    console.log(`Server is running on port ${configService.PORT}`);
 });
 
 const shutdown = (signal: string) => {

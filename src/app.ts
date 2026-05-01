@@ -1,3 +1,4 @@
+import { corsOrigin } from '@/middlewares/cors';
 import { apiLimiter } from '@/middlewares/ratelimit';
 import router from '@/routes/index';
 import compression from 'compression';
@@ -6,21 +7,17 @@ import express from 'express';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import pino from 'pino';
-import env from './config/config';
+import { env } from 'process';
 import errorHandler from './middlewares/error-handler';
 import notFoundHandler from './middlewares/not-found';
 
 const app = express();
 app.use(pino)
 
-const corsOrigin =
-    env.CORS_ORIGIN === '*'
-        ? '*'
-        : env.CORS_ORIGIN.split(',').map((origin) => origin.trim()).filter(Boolean);
+
 
 
 app.disable('x-powered-by');
-
 app.use(helmet());
 app.use(cors({ origin: corsOrigin }));
 app.use(compression());
