@@ -1,0 +1,46 @@
+{
+    "name": "threads-api-v2",
+    "version": "1.0.0",
+    "private": true,
+    "description": "Express API with TypeScript, Prisma, and MySQL",
+    "main": "dist/src/server.js",
+    "scripts": {
+        "dev": "tsx watch src/server.ts",
+        "build": "tsc -p tsconfig.json",
+        "start": "node dist/src/server.js",
+        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "db:generate": "prisma generate",
+        "db:migrate": "prisma migrate dev",
+        "db:push": "prisma db push",
+        "db:pull": "prisma db pull",
+        "db:studio": "prisma studio",
+        "db:seed": "tsx prisma/seed.ts",
+        "db:format": "prisma format"
+    },
+    "prisma": {
+        "seed": "tsx prisma/seed.ts"
+    },
+    "dependencies": {
+        "@prisma/adapter-mariadb": "^7.0.0",
+        "@prisma/client": "^7.0.0",
+        "compression": "^1.8.1",
+        "cors": "^2.8.5",
+        "dotenv": "^16.5.0",
+        "express": "^5.1.0",
+        "express-rate-limit": "^8.2.0",
+        "helmet": "^8.0.0",
+        "morgan": "^1.10.0",
+        "mariadb": "^3.4.5",
+        "zod": "^3.25.0"
+    },
+    "devDependencies": {
+        "@types/compression": "^1.7.5",
+        "@types/cors": "^2.8.19",
+        "@types/express": "^5.0.0",
+        "@types/morgan": "^1.9.10",
+        "@types/node": "^22.0.0",
+        "prisma": "^7.0.0",
+        "tsx": "^4.19.0",
+        "typescript": "^5.8.0"
+    }
+}
