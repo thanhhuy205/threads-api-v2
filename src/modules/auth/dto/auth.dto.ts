@@ -29,5 +29,5 @@ const registerSchema = loginSchema
 export type LoginDto = z.infer<typeof loginSchema>;
 export type RegisterDto = z.infer<typeof registerSchema>;
 
-export const parseLoginDto = (input: unknown) => loginSchema.safeParse(input);
-export const parseRegisterDto = (input: unknown) => registerSchema.safeParse(input);
+export { loginSchema, registerSchema };
+

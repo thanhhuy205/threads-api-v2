@@ -1,8 +1,8 @@
-import { redisConfig } from "@/config";
+import configService from "@/config/config";
 import { createClient } from "redis";
 
 const redisClient = createClient({
-    url: redisConfig.url
+    url: configService.REDIS_URL
 });
 
 redisClient.on('error', (err) => console.log('Redis error:', err));

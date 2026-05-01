@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json
+version: "3.8"
+services:
+  redis:
+    image: redis:latest
+    container_name: threads-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    networks:
+      - threads-network
+
+  redis-insight:
+    image: redislabs/redisinsight:latest
+    container_name: threads-redis-insight
+    ports:
+      - "8001:8001"
+    restart: unless-stopped
+    networks:
+      - threads-network
+
+volumes:
+  redis-data:

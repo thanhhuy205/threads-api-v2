@@ -7,4 +7,5 @@ const createPostSchema = z.object({
 
 export type CreatePostDto = z.infer<typeof createPostSchema>;
 
-export const parseCreatePostDto = (input: unknown) => createPostSchema.safeParse(input);
+export { createPostSchema };
+
