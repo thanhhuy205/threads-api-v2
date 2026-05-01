@@ -1,25 +1,23 @@
+import { apiLimiter } from '@/middlewares/ratelimit';
 import router from '@/routes/index';
 import compression from 'compression';
 import cors from 'cors';
 import express from 'express';
-import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import pino from 'pino';
 import env from './config/env';
 import errorHandler from './middlewares/error-handler';
 import notFoundHandler from './middlewares/not-found';
 
 const app = express();
+app.use(pino)
 
 const corsOrigin =
     env.CORS_ORIGIN === '*'
         ? '*'
         : env.CORS_ORIGIN.split(',').map((origin) => origin.trim()).filter(Boolean);
 
-const apiLimiter = rateLimit({
-    windowMs: env.RATE_LIMIT_WINDOW_MS,
-    limit: env.RATE_LIMIT_MAX,
-});
 
 app.disable('x-powered-by');
 
