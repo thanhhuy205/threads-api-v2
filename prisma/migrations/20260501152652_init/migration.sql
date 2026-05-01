@@ -9,7 +9,7 @@ CREATE TABLE `users` (
     `avatar` VARCHAR(255) NULL,
     `role` ENUM('USER', 'ADMIN') NOT NULL DEFAULT 'USER',
     `verified_at` DATETIME(3) NULL,
-    `status` INTEGER NOT NULL DEFAULT 0,
+    `status` ENUM('ACTIVE', 'SUSPENDED', 'BANNED', 'DEACTIVATED') NOT NULL DEFAULT 'ACTIVE',
     `followers_count` INTEGER NOT NULL DEFAULT 0,
     `following_count` INTEGER NOT NULL DEFAULT 0,
     `posts_count` INTEGER NOT NULL DEFAULT 0,

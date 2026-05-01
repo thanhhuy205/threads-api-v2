@@ -2,7 +2,9 @@ import type { TokenPairResponse } from '@/modules/jwt/dto/response/token-pair.re
 import type { UserProfile } from '@/modules/user/repo/user.repository';
 import type { AuthSessionUser } from '../../repo/auth.repository';
 
-export type AuthSessionResponseDto = Pick<AuthSessionUser, 'email' | 'username' | 'name' | 'bio' | 'avatar'> &
+export type AuthSessionResponseDto = {
+    user: Pick<AuthSessionUser, 'email' | 'username' | 'name' | 'bio' | 'avatar'>
+} &
     TokenPairResponse;
 
 export type AuthMeResponseDto = UserProfile;
@@ -27,11 +29,13 @@ class AuthResponse {
             const { user, accessToken, refreshToken, sessionId } = map;
 
             return {
-                email: user.email,
-                username: user.username,
-                name: user.name,
-                bio: user.bio,
-                avatar: user.avatar,
+                user: {
+                    email: user.email,
+                    username: user.username,
+                    name: user.name,
+                    bio: user.bio,
+                    avatar: user.avatar,
+                },
                 accessToken,
                 refreshToken,
                 sessionId,
