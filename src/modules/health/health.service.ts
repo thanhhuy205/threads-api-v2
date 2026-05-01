@@ -1,5 +1,5 @@
-import env from '../../../config/env';
-import prisma from '../../../config/prisma';
+import env from '../../config/env';
+import prisma from '../../config/prisma';
 
 export const buildHealthPayload = () => ({
     success: true,

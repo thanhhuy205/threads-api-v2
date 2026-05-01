@@ -1,6 +1,6 @@
-import env from '../config/env';
-import prisma from '../config/prisma';
 import createApp from './app';
+import env from './config/env';
+import prisma from './config/prisma';
 
 const app = createApp();
 
@@ -15,7 +15,6 @@ const shutdown = (signal: string) => {
         if (error) {
             console.error('Error while closing server', error);
             process.exit(1);
-            return;
         }
 
         void prisma.$disconnect().finally(() => {

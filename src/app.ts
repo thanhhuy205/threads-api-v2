@@ -4,7 +4,7 @@ import express from 'express';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import env from '../config/env';
+import env from './config/env';
 import errorHandler from './middlewares/error-handler';
 import notFoundHandler from './middlewares/not-found';
 import apiRouter from './routes';
