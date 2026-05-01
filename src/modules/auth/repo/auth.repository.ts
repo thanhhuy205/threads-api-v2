@@ -1,26 +1,44 @@
-export type RegisterPayload = {
-    email: string;
-    password: string;
-    name?: string;
-};
+import prisma from '@/config/prisma';
+import { RegisterDto } from '../dto/auth.dto';
 
 export type AuthUser = {
-    id: string;
+    id: number;
     email: string;
-    name: string | null;
+    username: string;
 };
 
 class AuthRepository {
-    async createUser(payload: RegisterPayload): Promise<AuthUser> {
-        return {
-            id: 'temp-user-id',
-            email: payload.email,
-            name: payload.name ?? null,
-        };
+    async createUser(payload: RegisterDto): Promise<AuthUser> {
+        const loginValue = payload.login.trim();
+        const user = await prisma.user.create({
+            data: {
+                email: loginValue,
+                username: loginValue,
+                password: payload.password,
+            },
+            select: {
+                id: true,
+                email: true,
+                username: true,
+            },
+        });
+
+        return user;
     }
 
-    async findUserByEmail(_email: string): Promise<AuthUser | null> {
-        return null;
+    async findUserByLogin(login: string): Promise<AuthUser | null> {
+        const user = await prisma.user.findFirst({
+            where: {
+                OR: [{ email: login }, { username: login }],
+            },
+            select: {
+                id: true,
+                email: true,
+                username: true,
+            },
+        });
+
+        return user;
     }
 }
 

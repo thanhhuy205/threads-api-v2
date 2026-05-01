@@ -1,5 +1,6 @@
 import { databaseConfig } from '@/config/database';
 import { rateLimitConfig } from '@/config/ratelimit';
+import { redisConfig } from '@/config/redis';
 import dotenv from 'dotenv';
 import { z } from 'zod';
 
@@ -11,6 +12,7 @@ const envSchema = z.object({
     CORS_ORIGIN: z.string().default('*'),
     ...databaseConfig.shape,
     ...rateLimitConfig.shape,
+    ...redisConfig.shape,
 
 });
 

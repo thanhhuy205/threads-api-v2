@@ -1,7 +1,8 @@
-import { CreatePostPayload, PostRecord, postRepository } from '../repo/post.repository';
+import { CreatePostDto } from '../dto/post.dto';
+import { PostRecord, postRepository } from '../repo/post.repository';
 
 class PostService {
-    async create(payload: CreatePostPayload): Promise<PostRecord> {
+    async create(payload: CreatePostDto): Promise<PostRecord> {
         return postRepository.create(payload);
     }
 

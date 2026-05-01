@@ -1,30 +1,53 @@
-export type CreatePostPayload = {
-    title: string;
-    content?: string;
-    authorId?: string;
-};
+import prisma from '@/config/prisma';
+import { CreatePostDto } from '../dto/post.dto';
 
 export type PostRecord = {
-    id: string;
-    title: string;
-    content: string | null;
-    authorId: string | null;
+    id: number;
+    content: string;
+    authorId: number;
     createdAt: string;
 };
 
 class PostRepository {
-    async create(payload: CreatePostPayload): Promise<PostRecord> {
+    async create(payload: CreatePostDto): Promise<PostRecord> {
+        const post = await prisma.post.create({
+            data: {
+                content: payload.content,
+                userId: payload.authorId,
+            },
+            select: {
+                id: true,
+                content: true,
+                userId: true,
+                createdAt: true,
+            },
+        });
+
         return {
-            id: 'temp-post-id',
-            title: payload.title,
-            content: payload.content ?? null,
-            authorId: payload.authorId ?? null,
-            createdAt: new Date().toISOString(),
+            id: post.id,
+            content: post.content,
+            authorId: post.userId,
+            createdAt: post.createdAt.toISOString(),
         };
     }
 
     async list(): Promise<PostRecord[]> {
-        return [];
+        const posts = await prisma.post.findMany({
+            orderBy: { createdAt: 'desc' },
+            select: {
+                id: true,
+                content: true,
+                userId: true,
+                createdAt: true,
+            },
+        });
+
+        return posts.map((post) => ({
+            id: post.id,
+            content: post.content,
+            authorId: post.userId,
+            createdAt: post.createdAt.toISOString(),
+        }));
     }
 }
 

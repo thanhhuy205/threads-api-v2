@@ -63,10 +63,10 @@ model User {
     username String @unique @db.VarChar(100)
     password String @db.VarChar(255)
 
-    firstName String? @map("first_name") @db.VarChar(100)
-    lastName  String? @map("last_name") @db.VarChar(100)
-    bio       String? @db.Text
-    avatar    String? @db.VarChar(255)
+    name String? @map("name") @db.VarChar(100)
+
+    bio    String? @db.Text
+    avatar String? @db.VarChar(255)
 
     role       UserRole  @default(USER)
     verifiedAt DateTime? @map("verified_at")
@@ -82,7 +82,7 @@ model User {
 
     deletedAt DateTime? @map("deleted_at")
     createdAt DateTime  @default(now()) @map("created_at")
-    updatedAt DateTime  @map("updated_at")
+    updatedAt DateTime  @updatedAt @map("updated_at")
 
     posts             Post[]
     refreshTokens     RefreshToken[]
@@ -138,7 +138,7 @@ model Post {
     deletedAt DateTime? @map("deleted_at")
 
     createdAt DateTime @default(now()) @map("created_at")
-    updatedAt DateTime @map("updated_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
 
     user User @relation(fields: [userId], references: [id])
 
@@ -200,7 +200,7 @@ model Follow {
     status      FollowStatus @default(PENDING)
 
     createdAt DateTime @default(now()) @map("created_at")
-    updatedAt DateTime @map("updated_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
 
     user      User @relation("FollowUser", fields: [userId], references: [id])
     following User @relation("FollowFollowing", fields: [followingId], references: [id])
@@ -217,7 +217,7 @@ model Like {
     userId    Int      @map("user_id")
     postId    Int      @map("post_id")
     createdAt DateTime @default(now()) @map("created_at")
-    updatedAt DateTime @map("updated_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
 
     user User @relation(fields: [userId], references: [id])
     post Post @relation(fields: [postId], references: [id])
@@ -233,7 +233,7 @@ model Topic {
     name      String   @unique @db.VarChar(255)
     count     Int      @default(1)
     createdAt DateTime @default(now()) @map("created_at")
-    updatedAt DateTime @map("updated_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
 
     topicsPosts        TopicsPost[] @relation("TopicPublic")
     privateTopicsPosts TopicsPost[] @relation("TopicPrivate")
@@ -276,7 +276,7 @@ model RefreshToken {
     ip        String @default("unknown") @db.VarChar(45)
 
     createdAt DateTime @default(now()) @map("created_at")
-    updatedAt DateTime @map("updated_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
 
     user User @relation(fields: [userId], references: [id])
 
