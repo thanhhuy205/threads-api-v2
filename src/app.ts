@@ -1,4 +1,5 @@
 import configService from '@/config/config';
+import { swaggerDocument } from '@/config/swagger';
 import { corsOrigin } from '@/middlewares/cors';
 import { errorHandler } from '@/middlewares/error-handler';
 import { logger } from '@/middlewares/logger';
@@ -10,6 +11,7 @@ import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import swaggerUi from 'swagger-ui-express';
 import { responseHandler } from './middlewares/response-handler';
 
 const app = express();
@@ -24,7 +26,9 @@ app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(responseHandler);
 
+
 app.use('/api/v1', apiLimiter, router);
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.use(notFoundHandler);
 app.use(errorHandler);
