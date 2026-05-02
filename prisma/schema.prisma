@@ -123,7 +123,7 @@ model VerificationCode {
     id        Int                  @id @default(autoincrement())
     userId    String               @map("user_id")
     type      VerificationCodeType
-    code      String               @db.VarChar(100)
+    tokenHash String               @unique @db.VarChar(100)
     expiresAt DateTime             @map("expires_at")
     usedAt    DateTime?            @map("used_at")
     createdAt DateTime             @default(now()) @map("created_at")

@@ -31,14 +31,29 @@ CREATE TABLE `verification_codes` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `user_id` VARCHAR(191) NOT NULL,
     `type` ENUM('FORGOT_PASSWORD', 'RESET_PASSWORD', 'VERIFY_ACCOUNT') NOT NULL,
-    `code` VARCHAR(100) NOT NULL,
+    `tokenHash` VARCHAR(100) NOT NULL,
     `expires_at` DATETIME(3) NOT NULL,
     `used_at` DATETIME(3) NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
+    UNIQUE INDEX `verification_codes_tokenHash_key`(`tokenHash`),
     INDEX `idx_verification_codes_user_type_created`(`user_id`, `type`, `created_at`),
     INDEX `idx_verification_codes_expires_at`(`expires_at`),
     INDEX `idx_verification_codes_used_at`(`used_at`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `user_intents` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `user_id` VARCHAR(191) NOT NULL,
+    `positiveText` VARCHAR(255) NULL,
+    `negativeText` VARCHAR(255) NULL,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at` DATETIME(3) NOT NULL,
+
+    INDEX `idx_user_intents_user_id`(`user_id`),
+    UNIQUE INDEX `uq_user_intents_user_id`(`user_id`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -92,7 +107,7 @@ CREATE TABLE `post_media` (
 CREATE TABLE `post_mentions` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `post_id` INTEGER NOT NULL,
-    `user_id` INTEGER NOT NULL,
+    `user_id` VARCHAR(191) NOT NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
     INDEX `idx_post_mentions_post_id`(`post_id`),
@@ -168,7 +183,6 @@ CREATE TABLE `refresh_tokens` (
     `token` VARCHAR(512) NOT NULL,
     `expire_at` DATETIME(3) NOT NULL,
     `session_id` VARCHAR(255) NOT NULL,
-    `revoked` BOOLEAN NOT NULL DEFAULT false,
     `revoked_at` DATETIME(3) NULL,
     `user_agent` VARCHAR(512) NOT NULL DEFAULT 'unknown',
     `ip` VARCHAR(45) NOT NULL DEFAULT 'unknown',
@@ -219,8 +233,75 @@ CREATE TABLE `failed_jobs` (
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
+-- CreateTable
+CREATE TABLE `circles` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(255) NOT NULL,
+    `user_id` VARCHAR(191) NOT NULL,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at` DATETIME(3) NOT NULL,
+    `visibility` ENUM('PUBLIC', 'PRIVATE', 'CIRCLE') NOT NULL DEFAULT 'PRIVATE',
+    `create_by_id` VARCHAR(191) NOT NULL,
+
+    INDEX `idx_circles_user_id`(`user_id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `circle_members` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `circle_id` INTEGER NOT NULL,
+    `user_id` VARCHAR(191) NOT NULL,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    INDEX `idx_circle_members_circle_id`(`circle_id`),
+    INDEX `idx_circle_members_user_id`(`user_id`),
+    UNIQUE INDEX `uq_circle_members_circle_user`(`circle_id`, `user_id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `anti_spam` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `user_id` VARCHAR(191) NOT NULL,
+    `action` ENUM('POST_CREATED', 'POST_DELETED', 'LIKE_CREATED', 'DISLIKE_CREATED', 'FLOW_FOLLOWER_CREATED', 'FOLLOW_FOLLOWING_CREATED', 'QUOTE_CREATED', 'QUOTE_DELETED', 'SHARE_CREATED', 'SHARE_DELETED') NOT NULL,
+    `reason` VARCHAR(255) NULL,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    INDEX `idx_anti_spam_user_id`(`user_id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `collections` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `user_id` VARCHAR(191) NOT NULL,
+    `name` VARCHAR(255) NOT NULL,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at` DATETIME(3) NOT NULL,
+
+    INDEX `idx_collections_user_id`(`user_id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `collection_posts` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `collection_id` INTEGER NOT NULL,
+    `post_id` INTEGER NOT NULL,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    INDEX `idx_collection_posts_collection_id`(`collection_id`),
+    INDEX `idx_collection_posts_post_id`(`post_id`),
+    UNIQUE INDEX `uq_collection_posts_collection_post`(`collection_id`, `post_id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
 -- AddForeignKey
 ALTER TABLE `verification_codes` ADD CONSTRAINT `verification_codes_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `user_intents` ADD CONSTRAINT `user_intents_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `posts` ADD CONSTRAINT `posts_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -263,3 +344,24 @@ ALTER TABLE `topics_posts` ADD CONSTRAINT `topics_posts_private_topic_id_fkey` F
 
 -- AddForeignKey
 ALTER TABLE `refresh_tokens` ADD CONSTRAINT `refresh_tokens_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `circles` ADD CONSTRAINT `circles_create_by_id_fkey` FOREIGN KEY (`create_by_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `circle_members` ADD CONSTRAINT `circle_members_circle_id_fkey` FOREIGN KEY (`circle_id`) REFERENCES `circles`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `circle_members` ADD CONSTRAINT `circle_members_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `anti_spam` ADD CONSTRAINT `anti_spam_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `collections` ADD CONSTRAINT `collections_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `collection_posts` ADD CONSTRAINT `collection_posts_collection_id_fkey` FOREIGN KEY (`collection_id`) REFERENCES `collections`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `collection_posts` ADD CONSTRAINT `collection_posts_post_id_fkey` FOREIGN KEY (`post_id`) REFERENCES `posts`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;

@@ -47,6 +47,7 @@ class AuthService {
     }
 
     async forgotPassword(payload: ForgotPasswordDto): Promise<ForgotPasswordResponseDto> {
+        
         return {
             email: payload.email,
         };
