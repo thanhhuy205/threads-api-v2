@@ -1,4 +1,17 @@
 services:
+  nginx:
+    image: nginx:alpine
+    container_name: threads-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+    depends_on:
+      - threads-api
+    restart: unless-stopped
+    networks:
+      - threads-network
+
   redis:
     image: redis:8.6.2-alpine
     container_name: threads-redis
