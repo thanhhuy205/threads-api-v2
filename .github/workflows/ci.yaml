@@ -49,8 +49,8 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            threads-api:latest
-            threads-api:${{ github.sha }}
+            ghcr.io/${{ github.repository }}:${{ github.sha }}
+            ghcr.io/${{ github.repository }}:production
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
