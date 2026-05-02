@@ -84,7 +84,7 @@ class PostController {
 
         const post = await postService.create({
             ...req.body,
-            authorId: userId,
+            userId,
         });
 
         return res.success(201, 'Post created', post);

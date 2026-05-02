@@ -20,7 +20,7 @@ export const postSwaggerSchemas = {
                 example: '2026-05-01T00:00:00.000Z',
             },
         },
-        required: ['id', 'content', 'authorId', 'createdAt'],
+        required: ['id', 'content', 'userId', 'createdAt'],
     },
     PostPagination: {
         type: 'object',
@@ -70,12 +70,8 @@ export const postSwaggerSchemas = {
                 type: 'string',
                 example: 'Hello Threads',
             },
-            authorId: {
-                type: 'string',
-                example: 'ckv8p4u1q0000x3jz8d2b6g7h',
-            },
         },
-        required: ['content', 'authorId'],
+        required: ['content'],
     },
     PostSuccessResponse: {
         type: 'object',
@@ -212,7 +208,7 @@ export const postSwaggerPaths = {
                         },
                         example: {
                             content: 'Hello Threads',
-                            authorId: 'ckv8p4u1q0000x3jz8d2b6g7h',
+                            userId: 'ckv8p4u1q0000x3jz8d2b6g7h',
                         },
                     },
                 },

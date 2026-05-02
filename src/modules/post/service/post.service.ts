@@ -23,6 +23,10 @@ type GetPostWithPostId = {
     postId: number;
 };
 
+type CreatePostPayload = CreatePostDto & {
+    userId: string;
+};
+
 class PostService {
     private async paginatePosts({
         currentPage,
@@ -133,7 +137,7 @@ class PostService {
         });
     }
 
-    async create(payload: CreatePostDto): Promise<PostRecord> {
+    async create(payload: CreatePostPayload): Promise<PostRecord> {
         return postRepository.create(payload);
     }
 
