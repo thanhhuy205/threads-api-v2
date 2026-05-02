@@ -158,6 +158,8 @@ const userIdParameters = [
     ...postPaginationQueryParameters,
 ];
 
+const bearerAuthSecurity = [{ bearerAuth: [] }];
+
 export const postSwaggerPaths = {
     '/posts/news-feed': {
         get: {
@@ -204,6 +206,7 @@ export const postSwaggerPaths = {
         get: {
             tags: ['Post'],
             summary: 'Get current user posts',
+            security: bearerAuthSecurity,
             parameters: postPaginationQueryParameters,
             responses: {
                 200: {
@@ -226,6 +229,7 @@ export const postSwaggerPaths = {
         get: {
             tags: ['Post'],
             summary: 'Get user reposts',
+            security: bearerAuthSecurity,
             parameters: userIdParameters,
             responses: {
                 200: {
@@ -248,6 +252,7 @@ export const postSwaggerPaths = {
         get: {
             tags: ['Post'],
             summary: 'Get user quotes',
+            security: bearerAuthSecurity,
             parameters: userIdParameters,
             responses: {
                 200: {
@@ -270,6 +275,7 @@ export const postSwaggerPaths = {
         post: {
             tags: ['Post'],
             summary: 'Create a post',
+            security: bearerAuthSecurity,
             requestBody: {
                 required: true,
                 content: {

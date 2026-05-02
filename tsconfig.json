@@ -17,6 +17,6 @@
       "@config/*": ["src/config/*"]
     }
   },
-  "include": ["src/**/*.ts", "src/config/**/*.ts", "prisma/**/*.ts"],
+  "include": ["src/**/*.ts", "src/config/**/*.ts", "prisma/**/*.ts", "workers/pine.worker.ts"],
   "exclude": ["node_modules", "dist"]
 }

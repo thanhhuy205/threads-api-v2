@@ -1,3 +1,4 @@
+import { pineProducer } from '@/modules/job/pine-vector/producer/pine.producer';
 import { NewFeedType } from '@/modules/post/enum';
 import { buildNewFeedWhere, buildUserPostsWhere } from '@/modules/post/helper';
 import { PostType, Prisma } from '@prisma/client';
@@ -137,6 +138,7 @@ class PostService {
     }
 
     async create(payload: CreatePostPayload): Promise<PostRecord> {
+        await pineProducer.addToPineconeQueue({ content: payload.content, topic: ['not'] });
         return postRepository.create(payload);
     }
 

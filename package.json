@@ -15,7 +15,9 @@
         "db:pull": "prisma db pull",
         "db:studio": "prisma studio",
         "db:seed": "tsx prisma/seed.ts",
-        "db:format": "prisma format"
+        "db:format": "prisma format",
+        "queue": "tsx queues/index.ts",
+        "worker": "tsx workers/index.ts"
     },
     "prisma": {
         "seed": "tsx prisma/seed.ts"
