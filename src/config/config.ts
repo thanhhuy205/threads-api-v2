@@ -1,6 +1,7 @@
 import { databaseConfig } from '@/config/database';
 import { jwtConfig } from '@/config/jwt';
 import { mixedbreadAIConfig } from '@/config/mixedbread-ai';
+import { nodemailerConfig } from '@/config/nodemailer';
 import { pineconeConfig } from '@/config/pinecone';
 import { rateLimitConfig } from '@/config/ratelimit';
 import { redisConfig } from '@/config/redis';
@@ -20,6 +21,7 @@ const envSchema = z.object({
     ...jwtConfig.shape,
     ...mixedbreadAIConfig.shape,
     ...pineconeConfig.shape,
+    ...nodemailerConfig.shape,
 
 });
 

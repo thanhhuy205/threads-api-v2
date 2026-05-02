@@ -29,7 +29,6 @@ class AuthController {
         if (!user) {
             return res.error(401, AUTH_MESSAGE.INVALID_CREDENTIALS);
         }
-
         return res.success(200, AUTH_MESSAGE.LOGIN_SUCCESS, user);
     }
 
