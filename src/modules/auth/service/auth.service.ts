@@ -1,10 +1,10 @@
 import { comparePassword, hashPassword } from '@/modules/auth/util/hasher-password';
 import { jwtService } from '@/modules/jwt/service/jwt.service';
 import { ensureRedisConnection } from '@/modules/redis/service/redis.service';
-import { userRepository } from '@/modules/user/repo/user.repository';
+import { userRepository } from '@/modules/user/repository/user.repository';
 import { LoginDto, LogoutDto, RegisterDto } from '../dto/request/auth.request';
 import { AuthMeResponseDto, authResponse, AuthSessionResponseDto } from '../dto/response/auth.response';
-import { authRepository } from '../repo/auth.repository';
+import { authRepository } from '../repository/auth.repository';
 
 class AuthService {
     async register(payload: RegisterDto): Promise<AuthSessionResponseDto> {

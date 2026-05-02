@@ -1,6 +1,6 @@
 import type { TokenPairResponse } from '@/modules/jwt/dto/response/token-pair.response';
-import type { UserProfile } from '@/modules/user/repo/user.repository';
-import type { AuthSessionUser } from '../../repo/auth.repository';
+import type { UserProfile } from '@/modules/user/repository/user.repository';
+import type { AuthSessionUser } from '../../repository/auth.repository';
 
 export type AuthSessionResponseDto = {
     user: Pick<AuthSessionUser, 'email' | 'username' | 'name' | 'bio' | 'avatar'>
