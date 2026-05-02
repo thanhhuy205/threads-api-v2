@@ -11,7 +11,7 @@ export const validate =
 
                 if (source === 'body') req.body = parsed;
                 if (source === 'params') req.params = parsed;
-                if (source === 'query') req.query = parsed;
+                if (source === 'query') req.query_parsed = parsed;
                 return next();
             } catch (error) {
                 if (error instanceof z.ZodError) {

@@ -1,4 +1,3 @@
-import { userCompactSelect } from "@/modules/user/selector/user";
 import { Prisma } from "@prisma/client";
 
 export const postFeedSelect = Prisma.validator<Prisma.PostSelect>()({
@@ -18,9 +17,6 @@ export const postFeedSelect = Prisma.validator<Prisma.PostSelect>()({
     quotesCount: true,
     viewsCount: true,
     createdAt: true,
-    user: {
-        select: userCompactSelect
-    },
     media: true,
     mentions: true
 });

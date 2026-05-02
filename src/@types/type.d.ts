@@ -8,6 +8,7 @@ declare global {
             user?: JwtPayload;
             accessToken?: string;
             isAdmin?: UserRole;
+            query_parsed?: any;
         }
 
         interface Response {

@@ -31,18 +31,17 @@ class PostService {
     private async paginatePosts({
         currentPage,
         perPage,
-        where
+        where,
     }: {
         currentPage: number;
         perPage: number;
         where: Prisma.PostWhereInput;
     }) {
-
         const [posts, total] = await Promise.all([
             postRepository.findAll({
                 page: currentPage,
                 limit: perPage,
-                where
+                where,
             }),
             postRepository.count({ where })
         ]);
@@ -62,14 +61,14 @@ class PostService {
         currentPage,
         perPage,
         userId,
-        feedType = NewFeedType.FOR_YOU
+        feedType = NewFeedType.FOR_YOU,
     }: NewsFeedPayload) {
         const where = buildNewFeedWhere(userId, feedType);
 
         return this.paginatePosts({
             currentPage,
             perPage,
-            where
+            where,
         });
     }
 
@@ -77,7 +76,7 @@ class PostService {
     async getPostMe({
         currentPage,
         perPage,
-        userId
+        userId,
     }: GetPostWithUser) {
         return this.paginatePosts({
             currentPage,
@@ -85,7 +84,7 @@ class PostService {
             where: buildUserPostsWhere({
                 userId,
                 postType: PostType.POST
-            })
+            }),
         });
     }
 
@@ -93,7 +92,7 @@ class PostService {
     async getReplies({
         currentPage,
         perPage,
-        postId
+        postId,
     }: GetPostWithPostId) {
         return this.paginatePosts({
             currentPage,
@@ -101,7 +100,7 @@ class PostService {
             where: {
                 parentId: postId,
                 type: PostType.REPLY
-            }
+            },
         });
     }
 
@@ -109,7 +108,7 @@ class PostService {
     async getRepost({
         currentPage,
         perPage,
-        userId
+        userId,
     }: GetPostWithUser) {
         return this.paginatePosts({
             currentPage,
@@ -117,7 +116,7 @@ class PostService {
             where: buildUserPostsWhere({
                 userId,
                 postType: PostType.REPOST
-            })
+            }),
         });
     }
 
@@ -125,7 +124,7 @@ class PostService {
     async getQuote({
         currentPage,
         perPage,
-        userId
+        userId,
     }: GetPostWithUser) {
         return this.paginatePosts({
             currentPage,
@@ -133,7 +132,7 @@ class PostService {
             where: buildUserPostsWhere({
                 userId,
                 postType: PostType.QUOTE
-            })
+            }),
         });
     }
 

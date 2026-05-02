@@ -10,7 +10,7 @@ export const postSwaggerSchemas = {
                 type: 'string',
                 example: 'Hello Threads',
             },
-            authorId: {
+            userId: {
                 type: 'string',
                 example: 'ckv8p4u1q0000x3jz8d2b6g7h',
             },
@@ -92,11 +92,78 @@ export const postSwaggerSchemas = {
     },
 };
 
+const postPaginationQueryParameters = [
+    {
+        name: 'page',
+        in: 'query',
+        required: false,
+        schema: {
+            type: 'integer',
+            example: 1,
+        },
+        description: 'Page number',
+    },
+    {
+        name: 'limit',
+        in: 'query',
+        required: false,
+        schema: {
+            type: 'integer',
+            example: 20,
+        },
+        description: 'Items per page',
+    },
+];
+
+const newsFeedQueryParameters = [
+    ...postPaginationQueryParameters,
+    {
+        name: 'feedType',
+        in: 'query',
+        required: false,
+        schema: {
+            type: 'string',
+            enum: ['for_you', 'following', 'me'],
+            example: 'for_you',
+        },
+        description: 'News feed type',
+    },
+];
+
+const postIdParameters = [
+    {
+        name: 'postId',
+        in: 'path',
+        required: true,
+        schema: {
+            type: 'integer',
+            example: 1,
+        },
+        description: 'Parent post id',
+    },
+    ...postPaginationQueryParameters,
+];
+
+const userIdParameters = [
+    {
+        name: 'userId',
+        in: 'path',
+        required: true,
+        schema: {
+            type: 'string',
+            example: 'ckv8p4u1q0000x3jz8d2b6g7h',
+        },
+        description: 'User id',
+    },
+    ...postPaginationQueryParameters,
+];
+
 export const postSwaggerPaths = {
     '/posts/news-feed': {
         get: {
             tags: ['Post'],
             summary: 'Get news feed',
+            parameters: newsFeedQueryParameters,
             responses: {
                 200: {
                     description: 'News feed retrieved',
@@ -118,6 +185,7 @@ export const postSwaggerPaths = {
         get: {
             tags: ['Post'],
             summary: 'Get replies for a post',
+            parameters: postIdParameters,
             responses: {
                 200: {
                     description: 'Replies retrieved',
@@ -136,6 +204,7 @@ export const postSwaggerPaths = {
         get: {
             tags: ['Post'],
             summary: 'Get current user posts',
+            parameters: postPaginationQueryParameters,
             responses: {
                 200: {
                     description: 'Posts retrieved',
@@ -157,6 +226,7 @@ export const postSwaggerPaths = {
         get: {
             tags: ['Post'],
             summary: 'Get user reposts',
+            parameters: userIdParameters,
             responses: {
                 200: {
                     description: 'Reposts retrieved',
@@ -178,6 +248,7 @@ export const postSwaggerPaths = {
         get: {
             tags: ['Post'],
             summary: 'Get user quotes',
+            parameters: userIdParameters,
             responses: {
                 200: {
                     description: 'Quotes retrieved',
@@ -208,7 +279,6 @@ export const postSwaggerPaths = {
                         },
                         example: {
                             content: 'Hello Threads',
-                            userId: 'ckv8p4u1q0000x3jz8d2b6g7h',
                         },
                     },
                 },

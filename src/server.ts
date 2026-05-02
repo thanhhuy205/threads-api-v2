@@ -6,7 +6,7 @@ import { redisService } from './modules/redis/service/redis.service';
 
 const server = app.listen(configService.PORT, () => {
     console.log(`Server is running on http://localhost:${configService.PORT}`);
-    console.log(`Swagger docs available at http://localhost:${configService.PORT}/api-docs`);
+    console.log(`Swagger docs available at http://localhost:${configService.PORT}/api/v1/docs`);
 });
 
 const shutdown = (signal: string) => {
