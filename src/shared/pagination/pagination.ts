@@ -1,4 +1,5 @@
 import { DEFAULT_PAGE, MAX_LIMIT, PER_PAGE } from "@/constants/pagination";
+import { Request } from "express";
 
 type BuildPaginationOptions = {
     page?: number;
@@ -17,9 +18,9 @@ export type PaginationResponse = {
     to: number;
 };
 
-export const getPagination = (req: Request): { currentPage: number; perPage: number } => {
-    const currentPage = req.headers.get('x-current-page') ? parseInt(req.headers.get('x-current-page') as string, 10) : 1;
-    const perPage = req.headers.get('x-per-page') ? parseInt(req.headers.get('x-per-page') as string, 10) : PER_PAGE;
+export const getPagination = (req: Request<{}, {}, {}, { page?: string; limit?: string }>): { currentPage: number; perPage: number } => {
+    const currentPage = req.query.page ? parseInt(req.query.page as string, 10) : DEFAULT_PAGE;
+    const perPage = req.query.limit ? parseInt(req.query.limit as string, 10) : PER_PAGE;
     return { currentPage, perPage };
 };
 

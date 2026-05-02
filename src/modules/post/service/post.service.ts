@@ -1,4 +1,5 @@
 import { NewFeedType } from '@/modules/post/enum';
+import { buildNewFeedWhere, buildUserPostsWhere } from '@/modules/post/helper';
 import { PostType, Prisma } from '@prisma/client';
 import { CreatePostDto } from '../dto/post.dto';
 import { PostRecord, postRepository } from '../repository/post.repository';
@@ -23,7 +24,6 @@ type GetPostWithPostId = {
 };
 
 class PostService {
-
     private async paginatePosts({
         currentPage,
         perPage,
@@ -60,10 +60,7 @@ class PostService {
         userId,
         feedType = NewFeedType.FOR_YOU
     }: NewsFeedPayload) {
-        const where = {
-            userId: userId ?? undefined,
-            feedType
-        };
+        const where = buildNewFeedWhere(userId, feedType);
 
         return this.paginatePosts({
             currentPage,
@@ -81,9 +78,10 @@ class PostService {
         return this.paginatePosts({
             currentPage,
             perPage,
-            where: {
-                userId
-            }
+            where: buildUserPostsWhere({
+                userId,
+                postType: PostType.POST
+            })
         });
     }
 
@@ -98,6 +96,7 @@ class PostService {
             perPage,
             where: {
                 id: postId,
+                type: PostType.REPLY
             }
         });
     }
@@ -111,10 +110,10 @@ class PostService {
         return this.paginatePosts({
             currentPage,
             perPage,
-            where: {
+            where: buildUserPostsWhere({
                 userId,
-                type: PostType.REPOST
-            }
+                postType: PostType.REPOST
+            })
         });
     }
 
@@ -127,10 +126,10 @@ class PostService {
         return this.paginatePosts({
             currentPage,
             perPage,
-            where: {
+            where: buildUserPostsWhere({
                 userId,
-                type: PostType.QUOTE
-            }
+                postType: PostType.QUOTE
+            })
         });
     }
 

@@ -1,7 +1,9 @@
 import configService from '@/config/config';
+import { UnauthorizedException } from '@/errors/error';
 import { PayloadSignTokenDto, SignTokenDto, VerifyTokenDto } from '@/modules/jwt/dto';
 import { TokenPairResponse } from '@/modules/jwt/dto/response/token-pair.response';
 import crypto from 'crypto';
+import { Request } from 'express';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import ms from 'ms';
 import { v4 as uuidv4 } from 'uuid';
@@ -65,6 +67,21 @@ class JwtService {
 
     generateOTP() {
         return String(Math.floor(100000 + Math.random() * 900000));
+    }
+
+
+    async requestAuthToken(req: Request) {
+        const token = req.headers.authorization?.split(' ')[1];
+        let userId = null;
+        if (token) {
+            try {
+                const verify = await jwtService.verifyToken({ token });
+                userId = verify.sub ?? null;
+            } catch {
+                throw new UnauthorizedException('Invalid token');
+            }
+        }
+        return userId;
     }
 }
 
