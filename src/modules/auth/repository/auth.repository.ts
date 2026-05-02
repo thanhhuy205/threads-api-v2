@@ -93,6 +93,16 @@ class AuthRepository {
             },
         });
     }
+    async findUserByEmail(email: string): Promise<AuthSessionUser | null> {
+        const user = await prisma.user.findUnique({
+            where: {
+                email,
+            },
+            select: authSessionUserSelect,
+        });
+
+        return user;
+    }
 }
 
 export const authRepository = new AuthRepository();

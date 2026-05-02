@@ -1,10 +1,15 @@
 import configService from '@/config/config';
+import { NotFoundException } from '@/errors/error';
 import { comparePassword, hashPassword } from '@/modules/auth/util/hasher-password';
 import { hasherToken } from '@/modules/auth/util/hasher-token';
+import { emailProducer } from '@/modules/job/email/producer/email.producer';
 import { TokenPairResponse } from '@/modules/jwt/dto/response/token-pair.response';
 import { jwtService } from '@/modules/jwt/service/jwt.service';
 import { userRepository } from '@/modules/user/repository/user.repository';
+import { verificationRepository } from '@/modules/verification/repository/verification.repository';
 import { ensureRedisConnection } from '@/providers/redis.provider';
+import { VerificationCodeType } from '@prisma/client';
+import crypto from 'crypto';
 import ms, { StringValue } from 'ms';
 import type { ForgotPasswordDto } from '../dto/request/forgot-password.request.dto';
 import type { LoginDto } from '../dto/request/login.request.dto';
@@ -47,7 +52,25 @@ class AuthService {
     }
 
     async forgotPassword(payload: ForgotPasswordDto): Promise<ForgotPasswordResponseDto> {
-        
+        const user = await authRepository.findUserByEmail(payload.email);
+        if (!user) {
+            throw new NotFoundException('Email or username not found');
+        }
+
+        const token = crypto.randomBytes(32).toString('hex');
+        const hashedToken = hasherToken(token);
+
+
+        await Promise.all([emailProducer.sendForgotPasswordEmail({
+            userId: user.id,
+            email: user.email,
+            tokenHash: hashedToken,
+        }),
+        verificationRepository.create({
+            userId: user.id,
+            tokenHash: hashedToken,
+            type: VerificationCodeType.FORGOT_PASSWORD
+        })]);
         return {
             email: payload.email,
         };

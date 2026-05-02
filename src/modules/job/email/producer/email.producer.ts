@@ -1,4 +1,5 @@
 import { EMAIL_JOB_NAME, QUEUE_NAME } from '@/constants/queue';
+import { ForgotPasswordProducer } from '@/modules/job/email/dto/forgot-password.dto';
 import { createQueue } from '@/providers/bullmq.provider';
 class EmailProducer {
     private readonly queue = createQueue(QUEUE_NAME.EMAIL_QUEUE);
@@ -13,7 +14,7 @@ class EmailProducer {
     //     });
     // }
 
-    async sendForgotPasswordEmail(payload: ForgotPasswordDTO) {
+    async sendForgotPasswordEmail(payload: ForgotPasswordProducer) {
         await this.queue.add(EMAIL_JOB_NAME.SEND_FORGOT_PASSWORD_EMAIL, {
             ...payload,
         });

@@ -1,4 +1,5 @@
-interface ForgotPasswordDTO {
+export interface ForgotPasswordProducer {
+    userId: string;
     email: string;
-    token: string;
+    tokenHash: string;
 }

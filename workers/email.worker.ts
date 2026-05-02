@@ -1,4 +1,7 @@
+import ejs from 'ejs';
+import path from 'path';
 import { EMAIL_JOB_NAME, QUEUE_NAME } from '../src/constants/queue';
+import { ForgotPasswordProducer } from '../src/modules/job/email/dto/forgot-password.dto';
 import { nodemailerService } from '../src/modules/nodemailer/service/nodemailer.service';
 import { createWorker } from '../src/providers/bullmq.provider';
 class EmailWorker {
@@ -21,9 +24,19 @@ class EmailWorker {
     }
 
 
-    async sendForgotPasswordEmail(data: { email: string; token: string }) {
-        await nodemailerService.sendMail(data.email, 'Reset your password', `<p>You can reset your password by clicking the link below:</p>
-                   <a href="${process.env.FRONTEND_URL}/reset-password?token=${data.token}">Reset Password</a>`, {});
+    async sendForgotPasswordEmail(data: ForgotPasswordProducer) {
+
+        const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${data.tokenHash}`;
+        const html = await ejs.renderFile(
+            path.join(process.cwd(), './template/forgot-password.ejs'),
+            {
+                appName: 'Threads',
+                resetUrl: resetLink,
+                expiresInMinutes: 15,
+                currentYear: new Date().getFullYear(),
+            }
+        );
+        await nodemailerService.sendMail(data.email, 'Reset your password', html, {});
         console.log(`Sent forgot password email to: ${data.email}`);
     }
 };
