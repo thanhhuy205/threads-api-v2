@@ -6,11 +6,19 @@ import { jwtService } from '@/modules/jwt/service/jwt.service';
 import { userRepository } from '@/modules/user/repository/user.repository';
 import { ensureRedisConnection } from '@/providers/redis.provider';
 import ms, { StringValue } from 'ms';
+import type { ForgotPasswordDto } from '../dto/request/forgot-password.request.dto';
 import type { LoginDto } from '../dto/request/login.request.dto';
 import type { LogoutDto } from '../dto/request/logout.request.dto';
 import type { RefreshTokenDto } from '../dto/request/refresh-token.request.dto';
 import type { RegisterDto } from '../dto/request/register.request.dto';
+import type { ResetPasswordDto } from '../dto/request/reset-password.request.dto';
+import type { ValidateEmailDto } from '../dto/request/validate-email.request.dto';
+import type { ValidateTokenDto } from '../dto/request/validate-token.request.dto';
+import type { ValidateUsernameDto } from '../dto/request/validate-username.request.dto';
 import { AuthMeResponseDto, authResponse, AuthSessionResponseDto } from '../dto/response/auth.response';
+import type { ForgotPasswordResponseDto } from '../dto/response/forgot-password.response.dto';
+import type { ValidateTokenResponseDto } from '../dto/response/validate-token.response.dto';
+import type { ValidateUserResponseDto } from '../dto/response/validate-user.response.dto';
 import { authRepository } from '../repository/auth.repository';
 
 type SessionMetadata = {
@@ -36,6 +44,12 @@ class AuthService {
         });
     }
 
+    async forgotPassword(payload: ForgotPasswordDto): Promise<ForgotPasswordResponseDto> {
+        return {
+            email: payload.email,
+        };
+    }
+
     async login(payload: LoginDto, metadata: SessionMetadata): Promise<AuthSessionResponseDto | null> {
         const user = await authRepository.findUserByLogin(payload.login);
 
@@ -56,6 +70,36 @@ class AuthService {
             user,
             ...tokenPair,
         });
+    }
+
+    async resendVerifyEmail(userId?: string): Promise<void> {
+        return;
+    }
+
+    async verifyEmail(payload: ValidateTokenDto): Promise<void> {
+        return;
+    }
+
+    async validateEmail(payload: ValidateEmailDto): Promise<ValidateUserResponseDto> {
+        return {
+            available: true,
+        };
+    }
+
+    async validateUsername(payload: ValidateUsernameDto): Promise<ValidateUserResponseDto> {
+        return {
+            available: true,
+        };
+    }
+
+    async validateResetPasswordToken(token: string): Promise<ValidateTokenResponseDto> {
+        return {
+            valid: true,
+        };
+    }
+
+    async resetPassword(payload: ResetPasswordDto): Promise<void> {
+        return;
     }
 
     async refreshToken(payload: RefreshTokenDto, metadata: SessionMetadata): Promise<TokenPairResponse | null> {
