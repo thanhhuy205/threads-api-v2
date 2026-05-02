@@ -1,9 +1,11 @@
+import configService from '@/config/config';
 import { comparePassword, hashPassword } from '@/modules/auth/util/hasher-password';
+import { hasherToken } from '@/modules/auth/util/hasher-token';
 import { TokenPairResponse } from '@/modules/jwt/dto/response/token-pair.response';
 import { jwtService } from '@/modules/jwt/service/jwt.service';
 import { userRepository } from '@/modules/user/repository/user.repository';
 import { ensureRedisConnection } from '@/providers/redis.provider';
-import crypto from 'crypto';
+import ms, { StringValue } from 'ms';
 import { LoginDto, LogoutDto, RefreshTokenDto, RegisterDto } from '../dto/request/auth.request';
 import { AuthMeResponseDto, authResponse, AuthSessionResponseDto } from '../dto/response/auth.response';
 import { authRepository } from '../repository/auth.repository';
@@ -21,14 +23,8 @@ class AuthService {
             userId: user.id,
             status: user.status,
         });
-        await authRepository.createRefreshToken({
-            userId: user.id,
-            token: crypto.createHash('sha256').update(tokenPair.refreshToken).digest('hex'),
-            sessionId: tokenPair.sessionId,
-            expireAt: new Date(Date.now() + (7 * 24 * 60 * 60 * 1000)),
-            ip: metadata.ip,
-            userAgent: metadata.userAgent,
-        });
+
+        await this.createRefreshToken(tokenPair.refreshToken, user.id, tokenPair.sessionId, metadata);
 
         return authResponse.toResponse({
             type: 'auth',
@@ -50,14 +46,7 @@ class AuthService {
             status: user.status,
         });
 
-        await authRepository.createRefreshToken({
-            userId: user.id,
-            token: crypto.createHash('sha256').update(tokenPair.refreshToken).digest('hex'),
-            sessionId: tokenPair.sessionId,
-            expireAt: new Date(Date.now() + (7 * 24 * 60 * 60 * 1000)),
-            ip: metadata.ip,
-            userAgent: metadata.userAgent,
-        });
+        await this.createRefreshToken(tokenPair.refreshToken, user.id, tokenPair.sessionId, metadata);
 
         return authResponse.toResponse({
             type: 'auth',
@@ -67,7 +56,7 @@ class AuthService {
     }
 
     async refreshToken(payload: RefreshTokenDto, metadata: SessionMetadata): Promise<TokenPairResponse | null> {
-        const hashedToken = crypto.createHash('sha256').update(payload.refreshToken).digest('hex');
+        const hashedToken = hasherToken(payload.refreshToken);
         const refreshToken = await authRepository.findRefreshTokenByToken(hashedToken);
 
         if (!refreshToken || refreshToken.revokedAt) {
@@ -93,14 +82,7 @@ class AuthService {
             status: user.status,
         });
 
-        await authRepository.createRefreshToken({
-            userId: refreshToken.userId,
-            token: crypto.createHash('sha256').update(tokenPair.refreshToken).digest('hex'),
-            sessionId: refreshToken.sessionId,
-            expireAt: new Date(Date.now() + (7 * 24 * 60 * 60 * 1000)),
-            ip: metadata.ip,
-            userAgent: metadata.userAgent,
-        });
+        await this.createRefreshToken(tokenPair.refreshToken, user.id, tokenPair.sessionId, metadata);
 
         return tokenPair;
     }
@@ -119,10 +101,28 @@ class AuthService {
 
     async logout(payload: LogoutDto): Promise<void> {
         const redisClient = await ensureRedisConnection();
-        await redisClient.set(`bl:at:${payload.accessToken}`, '1');
+        await redisClient.set(`bl:at:${payload.accessToken}`, 15 * 60); // Blacklist access token for 15 minutes
+
+        const hashedToken = hasherToken(payload.refreshToken);
+        const refreshToken = await authRepository.findRefreshTokenByToken(hashedToken);
+        if (refreshToken) {
+            await authRepository.revokeRefreshTokenById(refreshToken.id, new Date());
+        }
+    }
+
+    private async createRefreshToken(refreshToken: string, userId: string, sessionId: string, metadata: SessionMetadata) {
+        const createdRefreshToken = await authRepository.createRefreshToken({
+            userId: userId,
+            token: hasherToken(refreshToken),
+            sessionId: sessionId,
+            expireAt: new Date(Date.now() + ms(configService.REFRESH_TOKEN_EXPIRES_IN as StringValue)),
+            ip: metadata.ip,
+            userAgent: metadata.userAgent,
+        });
+
+        return createdRefreshToken;
     }
 }
-
 
 
 export const authService = new AuthService();

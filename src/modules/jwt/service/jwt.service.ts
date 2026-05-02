@@ -60,6 +60,19 @@ class JwtService {
     };
 
 
+    decodeToken(token: string): JwtPayload | null {
+        try {
+            const decoded = jwt.decode(token);
+            if (typeof decoded === 'object' && decoded !== null) {
+                return decoded as JwtPayload;
+            }
+            return null;
+        }
+        catch {
+            return null;
+        }
+    }
+
     generateRandomToken() {
         const token = crypto.randomBytes(32).toString('hex');
         return token;
