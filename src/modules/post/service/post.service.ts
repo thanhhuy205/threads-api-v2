@@ -138,8 +138,9 @@ class PostService {
     }
 
     async create(payload: CreatePostPayload): Promise<PostRecord> {
-        await pineProducer.addToPineconeQueue({ content: payload.content, topic: ['not'] });
-        return postRepository.create(payload);
+        const post = await postRepository.create(payload);
+        await pineProducer.addToPineconeQueue({ content: payload.content, topic: ['not'], postId: post.id, userId: payload.userId });
+        return post;
     }
 
     async list(): Promise<PostRecord[]> {

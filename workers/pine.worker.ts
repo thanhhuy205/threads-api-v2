@@ -1,4 +1,5 @@
 import { PINECONE_JOB_NAME, QUEUE_NAME } from "@/constants/queue";
+import { savePostEmbeddingToPinecone } from "@/modules/pinecone/service/pinecone.service";
 import { createWorker } from "@/providers/bullmq.provider";
 import { generateEmbedding } from "@/providers/mixedbread.provider";
 
@@ -16,11 +17,15 @@ class PineWorker {
 
 
     async process(data: any) {
-        // Implement the logic to process the data and generate embeddings
         console.log('Processing data in PineWorker:', data);
-        // Simulate embedding generation
         const embedding = await generateEmbedding(data.content, data.topic);
-        console.log('Generated embedding:', embedding);
+        savePostEmbeddingToPinecone({
+            postId: data.postId,
+            userId: data.userId,
+            content: data.content,
+            topics: data.topic,
+            embedding,
+        });
     }
 }
 
