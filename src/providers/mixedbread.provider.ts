@@ -7,14 +7,23 @@ const mixedbread = createMixedbread({
     apiKey: configService.MIXEDBREAD_API_KEY,
 });
 
-async function main() {
-    const { embedding } = await embed({
-        model: mixedbread.textEmbeddingModel('mixedbread-ai/mxbai-embed-large-v1'),
-        value: 'Tôi đang học Prisma, ExpressJS và semantic search',
-    });
 
-    console.log('Embedding dimensions:', embedding.length);
-    console.log(embedding.slice(0, 5));
+export async function generateEmbedding(content: string, topic: string[]): Promise<number[]> {
+    try {
+        const value = `Content: ${content}\nTopic: ${topic.join(', ')}`;
+        const response = await embed({
+            model: mixedbread.textEmbeddingModel('mixedbread-ai/mxbai-embed-large-v1'),
+            value,
+            providerOptions: {
+                mixedbread: {
+                    normalized: true,
+                    dimensions: 1024,
+                },
+            },
+        });
+        return response.embedding;
+    } catch (error) {
+        console.error('Error generating embedding:', error);
+        throw error;
+    }
 }
-
-main();

@@ -1,7 +1,7 @@
 import { QueueEvents } from 'bullmq';
 import { QUEUE_NAME } from '../src/constants/queue';
 
-const queueEvents = new QueueEvents(QUEUE_NAME.POST_EMBEDDING);
+const queueEvents = new QueueEvents(QUEUE_NAME.PINECONE_QUEUE);
 
 queueEvents.on('waiting', ({ jobId }) => {
     console.log(`A job with ID ${jobId} is waiting`);
