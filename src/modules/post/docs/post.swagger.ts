@@ -90,6 +90,45 @@ export const postSwaggerSchemas = {
         },
         required: ['success', 'message', 'data'],
     },
+    PostSearchResponse: {
+        type: 'object',
+        properties: {
+            q: {
+                type: 'string',
+                example: 'prisma',
+            },
+            topics: {
+                type: 'string',
+                example: 'DDD,ExpressJS',
+            },
+            limit: {
+                type: 'string',
+                example: '10',
+            },
+            page: {
+                type: 'string',
+                example: '1',
+            },
+        },
+        required: ['q', 'topics', 'limit', 'page'],
+    },
+    PostSearchSuccessResponse: {
+        type: 'object',
+        properties: {
+            success: {
+                type: 'boolean',
+                example: true,
+            },
+            message: {
+                type: 'string',
+                example: 'Post search success',
+            },
+            data: {
+                $ref: '#/components/schemas/PostSearchResponse',
+            },
+        },
+        required: ['success', 'message', 'data'],
+    },
 };
 
 const postPaginationQueryParameters = [
@@ -127,6 +166,30 @@ const newsFeedQueryParameters = [
             example: 'for_you',
         },
         description: 'News feed type',
+    },
+];
+
+const postSearchQueryParameters = [
+    ...postPaginationQueryParameters,
+    {
+        name: 'q',
+        in: 'query',
+        required: false,
+        schema: {
+            type: 'string',
+            example: 'prisma',
+        },
+        description: 'Search keyword',
+    },
+    {
+        name: 'topics',
+        in: 'query',
+        required: false,
+        schema: {
+            type: 'string',
+            example: 'DDD,ExpressJS',
+        },
+        description: 'Comma-separated topics',
     },
 ];
 
@@ -179,6 +242,25 @@ export const postSwaggerPaths = {
                 },
                 401: {
                     description: 'Invalid token',
+                },
+            },
+        },
+    },
+    '/posts/search': {
+        get: {
+            tags: ['Post'],
+            summary: 'Search posts',
+            parameters: postSearchQueryParameters,
+            responses: {
+                200: {
+                    description: 'Post search completed',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                $ref: '#/components/schemas/PostSearchSuccessResponse',
+                            },
+                        },
+                    },
                 },
             },
         },

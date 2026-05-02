@@ -1,29 +1,50 @@
-// src/services/pinecone.service.ts
 import { SavePostEmbeddingInput } from '@/modules/pinecone/dto/embedding-input.request.dto';
 import { pineconeIndex } from '@/providers/pinecone.provider';
 import { PostType } from '@prisma/client';
 
 
-export async function savePostEmbeddingToPinecone(input: SavePostEmbeddingInput) {
-    await pineconeIndex.upsert({
-        records: [
-            {
-                id: `post:${input.postId}`,
-                values: input.embedding,
-                metadata: {
-                    postId: input.postId,
-                    userId: input.userId,
-                    content: input.content,
-                    topics: input.topics,
-                    type: PostType.POST,
+class PineconeService {
+    async savePostEmbeddingToPinecone(input: SavePostEmbeddingInput) {
+        await pineconeIndex.upsert({
+            records: [
+                {
+                    id: `post:${input.postId}`,
+                    values: input.embedding,
+                    metadata: {
+                        postId: input.postId,
+                        userId: input.userId,
+                        content: input.content,
+                        topics: input.topics,
+                        type: PostType.POST,
+                    },
                 },
-            },
-        ],
-        namespace: 'posts',
-    });
+            ],
+            namespace: 'posts',
+        });
 
-    return {
-        id: `post:${input.postId}`,
-        namespace: 'posts',
-    };
+        return {
+            id: `post:${input.postId}`,
+            namespace: 'posts',
+        };
+    }
+
+    async querySimilarPosts(embedding: number[], topK: number = 10) {
+        const queryResponse = await pineconeIndex.query({
+            vector: embedding,
+            topK,
+            includeMetadata: true,
+            namespace: 'posts',
+        });
+
+        return queryResponse.matches?.map((match) => ({
+            postId: match.metadata?.postId,
+            userId: match.metadata?.userId,
+            content: match.metadata?.content,
+            topics: match.metadata?.topics,
+            score: match.score,
+        })) || [];
+    }
+
 }
+
+export const pineconeService = new PineconeService();

@@ -10,6 +10,13 @@ import {
 } from '../dto/request/post.request';
 import { postService } from '../service/post.service';
 
+type SearchQueryDto = {
+    q?: string;
+    topics?: string;
+    limit?: string;
+    page?: string;
+};
+
 class PostController {
     async getNewsFeedController(req: Request<{}, {}, {}, NewsFeedQueryDto>, res: Response) {
         const { currentPage, perPage } = getPagination(req);
@@ -97,6 +104,19 @@ class PostController {
 
     async create(req: Request<{}, {}, CreatePostDto>, res: Response) {
         return this.createPostController(req, res);
+    }
+
+    async search(req: Request<{}, {}, {}, SearchQueryDto>, res: Response) {
+        const query = {
+            q: req.query.q ?? '',
+            topics: req.query.topics ?? '',
+            limit: req.query.limit ?? '',
+            page: req.query.page ?? '',
+        };
+
+        await postService.search(query);
+
+        return res.success(200, 'Post search success', query);
     }
 }
 

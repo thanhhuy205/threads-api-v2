@@ -146,6 +146,15 @@ class PostService {
     async list(): Promise<PostRecord[]> {
         return postRepository.list();
     }
+
+    async search(query: {
+        q: string;
+        topics: string;
+        limit: string;
+        page: string;
+    }): Promise<void> {
+        console.log('post search query:', query);
+    }
 }
 
 export const postService = new PostService();

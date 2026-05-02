@@ -13,6 +13,7 @@ import {
 const postRouter = Router();
 
 postRouter.get('/news-feed', validate(newsFeedQuerySchema, 'query'), postController.getNewsFeedController);
+postRouter.get('/search', postController.search);
 postRouter.get('/:postId/replies', validate(postIdParamsSchema, 'params'), validate(paginationQuerySchema, 'query'), postController.getReplies);
 
 postRouter.use(authorization);
