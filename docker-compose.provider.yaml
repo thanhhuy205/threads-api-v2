@@ -1,4 +1,17 @@
 services:
+  mysql:
+    image: mysql:8.0
+    container_name: threads-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: threads_db
+      MYSQL_USER: threads_user
+      MYSQL_PASSWORD: threadspassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./docker/mysql-data:/var/lib/mysql
+
   nginx:
     image: nginx:alpine
     container_name: threads-nginx
@@ -34,6 +47,7 @@ services:
 
 volumes:
   redis-data:
+  mysql-data:
 
 networks:
   threads-network:
