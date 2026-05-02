@@ -2,9 +2,15 @@ export const authSwaggerSchemas = {
     AuthRegisterRequest: {
         type: 'object',
         properties: {
-            login: {
+            username: {
                 type: 'string',
-                description: 'Email or username',
+                description: 'Username',
+                example: 'john_doe',
+            },
+            email: {
+                type: 'string',
+                format: 'email',
+                description: 'Email address',
                 example: 'john@example.com',
             },
             password: {
@@ -16,7 +22,7 @@ export const authSwaggerSchemas = {
                 example: 'Password123',
             },
         },
-        required: ['login', 'password', 'confirmPassword'],
+        required: ['username', 'email', 'password', 'confirmPassword'],
     },
     AuthLoginRequest: {
         type: 'object',
@@ -250,7 +256,8 @@ export const authSwaggerPaths = {
                             $ref: '#/components/schemas/AuthRegisterRequest',
                         },
                         example: {
-                            login: 'john@example.com',
+                            username: 'john_doe',
+                            email: 'john@example.com',
                             password: 'Password123',
                             confirmPassword: 'Password123',
                         },

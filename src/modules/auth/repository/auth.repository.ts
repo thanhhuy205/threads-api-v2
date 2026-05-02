@@ -38,11 +38,10 @@ type CreateRefreshTokenPayload = {
 
 class AuthRepository {
     async createUser(payload: RegisterDto): Promise<AuthSessionUser> {
-        const loginValue = payload.login.trim();
         const user = await prisma.user.create({
             data: {
-                email: loginValue,
-                username: loginValue,
+                email: payload.email.trim(),
+                username: payload.username.trim(),
                 password: payload.password,
             },
             select: authSessionUserSelect,

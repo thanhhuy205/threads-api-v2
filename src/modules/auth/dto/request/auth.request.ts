@@ -2,11 +2,23 @@ import { z } from 'zod';
 
 const usernameRegex = /^[a-zA-Z0-9._-]{3,32}$/;
 
+const usernameSchema = z
+    .string()
+    .trim()
+    .min(3)
+    .max(32)
+    .refine((value) => usernameRegex.test(value), 'Username must be 3-32 characters and contain only letters, numbers, dots, underscores, and hyphens');
+
+const emailSchema = z.string().trim().email().max(255);
+
+const passwordSchema = z.string().min(6).max(128);
+
 const loginSchema = z.object({
     login: z
         .string()
+        .trim()
         .min(3)
-        .max(100)
+        .max(255)
         .refine((value) => {
             if (value.includes('@')) {
                 return z.string().email().safeParse(value).success;
@@ -14,12 +26,15 @@ const loginSchema = z.object({
 
             return usernameRegex.test(value);
         }, 'Login must be a valid email or username'),
-    password: z.string().min(6).max(128),
+    password: passwordSchema,
 });
 
-const registerSchema = loginSchema
-    .extend({
-        confirmPassword: z.string().min(6).max(128),
+const registerSchema = z
+    .object({
+        username: usernameSchema,
+        email: emailSchema,
+        password: passwordSchema,
+        confirmPassword: passwordSchema,
     })
     .refine((data) => data.password === data.confirmPassword, {
         message: 'Confirm password must match password',
