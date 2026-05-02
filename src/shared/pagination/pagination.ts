@@ -18,10 +18,15 @@ export type PaginationResponse = {
     to: number;
 };
 
-export const getPagination = (req: Request<{}, {}, {}, { page?: string; limit?: string }>): { currentPage: number; perPage: number } => {
-    const currentPage = req.query.page ? parseInt(req.query.page as string, 10) : DEFAULT_PAGE;
-    const perPage = req.query.limit ? parseInt(req.query.limit as string, 10) : PER_PAGE;
-    return { currentPage, perPage };
+export const getPagination = (
+    req: Request<{}, {}, {}, { page?: string | number; limit?: string | number }>
+): { currentPage: number; perPage: number } => {
+    const { currentPage, currentLimit } = buildPagination({
+        page: req.query.page === undefined ? undefined : Number(req.query.page),
+        limit: req.query.limit === undefined ? undefined : Number(req.query.limit),
+    });
+
+    return { currentPage, perPage: currentLimit };
 };
 
 export function buildPagination({

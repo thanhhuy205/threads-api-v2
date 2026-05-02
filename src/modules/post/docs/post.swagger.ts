@@ -22,6 +22,47 @@ export const postSwaggerSchemas = {
         },
         required: ['id', 'content', 'authorId', 'createdAt'],
     },
+    PostPagination: {
+        type: 'object',
+        properties: {
+            currentPage: {
+                type: 'integer',
+                example: 1,
+            },
+            perPage: {
+                type: 'integer',
+                example: 20,
+            },
+            total: {
+                type: 'integer',
+                example: 42,
+            },
+            rowCount: {
+                type: 'integer',
+                example: 20,
+            },
+        },
+        required: ['currentPage', 'perPage', 'total', 'rowCount'],
+    },
+    PaginatedPostResponse: {
+        type: 'object',
+        properties: {
+            success: {
+                type: 'boolean',
+                example: true,
+            },
+            data: {
+                type: 'array',
+                items: {
+                    $ref: '#/components/schemas/PostRecord',
+                },
+            },
+            pagination: {
+                $ref: '#/components/schemas/PostPagination',
+            },
+        },
+        required: ['success', 'data', 'pagination'],
+    },
     CreatePostRequest: {
         type: 'object',
         properties: {
@@ -35,26 +76,6 @@ export const postSwaggerSchemas = {
             },
         },
         required: ['content', 'authorId'],
-    },
-    PostListResponse: {
-        type: 'object',
-        properties: {
-            success: {
-                type: 'boolean',
-                example: true,
-            },
-            message: {
-                type: 'string',
-                example: 'Posts retrieved',
-            },
-            data: {
-                type: 'array',
-                items: {
-                    $ref: '#/components/schemas/PostRecord',
-                },
-            },
-        },
-        required: ['success', 'message', 'data'],
     },
     PostSuccessResponse: {
         type: 'object',
@@ -76,23 +97,109 @@ export const postSwaggerSchemas = {
 };
 
 export const postSwaggerPaths = {
-    '/posts': {
+    '/posts/news-feed': {
         get: {
             tags: ['Post'],
-            summary: 'List posts',
+            summary: 'Get news feed',
             responses: {
                 200: {
-                    description: 'Posts retrieved',
+                    description: 'News feed retrieved',
                     content: {
                         'application/json': {
                             schema: {
-                                $ref: '#/components/schemas/PostListResponse',
+                                $ref: '#/components/schemas/PaginatedPostResponse',
+                            },
+                        },
+                    },
+                },
+                401: {
+                    description: 'Invalid token',
+                },
+            },
+        },
+    },
+    '/posts/{postId}/replies': {
+        get: {
+            tags: ['Post'],
+            summary: 'Get replies for a post',
+            responses: {
+                200: {
+                    description: 'Replies retrieved',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                $ref: '#/components/schemas/PaginatedPostResponse',
                             },
                         },
                     },
                 },
             },
         },
+    },
+    '/posts/me': {
+        get: {
+            tags: ['Post'],
+            summary: 'Get current user posts',
+            responses: {
+                200: {
+                    description: 'Posts retrieved',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                $ref: '#/components/schemas/PaginatedPostResponse',
+                            },
+                        },
+                    },
+                },
+                401: {
+                    description: 'Invalid token',
+                },
+            },
+        },
+    },
+    '/posts/{userId}/repost': {
+        get: {
+            tags: ['Post'],
+            summary: 'Get user reposts',
+            responses: {
+                200: {
+                    description: 'Reposts retrieved',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                $ref: '#/components/schemas/PaginatedPostResponse',
+                            },
+                        },
+                    },
+                },
+                401: {
+                    description: 'Invalid token',
+                },
+            },
+        },
+    },
+    '/posts/{userId}/quote': {
+        get: {
+            tags: ['Post'],
+            summary: 'Get user quotes',
+            responses: {
+                200: {
+                    description: 'Quotes retrieved',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                $ref: '#/components/schemas/PaginatedPostResponse',
+                            },
+                        },
+                    },
+                },
+                401: {
+                    description: 'Invalid token',
+                },
+            },
+        },
+    },
+    '/posts': {
         post: {
             tags: ['Post'],
             summary: 'Create a post',
@@ -123,6 +230,9 @@ export const postSwaggerPaths = {
                 },
                 400: {
                     description: 'Validation failed',
+                },
+                401: {
+                    description: 'Invalid token',
                 },
             },
         },

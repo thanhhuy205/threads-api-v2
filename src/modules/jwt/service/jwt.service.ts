@@ -70,7 +70,7 @@ class JwtService {
     }
 
 
-    async requestAuthToken(req: Request) {
+    async requestAuthToken(req: Request<any, any, any, any>) {
         const token = req.headers.authorization?.split(' ')[1];
         let userId = null;
         if (token) {

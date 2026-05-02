@@ -95,7 +95,7 @@ class PostService {
             currentPage,
             perPage,
             where: {
-                id: postId,
+                parentId: postId,
                 type: PostType.REPLY
             }
         });
