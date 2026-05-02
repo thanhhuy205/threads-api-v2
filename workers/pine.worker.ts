@@ -1,7 +1,7 @@
 import { PINECONE_JOB_NAME, QUEUE_NAME } from "@/constants/queue";
+import { mixedBreadService } from "@/modules/mixed-bread/service/mixed-bread.service";
 import { pineconeService } from "@/modules/pinecone/service/pinecone.service";
 import { createWorker } from "@/providers/bullmq.provider";
-import { generateEmbedding } from "@/providers/mixedbread.provider";
 
 
 class PineWorker {
@@ -17,8 +17,7 @@ class PineWorker {
 
 
     async process(data: any) {
-        console.log('Processing data in PineWorker:', data);
-        const embedding = await generateEmbedding(data.content, data.topic);
+        const embedding = await mixedBreadService.generateEmbedding(data.content, data.topic);
         await pineconeService.savePostEmbeddingToPinecone({
             postId: data.postId,
             userId: data.userId,
@@ -26,6 +25,7 @@ class PineWorker {
             topics: data.topic,
             embedding,
         });
+        console.log(`Processed embedding for postId: ${data.postId}`);
     }
 }
 

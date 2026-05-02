@@ -114,9 +114,9 @@ class PostController {
             page: req.query.page ?? '',
         };
 
-        await postService.search(query);
+        const results = await postService.search(query);
 
-        return res.success(200, 'Post search success', query);
+        return res.success(200, 'Post search success', results);
     }
 }
 

@@ -1,4 +1,6 @@
 import { pineProducer } from '@/modules/job/pine-vector/producer/pine.producer';
+import { mixedBreadService } from '@/modules/mixed-bread/service/mixed-bread.service';
+import { pineconeService } from '@/modules/pinecone/service/pinecone.service';
 import { NewFeedType } from '@/modules/post/enum';
 import { buildNewFeedWhere, buildUserPostsWhere } from '@/modules/post/helper';
 import { PostType, Prisma } from '@prisma/client';
@@ -152,8 +154,12 @@ class PostService {
         topics: string;
         limit: string;
         page: string;
-    }): Promise<void> {
-        console.log('post search query:', query);
+    }): Promise<any[]> {
+        const { q, topics, limit, page } = query;
+        const embedding = await mixedBreadService.generateEmbedding(q, topics.split(','));
+        const results = await pineconeService.querySimilarPosts(embedding, Number(limit) || 10);
+
+        return results;
     }
 }
 
