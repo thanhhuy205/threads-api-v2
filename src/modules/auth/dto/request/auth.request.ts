@@ -1,5 +1,16 @@
 import { z } from 'zod';
 
+export const AuthErrorMessage = {
+    USERNAME_INVALID: 'auth.error.usernameInvalid',
+    USERNAME_RULE: 'auth.error.usernameRule',
+    USERNAME_EXISTS: 'auth.error.usernameExists',
+    EMAIL_INVALID: 'auth.error.emailInvalid',
+    EMAIL_EXISTS: 'auth.error.emailExists',
+    PASSWORD_INVALID: 'auth.error.passwordInvalid',
+    PASSWORD_MIN: 'auth.error.passwordMin',
+    PASSWORD_CONFIRM_NOT_MATCH: 'auth.error.passwordConfirmNotMatch',
+} as const;
+
 const usernameRegex = /^[a-zA-Z0-9._-]{3,32}$/;
 
 const usernameSchema = z
@@ -50,10 +61,28 @@ const refreshTokenSchema = z.object({
     refreshToken: z.string().min(1),
 });
 
+const forgotPasswordSchema = z.object({
+    email: emailSchema,
+});
+
+const resetPasswordSchema = z
+    .object({
+        token: z.string().min(1),
+        email: emailSchema,
+        password: z.string().min(8, { message: AuthErrorMessage.PASSWORD_MIN }).max(128),
+        confirmPassword: z.string(),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+        message: AuthErrorMessage.PASSWORD_CONFIRM_NOT_MATCH,
+        path: ['confirmPassword'],
+    });
+
 export type LoginDto = z.infer<typeof loginSchema>;
 export type RegisterDto = z.infer<typeof registerSchema>;
 export type LogoutDto = z.infer<typeof logoutSchema>;
 export type RefreshTokenDto = z.infer<typeof refreshTokenSchema>;
+export type ForgotPasswordDto = z.infer<typeof forgotPasswordSchema>;
+export type ResetPasswordDto = z.infer<typeof resetPasswordSchema>;
 
-export { loginSchema, logoutSchema, refreshTokenSchema, registerSchema };
+export { forgotPasswordSchema, loginSchema, logoutSchema, refreshTokenSchema, registerSchema, resetPasswordSchema };
 
