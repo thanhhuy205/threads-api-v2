@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { CreateFeedIntentDto } from '../dto/feed-intent.dto';
 import { userIntentService } from '../service/user-intent.service';
 
 class UserIntentController {
@@ -7,8 +8,17 @@ class UserIntentController {
         return res.success(200, 'Feed intent retrieved');
     }
 
-    async createFeedIntent(_req: Request, res: Response) {
-        await userIntentService.createFeedIntent();
+    async createFeedIntent(req: Request<{}, {}, CreateFeedIntentDto>, res: Response) {
+        const sub = req.user?.sub;
+        if (!sub || typeof sub !== 'string') {
+            return res.error(401, 'TOKEN_INVALID');
+        }
+
+        await userIntentService.createFeedIntent({
+            sub,
+            positiveText: req.body.positiveText,
+            negativeText: req.body.negativeText,
+        });
         return res.success(201, 'Feed intent created');
     }
 

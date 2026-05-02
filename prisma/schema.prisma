@@ -90,6 +90,7 @@ model User {
     follows           Follow[]           @relation("FollowUser")
     followers         Follow[]           @relation("FollowFollowing")
     likes             Like[]
+    userIntents       UserIntent[]
 
     @@index([deletedAt], map: "idx_users_deleted_at")
     @@map("users")
@@ -110,6 +111,23 @@ model VerificationCode {
     @@index([expiresAt], map: "idx_verification_codes_expires_at")
     @@index([usedAt], map: "idx_verification_codes_used_at")
     @@map("verification_codes")
+}
+
+model UserIntent {
+    id     Int    @id @default(autoincrement())
+    userId String @map("user_id")
+
+    positiveText String? @db.VarChar(255)
+    negativeText String? @db.VarChar(255)
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    user User @relation(fields: [userId], references: [id])
+
+    @@index([userId], map: "idx_user_intents_user_id")
+    @@unique([userId], map: "uq_user_intents_user_id")
+    @@map("user_intents")
 }
 
 model Post {
