@@ -1,7 +1,7 @@
 import { comparePassword, hashPassword } from '@/modules/auth/util/hasher-password';
 import { jwtService } from '@/modules/jwt/service/jwt.service';
-import { ensureRedisConnection } from '@/modules/redis/service/redis.service';
 import { userRepository } from '@/modules/user/repository/user.repository';
+import { ensureRedisConnection } from '@/providers/redis.provider';
 import { LoginDto, LogoutDto, RegisterDto } from '../dto/request/auth.request';
 import { AuthMeResponseDto, authResponse, AuthSessionResponseDto } from '../dto/response/auth.response';
 import { authRepository } from '../repository/auth.repository';

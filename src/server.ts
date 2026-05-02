@@ -1,7 +1,7 @@
 import app from '@/app';
 import configService from './config/config';
 import prisma from './config/prisma';
-import { redisService } from './modules/redis/service/redis.service';
+import { redisService } from './providers/redis.provider';
 
 
 const server = app.listen(configService.PORT, () => {
