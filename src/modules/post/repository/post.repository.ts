@@ -1,6 +1,6 @@
 import prisma from '@/config/prisma';
 import { postFeedSelect } from '@/modules/post/selector/post.selector';
-import { buildPagination } from '@/util/pagination/pagination';
+import { buildPagination } from '@/shared/pagination/pagination';
 import { Prisma } from '@prisma/client';
 import { CreatePostDto } from '../dto/post.dto';
 
@@ -11,29 +11,7 @@ export type PostRecord = {
     createdAt: string;
 };
 
-class PostRepository {
-    async create(payload: CreatePostDto): Promise<PostRecord> {
-        const post = await prisma.post.create({
-            data: {
-                content: payload.content,
-                userId: payload.authorId,
-            },
-            select: {
-                id: true,
-                content: true,
-                userId: true,
-                createdAt: true,
-            },
-        });
-
-        return {
-            id: post.id,
-            content: post.content,
-            authorId: post.userId,
-            createdAt: post.createdAt.toISOString(),
-        };
-    }
-
+class PostRepository implements IPagination<Prisma.PostWhereInput, any> {
     findAll({
         page,
         limit,
@@ -56,6 +34,35 @@ class PostRepository {
             select: postFeedSelect
         });
     }
+
+
+    count({ where = {} }: { where?: Prisma.PostWhereInput } = {}) {
+        return prisma.post.count({ where });
+    }
+
+
+    async create(payload: CreatePostDto): Promise<PostRecord> {
+        const post = await prisma.post.create({
+            data: {
+                content: payload.content,
+                userId: payload.authorId,
+            },
+            select: {
+                id: true,
+                content: true,
+                userId: true,
+                createdAt: true,
+            },
+        });
+
+        return {
+            id: post.id,
+            content: post.content,
+            authorId: post.userId,
+            createdAt: post.createdAt.toISOString(),
+        };
+    }
+
 
 
     async list(): Promise<PostRecord[]> {

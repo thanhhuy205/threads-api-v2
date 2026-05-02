@@ -1,7 +1,139 @@
+import { NewFeedType } from '@/modules/post/enum';
+import { PostType, Prisma } from '@prisma/client';
 import { CreatePostDto } from '../dto/post.dto';
 import { PostRecord, postRepository } from '../repository/post.repository';
 
+type NewsFeedPayload = {
+    currentPage: number;
+    perPage: number;
+    userId: string | null;
+    feedType?: NewFeedType;
+};
+
+type GetPostWithUser = {
+    currentPage: number;
+    perPage: number;
+    userId: string;
+};
+
+type GetPostWithPostId = {
+    currentPage: number;
+    perPage: number;
+    postId: number;
+};
+
 class PostService {
+
+    private async paginatePosts({
+        currentPage,
+        perPage,
+        where
+    }: {
+        currentPage: number;
+        perPage: number;
+        where: Prisma.PostWhereInput;
+    }) {
+
+        const [posts, total] = await Promise.all([
+            postRepository.findAll({
+                page: currentPage,
+                limit: perPage,
+                where
+            }),
+            postRepository.count({ where })
+        ]);
+
+        return {
+            posts,
+            pagination: {
+                currentPage,
+                perPage,
+                total,
+                rowCount: posts.length
+            }
+        }
+    }
+
+    async getNewsFeed({
+        currentPage,
+        perPage,
+        userId,
+        feedType = NewFeedType.FOR_YOU
+    }: NewsFeedPayload) {
+        const where = {
+            userId: userId ?? undefined,
+            feedType
+        };
+
+        return this.paginatePosts({
+            currentPage,
+            perPage,
+            where
+        });
+    }
+
+
+    async getPostMe({
+        currentPage,
+        perPage,
+        userId
+    }: GetPostWithUser) {
+        return this.paginatePosts({
+            currentPage,
+            perPage,
+            where: {
+                userId
+            }
+        });
+    }
+
+
+    async getReplies({
+        currentPage,
+        perPage,
+        postId
+    }: GetPostWithPostId) {
+        return this.paginatePosts({
+            currentPage,
+            perPage,
+            where: {
+                id: postId,
+            }
+        });
+    }
+
+
+    async getRepost({
+        currentPage,
+        perPage,
+        userId
+    }: GetPostWithUser) {
+        return this.paginatePosts({
+            currentPage,
+            perPage,
+            where: {
+                userId,
+                type: PostType.REPOST
+            }
+        });
+    }
+
+
+    async getQuote({
+        currentPage,
+        perPage,
+        userId
+    }: GetPostWithUser) {
+        return this.paginatePosts({
+            currentPage,
+            perPage,
+            where: {
+                userId,
+                type: PostType.QUOTE
+            }
+        });
+    }
+
     async create(payload: CreatePostDto): Promise<PostRecord> {
         return postRepository.create(payload);
     }
