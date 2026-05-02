@@ -1,4 +1,7 @@
 import prisma from '@/config/prisma';
+import { postFeedSelect } from '@/modules/post/selector/post.selector';
+import { buildPagination } from '@/util/pagination/pagination';
+import { Prisma } from '@prisma/client';
 import { CreatePostDto } from '../dto/post.dto';
 
 export type PostRecord = {
@@ -30,6 +33,30 @@ class PostRepository {
             createdAt: post.createdAt.toISOString(),
         };
     }
+
+    findAll({
+        page,
+        limit,
+        where,
+        orderBy
+    }: {
+        page: number;
+        limit: number;
+        where?: Prisma.PostWhereInput;
+        orderBy?: Prisma.PostOrderByWithRelationInput | Prisma.PostOrderByWithRelationInput[];
+    }) {
+        const { currentLimit, offset } = buildPagination({ page, limit });
+        const sortOrder = orderBy ?? { createdAt: 'desc' };
+
+        return prisma.post.findMany({
+            where: where ?? {},
+            orderBy: sortOrder,
+            skip: offset,
+            take: currentLimit,
+            select: postFeedSelect
+        });
+    }
+
 
     async list(): Promise<PostRecord[]> {
         const posts = await prisma.post.findMany({
