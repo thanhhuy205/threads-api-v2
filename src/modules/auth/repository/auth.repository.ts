@@ -14,6 +14,27 @@ const authSessionUserSelect = {
 } as const;
 
 export type AuthSessionUser = Prisma.UserGetPayload<{ select: typeof authSessionUserSelect }>;
+const refreshTokenSelect = {
+    id: true,
+    userId: true,
+    token: true,
+    expireAt: true,
+    sessionId: true,
+    revokedAt: true,
+    ip: true,
+    userAgent: true,
+} as const;
+
+export type RefreshTokenRecord = Prisma.RefreshTokenGetPayload<{ select: typeof refreshTokenSelect }>;
+
+type CreateRefreshTokenPayload = {
+    userId: string;
+    token: string;
+    expireAt: Date;
+    sessionId: string;
+    ip: string;
+    userAgent: string;
+};
 
 class AuthRepository {
     async createUser(payload: RegisterDto): Promise<AuthSessionUser> {
@@ -39,6 +60,39 @@ class AuthRepository {
         });
 
         return user;
+    }
+
+    async createRefreshToken(payload: CreateRefreshTokenPayload): Promise<void> {
+        await prisma.refreshToken.create({
+            data: {
+                userId: payload.userId,
+                token: payload.token,
+                expireAt: payload.expireAt,
+                sessionId: payload.sessionId,
+                ip: payload.ip,
+                userAgent: payload.userAgent,
+            },
+        });
+    }
+
+    async findRefreshTokenByToken(token: string): Promise<RefreshTokenRecord | null> {
+        return prisma.refreshToken.findUnique({
+            where: {
+                token,
+            },
+            select: refreshTokenSelect,
+        });
+    }
+
+    async revokeRefreshTokenById(id: number, revokedAt: Date): Promise<void> {
+        await prisma.refreshToken.update({
+            where: {
+                id,
+            },
+            data: {
+                revokedAt,
+            },
+        });
     }
 }
 

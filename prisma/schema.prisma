@@ -57,6 +57,25 @@ enum UserStatus {
     DEACTIVATED
 }
 
+enum Visibility {
+    PUBLIC
+    PRIVATE
+    CIRCLE
+}
+
+enum ActionType {
+    POST_CREATED
+    POST_DELETED
+    LIKE_CREATED
+    DISLIKE_CREATED
+    FLOW_FOLLOWER_CREATED
+    FOLLOW_FOLLOWING_CREATED
+    QUOTE_CREATED
+    QUOTE_DELETED
+    SHARE_CREATED
+    SHARE_DELETED
+}
+
 model User {
     id       String @id @default(cuid())
     email    String @unique @db.VarChar(255)
@@ -91,6 +110,10 @@ model User {
     followers         Follow[]           @relation("FollowFollowing")
     likes             Like[]
     userIntents       UserIntent[]
+    circles           Circle[]           @relation("CircleCreated")
+    circleMembers     CircleMember[]
+    antiSpams         AntiSpam[]
+    collections       Collection[]
 
     @@index([deletedAt], map: "idx_users_deleted_at")
     @@map("users")
@@ -125,8 +148,8 @@ model UserIntent {
 
     user User @relation(fields: [userId], references: [id])
 
-    @@index([userId], map: "idx_user_intents_user_id")
     @@unique([userId], map: "uq_user_intents_user_id")
+    @@index([userId], map: "idx_user_intents_user_id")
     @@map("user_intents")
 }
 
@@ -173,6 +196,8 @@ model Post {
     mentions    PostMention[]
     likes       Like[]
     topicsPosts TopicsPost[]
+
+    collectionPosts CollectionPost[]
 
     @@index([userId, createdAt])
     @@index([parentId])
@@ -287,7 +312,6 @@ model RefreshToken {
     expireAt  DateTime @map("expire_at")
     sessionId String   @map("session_id") @db.VarChar(255)
 
-    revoked   Boolean   @default(false)
     revokedAt DateTime? @map("revoked_at")
 
     userAgent String @default("unknown") @map("user_agent") @db.VarChar(512)
@@ -335,4 +359,76 @@ model FailedJob {
     @@index([uuid], map: "idx_failed_jobs_uuid")
     @@index([failedAt], map: "idx_failed_jobs_failed_at")
     @@map("failed_jobs")
+}
+
+model Circle {
+    id            Int            @id @default(autoincrement())
+    name          String         @db.VarChar(255)
+    userId        String         @map("user_id")
+    createdAt     DateTime       @default(now()) @map("created_at")
+    updatedAt     DateTime       @updatedAt @map("updated_at")
+    visibility    Visibility     @default(PRIVATE)
+    createdBy     User           @relation("CircleCreated", fields: [createById], references: [id])
+    createById    String         @map("create_by_id")
+    circleMembers CircleMember[]
+
+    @@index([userId], map: "idx_circles_user_id")
+    @@map("circles")
+}
+
+model CircleMember {
+    id        Int      @id @default(autoincrement())
+    circleId  Int      @map("circle_id")
+    userId    String   @map("user_id")
+    createdAt DateTime @default(now()) @map("created_at")
+
+    circle Circle @relation(fields: [circleId], references: [id])
+    user   User   @relation(fields: [userId], references: [id])
+
+    @@unique([circleId, userId], map: "uq_circle_members_circle_user")
+    @@index([circleId], map: "idx_circle_members_circle_id")
+    @@index([userId], map: "idx_circle_members_user_id")
+    @@map("circle_members")
+}
+
+model AntiSpam {
+    id     Int        @id @default(autoincrement())
+    userId String     @map("user_id")
+    action ActionType @map("action")
+    reason String?    @db.VarChar(255)
+
+    user      User     @relation(fields: [userId], references: [id])
+    createdAt DateTime @default(now()) @map("created_at")
+
+    @@index([userId], map: "idx_anti_spam_user_id")
+    @@map("anti_spam")
+}
+
+model Collection {
+    id        Int      @id @default(autoincrement())
+    userId    String   @map("user_id")
+    name      String   @db.VarChar(255)
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    user            User             @relation(fields: [userId], references: [id])
+    collectionPosts CollectionPost[]
+
+    @@index([userId], map: "idx_collections_user_id")
+    @@map("collections")
+}
+
+model CollectionPost {
+    id           Int      @id @default(autoincrement())
+    collectionId Int      @map("collection_id")
+    postId       Int      @map("post_id")
+    createdAt    DateTime @default(now()) @map("created_at")
+
+    collection Collection @relation(fields: [collectionId], references: [id])
+    post       Post       @relation(fields: [postId], references: [id])
+
+    @@unique([collectionId, postId], map: "uq_collection_posts_collection_post")
+    @@index([collectionId], map: "idx_collection_posts_collection_id")
+    @@index([postId], map: "idx_collection_posts_post_id")
+    @@map("collection_posts")
 }
