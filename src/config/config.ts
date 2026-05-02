@@ -4,6 +4,7 @@ import { mixedbreadAIConfig } from '@/config/mixedbread-ai';
 import { pineconeConfig } from '@/config/pinecone';
 import { rateLimitConfig } from '@/config/ratelimit';
 import { redisConfig } from '@/config/redis';
+import { ENV_MESSAGE } from '@/constants/message';
 import dotenv from 'dotenv';
 import { z } from 'zod';
 
@@ -25,8 +26,8 @@ const envSchema = z.object({
 const parsedEnv = envSchema.safeParse(process.env);
 
 if (!parsedEnv.success) {
-    console.error('Invalid environment variables:', parsedEnv.error.flatten().fieldErrors);
-    throw new Error('Invalid environment variables');
+    console.error(ENV_MESSAGE.INVALID_ENVIRONMENT_VARIABLES, parsedEnv.error.flatten().fieldErrors);
+    throw new Error(ENV_MESSAGE.INVALID_ENVIRONMENT_VARIABLES);
 }
 
 const configService = parsedEnv.data;

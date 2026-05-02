@@ -1,3 +1,5 @@
+import { AUTH_MESSAGE, COMMON_MESSAGE } from '@/constants/message';
+
 export const authSwaggerSchemas = {
     AuthRegisterRequest: {
         type: 'object',
@@ -202,7 +204,7 @@ export const authSwaggerSchemas = {
             },
             message: {
                 type: 'string',
-                example: 'Register success',
+                example: AUTH_MESSAGE.REGISTER_SUCCESS,
             },
             data: {
                 $ref: '#/components/schemas/AuthSessionResponse',
@@ -219,7 +221,7 @@ export const authSwaggerSchemas = {
             },
             message: {
                 type: 'string',
-                example: 'Get me success',
+                example: AUTH_MESSAGE.GET_ME_SUCCESS,
             },
             data: {
                 $ref: '#/components/schemas/AuthMeResponse',
@@ -236,7 +238,7 @@ export const authSwaggerSchemas = {
             },
             message: {
                 type: 'string',
-                example: 'Logout success',
+                example: AUTH_MESSAGE.LOGOUT_SUCCESS,
             },
         },
         required: ['success', 'message'],
@@ -266,7 +268,7 @@ export const authSwaggerPaths = {
             },
             responses: {
                 201: {
-                    description: 'Register success',
+                    description: AUTH_MESSAGE.REGISTER_SUCCESS,
                     content: {
                         'application/json': {
                             schema: {
@@ -276,7 +278,7 @@ export const authSwaggerPaths = {
                     },
                 },
                 400: {
-                    description: 'Validation failed',
+                    description: COMMON_MESSAGE.VALIDATION_FAILED,
                 },
             },
         },
@@ -301,7 +303,7 @@ export const authSwaggerPaths = {
             },
             responses: {
                 200: {
-                    description: 'Login success',
+                    description: AUTH_MESSAGE.LOGIN_SUCCESS,
                     content: {
                         'application/json': {
                             schema: {
@@ -311,10 +313,10 @@ export const authSwaggerPaths = {
                     },
                 },
                 400: {
-                    description: 'Validation failed',
+                    description: COMMON_MESSAGE.VALIDATION_FAILED,
                 },
                 401: {
-                    description: 'Invalid credentials',
+                    description: AUTH_MESSAGE.INVALID_CREDENTIALS,
                 },
             },
         },
@@ -326,7 +328,7 @@ export const authSwaggerPaths = {
             security: [{ bearerAuth: [] }],
             responses: {
                 200: {
-                    description: 'Get me success',
+                    description: AUTH_MESSAGE.GET_ME_SUCCESS,
                     content: {
                         'application/json': {
                             schema: {
@@ -336,10 +338,10 @@ export const authSwaggerPaths = {
                     },
                 },
                 401: {
-                    description: 'Token invalid',
+                    description: AUTH_MESSAGE.TOKEN_INVALID,
                 },
                 403: {
-                    description: 'User banned',
+                    description: AUTH_MESSAGE.USER_BANNED,
                 },
             },
         },
@@ -364,7 +366,7 @@ export const authSwaggerPaths = {
             },
             responses: {
                 200: {
-                    description: 'Logout success',
+                    description: AUTH_MESSAGE.LOGOUT_SUCCESS,
                     content: {
                         'application/json': {
                             schema: {
@@ -374,7 +376,7 @@ export const authSwaggerPaths = {
                     },
                 },
                 400: {
-                    description: 'Validation failed',
+                    description: COMMON_MESSAGE.VALIDATION_FAILED,
                 },
             },
         },

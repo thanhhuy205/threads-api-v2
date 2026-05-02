@@ -1,3 +1,4 @@
+import { USER_INTENT_MESSAGE } from '@/constants/message';
 import { z } from 'zod';
 
 const createFeedIntentSchema = z
@@ -6,7 +7,7 @@ const createFeedIntentSchema = z
         negativeText: z.string().trim().max(255).optional(),
     })
     .refine((data) => Boolean(data.positiveText || data.negativeText), {
-        message: 'At least one of positiveText or negativeText is required',
+        message: USER_INTENT_MESSAGE.AT_LEAST_ONE_TEXT_REQUIRED,
         path: ['positiveText'],
     });
 

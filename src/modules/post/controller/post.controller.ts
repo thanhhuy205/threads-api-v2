@@ -1,3 +1,4 @@
+import { AUTH_MESSAGE, POST_MESSAGE } from '@/constants/message';
 import { jwtService } from '@/modules/jwt/service/jwt.service';
 import { getPagination } from '@/shared/pagination/pagination';
 import { Request, Response } from 'express';
@@ -36,7 +37,7 @@ class PostController {
         const userId = req.user?.sub;
 
         if (!userId) {
-            return res.error(401, 'TOKEN_INVALID');
+            return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
         }
 
         const { currentPage, perPage } = getPagination(req);
@@ -86,7 +87,7 @@ class PostController {
         const userId = req.user?.sub;
 
         if (!userId) {
-            return res.error(401, 'TOKEN_INVALID');
+            return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
         }
 
         const post = await postService.create({
@@ -94,12 +95,12 @@ class PostController {
             userId,
         });
 
-        return res.success(201, 'Post created', post);
+        return res.success(201, POST_MESSAGE.CREATED, post);
     }
 
     async list(req: Request, res: Response) {
         const posts = await postService.list();
-        return res.success(200, 'Posts retrieved', posts);
+        return res.success(200, POST_MESSAGE.RETRIEVED, posts);
     }
 
     async create(req: Request<{}, {}, CreatePostDto>, res: Response) {
@@ -116,7 +117,7 @@ class PostController {
 
         const results = await postService.search(query);
 
-        return res.success(200, 'Post search success', results);
+        return res.success(200, POST_MESSAGE.SEARCH_SUCCESS, results);
     }
 }
 

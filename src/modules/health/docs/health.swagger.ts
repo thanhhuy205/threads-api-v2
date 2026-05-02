@@ -1,3 +1,5 @@
+import { HEALTH_MESSAGE } from '@/constants/message';
+
 export const healthSwaggerSchemas = {
     HealthPayload: {
         type: 'object',
@@ -35,7 +37,7 @@ export const healthSwaggerSchemas = {
             },
             message: {
                 type: 'string',
-                example: 'Service is healthy',
+                example: HEALTH_MESSAGE.SERVICE_IS_HEALTHY,
             },
             data: {
                 $ref: '#/components/schemas/HealthPayload',
@@ -52,7 +54,7 @@ export const healthSwaggerPaths = {
             summary: 'Check service health',
             responses: {
                 200: {
-                    description: 'Service is healthy',
+                    description: HEALTH_MESSAGE.SERVICE_IS_HEALTHY,
                     content: {
                         'application/json': {
                             schema: {

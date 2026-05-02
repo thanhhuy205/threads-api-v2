@@ -1,3 +1,5 @@
+import { AUTH_MESSAGE, COMMON_MESSAGE, POST_MESSAGE } from '@/constants/message';
+
 export const postSwaggerSchemas = {
     PostRecord: {
         type: 'object',
@@ -82,7 +84,7 @@ export const postSwaggerSchemas = {
             },
             message: {
                 type: 'string',
-                example: 'Post created',
+                example: POST_MESSAGE.CREATED,
             },
             data: {
                 $ref: '#/components/schemas/PostRecord',
@@ -121,7 +123,7 @@ export const postSwaggerSchemas = {
             },
             message: {
                 type: 'string',
-                example: 'Post search success',
+                example: POST_MESSAGE.SEARCH_SUCCESS,
             },
             data: {
                 $ref: '#/components/schemas/PostSearchResponse',
@@ -231,7 +233,7 @@ export const postSwaggerPaths = {
             parameters: newsFeedQueryParameters,
             responses: {
                 200: {
-                    description: 'News feed retrieved',
+                    description: POST_MESSAGE.NEWS_FEED_RETRIEVED,
                     content: {
                         'application/json': {
                             schema: {
@@ -241,7 +243,7 @@ export const postSwaggerPaths = {
                     },
                 },
                 401: {
-                    description: 'Invalid token',
+                    description: AUTH_MESSAGE.TOKEN_INVALID,
                 },
             },
         },
@@ -253,7 +255,7 @@ export const postSwaggerPaths = {
             parameters: postSearchQueryParameters,
             responses: {
                 200: {
-                    description: 'Post search completed',
+                    description: POST_MESSAGE.SEARCH_SUCCESS,
                     content: {
                         'application/json': {
                             schema: {
@@ -272,7 +274,7 @@ export const postSwaggerPaths = {
             parameters: postIdParameters,
             responses: {
                 200: {
-                    description: 'Replies retrieved',
+                    description: POST_MESSAGE.REPLIES_RETRIEVED,
                     content: {
                         'application/json': {
                             schema: {
@@ -292,7 +294,7 @@ export const postSwaggerPaths = {
             parameters: postPaginationQueryParameters,
             responses: {
                 200: {
-                    description: 'Posts retrieved',
+                    description: POST_MESSAGE.RETRIEVED,
                     content: {
                         'application/json': {
                             schema: {
@@ -302,7 +304,7 @@ export const postSwaggerPaths = {
                     },
                 },
                 401: {
-                    description: 'Invalid token',
+                    description: AUTH_MESSAGE.TOKEN_INVALID,
                 },
             },
         },
@@ -315,7 +317,7 @@ export const postSwaggerPaths = {
             parameters: userIdParameters,
             responses: {
                 200: {
-                    description: 'Reposts retrieved',
+                    description: POST_MESSAGE.REPOSTS_RETRIEVED,
                     content: {
                         'application/json': {
                             schema: {
@@ -325,7 +327,7 @@ export const postSwaggerPaths = {
                     },
                 },
                 401: {
-                    description: 'Invalid token',
+                    description: AUTH_MESSAGE.TOKEN_INVALID,
                 },
             },
         },
@@ -338,7 +340,7 @@ export const postSwaggerPaths = {
             parameters: userIdParameters,
             responses: {
                 200: {
-                    description: 'Quotes retrieved',
+                    description: POST_MESSAGE.QUOTES_RETRIEVED,
                     content: {
                         'application/json': {
                             schema: {
@@ -348,7 +350,7 @@ export const postSwaggerPaths = {
                     },
                 },
                 401: {
-                    description: 'Invalid token',
+                    description: AUTH_MESSAGE.TOKEN_INVALID,
                 },
             },
         },
@@ -373,7 +375,7 @@ export const postSwaggerPaths = {
             },
             responses: {
                 201: {
-                    description: 'Post created',
+                    description: POST_MESSAGE.CREATED,
                     content: {
                         'application/json': {
                             schema: {
@@ -383,10 +385,10 @@ export const postSwaggerPaths = {
                     },
                 },
                 400: {
-                    description: 'Validation failed',
+                    description: COMMON_MESSAGE.VALIDATION_FAILED,
                 },
                 401: {
-                    description: 'Invalid token',
+                    description: AUTH_MESSAGE.TOKEN_INVALID,
                 },
             },
         },

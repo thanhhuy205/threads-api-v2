@@ -1,3 +1,4 @@
+import { COMMON_MESSAGE } from '@/constants/message';
 import { NextFunction, Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import { z, ZodSchema } from 'zod';
@@ -19,7 +20,7 @@ export const validate =
                         path: i.path.join('.'),
                         message: i.message
                     }));
-                    return res.error(StatusCodes.BAD_REQUEST, 'Validation failed', errors);
+                    return res.error(StatusCodes.BAD_REQUEST, COMMON_MESSAGE.VALIDATION_FAILED, errors);
                 }
                 return next(error);
             }

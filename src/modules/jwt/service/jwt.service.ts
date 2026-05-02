@@ -1,4 +1,5 @@
 import configService from '@/config/config';
+import { JWT_MESSAGE } from '@/constants/message';
 import { UnauthorizedException } from '@/errors/error';
 import { PayloadSignTokenDto, SignTokenDto, VerifyTokenDto } from '@/modules/jwt/dto';
 import { TokenPairResponse } from '@/modules/jwt/dto/response/token-pair.response';
@@ -91,7 +92,7 @@ class JwtService {
                 const verify = await jwtService.verifyToken({ token });
                 userId = verify.sub ?? null;
             } catch {
-                throw new UnauthorizedException('Invalid token');
+                throw new UnauthorizedException(JWT_MESSAGE.INVALID_TOKEN);
             }
         }
         return userId;
