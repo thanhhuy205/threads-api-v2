@@ -1,6 +1,8 @@
 import { authService } from '@/modules/auth/service/auth.service';
 import { Request, Response } from 'express';
-import { LoginDto, RefreshTokenDto, RegisterDto } from '../dto/request/auth.request';
+import type { LoginDto } from '../dto/request/login.request.dto';
+import type { RefreshTokenDto } from '../dto/request/refresh-token.request.dto';
+import type { RegisterDto } from '../dto/request/register.request.dto';
 
 class AuthController {
     async register(req: Request<{}, {}, RegisterDto>, res: Response) {

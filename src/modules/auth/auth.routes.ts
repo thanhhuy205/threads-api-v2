@@ -2,7 +2,10 @@ import { authorization } from '@/middlewares/auth';
 import { validate } from '@/middlewares/validate';
 import { Router } from 'express';
 import { authController } from './controller/auth.controller';
-import { loginSchema, logoutSchema, refreshTokenSchema, registerSchema } from './dto/request/auth.request';
+import { loginSchema } from './dto/request/login.request.dto';
+import { logoutSchema } from './dto/request/logout.request.dto';
+import { refreshTokenSchema } from './dto/request/refresh-token.request.dto';
+import { registerSchema } from './dto/request/register.request.dto';
 
 const authRouter = Router();
 

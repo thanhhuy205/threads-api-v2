@@ -1,6 +1,6 @@
 import prisma from '@/config/prisma';
 import type { Prisma } from '@prisma/client';
-import { RegisterDto } from '../dto/request/auth.request';
+import type { RegisterDto } from '../dto/request/register.request.dto';
 
 const authSessionUserSelect = {
     id: true,

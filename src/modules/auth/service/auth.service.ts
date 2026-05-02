@@ -6,7 +6,10 @@ import { jwtService } from '@/modules/jwt/service/jwt.service';
 import { userRepository } from '@/modules/user/repository/user.repository';
 import { ensureRedisConnection } from '@/providers/redis.provider';
 import ms, { StringValue } from 'ms';
-import { LoginDto, LogoutDto, RefreshTokenDto, RegisterDto } from '../dto/request/auth.request';
+import type { LoginDto } from '../dto/request/login.request.dto';
+import type { LogoutDto } from '../dto/request/logout.request.dto';
+import type { RefreshTokenDto } from '../dto/request/refresh-token.request.dto';
+import type { RegisterDto } from '../dto/request/register.request.dto';
 import { AuthMeResponseDto, authResponse, AuthSessionResponseDto } from '../dto/response/auth.response';
 import { authRepository } from '../repository/auth.repository';
 
