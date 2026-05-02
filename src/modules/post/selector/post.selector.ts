@@ -20,3 +20,4 @@ export const postFeedSelect = Prisma.validator<Prisma.PostSelect>()({
     media: true,
     mentions: true
 });
+    

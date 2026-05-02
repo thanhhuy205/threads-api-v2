@@ -21,10 +21,13 @@
         "seed": "tsx prisma/seed.ts"
     },
     "dependencies": {
+        "@mixedbread-ai/sdk": "^2.2.11",
+        "@pinecone-database/pinecone": "^7.2.0",
         "@prisma/adapter-mariadb": "^7.0.0",
         "@prisma/client": "^7.0.0",
         "@types/swagger-ui-express": "^4.1.8",
         "bcrypt": "^6.0.0",
+        "bullmq": "^5.76.4",
         "compression": "^1.8.1",
         "cors": "^2.8.5",
         "dotenv": "^16.5.0",

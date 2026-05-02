@@ -1,5 +1,7 @@
 import { databaseConfig } from '@/config/database';
 import { jwtConfig } from '@/config/jwt';
+import { mixedbreadAIConfig } from '@/config/mixedbread-ai';
+import { pineconeConfig } from '@/config/pinecone';
 import { rateLimitConfig } from '@/config/ratelimit';
 import { redisConfig } from '@/config/redis';
 import dotenv from 'dotenv';
@@ -15,6 +17,8 @@ const envSchema = z.object({
     ...rateLimitConfig.shape,
     ...redisConfig.shape,
     ...jwtConfig.shape,
+    ...mixedbreadAIConfig.shape,
+    ...pineconeConfig.shape,
 
 });
 
