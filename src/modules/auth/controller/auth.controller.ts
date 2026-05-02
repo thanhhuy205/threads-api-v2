@@ -5,6 +5,7 @@ import type { LoginDto } from '../dto/request/login.request.dto';
 import type { RefreshTokenDto } from '../dto/request/refresh-token.request.dto';
 import type { RegisterDto } from '../dto/request/register.request.dto';
 import type { ResetPasswordDto } from '../dto/request/reset-password.request.dto';
+import type { UpdateProfileDto } from '../dto/request/update-profile.request.dto';
 import type { ValidateEmailDto } from '../dto/request/validate-email.request.dto';
 import type { ValidateTokenDto } from '../dto/request/validate-token.request.dto';
 import type { ValidateUsernameDto } from '../dto/request/validate-username.request.dto';
@@ -34,6 +35,17 @@ class AuthController {
     async forgotPassword(req: Request<{}, {}, ForgotPasswordDto>, res: Response) {
         const result = await authService.forgotPassword(req.body);
         return res.success(200, 'Forgot password success', result);
+    }
+
+    async updateProfile(req: Request<{}, {}, UpdateProfileDto>, res: Response) {
+        const userId = req.user?.sub;
+
+        if (!userId) {
+            return res.error(401, 'TOKEN_INVALID');
+        }
+
+        const result = await authService.updateProfile(userId, req.body);
+        return res.success(200, 'Update profile success', result);
     }
 
     async refreshToken(req: Request<{}, {}, RefreshTokenDto>, res: Response) {

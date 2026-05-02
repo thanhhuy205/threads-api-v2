@@ -12,11 +12,13 @@ import type { LogoutDto } from '../dto/request/logout.request.dto';
 import type { RefreshTokenDto } from '../dto/request/refresh-token.request.dto';
 import type { RegisterDto } from '../dto/request/register.request.dto';
 import type { ResetPasswordDto } from '../dto/request/reset-password.request.dto';
+import type { UpdateProfileDto } from '../dto/request/update-profile.request.dto';
 import type { ValidateEmailDto } from '../dto/request/validate-email.request.dto';
 import type { ValidateTokenDto } from '../dto/request/validate-token.request.dto';
 import type { ValidateUsernameDto } from '../dto/request/validate-username.request.dto';
 import { AuthMeResponseDto, authResponse, AuthSessionResponseDto } from '../dto/response/auth.response';
 import type { ForgotPasswordResponseDto } from '../dto/response/forgot-password.response.dto';
+import type { UpdateProfileDataDto } from '../dto/response/update-profile.response.dto';
 import type { ValidateTokenResponseDto } from '../dto/response/validate-token.response.dto';
 import type { ValidateUserResponseDto } from '../dto/response/validate-user.response.dto';
 import { authRepository } from '../repository/auth.repository';
@@ -47,6 +49,12 @@ class AuthService {
     async forgotPassword(payload: ForgotPasswordDto): Promise<ForgotPasswordResponseDto> {
         return {
             email: payload.email,
+        };
+    }
+
+    async updateProfile(userId: string, payload: UpdateProfileDto): Promise<UpdateProfileDataDto> {
+        return {
+            updated: Boolean(userId || payload),
         };
     }
 
