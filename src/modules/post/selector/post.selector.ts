@@ -17,7 +17,8 @@ export const postFeedSelect = Prisma.validator<Prisma.PostSelect>()({
     viewsCount: true,
     createdAt: true,
     media: true,
-    mentions: true
+    mentions: true,
+    isGhost: true,
 });
 
 const postOriginSelect = Prisma.validator<Prisma.PostSelect>()({

@@ -182,10 +182,7 @@ class PostService {
         } as PostRecord;
     }
 
-    async delete(publicId: string, userId: string): Promise<void> {
-        // stub: no-op
-        return;
-    }
+
 
     async reply(publicId: string, payload: CreatePostDto & { userId: string }) {
         const userSnapshot = await userService.findByUserId(payload.userId);
@@ -207,10 +204,6 @@ class PostService {
         } as PostRecord;
     }
 
-    async like(publicId: string, userId: string): Promise<void> {
-        // stub: no-op
-        return;
-    }
 
     async repost(payload: CreatePostDto & { publicId: string }, userId: string) {
         const userSnapshot = await userService.findByUserId(userId);
@@ -233,10 +226,20 @@ class PostService {
     }
 
     async quote(publicId: string, payload: CreatePostDto & { userId: string }) {
-        // stub: return minimal quote record
+        const userSnapshot = await userService.findByUserId(payload.userId);
+
+        if (!userSnapshot) {
+            throw new Error('User not found');
+        }
+        const post = await postRepository.createQuote({
+            userId: payload.userId,
+            content: payload.content
+        }, publicId, userSnapshot);
+
+
         return {
-            publicId: '',
-            content: payload.content,
+            publicId: post.publicId,
+            content: post.content,
             userId: payload.userId,
             createdAt: new Date().toISOString(),
         } as PostRecord;
@@ -248,6 +251,25 @@ class PostService {
     }
 
     async hide(publicId: string, userId: string): Promise<void> {
+        const post = await postRepository.findByPublicId(publicId);
+        if (!post) {
+            throw new Error('Post not found');
+        }
+
+        if (post.userId === userId) {
+            throw new Error('Users cannot hide their own posts');
+        }
+
+        await postRepository.updateIsGhost(publicId, !post.isGhost);
+    }
+
+    async like(publicId: string, userId: string): Promise<void> {
+        // stub: no-op
+        return;
+    }
+
+
+    async delete(publicId: string, userId: string): Promise<void> {
         // stub: no-op
         return;
     }

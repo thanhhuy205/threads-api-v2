@@ -164,6 +164,7 @@ model Post {
 
     isQuote  Boolean @default(false) @map("is_quote")
     isPinned Boolean @default(false) @map("is_pinned")
+    isGhost  Boolean @default(false) @map("is_ghost")
 
     isDeleted Boolean   @default(false) @map("is_deleted")
     deletedAt DateTime? @map("deleted_at")

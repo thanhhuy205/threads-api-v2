@@ -1,3 +1,4 @@
+import { cloudinaryConfig } from '@/config/cloudinary';
 import { databaseConfig } from '@/config/database';
 import { jwtConfig } from '@/config/jwt';
 import { mixedbreadAIConfig } from '@/config/mixedbread-ai';
@@ -23,6 +24,7 @@ const envSchema = z.object({
     ...mixedbreadAIConfig.shape,
     ...pineconeConfig.shape,
     ...nodemailerConfig.shape,
+    ...cloudinaryConfig.shape,
 
 });
 

@@ -152,6 +152,39 @@ class PostRepository implements IPagination<Prisma.PostWhereInput, any> {
         };
     }
 
+    async createQuote(payload: CreatePostPayload, originPublicId: string, userSnapshot: {
+        id: string;
+        username: string;
+        bio: string | null;
+        avatar: string | null;
+        followersCount: number;
+    }) {
+        const post = await prisma.post.create({
+            data: {
+                content: payload.content,
+                userId: payload.userId,
+                originPublicId,
+                userSnapshot,
+                type: PostType.QUOTE
+            },
+            select: {
+                id: true,
+                publicId: true,
+                content: true,
+                userId: true,
+                createdAt: true,
+                userSnapshot: true,
+            },
+        });
+
+        return {
+            id: post.id,
+            publicId: post.publicId,
+            content: post.content!,
+            userId: post.userId,
+            createdAt: post.createdAt.toISOString(),
+        };
+    }
 
 
     async list(): Promise<PostRecord[]> {
@@ -171,6 +204,19 @@ class PostRepository implements IPagination<Prisma.PostWhereInput, any> {
             userId: post.userId,
             createdAt: post.createdAt.toISOString(),
         }));
+    }
+    async findByPublicId(publicId: string) {
+        return prisma.post.findUnique({
+            where: { publicId },
+            select: postFeedSelect,
+        });
+    }
+
+    async updateIsGhost(publicId: string, isGhost: boolean): Promise<void> {
+        await prisma.post.update({
+            where: { publicId },
+            data: { isGhost },
+        });
     }
 }
 
