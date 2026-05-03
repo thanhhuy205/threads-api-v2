@@ -15,6 +15,16 @@ import {
 } from '../modules/post/docs/post.swagger';
 
 import {
+    userSwaggerPaths,
+    userSwaggerSchemas,
+} from '../modules/user/docs/user.swagger';
+
+import {
+    uploadSwaggerPaths,
+    uploadSwaggerSchemas,
+} from '../modules/upload/docs/upload.swagger';
+
+import {
     jwtSwaggerSchemas,
 } from '../modules/jwt/docs/jwt.swagger';
 
@@ -47,12 +57,22 @@ export const swaggerDocument = {
             name: 'Post',
             description: 'Post APIs',
         },
+        {
+            name: 'User',
+            description: 'User and social APIs',
+        },
+        {
+            name: 'Upload',
+            description: 'Upload APIs',
+        },
     ],
 
     paths: {
         ...healthSwaggerPaths,
         ...authSwaggerPaths,
         ...postSwaggerPaths,
+        ...userSwaggerPaths,
+        ...uploadSwaggerPaths,
     },
 
     components: {
@@ -60,6 +80,8 @@ export const swaggerDocument = {
             ...healthSwaggerSchemas,
             ...authSwaggerSchemas,
             ...postSwaggerSchemas,
+            ...userSwaggerSchemas,
+            ...uploadSwaggerSchemas,
             ...jwtSwaggerSchemas,
         },
 

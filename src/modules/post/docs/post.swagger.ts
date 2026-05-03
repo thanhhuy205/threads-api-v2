@@ -131,6 +131,41 @@ export const postSwaggerSchemas = {
         },
         required: ['success', 'message', 'data'],
     },
+    PostActionFlagResponse: {
+        type: 'object',
+        properties: {
+            success: {
+                type: 'boolean',
+                example: true,
+            },
+            message: {
+                type: 'string',
+                example: POST_MESSAGE.RETRIEVED,
+            },
+            data: {
+                type: 'object',
+                additionalProperties: {
+                    type: 'boolean',
+                },
+                example: {
+                    liked: true,
+                },
+            },
+        },
+        required: ['success', 'message', 'data'],
+    },
+    ReportPostRequest: {
+        type: 'object',
+        properties: {
+            reason: {
+                type: 'string',
+                minLength: 1,
+                maxLength: 1000,
+                example: 'Spam content',
+            },
+        },
+        required: ['reason'],
+    },
 };
 
 const postPaginationQueryParameters = [
@@ -286,6 +321,36 @@ export const postSwaggerPaths = {
             },
         },
     },
+    '/posts/{publicId}': {
+        delete: {
+            tags: ['Post'],
+            summary: 'Delete post by public id',
+            security: bearerAuthSecurity,
+            parameters: [publicIdParameters[0]],
+            responses: {
+                200: {
+                    description: POST_MESSAGE.RETRIEVED,
+                    content: {
+                        'application/json': {
+                            schema: {
+                                $ref: '#/components/schemas/PostActionFlagResponse',
+                            },
+                            example: {
+                                success: true,
+                                message: POST_MESSAGE.RETRIEVED,
+                                data: {
+                                    deleted: true,
+                                },
+                            },
+                        },
+                    },
+                },
+                401: {
+                    description: AUTH_MESSAGE.TOKEN_INVALID,
+                },
+            },
+        },
+    },
     '/posts/me': {
         get: {
             tags: ['Post'],
@@ -386,6 +451,225 @@ export const postSwaggerPaths = {
                 },
                 400: {
                     description: COMMON_MESSAGE.VALIDATION_FAILED,
+                },
+                401: {
+                    description: AUTH_MESSAGE.TOKEN_INVALID,
+                },
+            },
+        },
+    },
+    '/posts/{publicId}/reply': {
+        post: {
+            tags: ['Post'],
+            summary: 'Reply to a post',
+            security: bearerAuthSecurity,
+            parameters: [publicIdParameters[0]],
+            requestBody: {
+                required: true,
+                content: {
+                    'application/json': {
+                        schema: {
+                            $ref: '#/components/schemas/CreatePostRequest',
+                        },
+                    },
+                },
+            },
+            responses: {
+                201: {
+                    description: POST_MESSAGE.CREATED,
+                    content: {
+                        'application/json': {
+                            schema: {
+                                $ref: '#/components/schemas/PostSuccessResponse',
+                            },
+                        },
+                    },
+                },
+                401: {
+                    description: AUTH_MESSAGE.TOKEN_INVALID,
+                },
+            },
+        },
+    },
+    '/posts/{publicId}/like': {
+        post: {
+            tags: ['Post'],
+            summary: 'Like a post',
+            security: bearerAuthSecurity,
+            parameters: [publicIdParameters[0]],
+            responses: {
+                200: {
+                    description: POST_MESSAGE.RETRIEVED,
+                    content: {
+                        'application/json': {
+                            schema: {
+                                $ref: '#/components/schemas/PostActionFlagResponse',
+                            },
+                            example: {
+                                success: true,
+                                message: POST_MESSAGE.RETRIEVED,
+                                data: {
+                                    liked: true,
+                                },
+                            },
+                        },
+                    },
+                },
+                401: {
+                    description: AUTH_MESSAGE.TOKEN_INVALID,
+                },
+            },
+        },
+    },
+    '/posts/{publicId}/repost': {
+        post: {
+            tags: ['Post'],
+            summary: 'Repost a post',
+            security: bearerAuthSecurity,
+            parameters: [publicIdParameters[0]],
+            responses: {
+                201: {
+                    description: POST_MESSAGE.CREATED,
+                    content: {
+                        'application/json': {
+                            schema: {
+                                $ref: '#/components/schemas/PostSuccessResponse',
+                            },
+                        },
+                    },
+                },
+                401: {
+                    description: AUTH_MESSAGE.TOKEN_INVALID,
+                },
+            },
+        },
+    },
+    '/posts/{publicId}/quote': {
+        post: {
+            tags: ['Post'],
+            summary: 'Quote a post',
+            security: bearerAuthSecurity,
+            parameters: [publicIdParameters[0]],
+            requestBody: {
+                required: true,
+                content: {
+                    'application/json': {
+                        schema: {
+                            $ref: '#/components/schemas/CreatePostRequest',
+                        },
+                    },
+                },
+            },
+            responses: {
+                201: {
+                    description: POST_MESSAGE.CREATED,
+                    content: {
+                        'application/json': {
+                            schema: {
+                                $ref: '#/components/schemas/PostSuccessResponse',
+                            },
+                        },
+                    },
+                },
+                401: {
+                    description: AUTH_MESSAGE.TOKEN_INVALID,
+                },
+            },
+        },
+    },
+    '/posts/{publicId}/save': {
+        post: {
+            tags: ['Post'],
+            summary: 'Save a post',
+            security: bearerAuthSecurity,
+            parameters: [publicIdParameters[0]],
+            responses: {
+                200: {
+                    description: POST_MESSAGE.RETRIEVED,
+                    content: {
+                        'application/json': {
+                            schema: {
+                                $ref: '#/components/schemas/PostActionFlagResponse',
+                            },
+                            example: {
+                                success: true,
+                                message: POST_MESSAGE.RETRIEVED,
+                                data: {
+                                    saved: true,
+                                },
+                            },
+                        },
+                    },
+                },
+                401: {
+                    description: AUTH_MESSAGE.TOKEN_INVALID,
+                },
+            },
+        },
+    },
+    '/posts/{publicId}/hide': {
+        post: {
+            tags: ['Post'],
+            summary: 'Hide a post',
+            security: bearerAuthSecurity,
+            parameters: [publicIdParameters[0]],
+            responses: {
+                200: {
+                    description: POST_MESSAGE.RETRIEVED,
+                    content: {
+                        'application/json': {
+                            schema: {
+                                $ref: '#/components/schemas/PostActionFlagResponse',
+                            },
+                            example: {
+                                success: true,
+                                message: POST_MESSAGE.RETRIEVED,
+                                data: {
+                                    hidden: true,
+                                },
+                            },
+                        },
+                    },
+                },
+                401: {
+                    description: AUTH_MESSAGE.TOKEN_INVALID,
+                },
+            },
+        },
+    },
+    '/posts/{publicId}/report': {
+        post: {
+            tags: ['Post'],
+            summary: 'Report a post',
+            security: bearerAuthSecurity,
+            parameters: [publicIdParameters[0]],
+            requestBody: {
+                required: true,
+                content: {
+                    'application/json': {
+                        schema: {
+                            $ref: '#/components/schemas/ReportPostRequest',
+                        },
+                    },
+                },
+            },
+            responses: {
+                200: {
+                    description: POST_MESSAGE.RETRIEVED,
+                    content: {
+                        'application/json': {
+                            schema: {
+                                $ref: '#/components/schemas/PostActionFlagResponse',
+                            },
+                            example: {
+                                success: true,
+                                message: POST_MESSAGE.RETRIEVED,
+                                data: {
+                                    reported: true,
+                                },
+                            },
+                        },
+                    },
                 },
                 401: {
                     description: AUTH_MESSAGE.TOKEN_INVALID,
