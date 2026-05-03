@@ -7,7 +7,7 @@ import type { ReportDto } from '../dto/request/post.request';
 import {
     NewsFeedQueryDto,
     PaginationQueryDto,
-    PostIdParamsDto,
+    PublicIdParamsDto,
     UserIdParamsDto,
 } from '../dto/request/post.request';
 import { postService } from '../service/post.service';
@@ -28,7 +28,7 @@ class PostController {
             currentPage,
             perPage,
             userId,
-            feedType: req.query.feedType,
+            feedType: req.query_parsed.type,
         });
 
         return res.paginate({ rows: posts, pagination });
@@ -51,12 +51,12 @@ class PostController {
         return res.paginate({ rows: posts, pagination });
     }
 
-    async getReplies(req: Request<PostIdParamsDto, {}, {}, PaginationQueryDto>, res: Response) {
+    async getReplies(req: Request<PublicIdParamsDto, {}, {}, PaginationQueryDto>, res: Response) {
         const { currentPage, perPage } = getPagination(req);
         const { posts, pagination } = await postService.getReplies({
             currentPage,
             perPage,
-            postId: req.params.postId,
+            publicId: req.params.publicId,
         });
 
         return res.paginate({ rows: posts, pagination });
@@ -108,8 +108,8 @@ class PostController {
         return this.createPostController(req, res);
     }
 
-    async getThread(req: Request<PostIdParamsDto>, res: Response) {
-        const post = await postService.getById(Number(req.params.postId));
+    async getThread(req: Request<PublicIdParamsDto>, res: Response) {
+        const post = await postService.getById(req.params.publicId);
 
         if (!post) {
             return res.error(404, 'Post not found');
@@ -118,91 +118,91 @@ class PostController {
         return res.success(200, POST_MESSAGE.RETRIEVED, post);
     }
 
-    async replyPost(req: Request<PostIdParamsDto, {}, CreatePostDto>, res: Response) {
+    async replyPost(req: Request<PublicIdParamsDto, {}, CreatePostDto>, res: Response) {
         const userId = req.user?.sub;
 
         if (!userId) {
             return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
         }
 
-        const reply = await postService.reply(Number(req.params.postId), { ...req.body, userId });
+        const reply = await postService.reply(req.params.publicId, { ...req.body, userId });
         return res.success(201, POST_MESSAGE.CREATED, reply);
     }
 
-    async likePost(req: Request<PostIdParamsDto>, res: Response) {
+    async likePost(req: Request<PublicIdParamsDto>, res: Response) {
         const userId = req.user?.sub;
 
         if (!userId) {
             return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
         }
 
-        await postService.like(Number(req.params.postId), userId);
+        await postService.like(req.params.publicId, userId);
         return res.success(200, POST_MESSAGE.RETRIEVED, { liked: true });
     }
 
-    async repostPost(req: Request<PostIdParamsDto>, res: Response) {
+    async repostPost(req: Request<PublicIdParamsDto>, res: Response) {
         const userId = req.user?.sub;
 
         if (!userId) {
             return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
         }
 
-        const repost = await postService.repost(Number(req.params.postId), userId);
+        const repost = await postService.repost(req.params.publicId, userId);
         return res.success(201, POST_MESSAGE.CREATED, repost);
     }
 
-    async quotePost(req: Request<PostIdParamsDto, {}, CreatePostDto>, res: Response) {
+    async quotePost(req: Request<PublicIdParamsDto, {}, CreatePostDto>, res: Response) {
         const userId = req.user?.sub;
 
         if (!userId) {
             return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
         }
 
-        const quote = await postService.quote(Number(req.params.postId), { ...req.body, userId });
+        const quote = await postService.quote(req.params.publicId, { ...req.body, userId });
         return res.success(201, POST_MESSAGE.CREATED, quote);
     }
 
-    async savePost(req: Request<PostIdParamsDto>, res: Response) {
+    async savePost(req: Request<PublicIdParamsDto>, res: Response) {
         const userId = req.user?.sub;
 
         if (!userId) {
             return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
         }
 
-        await postService.save(Number(req.params.postId), userId);
+        await postService.save(req.params.publicId, userId);
         return res.success(200, POST_MESSAGE.RETRIEVED, { saved: true });
     }
 
-    async hidePost(req: Request<PostIdParamsDto>, res: Response) {
+    async hidePost(req: Request<PublicIdParamsDto>, res: Response) {
         const userId = req.user?.sub;
 
         if (!userId) {
             return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
         }
 
-        await postService.hide(Number(req.params.postId), userId);
+        await postService.hide(req.params.publicId, userId);
         return res.success(200, POST_MESSAGE.RETRIEVED, { hidden: true });
     }
 
-    async reportPost(req: Request<PostIdParamsDto, {}, ReportDto>, res: Response) {
+    async reportPost(req: Request<PublicIdParamsDto, {}, ReportDto>, res: Response) {
         const userId = req.user?.sub;
 
         if (!userId) {
             return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
         }
 
-        await postService.report(Number(req.params.postId), { ...req.body, userId });
+        await postService.report(req.params.publicId, { ...req.body, userId });
         return res.success(200, POST_MESSAGE.RETRIEVED, { reported: true });
     }
 
-    async deletePost(req: Request<PostIdParamsDto>, res: Response) {
+    async deletePost(req: Request<PublicIdParamsDto>, res: Response) {
         const userId = req.user?.sub;
 
         if (!userId) {
             return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
         }
 
-        await postService.delete(Number(req.params.postId), userId);
+        await postService.delete(req.params.publicId, userId);
         return res.success(200, POST_MESSAGE.RETRIEVED, { deleted: true });
     }
 

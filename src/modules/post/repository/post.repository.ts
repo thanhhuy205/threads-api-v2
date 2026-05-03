@@ -5,7 +5,8 @@ import { Prisma } from '@prisma/client';
 import { CreatePostDto } from '../dto/post.dto';
 
 export type PostRecord = {
-    id: number;
+    id?: number;
+    publicId: string;
     content: string;
     userId: string;
     createdAt: string;
@@ -45,22 +46,32 @@ class PostRepository implements IPagination<Prisma.PostWhereInput, any> {
     }
 
 
-    async create(payload: CreatePostPayload): Promise<PostRecord> {
+    async create(payload: CreatePostPayload, userSnapshot: {
+        id: string;
+        username: string;
+        bio: string | null;
+        avatar: string | null;
+        followersCount: number;
+    }): Promise<PostRecord> {
         const post = await prisma.post.create({
             data: {
                 content: payload.content,
                 userId: payload.userId,
+                userSnapshot,
             },
             select: {
                 id: true,
+                publicId: true,
                 content: true,
                 userId: true,
                 createdAt: true,
+                userSnapshot: true,
             },
         });
 
         return {
             id: post.id,
+            publicId: post.publicId,
             content: post.content,
             userId: post.userId,
             createdAt: post.createdAt.toISOString(),
@@ -73,7 +84,7 @@ class PostRepository implements IPagination<Prisma.PostWhereInput, any> {
         const posts = await prisma.post.findMany({
             orderBy: { createdAt: 'desc' },
             select: {
-                id: true,
+                publicId: true,
                 content: true,
                 userId: true,
                 createdAt: true,
@@ -81,7 +92,7 @@ class PostRepository implements IPagination<Prisma.PostWhereInput, any> {
         });
 
         return posts.map((post) => ({
-            id: post.id,
+            publicId: post.publicId,
             content: post.content,
             userId: post.userId,
             createdAt: post.createdAt.toISOString(),

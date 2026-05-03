@@ -1,3 +1,4 @@
+import { userRepository } from '@/modules/user/repository/user.repository';
 import type { FollowActionDataDto } from '../dto/response/follow-action.response.dto';
 import type { GetFollowersDataDto } from '../dto/response/followers.response.dto';
 
@@ -18,6 +19,11 @@ class UserService {
         return {
             following: false,
         };
+    }
+
+
+    async findByUserId(userId: string) {
+        return userRepository.findById(userId);
     }
 }
 

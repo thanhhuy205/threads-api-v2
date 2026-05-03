@@ -168,12 +168,12 @@ model Post {
     userSnapshot    Json?  @map("user_snapshot")
     replyPermission String @default("everyone") @map("reply_permission") @db.VarChar(50)
 
-    likesCount   Int @default(0) @map("likes_count")
-    repliesCount Int @default(0) @map("replies_count")
-    repostsCount Int @default(0) @map("reposts_count")
-    quotesCount  Int @default(0) @map("quotes_count")
-    viewsCount   Int @default(0) @map("views_count")
+    likesCount                Int @default(0) @map("likes_count")
+    repliesCount              Int @default(0) @map("replies_count")
+    repostsCountAndQuoteCount Int @default(0) @map("reposts_and_quotes_count")
+    viewsCount                Int @default(0) @map("views_count")
 
+    isQuote   Boolean   @default(false) @map("is_quote")
     isPinned  Boolean   @default(false) @map("is_pinned")
     isDeleted Boolean   @default(false) @map("is_deleted")
     deletedAt DateTime? @map("deleted_at")

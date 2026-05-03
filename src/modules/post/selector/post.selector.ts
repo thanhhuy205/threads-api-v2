@@ -1,11 +1,28 @@
 import { Prisma } from "@prisma/client";
 
 export const postFeedSelect = Prisma.validator<Prisma.PostSelect>()({
-    id: true,
     publicId: true,
     userId: true,
     content: true,
-    type: true,
+    parentId: true,
+    originPostId: true,
+    // origin: postOriginSelect,
+    parent: true,
+    rootPostId: true,
+    userSnapshot: true,
+    replyPermission: true,
+    likesCount: true,
+    repliesCount: true,
+    repostsCountAndQuoteCount: true,
+    viewsCount: true,
+    createdAt: true,
+    media: true,
+    mentions: true
+});
+
+const postOriginSelect = Prisma.validator<Prisma.PostSelect>()({
+    userId: true,
+    content: true,
     parentId: true,
     originPostId: true,
     rootPostId: true,
@@ -13,11 +30,7 @@ export const postFeedSelect = Prisma.validator<Prisma.PostSelect>()({
     replyPermission: true,
     likesCount: true,
     repliesCount: true,
-    repostsCount: true,
-    quotesCount: true,
+    repostsCountAndQuoteCount: true,
     viewsCount: true,
-    createdAt: true,
-    media: true,
-    mentions: true
+    isPinned: false,
 });
-    

@@ -4,9 +4,9 @@ export const postSwaggerSchemas = {
     PostRecord: {
         type: 'object',
         properties: {
-            id: {
-                type: 'integer',
-                example: 1,
+            publicId: {
+                type: 'string',
+                example: 'post_abc123xyz789',
             },
             content: {
                 type: 'string',
@@ -22,7 +22,7 @@ export const postSwaggerSchemas = {
                 example: '2026-05-01T00:00:00.000Z',
             },
         },
-        required: ['id', 'content', 'userId', 'createdAt'],
+        required: ['publicId', 'content', 'userId', 'createdAt'],
     },
     PostPagination: {
         type: 'object',
@@ -159,7 +159,7 @@ const postPaginationQueryParameters = [
 const newsFeedQueryParameters = [
     ...postPaginationQueryParameters,
     {
-        name: 'feedType',
+        name: 'type',
         in: 'query',
         required: false,
         schema: {
@@ -195,16 +195,16 @@ const postSearchQueryParameters = [
     },
 ];
 
-const postIdParameters = [
+const publicIdParameters = [
     {
-        name: 'postId',
+        name: 'publicId',
         in: 'path',
         required: true,
         schema: {
-            type: 'integer',
-            example: 1,
+            type: 'string',
+            example: 'post_abc123xyz789',
         },
-        description: 'Parent post id',
+        description: 'Post public id',
     },
     ...postPaginationQueryParameters,
 ];
@@ -267,11 +267,11 @@ export const postSwaggerPaths = {
             },
         },
     },
-    '/posts/{postId}/replies': {
+    '/posts/{publicId}/replies': {
         get: {
             tags: ['Post'],
             summary: 'Get replies for a post',
-            parameters: postIdParameters,
+            parameters: publicIdParameters,
             responses: {
                 200: {
                     description: POST_MESSAGE.REPLIES_RETRIEVED,

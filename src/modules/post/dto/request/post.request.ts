@@ -9,16 +9,16 @@ export const paginationQuerySchema = z.object({
 export type PaginationQueryDto = z.infer<typeof paginationQuerySchema>;
 
 export const newsFeedQuerySchema = paginationQuerySchema.extend({
-    feedType: z.nativeEnum(NewFeedType).optional(),
+    type: z.nativeEnum(NewFeedType).optional(),
 });
 
 export type NewsFeedQueryDto = z.infer<typeof newsFeedQuerySchema>;
 
-export const postIdParamsSchema = z.object({
-    postId: z.coerce.number().int().positive(),
+export const publicIdParamsSchema = z.object({
+    publicId: z.string().min(1),
 });
 
-export type PostIdParamsDto = z.infer<typeof postIdParamsSchema>;
+export type PublicIdParamsDto = z.infer<typeof publicIdParamsSchema>;
 
 export const userIdParamsSchema = z.object({
     userId: z.string().min(1),

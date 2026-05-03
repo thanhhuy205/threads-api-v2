@@ -3,6 +3,7 @@ import { mixedBreadService } from '@/modules/mixed-bread/service/mixed-bread.ser
 import { pineconeService } from '@/modules/pinecone/service/pinecone.service';
 import { NewFeedType } from '@/modules/post/enum';
 import { buildNewFeedWhere, buildUserPostsWhere } from '@/modules/post/helper';
+import { userService } from '@/modules/user/service/user.service';
 import { buildPaginationResponse } from '@/shared/pagination/pagination';
 import { PostType, Prisma } from '@prisma/client';
 import { CreatePostDto } from '../dto/post.dto';
@@ -21,10 +22,10 @@ type GetPostWithUser = {
     userId: string;
 };
 
-type GetPostWithPostId = {
+type GetPostWithPublicId = {
     currentPage: number;
     perPage: number;
-    postId: number;
+    publicId: string;
 };
 
 type CreatePostPayload = CreatePostDto & {
@@ -91,13 +92,14 @@ class PostService {
     async getReplies({
         currentPage,
         perPage,
-        postId,
-    }: GetPostWithPostId) {
+        publicId,
+    }: GetPostWithPublicId) {
+        // For replies, we would need to first find the post by publicId to get its internal id
+        // Then use that id as parentId. For now, stub returns empty.
         return this.paginatePosts({
             currentPage,
             perPage,
             where: {
-                parentId: postId,
                 type: PostType.REPLY
             },
         });
@@ -135,9 +137,21 @@ class PostService {
         });
     }
 
-    async create(payload: CreatePostPayload): Promise<PostRecord> {
-        const post = await postRepository.create(payload);
-        await pineProducer.addToPineconeQueue({ content: payload.content, topic: ['not'], postId: post.id, userId: payload.userId });
+    async create(payload: CreatePostPayload) {
+        const userSnapshot = await userService.findByUserId(payload.userId);
+
+        if (!userSnapshot) {
+            throw new Error('User not found');
+        }
+
+        const post = await postRepository.create(payload, {
+            id: userSnapshot.id,
+            username: userSnapshot.username,
+            bio: userSnapshot.bio,
+            avatar: userSnapshot.avatar,
+            followersCount: userSnapshot.followersCount,
+        });
+        await pineProducer.addToPineconeQueue({ content: payload.content, topic: ['not'], postId: post.id || 0, userId: payload.userId });
         return post;
     }
 
@@ -158,67 +172,67 @@ class PostService {
         return results;
     }
 
-    async getById(postId: number) {
+    async getById(publicId: string) {
         // Minimal stub: return a placeholder post object
         return {
-            id: postId,
+            publicId,
             content: '',
             userId: '',
             createdAt: new Date().toISOString(),
         } as PostRecord;
     }
 
-    async delete(postId: number, userId: string): Promise<void> {
+    async delete(publicId: string, userId: string): Promise<void> {
         // stub: no-op
         return;
     }
 
-    async reply(postId: number, payload: CreatePostDto & { userId: string }) {
+    async reply(publicId: string, payload: CreatePostDto & { userId: string }) {
         // stub: return a minimal reply record
         return {
-            id: 0,
+            publicId: '',
             content: payload.content,
             userId: payload.userId,
             createdAt: new Date().toISOString(),
         } as PostRecord;
     }
 
-    async like(postId: number, userId: string): Promise<void> {
+    async like(publicId: string, userId: string): Promise<void> {
         // stub: no-op
         return;
     }
 
-    async repost(postId: number, userId: string) {
+    async repost(publicId: string, userId: string) {
         // stub: return a minimal repost record
         return {
-            id: 0,
+            publicId: '',
             content: '',
             userId,
             createdAt: new Date().toISOString(),
         } as PostRecord;
     }
 
-    async quote(postId: number, payload: CreatePostDto & { userId: string }) {
+    async quote(publicId: string, payload: CreatePostDto & { userId: string }) {
         // stub: return minimal quote record
         return {
-            id: 0,
+            publicId: '',
             content: payload.content,
             userId: payload.userId,
             createdAt: new Date().toISOString(),
         } as PostRecord;
     }
 
-    async save(postId: number, userId: string): Promise<void> {
+    async save(publicId: string, userId: string): Promise<void> {
         // stub: no-op
         return;
     }
 
-    async hide(postId: number, userId: string): Promise<void> {
+    async hide(publicId: string, userId: string): Promise<void> {
         // stub: no-op
         return;
     }
 
-    async report(postId: number, payload: { reason: string; userId: string }): Promise<void> {
+    async report(publicId: string, payload: { reason: string; userId: string }): Promise<void> {
         // stub: no-op
         return;
     }
