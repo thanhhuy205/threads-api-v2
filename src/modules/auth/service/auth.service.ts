@@ -1,5 +1,6 @@
 import configService from '@/config/config';
 import { NotFoundException } from '@/errors/error';
+import { baseLogger } from '@/middlewares/logger';
 import { verificationRepository } from '@/modules/auth/repository/verification.repository';
 import { comparePassword, hashPassword } from '@/modules/auth/util/hasher-password';
 import { hasherToken } from '@/modules/auth/util/hasher-token';
@@ -125,7 +126,7 @@ class AuthService {
     async validateEmail(payload: ValidateEmailDto): Promise<ValidateUserResponseDto> {
         const redisClient = await ensureRedisConnection();
         const isExistingEmail = await redisClient.bf.exists('filter:emails', payload.email);
-
+        baseLogger.info(`Checked email: ${payload.email} in Bloom filter, exists: ${isExistingEmail}`);
         return {
             available: !Boolean(isExistingEmail),
         };
@@ -134,6 +135,7 @@ class AuthService {
     async validateUsername(payload: ValidateUsernameDto): Promise<ValidateUserResponseDto> {
         const redisClient = await ensureRedisConnection();
         const isExistingUsername = await redisClient.bf.exists('filter:usernames', payload.username);
+        baseLogger.info(`Checked username: ${payload.username} in Bloom filter, exists: ${isExistingUsername}`);
 
         return {
             available: !Boolean(isExistingUsername),
