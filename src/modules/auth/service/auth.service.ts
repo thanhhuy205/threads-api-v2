@@ -3,6 +3,7 @@ import { NotFoundException } from '@/errors/error';
 import { verificationRepository } from '@/modules/auth/repository/verification.repository';
 import { comparePassword, hashPassword } from '@/modules/auth/util/hasher-password';
 import { hasherToken } from '@/modules/auth/util/hasher-token';
+import { bloomProducer } from '@/modules/job/bloom/producer/bloom.producer';
 import { emailProducer } from '@/modules/job/email/producer/email.producer';
 import { TokenPairResponse } from '@/modules/jwt/dto/response/token-pair.response';
 import { jwtService } from '@/modules/jwt/service/jwt.service';
@@ -42,7 +43,15 @@ class AuthService {
             status: user.status,
         });
 
-        await this.createRefreshToken(tokenPair.refreshToken, user.id, tokenPair.sessionId, metadata);
+        await Promise.all(
+            [
+                this.createRefreshToken(tokenPair.refreshToken, user.id, tokenPair.sessionId, metadata),
+                bloomProducer.addUserNameAndEmailToBloom({
+                    email: user.email,
+                    userName: user.username,
+                })
+            ]
+        )
 
         return authResponse.toResponse({
             type: 'auth',

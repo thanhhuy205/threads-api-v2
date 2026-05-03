@@ -1,8 +1,9 @@
 import configService from "@/config/config";
 import IORedis from 'ioredis';
 import { createClient } from "redis";
+
 const redisClient = createClient({
-    url: configService.REDIS_URL
+    url: configService.REDIS_URL,
 });
 
 export const redisQueue = new IORedis({
