@@ -3,6 +3,7 @@ import { jwtService } from '@/modules/jwt/service/jwt.service';
 import { getPagination } from '@/shared/pagination/pagination';
 import { Request, Response } from 'express';
 import { CreatePostDto } from '../dto/post.dto';
+import type { ReportDto } from '../dto/request/post.request';
 import {
     NewsFeedQueryDto,
     PaginationQueryDto,
@@ -105,6 +106,104 @@ class PostController {
 
     async create(req: Request<{}, {}, CreatePostDto>, res: Response) {
         return this.createPostController(req, res);
+    }
+
+    async getThread(req: Request<PostIdParamsDto>, res: Response) {
+        const post = await postService.getById(Number(req.params.postId));
+
+        if (!post) {
+            return res.error(404, 'Post not found');
+        }
+
+        return res.success(200, POST_MESSAGE.RETRIEVED, post);
+    }
+
+    async replyPost(req: Request<PostIdParamsDto, {}, CreatePostDto>, res: Response) {
+        const userId = req.user?.sub;
+
+        if (!userId) {
+            return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
+        }
+
+        const reply = await postService.reply(Number(req.params.postId), { ...req.body, userId });
+        return res.success(201, POST_MESSAGE.CREATED, reply);
+    }
+
+    async likePost(req: Request<PostIdParamsDto>, res: Response) {
+        const userId = req.user?.sub;
+
+        if (!userId) {
+            return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
+        }
+
+        await postService.like(Number(req.params.postId), userId);
+        return res.success(200, POST_MESSAGE.RETRIEVED, { liked: true });
+    }
+
+    async repostPost(req: Request<PostIdParamsDto>, res: Response) {
+        const userId = req.user?.sub;
+
+        if (!userId) {
+            return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
+        }
+
+        const repost = await postService.repost(Number(req.params.postId), userId);
+        return res.success(201, POST_MESSAGE.CREATED, repost);
+    }
+
+    async quotePost(req: Request<PostIdParamsDto, {}, CreatePostDto>, res: Response) {
+        const userId = req.user?.sub;
+
+        if (!userId) {
+            return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
+        }
+
+        const quote = await postService.quote(Number(req.params.postId), { ...req.body, userId });
+        return res.success(201, POST_MESSAGE.CREATED, quote);
+    }
+
+    async savePost(req: Request<PostIdParamsDto>, res: Response) {
+        const userId = req.user?.sub;
+
+        if (!userId) {
+            return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
+        }
+
+        await postService.save(Number(req.params.postId), userId);
+        return res.success(200, POST_MESSAGE.RETRIEVED, { saved: true });
+    }
+
+    async hidePost(req: Request<PostIdParamsDto>, res: Response) {
+        const userId = req.user?.sub;
+
+        if (!userId) {
+            return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
+        }
+
+        await postService.hide(Number(req.params.postId), userId);
+        return res.success(200, POST_MESSAGE.RETRIEVED, { hidden: true });
+    }
+
+    async reportPost(req: Request<PostIdParamsDto, {}, ReportDto>, res: Response) {
+        const userId = req.user?.sub;
+
+        if (!userId) {
+            return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
+        }
+
+        await postService.report(Number(req.params.postId), { ...req.body, userId });
+        return res.success(200, POST_MESSAGE.RETRIEVED, { reported: true });
+    }
+
+    async deletePost(req: Request<PostIdParamsDto>, res: Response) {
+        const userId = req.user?.sub;
+
+        if (!userId) {
+            return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
+        }
+
+        await postService.delete(Number(req.params.postId), userId);
+        return res.success(200, POST_MESSAGE.RETRIEVED, { deleted: true });
     }
 
     async search(req: Request<{}, {}, {}, SearchQueryDto>, res: Response) {

@@ -25,3 +25,9 @@ export const userIdParamsSchema = z.object({
 });
 
 export type UserIdParamsDto = z.infer<typeof userIdParamsSchema>;
+
+export const reportSchema = z.object({
+    reason: z.string().min(1).max(1000),
+});
+
+export type ReportDto = z.infer<typeof reportSchema>;

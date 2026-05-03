@@ -157,6 +157,71 @@ class PostService {
 
         return results;
     }
+
+    async getById(postId: number) {
+        // Minimal stub: return a placeholder post object
+        return {
+            id: postId,
+            content: '',
+            userId: '',
+            createdAt: new Date().toISOString(),
+        } as PostRecord;
+    }
+
+    async delete(postId: number, userId: string): Promise<void> {
+        // stub: no-op
+        return;
+    }
+
+    async reply(postId: number, payload: CreatePostDto & { userId: string }) {
+        // stub: return a minimal reply record
+        return {
+            id: 0,
+            content: payload.content,
+            userId: payload.userId,
+            createdAt: new Date().toISOString(),
+        } as PostRecord;
+    }
+
+    async like(postId: number, userId: string): Promise<void> {
+        // stub: no-op
+        return;
+    }
+
+    async repost(postId: number, userId: string) {
+        // stub: return a minimal repost record
+        return {
+            id: 0,
+            content: '',
+            userId,
+            createdAt: new Date().toISOString(),
+        } as PostRecord;
+    }
+
+    async quote(postId: number, payload: CreatePostDto & { userId: string }) {
+        // stub: return minimal quote record
+        return {
+            id: 0,
+            content: payload.content,
+            userId: payload.userId,
+            createdAt: new Date().toISOString(),
+        } as PostRecord;
+    }
+
+    async save(postId: number, userId: string): Promise<void> {
+        // stub: no-op
+        return;
+    }
+
+    async hide(postId: number, userId: string): Promise<void> {
+        // stub: no-op
+        return;
+    }
+
+    async report(postId: number, payload: { reason: string; userId: string }): Promise<void> {
+        // stub: no-op
+        return;
+    }
 }
 
 export const postService = new PostService();
