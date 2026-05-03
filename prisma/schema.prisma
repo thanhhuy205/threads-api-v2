@@ -114,6 +114,8 @@ model User {
     circleMembers     CircleMember[]
     antiSpams         AntiSpam[]
     collections       Collection[]
+    emailLogs         EmailLog[]
+    notifications     Notification[]
 
     @@index([deletedAt], map: "idx_users_deleted_at")
     @@map("users")
@@ -134,23 +136,6 @@ model VerificationCode {
     @@index([expiresAt], map: "idx_verification_codes_expires_at")
     @@index([usedAt], map: "idx_verification_codes_used_at")
     @@map("verification_codes")
-}
-
-model UserIntent {
-    id     Int    @id @default(autoincrement())
-    userId String @map("user_id")
-
-    positiveText String? @db.VarChar(255)
-    negativeText String? @db.VarChar(255)
-
-    createdAt DateTime @default(now()) @map("created_at")
-    updatedAt DateTime @updatedAt @map("updated_at")
-
-    user User @relation(fields: [userId], references: [id])
-
-    @@unique([userId], map: "uq_user_intents_user_id")
-    @@index([userId], map: "idx_user_intents_user_id")
-    @@map("user_intents")
 }
 
 model Post {
@@ -328,37 +313,38 @@ model RefreshToken {
     @@map("refresh_tokens")
 }
 
-model Job {
-    id             Int       @id @default(autoincrement())
-    uuid           String    @unique @db.VarChar(255)
-    queue          String    @db.Text
-    payload        String    @db.LongText
-    recipientEmail String?   @map("recipient_email") @db.VarChar(255)
-    hashToken      String?   @map("hash_token") @db.VarChar(255)
-    status         JobStatus @default(PENDING)
-    createdAt      DateTime  @default(now()) @map("created_at")
-    availableAt    DateTime? @map("available_at")
-    expiresAt      DateTime? @map("expires_at")
+model EmailLog {
+    id        Int      @id @default(autoincrement())
+    userId    String   @map("user_id")
+    email     String   @db.VarChar(255)
+    type      String   @db.VarChar(50)
+    status    String   @db.VarChar(50)
+    error     String?  @db.VarChar(255)
+    createdAt DateTime @default(now()) @map("created_at")
 
-    @@index([uuid], map: "idx_jobs_uuid")
-    @@index([status], map: "idx_jobs_status")
-    @@index([createdAt], map: "idx_jobs_created_at")
-    @@index([expiresAt], map: "idx_jobs_expires_at")
-    @@map("jobs")
+    user User @relation(fields: [userId], references: [id])
+
+    @@index([userId], map: "idx_email_logs_user_id")
+    @@index([type], map: "idx_email_logs_type")
+    @@index([status], map: "idx_email_logs_status")
+    @@map("email_logs")
 }
 
-model FailedJob {
-    id         Int      @id @default(autoincrement())
-    uuid       String   @unique @db.VarChar(255)
-    connection String   @db.Text
-    queue      String   @db.Text
-    payload    String   @db.LongText
-    exception  String   @db.LongText
-    failedAt   DateTime @map("failed_at") @db.Timestamp(0)
+model UserIntent {
+    id     Int    @id @default(autoincrement())
+    userId String @map("user_id")
 
-    @@index([uuid], map: "idx_failed_jobs_uuid")
-    @@index([failedAt], map: "idx_failed_jobs_failed_at")
-    @@map("failed_jobs")
+    positiveText String? @db.VarChar(255)
+    negativeText String? @db.VarChar(255)
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    user User @relation(fields: [userId], references: [id])
+
+    @@unique([userId], map: "uq_user_intents_user_id")
+    @@index([userId], map: "idx_user_intents_user_id")
+    @@map("user_intents")
 }
 
 model Circle {
@@ -431,4 +417,19 @@ model CollectionPost {
     @@index([collectionId], map: "idx_collection_posts_collection_id")
     @@index([postId], map: "idx_collection_posts_post_id")
     @@map("collection_posts")
+}
+
+model Notification {
+    id        Int      @id @default(autoincrement())
+    userId    String   @map("user_id")
+    type      String   @db.VarChar(50)
+    content   String   @db.VarChar(255)
+    isRead    Boolean  @default(false) @map("is_read")
+    createdAt DateTime @default(now()) @map("created_at")
+
+    user User @relation(fields: [userId], references: [id])
+
+    @@index([userId], map: "idx_notifications_user_id")
+    @@index([isRead], map: "idx_notifications_is_read")
+    @@map("notifications")
 }
