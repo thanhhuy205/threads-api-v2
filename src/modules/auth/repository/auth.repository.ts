@@ -103,6 +103,17 @@ class AuthRepository {
 
         return user;
     }
+
+    async updatePassword(userId: string, newPassword: string): Promise<void> {
+        await prisma.user.update({
+            where: {
+                id: userId,
+            },
+            data: {
+                password: newPassword,
+            },
+        });
+    }
 }
 
 export const authRepository = new AuthRepository();

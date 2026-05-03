@@ -1,12 +1,12 @@
 import configService from '@/config/config';
 import { NotFoundException } from '@/errors/error';
+import { verificationRepository } from '@/modules/auth/repository/verification.repository';
 import { comparePassword, hashPassword } from '@/modules/auth/util/hasher-password';
 import { hasherToken } from '@/modules/auth/util/hasher-token';
 import { emailProducer } from '@/modules/job/email/producer/email.producer';
 import { TokenPairResponse } from '@/modules/jwt/dto/response/token-pair.response';
 import { jwtService } from '@/modules/jwt/service/jwt.service';
 import { userRepository } from '@/modules/user/repository/user.repository';
-import { verificationRepository } from '@/modules/verification/repository/verification.repository';
 import { ensureRedisConnection } from '@/providers/redis.provider';
 import { VerificationCodeType } from '@prisma/client';
 import crypto from 'crypto';
@@ -64,8 +64,9 @@ class AuthService {
         await Promise.all([emailProducer.sendForgotPasswordEmail({
             userId: user.id,
             email: user.email,
-            tokenHash: hashedToken,
+            token,
         }),
+
         verificationRepository.create({
             userId: user.id,
             tokenHash: hashedToken,
@@ -131,7 +132,27 @@ class AuthService {
     }
 
     async resetPassword(payload: ResetPasswordDto): Promise<void> {
-        return;
+        const hashedToken = hasherToken(payload.token);
+        const verificationRecord = await verificationRepository.findByTokenHashAndType(hashedToken, VerificationCodeType.FORGOT_PASSWORD);
+        if (!verificationRecord) {
+            throw new NotFoundException('Invalid token');
+        }
+
+        if (verificationRecord.expiresAt < new Date()) {
+            throw new NotFoundException('Token expired');
+        }
+
+        const user = await authRepository.findUserByEmail(payload.email);
+        if (!user) {
+            throw new NotFoundException('User not found');
+        }
+
+        if (payload.password !== payload.confirmPassword) {
+            throw new NotFoundException('Password and confirm password do not match');
+        }
+
+        const newPassword = hashPassword(payload.password);
+        await authRepository.updatePassword(user.id, newPassword);
     }
 
     async refreshToken(payload: RefreshTokenDto, metadata: SessionMetadata): Promise<TokenPairResponse | null> {

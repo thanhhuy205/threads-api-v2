@@ -1,5 +1,6 @@
 import ejs from 'ejs';
 import path from 'path';
+import configService from '../src/config/config';
 import { EMAIL_JOB_NAME, QUEUE_NAME } from '../src/constants/queue';
 import { ForgotPasswordProducer } from '../src/modules/job/email/dto/forgot-password.dto';
 import { nodemailerService } from '../src/modules/nodemailer/service/nodemailer.service';
@@ -19,20 +20,19 @@ class EmailWorker {
 
     async sendVerificationEmail(data: { email: string; token: string }) {
         await nodemailerService.sendMail(data.email, 'Verify your email', `<p>Please verify your email by clicking the link below:</p>
-                   <a href="${process.env.FRONTEND_URL}/verify-email?token=${data.token}">Verify Email</a>`, {});
+                   <a href="${configService.FRONTEND_URL}/verify-email?token=${data.token}">Verify Email</a>`, {});
         console.log(`Sent verification email to: ${data.email}`);
     }
 
 
     async sendForgotPasswordEmail(data: ForgotPasswordProducer) {
-
-        const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${data.tokenHash}`;
+        const resetLink = `${configService.FRONTEND_URL}/reset-password?token=${data.token}`;
         const html = await ejs.renderFile(
             path.join(process.cwd(), './template/forgot-password.ejs'),
             {
                 appName: 'Threads',
                 resetUrl: resetLink,
-                expiresInMinutes: 15,
+                expiresInMinutes: configService.RESET_PASSWORD_TOKEN_EXPIRES_IN,
                 currentYear: new Date().getFullYear(),
             }
         );

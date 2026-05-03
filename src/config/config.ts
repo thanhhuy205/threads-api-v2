@@ -15,6 +15,8 @@ const envSchema = z.object({
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
     PORT: z.coerce.number().int().positive().default(3000),
     CORS_ORIGIN: z.string().default('*'),
+    FRONTEND_URL: z.string().default('http://localhost:5173'),
+    RESET_PASSWORD_TOKEN_EXPIRES_IN: z.string().default('15m'),
     ...databaseConfig.shape,
     ...rateLimitConfig.shape,
     ...redisConfig.shape,
