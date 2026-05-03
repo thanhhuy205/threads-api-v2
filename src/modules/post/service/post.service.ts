@@ -94,12 +94,12 @@ class PostService {
         perPage,
         publicId,
     }: GetPostWithPublicId) {
-        // For replies, we would need to first find the post by publicId to get its internal id
-        // Then use that id as parentId. For now, stub returns empty.
+
         return this.paginatePosts({
             currentPage,
             perPage,
             where: {
+                parentPublicId: publicId,
                 type: PostType.REPLY
             },
         });
@@ -188,12 +188,22 @@ class PostService {
     }
 
     async reply(publicId: string, payload: CreatePostDto & { userId: string }) {
-        // stub: return a minimal reply record
-        return {
-            publicId: '',
+        const userSnapshot = await userService.findByUserId(payload.userId);
+
+        if (!userSnapshot) {
+            throw new Error('User not found');
+        }
+
+        const post = await postRepository.createReply({
             content: payload.content,
             userId: payload.userId,
-            createdAt: new Date().toISOString(),
+        }, publicId, userSnapshot);
+
+        return {
+            publicId: post.publicId,
+            content: post.content!,
+            userId: post.userId,
+            createdAt: post.createdAt,
         } as PostRecord;
     }
 
@@ -202,14 +212,24 @@ class PostService {
         return;
     }
 
-    async repost(publicId: string, userId: string) {
-        // stub: return a minimal repost record
-        return {
-            publicId: '',
-            content: '',
+    async repost(payload: CreatePostDto & { publicId: string }, userId: string) {
+        const userSnapshot = await userService.findByUserId(userId);
+
+        if (!userSnapshot) {
+            throw new Error('User not found');
+        }
+
+        const post = await postRepository.createRepost({
             userId,
-            createdAt: new Date().toISOString(),
+            content: payload.content
+        }, payload.publicId, userSnapshot);
+
+        return {
+            publicId: post.publicId,
+            userId: post.userId,
+            createdAt: post.createdAt,
         } as PostRecord;
+
     }
 
     async quote(publicId: string, payload: CreatePostDto & { userId: string }) {

@@ -44,20 +44,6 @@ CREATE TABLE `verification_codes` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `user_intents` (
-    `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `user_id` VARCHAR(191) NOT NULL,
-    `positiveText` VARCHAR(255) NULL,
-    `negativeText` VARCHAR(255) NULL,
-    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    `updated_at` DATETIME(3) NOT NULL,
-
-    INDEX `idx_user_intents_user_id`(`user_id`),
-    UNIQUE INDEX `uq_user_intents_user_id`(`user_id`),
-    PRIMARY KEY (`id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- CreateTable
 CREATE TABLE `posts` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `public_id` VARCHAR(191) NOT NULL,
@@ -71,9 +57,9 @@ CREATE TABLE `posts` (
     `reply_permission` VARCHAR(50) NOT NULL DEFAULT 'everyone',
     `likes_count` INTEGER NOT NULL DEFAULT 0,
     `replies_count` INTEGER NOT NULL DEFAULT 0,
-    `reposts_count` INTEGER NOT NULL DEFAULT 0,
-    `quotes_count` INTEGER NOT NULL DEFAULT 0,
+    `reposts_and_quotes_count` INTEGER NOT NULL DEFAULT 0,
     `views_count` INTEGER NOT NULL DEFAULT 0,
+    `is_quote` BOOLEAN NOT NULL DEFAULT false,
     `is_pinned` BOOLEAN NOT NULL DEFAULT false,
     `is_deleted` BOOLEAN NOT NULL DEFAULT false,
     `deleted_at` DATETIME(3) NULL,
@@ -197,39 +183,32 @@ CREATE TABLE `refresh_tokens` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `jobs` (
+CREATE TABLE `email_logs` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `uuid` VARCHAR(255) NOT NULL,
-    `queue` TEXT NOT NULL,
-    `payload` LONGTEXT NOT NULL,
-    `recipient_email` VARCHAR(255) NULL,
-    `hash_token` VARCHAR(255) NULL,
-    `status` ENUM('PENDING', 'PROCESSING', 'SUCCESS', 'FAILED') NOT NULL DEFAULT 'PENDING',
+    `user_id` VARCHAR(191) NOT NULL,
+    `email` VARCHAR(255) NOT NULL,
+    `type` VARCHAR(50) NOT NULL,
+    `status` VARCHAR(50) NOT NULL,
+    `error` VARCHAR(255) NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    `available_at` DATETIME(3) NULL,
-    `expires_at` DATETIME(3) NULL,
 
-    UNIQUE INDEX `jobs_uuid_key`(`uuid`),
-    INDEX `idx_jobs_uuid`(`uuid`),
-    INDEX `idx_jobs_status`(`status`),
-    INDEX `idx_jobs_created_at`(`created_at`),
-    INDEX `idx_jobs_expires_at`(`expires_at`),
+    INDEX `idx_email_logs_user_id`(`user_id`),
+    INDEX `idx_email_logs_type`(`type`),
+    INDEX `idx_email_logs_status`(`status`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `failed_jobs` (
+CREATE TABLE `user_intents` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `uuid` VARCHAR(255) NOT NULL,
-    `connection` TEXT NOT NULL,
-    `queue` TEXT NOT NULL,
-    `payload` LONGTEXT NOT NULL,
-    `exception` LONGTEXT NOT NULL,
-    `failed_at` TIMESTAMP(0) NOT NULL,
+    `user_id` VARCHAR(191) NOT NULL,
+    `positiveText` VARCHAR(255) NULL,
+    `negativeText` VARCHAR(255) NULL,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at` DATETIME(3) NOT NULL,
 
-    UNIQUE INDEX `failed_jobs_uuid_key`(`uuid`),
-    INDEX `idx_failed_jobs_uuid`(`uuid`),
-    INDEX `idx_failed_jobs_failed_at`(`failed_at`),
+    INDEX `idx_user_intents_user_id`(`user_id`),
+    UNIQUE INDEX `uq_user_intents_user_id`(`user_id`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -297,11 +276,22 @@ CREATE TABLE `collection_posts` (
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- AddForeignKey
-ALTER TABLE `verification_codes` ADD CONSTRAINT `verification_codes_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+-- CreateTable
+CREATE TABLE `notifications` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `user_id` VARCHAR(191) NOT NULL,
+    `type` VARCHAR(50) NOT NULL,
+    `content` VARCHAR(255) NOT NULL,
+    `is_read` BOOLEAN NOT NULL DEFAULT false,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    INDEX `idx_notifications_user_id`(`user_id`),
+    INDEX `idx_notifications_is_read`(`is_read`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- AddForeignKey
-ALTER TABLE `user_intents` ADD CONSTRAINT `user_intents_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `verification_codes` ADD CONSTRAINT `verification_codes_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `posts` ADD CONSTRAINT `posts_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -346,6 +336,12 @@ ALTER TABLE `topics_posts` ADD CONSTRAINT `topics_posts_private_topic_id_fkey` F
 ALTER TABLE `refresh_tokens` ADD CONSTRAINT `refresh_tokens_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `email_logs` ADD CONSTRAINT `email_logs_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `user_intents` ADD CONSTRAINT `user_intents_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE `circles` ADD CONSTRAINT `circles_create_by_id_fkey` FOREIGN KEY (`create_by_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -365,3 +361,6 @@ ALTER TABLE `collection_posts` ADD CONSTRAINT `collection_posts_collection_id_fk
 
 -- AddForeignKey
 ALTER TABLE `collection_posts` ADD CONSTRAINT `collection_posts_post_id_fkey` FOREIGN KEY (`post_id`) REFERENCES `posts`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `notifications` ADD CONSTRAINT `notifications_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;

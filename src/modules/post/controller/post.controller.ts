@@ -147,7 +147,10 @@ class PostController {
             return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
         }
 
-        const repost = await postService.repost(req.params.publicId, userId);
+        const repost = await postService.repost({
+            publicId: req.params.publicId,
+            content: req.body.content ?? '',
+        }, userId);
         return res.success(201, POST_MESSAGE.CREATED, repost);
     }
 

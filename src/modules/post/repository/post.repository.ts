@@ -1,7 +1,7 @@
 import prisma from '@/config/prisma';
 import { postFeedSelect } from '@/modules/post/selector/post.selector';
 import { buildPagination } from '@/shared/pagination/pagination';
-import { Prisma } from '@prisma/client';
+import { PostType, Prisma } from '@prisma/client';
 import { CreatePostDto } from '../dto/post.dto';
 
 export type PostRecord = {
@@ -15,6 +15,12 @@ export type PostRecord = {
 type CreatePostPayload = CreatePostDto & {
     userId: string;
 };
+
+type CreateRepostPayload = CreatePostDto & {
+    userId: string;
+}
+
+
 
 class PostRepository implements IPagination<Prisma.PostWhereInput, any> {
     findAll({
@@ -73,6 +79,74 @@ class PostRepository implements IPagination<Prisma.PostWhereInput, any> {
             id: post.id,
             publicId: post.publicId,
             content: post.content,
+            userId: post.userId,
+            createdAt: post.createdAt.toISOString(),
+        };
+    }
+
+    async createReply(payload: CreatePostPayload, parentPublicId: string, userSnapshot: {
+        id: string;
+        username: string;
+        bio: string | null;
+        avatar: string | null;
+        followersCount: number;
+    }) {
+        const post = await prisma.post.create({
+            data: {
+                content: payload.content,
+                userId: payload.userId,
+                parentPublicId,
+                userSnapshot,
+                type: PostType.REPLY
+            },
+            select: {
+                id: true,
+                publicId: true,
+                content: true,
+                userId: true,
+                createdAt: true,
+                userSnapshot: true,
+            },
+        });
+
+        return {
+            id: post.id,
+            publicId: post.publicId,
+            content: post.content!,
+            userId: post.userId,
+            createdAt: post.createdAt.toISOString(),
+        };
+    }
+
+
+    async createRepost(payload: CreateRepostPayload, originPublicId: string, userSnapshot: {
+        id: string;
+        username: string;
+        bio: string | null;
+        avatar: string | null;
+        followersCount: number;
+    }) {
+        const post = await prisma.post.create({
+            data: {
+                userId: payload.userId,
+                originPublicId,
+                content: '', // for repost, content is empty
+                userSnapshot,
+                type: PostType.REPOST
+            },
+            select: {
+                id: true,
+                publicId: true,
+                content: true,
+                userId: true,
+                createdAt: true,
+                userSnapshot: true,
+            },
+        });
+
+        return {
+            id: post.id,
+            publicId: post.publicId,
             userId: post.userId,
             createdAt: post.createdAt.toISOString(),
         };
