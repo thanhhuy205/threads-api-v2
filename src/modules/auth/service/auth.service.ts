@@ -123,14 +123,20 @@ class AuthService {
     }
 
     async validateEmail(payload: ValidateEmailDto): Promise<ValidateUserResponseDto> {
+        const redisClient = await ensureRedisConnection();
+        const isExistingEmail = await redisClient.bf.exists('filter:emails', payload.email);
+
         return {
-            available: true,
+            available: !Boolean(isExistingEmail),
         };
     }
 
     async validateUsername(payload: ValidateUsernameDto): Promise<ValidateUserResponseDto> {
+        const redisClient = await ensureRedisConnection();
+        const isExistingUsername = await redisClient.bf.exists('filter:usernames', payload.username);
+
         return {
-            available: true,
+            available: !Boolean(isExistingUsername),
         };
     }
 

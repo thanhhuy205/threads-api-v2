@@ -22,3 +22,8 @@ export const EMAIL_JOB_NAME = {
 export const BLOOM_JOB_NAME = {
     GENERATE_BLOOM: 'generate_bloom',
 }
+
+export const BLOOM_KEY = {
+    FILTER_USERNAME: 'filter:usernames  ',
+    FILTER_EMAIL: 'filter:emails  ',
+}
