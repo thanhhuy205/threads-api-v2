@@ -6,12 +6,12 @@ import type { UploadMediaDto } from '../dto/request/upload-media.request.dto';
 
 class UploadController {
     async uploadAvatar(req: Request<{}, {}, UploadAvatarDto>, res: Response) {
-        const result = await uploadService.uploadAvatar(req.body);
+        const result = await uploadService.uploadAvatar(req.file!);
         return res.success(201, UPLOAD_MESSAGE.UPLOAD_AVATAR_SUCCESS, result);
     }
 
     async uploadMedia(req: Request<{}, {}, UploadMediaDto>, res: Response) {
-        const result = await uploadService.uploadMedia(req.body);
+        const result = await uploadService.uploadMedia(req.file);
         return res.success(201, UPLOAD_MESSAGE.UPLOAD_MEDIA_SUCCESS, result);
     }
 }
