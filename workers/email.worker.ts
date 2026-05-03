@@ -2,6 +2,7 @@ import ejs from 'ejs';
 import path from 'path';
 import configService from '../src/config/config';
 import { EMAIL_JOB_NAME, QUEUE_NAME } from '../src/constants/queue';
+import { baseLogger } from '../src/middlewares/logger';
 import { ForgotPasswordProducer } from '../src/modules/job/email/dto/forgot-password.dto';
 import { nodemailerService } from '../src/modules/nodemailer/service/nodemailer.service';
 import { createWorker } from '../src/providers/bullmq.provider';
@@ -19,9 +20,18 @@ class EmailWorker {
 
 
     async sendVerificationEmail(data: { email: string; token: string }) {
-        await nodemailerService.sendMail(data.email, 'Verify your email', `<p>Please verify your email by clicking the link below:</p>
-                   <a href="${configService.FRONTEND_URL}/verify-email?token=${data.token}">Verify Email</a>`, {});
-        console.log(`Sent verification email to: ${data.email}`);
+        const verifyLink = `${configService.FRONTEND_URL}/verify-email?token=${data.token}`;
+        const html = await ejs.renderFile(
+            path.join(process.cwd(), './template/verify-email.ejs'),
+            {
+                appName: 'Threads',
+                resetUrl: verifyLink,
+                expiresInMinutes: configService.RESEND_VERIFY_EMAIL_TOKEN_EXPIRES_IN_TEXT,
+                currentYear: new Date().getFullYear(),
+            }
+        );
+        await nodemailerService.sendMail(data.email, 'Verify your email', html, {});
+        baseLogger.info(`Sent verification email to: ${data.email}`);
     }
 
 
@@ -32,12 +42,12 @@ class EmailWorker {
             {
                 appName: 'Threads',
                 resetUrl: resetLink,
-                expiresInMinutes: configService.RESET_PASSWORD_TOKEN_EXPIRES_IN,
+                expiresInMinutes: configService.RESET_PASSWORD_TOKEN_EXPIRES_IN_TEXT,
                 currentYear: new Date().getFullYear(),
             }
         );
         await nodemailerService.sendMail(data.email, 'Reset your password', html, {});
-        console.log(`Sent forgot password email to: ${data.email}`);
+        baseLogger.info(`Sent forgot password email to: ${data.email}`);
     }
 };
 

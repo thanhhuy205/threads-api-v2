@@ -116,11 +116,40 @@ class AuthService {
     }
 
     async resendVerifyEmail(userId?: string): Promise<void> {
-        return;
+        const user = await userRepository.findById(userId ?? '');
+        if (!user) {
+            throw new NotFoundException('User not found');
+        }
+
+        const token = crypto.randomBytes(32).toString('hex');
+        const hashedToken = hasherToken(token);
+
+        await Promise.all([
+            emailProducer.sendVerifyEmail({
+                userName: user.username,
+                email: user.email,
+                token,
+            }),
+            verificationRepository.create({
+                userId: user.id,
+                tokenHash: hashedToken,
+                type: VerificationCodeType.VERIFY_ACCOUNT,
+            }),
+        ]);
     }
 
     async verifyEmail(payload: ValidateTokenDto): Promise<void> {
-        return;
+        const hashedToken = hasherToken(payload.token);
+        const verificationRecord = await verificationRepository.findByTokenHashAndType(hashedToken, VerificationCodeType.VERIFY_ACCOUNT);
+        if (!verificationRecord) {
+            throw new NotFoundException('Invalid token');
+        }
+
+        if (verificationRecord.expiresAt < new Date()) {
+            throw new NotFoundException('Mã xac thực đã hết hạn');
+        }
+
+        await authRepository.updateVerifiedEmail(verificationRecord.userId);
     }
 
     async validateEmail(payload: ValidateEmailDto): Promise<ValidateUserResponseDto> {

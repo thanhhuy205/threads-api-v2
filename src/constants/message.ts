@@ -19,16 +19,17 @@ export const AUTH_MESSAGE = {
 } as const;
 
 export const AUTH_ERROR_MESSAGE = {
-    USERNAME_INVALID: 'auth.error.usernameInvalid',
-    USERNAME_RULE: 'auth.error.usernameRule',
-    USERNAME_EXISTS: 'auth.error.usernameExists',
-    EMAIL_INVALID: 'auth.error.emailInvalid',
-    EMAIL_EXISTS: 'auth.error.emailExists',
-    PASSWORD_INVALID: 'auth.error.passwordInvalid',
-    PASSWORD_MIN: 'auth.error.passwordMin',
-    PASSWORD_CONFIRM_NOT_MATCH: 'auth.error.passwordConfirmNotMatch',
-} as const;
+    USERNAME_INVALID: 'Username is not valid',
+    USERNAME_RULE: 'Username does not meet the requirements',
+    USERNAME_EXISTS: 'This username is already taken',
 
+    EMAIL_INVALID: 'Please enter a valid email address',
+    EMAIL_EXISTS: 'This email is already registered',
+
+    PASSWORD_INVALID: 'Incorrect password',
+    PASSWORD_MIN: 'Password is too short',
+    PASSWORD_CONFIRM_NOT_MATCH: 'Passwords do not match',
+} as const;
 export const COMMON_MESSAGE = {
     BAD_REQUEST: 'Bad request',
     UNAUTHORIZED: 'Unauthorized',

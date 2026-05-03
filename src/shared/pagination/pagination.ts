@@ -48,3 +48,19 @@ export function buildPagination({
         offset,
     };
 }
+
+export function buildPaginationResponse(totalItems: number, currentPage: number, perPage: number): PaginationResponse {
+    const total = totalItems;
+    const lastPage = Math.ceil(total / perPage);
+    const from = (currentPage - 1) * perPage + 1;
+    const to = Math.min(currentPage * perPage, total);
+
+    return {
+        currentPage,
+        perPage,
+        total,
+        lastPage,
+        from,
+        to
+    };
+}

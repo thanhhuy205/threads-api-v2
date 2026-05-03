@@ -114,6 +114,17 @@ class AuthRepository {
             },
         });
     }
+
+    async updateVerifiedEmail(userId: string): Promise<void> {
+        await prisma.user.update({
+            where: {
+                id: userId,
+            },
+            data: {
+                verifiedAt: new Date(),
+            },
+        });
+    }
 }
 
 export const authRepository = new AuthRepository();

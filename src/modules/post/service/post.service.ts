@@ -3,6 +3,7 @@ import { mixedBreadService } from '@/modules/mixed-bread/service/mixed-bread.ser
 import { pineconeService } from '@/modules/pinecone/service/pinecone.service';
 import { NewFeedType } from '@/modules/post/enum';
 import { buildNewFeedWhere, buildUserPostsWhere } from '@/modules/post/helper';
+import { buildPaginationResponse } from '@/shared/pagination/pagination';
 import { PostType, Prisma } from '@prisma/client';
 import { CreatePostDto } from '../dto/post.dto';
 import { PostRecord, postRepository } from '../repository/post.repository';
@@ -51,12 +52,7 @@ class PostService {
 
         return {
             posts,
-            pagination: {
-                currentPage,
-                perPage,
-                total,
-                rowCount: posts.length
-            }
+            pagination: buildPaginationResponse(total, currentPage, perPage),
         }
     }
 
