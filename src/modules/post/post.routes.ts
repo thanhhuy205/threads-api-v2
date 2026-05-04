@@ -3,6 +3,7 @@ import { validate } from '@/middlewares/validate';
 import { Router } from 'express';
 import { postController } from './controller/post.controller';
 import { createPostSchema } from './dto/post.dto';
+import { createInteractionSchema } from './dto/request/create-interaction.request';
 import {
     newsFeedQuerySchema,
     paginationQuerySchema,
@@ -27,6 +28,7 @@ postRouter.get('/:userId/quote', validate(userIdParamsSchema, 'params'), validat
 postRouter.post('/', validate(createPostSchema), postController.createPostController);
 
 postRouter.post('/:publicId/reply', validate(publicIdParamsSchema, 'params'), validate(createPostSchema), postController.replyPost);
+postRouter.post('/:publicId/interaction', validate(publicIdParamsSchema, 'params'), validate(createInteractionSchema), postController.createInteraction);
 postRouter.post('/:publicId/like', validate(publicIdParamsSchema, 'params'), postController.likePost);
 postRouter.post('/:publicId/repost', validate(publicIdParamsSchema, 'params'), postController.repostPost);
 postRouter.post('/:publicId/quote', validate(publicIdParamsSchema, 'params'), validate(createPostSchema), postController.quotePost);

@@ -76,6 +76,17 @@ enum ActionType {
     SHARE_DELETED
 }
 
+enum InteractionType {
+    LIKE
+    DISLIKE
+    FOLLOW
+    UNFOLLOW
+    QUOTE
+    UNQUOTE
+    SHARE
+    UNSHARE
+}
+
 enum RoleMembership {
     OWNER
     ADMIN
@@ -134,7 +145,6 @@ model User {
     verificationCodes  VerificationCode[]
     follows            Follow[]            @relation("FollowUser")
     followers          Follow[]            @relation("FollowFollowing")
-    likes              Like[]
     userIntents        UserIntent[]
     circles            Circle[]            @relation("CircleCreated")
     circleMembers      CircleMember[]
@@ -145,6 +155,7 @@ model User {
     invitationRequests InvitationRequest[]
     circleInvitations  CircleInvitation[]  @relation("CircleInvitationUser")
     circleInvited      CircleInvitation[]  @relation("CircleInvitationInviter")
+    interactions       Interaction[]
 
     @@index([deletedAt], map: "idx_users_deleted_at")
     @@map("users")
@@ -183,6 +194,10 @@ model Post {
     originPublicId String? @map("origin_public_id")
     rootPublicId   String? @map("root_public_id")
 
+    isLikedByAuth    Boolean @default(false) @map("is_liked_by_auth")
+    isSavedByAuth    Boolean @default(false) @map("is_saved_by_auth")
+    isRepostedByAuth Boolean @default(false) @map("is_reposted_by_auth")
+
     userSnapshot    Json?  @map("user_snapshot")
     replyPermission String @default("everyone") @map("reply_permission") @db.VarChar(50)
 
@@ -212,10 +227,10 @@ model Post {
     root   Post?  @relation("PostRoot", fields: [rootPostId], references: [id])
     thread Post[] @relation("PostRoot")
 
-    media       PostMedia[]
-    mentions    PostMention[]
-    likes       Like[]
-    topicsPosts TopicsPost[]
+    media        PostMedia[]
+    mentions     PostMention[]
+    interactions Interaction[]
+    topicsPosts  TopicsPost[]
 
     collectionPosts CollectionPost[]
 
@@ -229,7 +244,7 @@ model Post {
 
 model PostMedia {
     id        Int              @id @default(autoincrement())
-    postId    Int?              @map("post_id")
+    postId    Int?             @map("post_id")
     url       String           @db.VarChar(2048)
     type      PostMediaType?   @map("type_enum")
     width     Int?
@@ -237,7 +252,7 @@ model PostMedia {
     createdAt DateTime         @default(now()) @map("created_at")
     key       String?          @db.VarChar(255)
     status    PostMediaStatus? @default(TEMPORARY) @map("status_enum")
-    post      Post?             @relation(fields: [postId], references: [id])
+    post      Post?            @relation(fields: [postId], references: [id])
 
     @@index([postId], map: "idx_post_media_post_id")
     @@map("post_media")
@@ -276,20 +291,22 @@ model Follow {
     @@map("follows")
 }
 
-model Like {
-    id        Int      @id @default(autoincrement())
-    userId    String   @map("user_id")
-    postId    Int      @map("post_id")
-    createdAt DateTime @default(now()) @map("created_at")
-    updatedAt DateTime @updatedAt @map("updated_at")
+model Interaction {
+    id            Int             @id @default(autoincrement())
+    userId        String          @map("user_id")
+    postId        Int             @map("post_id")
+    isInteraction Boolean         @default(true) @map("is_interaction")
+    action        InteractionType @map("interaction_type_enum")
+    createdAt     DateTime        @default(now()) @map("created_at")
+    updatedAt     DateTime        @updatedAt @map("updated_at")
 
     user User @relation(fields: [userId], references: [id])
     post Post @relation(fields: [postId], references: [id])
 
-    @@unique([userId, postId], map: "uq_likes_user_post")
-    @@index([userId], map: "idx_likes_user_id")
-    @@index([postId], map: "idx_likes_post_id")
-    @@map("likes")
+    @@unique([userId, postId], map: "uq_interactions_user_post")
+    @@index([userId], map: "idx_interactions_user_id")
+    @@index([postId], map: "idx_interactions_post_id")
+    @@map("interactions")
 }
 
 model Topic {

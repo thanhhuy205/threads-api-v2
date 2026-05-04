@@ -3,6 +3,7 @@ import { jwtService } from '@/modules/jwt/service/jwt.service';
 import { getPagination } from '@/shared/pagination/pagination';
 import { Request, Response } from 'express';
 import { CreatePostDto } from '../dto/post.dto';
+import type { CreateInteractionDto } from '../dto/request/create-interaction.request';
 import type { ReportDto } from '../dto/request/post.request';
 import {
     NewsFeedQueryDto,
@@ -97,6 +98,18 @@ class PostController {
         });
 
         return res.success(201, POST_MESSAGE.CREATED, post);
+    }
+
+    async createInteraction(req: Request<PublicIdParamsDto, {}, CreateInteractionDto>, res: Response) {
+        const userId = req.user?.sub;
+
+        if (!userId) {
+            return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
+        }
+
+        await postService.createInteraction(req.params.publicId, userId, req.body.action);
+
+        return res.success(201, POST_MESSAGE.CREATED, { interacted: true });
     }
 
     async list(req: Request, res: Response) {

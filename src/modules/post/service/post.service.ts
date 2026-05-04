@@ -1,3 +1,4 @@
+import { NotFoundException } from '@/errors/error';
 import { pineProducer } from '@/modules/job/pine-vector/producer/pine.producer';
 import { mixedBreadService } from '@/modules/mixed-bread/service/mixed-bread.service';
 import { pineconeService } from '@/modules/pinecone/service/pinecone.service';
@@ -7,9 +8,10 @@ import type { CreatePostPayload } from '@/modules/post/interfaces/create-post-pa
 import type { GetPostWithPublicId } from '@/modules/post/interfaces/get-post-with-public-id';
 import type { GetPostWithUser } from '@/modules/post/interfaces/get-post-with-user';
 import type { NewsFeedPayload } from '@/modules/post/interfaces/news-feed-payload';
+import { interactionRepository } from '@/modules/post/repository/interaction.repository';
 import { userService } from '@/modules/user/service/user.service';
 import { buildPaginationResponse } from '@/shared/pagination/pagination';
-import { PostType, Prisma } from '@prisma/client';
+import { InteractionType, PostType, Prisma } from '@prisma/client';
 import { CreatePostDto } from '../dto/post.dto';
 import { PostRecord, postRepository } from '../repository/post.repository';
 
@@ -124,7 +126,7 @@ class PostService {
         if (!userSnapshot) {
             throw new Error('User not found');
         }
-        console.log(payload); 
+        console.log(payload);
         const post = await postRepository.create(payload, {
             id: userSnapshot.id,
             username: userSnapshot.username,
@@ -167,6 +169,20 @@ class PostService {
             createdAt: post.createdAt,
             userSnapshot: post.userSnapshot,
         };
+    }
+
+    async createInteraction(publicId: string, userId: string, action: InteractionType) {
+        const post = await postRepository.findByPublicId(publicId);
+
+        if (!post) {
+            throw new NotFoundException('Post not found');
+        }
+
+        return interactionRepository.create({
+            postId: post.id,
+            userId,
+            action,
+        });
     }
 
 
@@ -233,10 +249,7 @@ class PostService {
         } as PostRecord;
     }
 
-    async save(publicId: string, userId: string): Promise<void> {
-        // stub: no-op
-        return;
-    }
+
 
     async hide(publicId: string, userId: string): Promise<void> {
         const post = await postRepository.findByPublicId(publicId);
@@ -249,6 +262,11 @@ class PostService {
         }
 
         await postRepository.updateIsGhost(publicId, !post.isGhost);
+    }
+
+    async save(publicId: string, userId: string): Promise<void> {
+        // stub: no-op
+        return;
     }
 
     async like(publicId: string, userId: string): Promise<void> {

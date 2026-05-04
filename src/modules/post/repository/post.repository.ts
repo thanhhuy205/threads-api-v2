@@ -221,7 +221,10 @@ class PostRepository implements IPagination<Prisma.PostWhereInput, any> {
     async findByPublicId(publicId: string) {
         return prisma.post.findUnique({
             where: { publicId },
-            select: postFeedSelect,
+            select: {
+                id: true,
+                ...postFeedSelect,
+            },
         });
     }
 
