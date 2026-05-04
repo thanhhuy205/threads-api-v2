@@ -8,10 +8,11 @@ import type { CreatePostPayload } from '@/modules/post/interfaces/create-post-pa
 import type { GetPostWithPublicId } from '@/modules/post/interfaces/get-post-with-public-id';
 import type { GetPostWithUser } from '@/modules/post/interfaces/get-post-with-user';
 import type { NewsFeedPayload } from '@/modules/post/interfaces/news-feed-payload';
-import { interactionRepository } from '@/modules/post/repository/interaction.repository';
+import { likeRepository } from '@/modules/post/repository/like.repository';
 import { userService } from '@/modules/user/service/user.service';
+import { redisService } from '@/providers/redis.provider';
 import { buildPaginationResponse } from '@/shared/pagination/pagination';
-import { InteractionType, PostType, Prisma } from '@prisma/client';
+import { PostType, Prisma } from '@prisma/client';
 import { CreatePostDto } from '../dto/post.dto';
 import { PostRecord, postRepository } from '../repository/post.repository';
 
@@ -171,22 +172,6 @@ class PostService {
         };
     }
 
-    async createInteraction(publicId: string, userId: string, action: InteractionType) {
-        const post = await postRepository.findByPublicId(publicId);
-
-        if (!post) {
-            throw new NotFoundException('Post not found');
-        }
-
-        return interactionRepository.create({
-            postId: post.id,
-            userId,
-            action,
-        });
-    }
-
-
-
     async reply(publicId: string, payload: CreatePostDto & { userId: string }) {
         const userSnapshot = await userService.findByUserId(payload.userId);
 
@@ -269,20 +254,15 @@ class PostService {
         return;
     }
 
-    async like(publicId: string, userId: string): Promise<void> {
-        const post = await postRepository.findByPublicId(publicId);
-
-        if (!post) {
-            throw new Error('Post not found');
-        }
-
-        await interactionRepository.create({
-            postId: post.id,
+    async like(publicId: string, userId: string, isLiked: boolean): Promise<void> {
+        await likeRepository.upsert({
+            publicId,
             userId,
-            action: InteractionType.LIKE,
+            isLiked,
         });
 
-        return;
+        const key = `post:${publicId}:likes`;
+        await redisService.set(key, isLiked ? '1' : '0', { EX: 1000 });
     }
 
 

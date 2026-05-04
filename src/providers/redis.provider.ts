@@ -28,10 +28,4 @@ redisClient.on('ready', () => console.log('Redis ready'));
 
 export const redisService = redisClient;
 
-export const ensureRedisConnection = async () => {
-    if (!redisClient.isOpen) {
-        await redisClient.connect();
-    }
 
-    return redisClient;
-};

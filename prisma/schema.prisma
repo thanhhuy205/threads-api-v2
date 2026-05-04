@@ -155,7 +155,7 @@ model User {
     invitationRequests InvitationRequest[]
     circleInvitations  CircleInvitation[]  @relation("CircleInvitationUser")
     circleInvited      CircleInvitation[]  @relation("CircleInvitationInviter")
-    interactions       Interaction[]
+    likes              Like[]
 
     @@index([deletedAt], map: "idx_users_deleted_at")
     @@map("users")
@@ -227,12 +227,12 @@ model Post {
     root   Post?  @relation("PostRoot", fields: [rootPostId], references: [id])
     thread Post[] @relation("PostRoot")
 
-    media        PostMedia[]
-    mentions     PostMention[]
-    interactions Interaction[]
-    topicsPosts  TopicsPost[]
+    media       PostMedia[]
+    mentions    PostMention[]
+    topicsPosts TopicsPost[]
 
     collectionPosts CollectionPost[]
+    likes           Like[]
 
     @@index([userId, createdAt])
     @@index([parentId])
@@ -291,23 +291,21 @@ model Follow {
     @@map("follows")
 }
 
-model Interaction {
-    id            Int             @id @default(autoincrement())
-    userId        String          @map("user_id")
-    postId        Int             @map("post_id")
-    isInteraction Boolean         @default(true) @map("is_interaction")
-    action        InteractionType @map("interaction_type_enum")
-    createdAt     DateTime        @default(now()) @map("created_at")
-    updatedAt     DateTime        @updatedAt @map("updated_at")
+model Like {
+    id        Int      @id @default(autoincrement())
+    userId    String   @map("user_id")
+    postId    Int      @map("post_id")
+    isLike    Boolean  @default(false)
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
 
     user User @relation(fields: [userId], references: [id])
     post Post @relation(fields: [postId], references: [id])
 
-    @@unique([userId, postId], map: "uq_interactions_user_post")
-    @@unique([userId, postId, action], map: "uq_interactions_user_post_action")
-    @@index([userId], map: "idx_interactions_user_id")
-    @@index([postId], map: "idx_interactions_post_id")
-    @@map("interactions")
+    @@unique([userId, postId], map: "uq_likes_user_post")
+    @@index([userId], map: "idx_likes_user_id")
+    @@index([postId], map: "idx_likes_post_id")
+    @@map("likes")
 }
 
 model Topic {

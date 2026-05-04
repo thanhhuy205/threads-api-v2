@@ -154,6 +154,16 @@ export const postSwaggerSchemas = {
         },
         required: ['success', 'message', 'data'],
     },
+    LikeRequest: {
+        type: 'object',
+        properties: {
+            isLiked: {
+                type: 'boolean',
+                example: true,
+            },
+        },
+        required: ['isLiked'],
+    },
     ReportPostRequest: {
         type: 'object',
         properties: {
@@ -515,6 +525,16 @@ export const postSwaggerPaths = {
             summary: 'Like a post',
             security: bearerAuthSecurity,
             parameters: [publicIdParameters[0]],
+            requestBody: {
+                required: true,
+                content: {
+                    'application/json': {
+                        schema: {
+                            $ref: '#/components/schemas/LikeRequest',
+                        },
+                    },
+                },
+            },
             responses: {
                 200: {
                     description: POST_MESSAGE.RETRIEVED,

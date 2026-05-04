@@ -3,7 +3,7 @@ import { jwtService } from '@/modules/jwt/service/jwt.service';
 import { getPagination } from '@/shared/pagination/pagination';
 import { Request, Response } from 'express';
 import { CreatePostDto } from '../dto/post.dto';
-import type { CreateInteractionDto } from '../dto/request/create-interaction.request';
+import type { LikeDto } from '../dto/request/like.request';
 import type { ReportDto } from '../dto/request/post.request';
 import {
     NewsFeedQueryDto,
@@ -100,18 +100,6 @@ class PostController {
         return res.success(201, POST_MESSAGE.CREATED, post);
     }
 
-    async createInteraction(req: Request<PublicIdParamsDto, {}, CreateInteractionDto>, res: Response) {
-        const userId = req.user?.sub;
-
-        if (!userId) {
-            return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
-        }
-
-        await postService.createInteraction(req.params.publicId, userId, req.body.action);
-
-        return res.success(201, POST_MESSAGE.CREATED, { interacted: true });
-    }
-
     async list(req: Request, res: Response) {
         const posts = await postService.list();
         return res.success(200, POST_MESSAGE.RETRIEVED, posts);
@@ -152,15 +140,15 @@ class PostController {
         return res.success(201, POST_MESSAGE.CREATED, reply);
     }
 
-    async likePost(req: Request<PublicIdParamsDto>, res: Response) {
+    async likePost(req: Request<PublicIdParamsDto, {}, LikeDto>, res: Response) {
         const userId = req.user?.sub;
 
         if (!userId) {
             return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
         }
 
-        await postService.like(req.params.publicId, userId);
-        return res.success(200, POST_MESSAGE.RETRIEVED, { liked: true });
+        await postService.like(req.params.publicId, userId, req.body.isLiked);
+        return res.success(200, POST_MESSAGE.RETRIEVED, { liked: req.body.isLiked });
     }
 
     async repostPost(req: Request<PublicIdParamsDto>, res: Response) {

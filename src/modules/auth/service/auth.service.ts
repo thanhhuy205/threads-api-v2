@@ -10,7 +10,7 @@ import { emailProducer } from '@/modules/job/email/producer/email.producer';
 import { TokenPairResponse } from '@/modules/jwt/dto/response/token-pair.response';
 import { jwtService } from '@/modules/jwt/service/jwt.service';
 import { userRepository } from '@/modules/user/repository/user.repository';
-import { ensureRedisConnection } from '@/providers/redis.provider';
+import { redisService } from '@/providers/redis.provider';
 import { VerificationCodeType } from '@prisma/client';
 import crypto from 'crypto';
 import ms, { StringValue } from 'ms';
@@ -150,8 +150,7 @@ class AuthService {
     }
 
     async validateEmail(payload: ValidateEmailDto): Promise<ValidateUserResponseDto> {
-        const redisClient = await ensureRedisConnection();
-        const isExistingEmail = await redisClient.bf.exists('filter:emails', payload.email);
+        const isExistingEmail = await redisService.bf.exists('filter:emails', payload.email);
         baseLogger.info(`Checked email: ${payload.email} in Bloom filter, exists: ${isExistingEmail}`);
         return {
             available: !Boolean(isExistingEmail),
@@ -159,8 +158,7 @@ class AuthService {
     }
 
     async validateUsername(payload: ValidateUsernameDto): Promise<ValidateUserResponseDto> {
-        const redisClient = await ensureRedisConnection();
-        const isExistingUsername = await redisClient.bf.exists('filter:usernames', payload.username);
+        const isExistingUsername = await redisService.bf.exists('filter:usernames', payload.username);
         baseLogger.info(`Checked username: ${payload.username} in Bloom filter, exists: ${isExistingUsername}`);
 
         return {
@@ -243,8 +241,7 @@ class AuthService {
     }
 
     async logout(payload: LogoutDto): Promise<void> {
-        const redisClient = await ensureRedisConnection();
-        await redisClient.set(`bl:at:${payload.accessToken}`, 15 * 60); // Blacklist access token for 15 minutes
+        await redisService.set(`bl:at:${payload.accessToken}`, 15 * 60); // Blacklist access token for 15 minutes
 
         const hashedToken = hasherToken(payload.refreshToken);
         const refreshToken = await authRepository.findRefreshTokenByToken(hashedToken);

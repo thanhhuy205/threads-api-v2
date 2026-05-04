@@ -2,7 +2,7 @@ import { AUTH_MESSAGE } from '@/constants/message';
 import { ForbiddenException, UnauthorizedException } from '@/errors/error';
 import { jwtService } from '@/modules/jwt/service/jwt.service';
 import { userRepository } from '@/modules/user/repository/user.repository';
-import { ensureRedisConnection } from '@/providers/redis.provider';
+import { redisService } from '@/providers/redis.provider';
 import { UserRole, UserStatus } from '@prisma/client';
 import { NextFunction, Request, Response } from 'express';
 
@@ -18,8 +18,7 @@ export const authorization = async (req: Request, _res: Response, next: NextFunc
             throw new UnauthorizedException(AUTH_MESSAGE.TOKEN_INVALID);
         }
 
-        const redisClient = await ensureRedisConnection();
-        const isBlacklisted = await redisClient.exists(`bl:at:${token}`);
+        const isBlacklisted = await redisService.exists(`bl:at:${token}`);
 
         if (isBlacklisted > 0) {
             throw new UnauthorizedException(AUTH_MESSAGE.TOKEN_INVALID);
