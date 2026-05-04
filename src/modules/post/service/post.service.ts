@@ -124,7 +124,7 @@ class PostService {
         if (!userSnapshot) {
             throw new Error('User not found');
         }
-
+        console.log(payload); 
         const post = await postRepository.create(payload, {
             id: userSnapshot.id,
             username: userSnapshot.username,
@@ -188,7 +188,7 @@ class PostService {
             content: post.content!,
             userId: post.userId,
             createdAt: post.createdAt,
-            
+
         } as PostRecord;
     }
 

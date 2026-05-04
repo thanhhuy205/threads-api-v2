@@ -1,18 +1,18 @@
+import { baseLogger } from "@/middlewares/logger";
 import { NextFunction, Request, Response } from "express";
 import sharp from "sharp";
 
-export const resizeForThreads = async (req: Request, res: Response, next: NextFunction) => {
-    if (!req.file) return next();
 
-    const buffer = req.file.buffer;
+
+
+export const handlerResize = async (buffer: Buffer) => {
     const metadata = await sharp(buffer).metadata();
     const { width: w, height: h } = metadata;
 
     const MAX_WIDTH = 1080;
 
     if (w <= MAX_WIDTH && h <= MAX_WIDTH) {
-        req.file.resizedBuffer = buffer;
-        return next();
+        return buffer;
     }
 
     const resizedBuffer = await sharp(buffer)
@@ -20,7 +20,25 @@ export const resizeForThreads = async (req: Request, res: Response, next: NextFu
         .jpeg({ quality: 85 })
         .toBuffer();
 
-    req.file.resizedBuffer = resizedBuffer;
+    baseLogger.info(`Image resized from ${w}x${h} to fit within ${MAX_WIDTH}x${MAX_WIDTH}`);
+    return resizedBuffer;
+}
+
+export const resizeForThreads = async (req: Request, res: Response, next: NextFunction) => {
+    if (req.file) {
+        const buffer = req.file.buffer;
+        const resizedBuffer = await handlerResize(buffer);
+        req.file.resizedBuffer = resizedBuffer;
+    }
+
+    if (req.files) {
+        const files = req.files as Express.Multer.File[];
+        await Promise.all(files.map(async (file) => {
+            const buffer = file.buffer;
+            const resizedBuffer = await handlerResize(buffer);
+            file.resizedBuffer = resizedBuffer;
+        }));
+    }
+
     next();
 };
-

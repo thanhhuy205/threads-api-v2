@@ -9,7 +9,7 @@ class UploadService {
 
         return putObject({
             key,
-            body: file.buffer,
+            body: file.resizedBuffer || file.buffer,
             contentType: file.mimetype,
         });
     }
@@ -17,10 +17,10 @@ class UploadService {
     async uploadMedia(files: Express.Multer.File[]): Promise<UploadMediaDataDto> {
         const uploadResults = await Promise.all(
             files.map(async (file) => {
-                const key = generateKeyImage('post-media', file.originalname);
+                const key = generateKeyImage('medias', file.originalname);
                 const result = await putObject({
                     key,
-                    body: file.buffer,
+                    body: file.resizedBuffer || file.buffer,
                     contentType: file.mimetype,
                 });
 
@@ -34,7 +34,7 @@ class UploadService {
         );
 
         const medias = await postMediaRepository.createMedia(uploadResults);
-
+        
         return {
             medias,
         };

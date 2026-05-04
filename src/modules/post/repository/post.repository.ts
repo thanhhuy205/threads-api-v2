@@ -14,6 +14,11 @@ export type PostRecord = {
 
 type CreatePostPayload = CreatePostDto & {
     userId: string;
+    media?: {
+        id: number;
+        key: string;
+        url: string;
+    }[];
 };
 
 type CreateRepostPayload = CreatePostDto & {
@@ -64,7 +69,15 @@ class PostRepository implements IPagination<Prisma.PostWhereInput, any> {
                 content: payload.content,
                 userId: payload.userId,
                 userSnapshot,
+                media: payload.media?.length
+                    ? {
+                        connect: payload.media.map((media) => ({
+                            id: media.id,
+                        })),
+                    }
+                    : undefined,
             },
+
             select: {
                 id: true,
                 publicId: true,
