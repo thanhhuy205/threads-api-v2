@@ -3,34 +3,15 @@ import { mixedBreadService } from '@/modules/mixed-bread/service/mixed-bread.ser
 import { pineconeService } from '@/modules/pinecone/service/pinecone.service';
 import { NewFeedType } from '@/modules/post/enum';
 import { buildNewFeedWhere, buildUserPostsWhere } from '@/modules/post/helper';
+import type { CreatePostPayload } from '@/modules/post/interfaces/create-post-payload';
+import type { GetPostWithPublicId } from '@/modules/post/interfaces/get-post-with-public-id';
+import type { GetPostWithUser } from '@/modules/post/interfaces/get-post-with-user';
+import type { NewsFeedPayload } from '@/modules/post/interfaces/news-feed-payload';
 import { userService } from '@/modules/user/service/user.service';
 import { buildPaginationResponse } from '@/shared/pagination/pagination';
 import { PostType, Prisma } from '@prisma/client';
 import { CreatePostDto } from '../dto/post.dto';
 import { PostRecord, postRepository } from '../repository/post.repository';
-
-type NewsFeedPayload = {
-    currentPage: number;
-    perPage: number;
-    userId: string | null;
-    feedType?: NewFeedType;
-};
-
-type GetPostWithUser = {
-    currentPage: number;
-    perPage: number;
-    userId: string;
-};
-
-type GetPostWithPublicId = {
-    currentPage: number;
-    perPage: number;
-    publicId: string;
-};
-
-type CreatePostPayload = CreatePostDto & {
-    userId: string;
-};
 
 class PostService {
     private async paginatePosts({

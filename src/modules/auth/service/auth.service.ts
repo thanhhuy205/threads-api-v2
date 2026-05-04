@@ -1,6 +1,7 @@
 import configService from '@/config/config';
 import { NotFoundException } from '@/errors/error';
 import { baseLogger } from '@/middlewares/logger';
+import type { SessionMetadata } from '@/modules/auth/interfaces/session-metadata';
 import { verificationRepository } from '@/modules/auth/repository/verification.repository';
 import { comparePassword, hashPassword } from '@/modules/auth/util/hasher-password';
 import { hasherToken } from '@/modules/auth/util/hasher-token';
@@ -30,10 +31,6 @@ import type { ValidateTokenResponseDto } from '../dto/response/validate-token.re
 import type { ValidateUserResponseDto } from '../dto/response/validate-user.response.dto';
 import { authRepository } from '../repository/auth.repository';
 
-type SessionMetadata = {
-    ip: string;
-    userAgent: string;
-};
 
 class AuthService {
     async register(payload: RegisterDto, metadata: SessionMetadata): Promise<AuthSessionResponseDto> {

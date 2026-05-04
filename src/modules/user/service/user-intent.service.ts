@@ -1,10 +1,5 @@
+import type { CreateFeedIntentPayload } from '@/modules/user/interfaces/create-feed-intent-payload';
 import { userIntentRepository } from '../repository/user-intent.repository';
-
-type CreateFeedIntentPayload = {
-    sub: string;
-    positiveText?: string;
-    negativeText?: string;
-};
 
 class UserIntentService {
     async getFeedIntent(): Promise<void> { }
