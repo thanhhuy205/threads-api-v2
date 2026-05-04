@@ -88,6 +88,20 @@ enum CircleInvitationStatus {
     REJECTED
 }
 
+enum PostMediaType {
+    IMAGE
+    VIDEO
+    GIF
+    OTHER
+}
+
+enum PostMediaStatus {
+    TEMPORARY
+    UPLOADING
+    UPLOADED
+    FAILED
+}
+
 model User {
     id       String @id @default(cuid())
     email    String @unique @db.VarChar(255)
@@ -214,15 +228,16 @@ model Post {
 }
 
 model PostMedia {
-    id        Int      @id @default(autoincrement())
-    postId    Int      @map("post_id")
-    url       String   @db.VarChar(2048)
-    type      String?  @db.VarChar(50)
+    id        Int              @id @default(autoincrement())
+    postId    Int?              @map("post_id")
+    url       String           @db.VarChar(2048)
+    type      PostMediaType?   @map("type_enum")
     width     Int?
     height    Int?
-    createdAt DateTime @default(now()) @map("created_at")
-
-    post Post @relation(fields: [postId], references: [id])
+    createdAt DateTime         @default(now()) @map("created_at")
+    key       String?          @db.VarChar(255)
+    status    PostMediaStatus? @default(TEMPORARY) @map("status_enum")
+    post      Post?             @relation(fields: [postId], references: [id])
 
     @@index([postId], map: "idx_post_media_post_id")
     @@map("post_media")

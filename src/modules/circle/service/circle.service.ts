@@ -8,9 +8,6 @@ import { circleMemberRepository } from '../repository/circle-member.repository';
 import { circleRepository } from '../repository/circle.repository';
 
 class CircleService {
-
-
-
     async getCircle(currentPage: number, perPage: number) {
         const [circles, total] = await Promise.all([
             await circleRepository.findAll({ page: currentPage, limit: perPage }),

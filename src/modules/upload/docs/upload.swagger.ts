@@ -34,18 +34,35 @@ export const uploadSwaggerSchemas = {
         },
         required: ['success', 'message', 'data'],
     },
+    UploadMediaItemData: {
+        type: 'object',
+        properties: {
+            id: {
+                type: 'number',
+                example: 1,
+            },
+            key: {
+                type: 'string',
+                example: 'post-media/2026/05/uuid.webm',
+            },
+            url: {
+                type: 'string',
+                example: 'https://cdn.example.com/bucket/post-media/2026/05/uuid.webm',
+            },
+        },
+        required: ['id', 'key', 'url'],
+    },
     UploadMediaData: {
         type: 'object',
         properties: {
-            urls: {
+            medias: {
                 type: 'array',
                 items: {
-                    type: 'string',
-                    example: 'https://cdn.example.com/bucket/media/1714726800-media.jpg',
+                    $ref: '#/components/schemas/UploadMediaItemData',
                 },
             },
         },
-        required: ['urls'],
+        required: ['medias'],
     },
     UploadMediaSuccessResponse: {
         type: 'object',
@@ -84,6 +101,28 @@ const multipartFileRequestBody = {
     },
 };
 
+const multipartMediaRequestBody = {
+    required: true,
+    content: {
+        'multipart/form-data': {
+            schema: {
+                type: 'object',
+                properties: {
+                    medias: {
+                        type: 'array',
+                        items: {
+                            type: 'string',
+                            format: 'binary',
+                        },
+                        maxItems: 5,
+                    },
+                },
+                required: ['medias'],
+            },
+        },
+    },
+};
+
 export const uploadSwaggerPaths = {
     '/upload/avatar': {
         post: {
@@ -112,7 +151,7 @@ export const uploadSwaggerPaths = {
             tags: ['Upload'],
             summary: 'Upload post media',
             security: bearerAuthSecurity,
-            requestBody: multipartFileRequestBody,
+            requestBody: multipartMediaRequestBody,
             responses: {
                 201: {
                     description: UPLOAD_MESSAGE.UPLOAD_MEDIA_SUCCESS,

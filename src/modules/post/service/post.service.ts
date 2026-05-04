@@ -154,13 +154,19 @@ class PostService {
     }
 
     async getById(publicId: string) {
-        // Minimal stub: return a placeholder post object
+        const post = await postRepository.findByPublicId(publicId);
+
+        if (!post) {
+            return null;
+        }
+
         return {
             publicId,
-            content: '',
-            userId: '',
-            createdAt: new Date().toISOString(),
-        } as PostRecord;
+            content: post.content,
+            userId: post.userId,
+            createdAt: post.createdAt,
+            userSnapshot: post.userSnapshot,
+        };
     }
 
 
@@ -182,6 +188,7 @@ class PostService {
             content: post.content!,
             userId: post.userId,
             createdAt: post.createdAt,
+            
         } as PostRecord;
     }
 

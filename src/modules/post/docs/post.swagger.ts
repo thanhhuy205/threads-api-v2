@@ -322,6 +322,24 @@ export const postSwaggerPaths = {
         },
     },
     '/posts/{publicId}': {
+        get: {
+            tags: ['Post'],
+            summary: 'Get post by public id',
+            parameters: [publicIdParameters[0]],
+            responses: {
+                200: {
+                    description: POST_MESSAGE.RETRIEVED,
+                    content: {
+                        'application/json': {
+                            schema: {
+                                $ref: '#/components/schemas/PostSuccessResponse',
+                            },
+                        },
+                    },
+                },
+                404: { description: 'Post not found' },
+            },
+        },
         delete: {
             tags: ['Post'],
             summary: 'Delete post by public id',

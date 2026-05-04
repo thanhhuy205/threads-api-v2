@@ -16,6 +16,7 @@ const postRouter = Router();
 postRouter.get('/news-feed', validate(newsFeedQuerySchema, 'query'), postController.getNewsFeedController);
 postRouter.get('/search', postController.search);
 postRouter.get('/:publicId/replies', validate(publicIdParamsSchema, 'params'), validate(paginationQuerySchema, 'query'), postController.getReplies);
+postRouter.get('/:publicId', validate(publicIdParamsSchema, 'params'), postController.getPost);
 
 postRouter.use(authorization);
 

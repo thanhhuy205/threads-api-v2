@@ -23,3 +23,4 @@ export const resizeForThreads = async (req: Request, res: Response, next: NextFu
     req.file.resizedBuffer = resizedBuffer;
     next();
 };
+

@@ -118,6 +118,16 @@ class PostController {
         return res.success(200, POST_MESSAGE.RETRIEVED, post);
     }
 
+    async getPost(req: Request<PublicIdParamsDto>, res: Response) {
+        const post = await postService.getById(req.params.publicId);
+
+        if (!post) {
+            return res.error(404, 'Post not found');
+        }
+
+        return res.success(200, POST_MESSAGE.RETRIEVED, post);
+    }
+
     async replyPost(req: Request<PublicIdParamsDto, {}, CreatePostDto>, res: Response) {
         const userId = req.user?.sub;
 

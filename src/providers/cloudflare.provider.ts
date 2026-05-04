@@ -19,7 +19,10 @@ export const putObject = async (params: { key: string; body: Buffer; contentType
             ContentType: params.contentType ?? 'image/webp',
         }),
     );
-    return { key: params.key };
+    return {
+        key: params.key,
+        url: `${configService.R2_ENDPOINT}/${configService.R2_BUCKET_NAME}/${params.key}`,
+    };
 }
 
 export default s3;
