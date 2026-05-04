@@ -1,6 +1,9 @@
-import { Visibility } from "@prisma/client";
+import { Visibility } from '@prisma/client';
+import { z } from 'zod';
 
-export interface CreateCircleDto {
-    name: string;
-    visibility?: Visibility;
-}
+export const createCircleSchema = z.object({
+    name: z.string(),
+    visibility: z.nativeEnum(Visibility).optional(),
+});
+
+export type CreateCircleDto = z.infer<typeof createCircleSchema>;

@@ -1,10 +1,12 @@
-import { SendInvitationDto } from '@/modules/circle/dto/send-invitation.dto';
+import type { SendInvitationDto } from '@/modules/circle/dto/send-invitation.dto';
+import { getPagination } from '@/shared/pagination/pagination';
 import type { Request, Response } from 'express';
 import { circleService } from '../service/circle.service';
 
 class CircleController {
     async getCircle(req: Request, res: Response) {
-        const circle = await circleService.getCircle();
+        const { currentPage, perPage } = getPagination(req);
+        const circle = await circleService.getCircle(currentPage , perPage);
         return res.success(200, 'Circle module ready', circle);
     }
 

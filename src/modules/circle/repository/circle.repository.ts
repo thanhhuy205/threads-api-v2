@@ -1,10 +1,23 @@
 import prisma from "@/config/prisma";
 import { CreateCircleInput } from "@/modules/circle/interfaces/circle-service.interface";
+import { buildPagination } from "@/shared/pagination/pagination";
 import { $Enums, Circle, Prisma, RoleMembership } from "@prisma/client";
 
 class CircleRepository implements IPagination<Prisma.CircleWhereInput, Circle> {
-    findAll({ page, limit, where, orderBy }: { page: number; limit: number; where?: Prisma.CircleWhereInput | undefined; orderBy?: any; }): Promise<{ name: string; id: number; userId: string; createdAt: Date; updatedAt: Date; visibility: $Enums.Visibility; createById: string; }[]> {
-        throw new Error("Method not implemented.");
+    async findAll({ page, limit, where, orderBy }: { page: number; limit: number; where?: Prisma.CircleWhereInput | undefined; orderBy?: any; }): Promise<{ name: string; id: number; userId: string; createdAt: Date; updatedAt: Date; visibility: $Enums.Visibility; createById: string; }[]> {
+        const { currentLimit, offset } = buildPagination({ page, limit });
+        const circles = await prisma.$queryRaw`
+            SELECT 
+                c.*,
+                COUNT(cm.id) as member_count
+            FROM circles c
+            LEFT JOIN circle_members cm ON c.id = cm.circle_id
+            WHERE c.visibility != 'CIRCLE' 
+            GROUP BY c.id
+            ORDER BY member_count DESC
+            LIMIT ${currentLimit} OFFSET ${offset}
+            `;
+        return circles as any;
     }
     count(params: { where?: Prisma.CircleWhereInput | undefined; }): Promise<number> {
         throw new Error("Method not implemented.");

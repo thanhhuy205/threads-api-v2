@@ -5,13 +5,10 @@ import { circleMemberRepository } from '../repository/circle-member.repository';
 import { circleRepository } from '../repository/circle.repository';
 
 class CircleService {
-    async getCircle() {
-        const circles = await circleRepository.findAll({ page: 1, limit: 10 });
-        const members = await circleMemberRepository.findAll({ page: 1, limit: 10 });
-
+    async getCircle(currentPage: number, perPage: number) {
+        const circles = await circleRepository.findAll({ page: currentPage, limit: perPage });
         return {
             circles,
-            members,
         };
     }
 
@@ -35,7 +32,7 @@ class CircleService {
 
         const userRole = await circleMemberRepository.findRoleByCircleId(data.circleId, data.inviterId);
         if (userRole && (userRole.role === RoleMembership.ADMIN || userRole.role === RoleMembership.OWNER)) {
-           
+
         } else {
             throw new Error(`User ${data.inviterId} is not an admin or owner of circle ${data.circleId}`);
         }
