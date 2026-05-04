@@ -25,6 +25,10 @@ import {
 } from '../modules/upload/docs/upload.swagger';
 
 import {
+    circleSwaggerPaths,
+    circleSwaggerSchemas,
+} from '../modules/circle/docs/circle.swagger';
+import {
     jwtSwaggerSchemas,
 } from '../modules/jwt/docs/jwt.swagger';
 
@@ -65,6 +69,10 @@ export const swaggerDocument = {
             name: 'Upload',
             description: 'Upload APIs',
         },
+        {
+            name: 'Circle',
+            description: 'Circle / community APIs',
+        },
     ],
 
     paths: {
@@ -73,6 +81,7 @@ export const swaggerDocument = {
         ...postSwaggerPaths,
         ...userSwaggerPaths,
         ...uploadSwaggerPaths,
+        ...circleSwaggerPaths,
     },
 
     components: {
@@ -82,6 +91,7 @@ export const swaggerDocument = {
             ...postSwaggerSchemas,
             ...userSwaggerSchemas,
             ...uploadSwaggerSchemas,
+            ...circleSwaggerSchemas,
             ...jwtSwaggerSchemas,
         },
 
