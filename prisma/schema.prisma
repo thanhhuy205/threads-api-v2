@@ -304,6 +304,7 @@ model Interaction {
     post Post @relation(fields: [postId], references: [id])
 
     @@unique([userId, postId], map: "uq_interactions_user_post")
+    @@unique([userId, postId, action], map: "uq_interactions_user_post_action")
     @@index([userId], map: "idx_interactions_user_id")
     @@index([postId], map: "idx_interactions_post_id")
     @@map("interactions")

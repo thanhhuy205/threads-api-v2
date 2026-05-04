@@ -270,7 +270,18 @@ class PostService {
     }
 
     async like(publicId: string, userId: string): Promise<void> {
-        // stub: no-op
+        const post = await postRepository.findByPublicId(publicId);
+
+        if (!post) {
+            throw new Error('Post not found');
+        }
+
+        await interactionRepository.create({
+            postId: post.id,
+            userId,
+            action: InteractionType.LIKE,
+        });
+
         return;
     }
 
