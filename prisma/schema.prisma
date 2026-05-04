@@ -76,6 +76,12 @@ enum ActionType {
     SHARE_DELETED
 }
 
+enum RoleMembership {
+    OWNER
+    ADMIN
+    MEMBER
+}
+
 model User {
     id       String @id @default(cuid())
     email    String @unique @db.VarChar(255)
@@ -103,19 +109,20 @@ model User {
     createdAt DateTime  @default(now()) @map("created_at")
     updatedAt DateTime  @updatedAt @map("updated_at")
 
-    posts             Post[]
-    refreshTokens     RefreshToken[]
-    verificationCodes VerificationCode[]
-    follows           Follow[]           @relation("FollowUser")
-    followers         Follow[]           @relation("FollowFollowing")
-    likes             Like[]
-    userIntents       UserIntent[]
-    circles           Circle[]           @relation("CircleCreated")
-    circleMembers     CircleMember[]
-    antiSpams         AntiSpam[]
-    collections       Collection[]
-    emailLogs         EmailLog[]
-    notifications     Notification[]
+    posts              Post[]
+    refreshTokens      RefreshToken[]
+    verificationCodes  VerificationCode[]
+    follows            Follow[]            @relation("FollowUser")
+    followers          Follow[]            @relation("FollowFollowing")
+    likes              Like[]
+    userIntents        UserIntent[]
+    circles            Circle[]            @relation("CircleCreated")
+    circleMembers      CircleMember[]
+    antiSpams          AntiSpam[]
+    collections        Collection[]
+    emailLogs          EmailLog[]
+    notifications      Notification[]
+    invitationRequests InvitationRequest[]
 
     @@index([deletedAt], map: "idx_users_deleted_at")
     @@map("users")
@@ -354,25 +361,44 @@ model UserIntent {
 }
 
 model Circle {
-    id            Int            @id @default(autoincrement())
-    name          String         @db.VarChar(255)
-    userId        String         @map("user_id")
-    createdAt     DateTime       @default(now()) @map("created_at")
-    updatedAt     DateTime       @updatedAt @map("updated_at")
-    visibility    Visibility     @default(PRIVATE)
-    createdBy     User           @relation("CircleCreated", fields: [createById], references: [id])
-    createById    String         @map("create_by_id")
-    circleMembers CircleMember[]
+    id                 Int                 @id @default(autoincrement())
+    name               String              @db.VarChar(255)
+    userId             String              @map("user_id")
+    createdAt          DateTime            @default(now()) @map("created_at")
+    updatedAt          DateTime            @updatedAt @map("updated_at")
+    visibility         Visibility          @default(PRIVATE)
+    createdBy          User                @relation("CircleCreated", fields: [createById], references: [id])
+    createById         String              @map("create_by_id")
+    circleMembers      CircleMember[]
+    invitationRequests InvitationRequest[]
 
     @@index([userId], map: "idx_circles_user_id")
     @@map("circles")
 }
 
-model CircleMember {
+model InvitationRequest {
     id        Int      @id @default(autoincrement())
     circleId  Int      @map("circle_id")
     userId    String   @map("user_id")
+    status    String   @db.VarChar(50)
     createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    circle Circle @relation(fields: [circleId], references: [id])
+    user   User   @relation(fields: [userId], references: [id])
+
+    @@unique([circleId, userId], map: "uq_invitation_requests_circle_user")
+    @@index([circleId], map: "idx_invitation_requests_circle_id")
+    @@index([userId], map: "idx_invitation_requests_user_id")
+    @@map("invitation_requests")
+}
+
+model CircleMember {
+    id        Int            @id @default(autoincrement())
+    circleId  Int            @map("circle_id")
+    userId    String         @map("user_id")
+    createdAt DateTime       @default(now()) @map("created_at")
+    role      RoleMembership @default(MEMBER)
 
     circle Circle @relation(fields: [circleId], references: [id])
     user   User   @relation(fields: [userId], references: [id])
