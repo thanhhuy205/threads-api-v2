@@ -1,20 +1,546 @@
 // prisma/seed.ts
-// import { PrismaMariaDb } from '@prisma/adapter-mariadb';
-// import { PostType, PrismaClient } from '@prisma/client';
-// import dotenv from 'dotenv';
-// dotenv.config();
+import { PrismaMariaDb } from '@prisma/adapter-mariadb';
+import { CircleInvitationStatus, PrismaClient, RoleMembership, Visibility } from '@prisma/client';
+import dotenv from 'dotenv';
+dotenv.config();
 
-// const adapter = new PrismaMariaDb({
-//     port: Number(process.env.DB_PORT) || 3306,
-//     host: process.env.DB_HOST || 'localhost',
-//     user: process.env.DB_USER || 'root',
-//     password: process.env.DB_PASSWORD || 'password',
-//     database: process.env.DB_NAME || 'threads_api',
-// });
-// const prisma = new PrismaClient({
-//     adapter,
-// });
+const adapter = new PrismaMariaDb({
+    port: Number(process.env.DB_PORT) || 3306,
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || 'password',
+    database: process.env.DB_NAME || 'threads_api',
+});
+const prisma = new PrismaClient({
+    adapter,
+});
+//  const vietnameseGirls = [
+//   {
+//     name: 'Nguyễn Thị Lan Anh',
+//     username: 'lananh.nguyen',
+//     email: 'lananh.nguyen@gmail.com',
+//     bio: 'Thích cà phê sáng và những buổi chiều đọc sách ☕📚',
+//     location: 'Hà Nội',
+//     website: 'https://lananh.blog',
+//     avatar: 'https://i.pravatar.cc/300?img=1',
+//   },
+//   {
+//     name: 'Trần Minh Châu',
+//     username: 'minchau.tran',
+//     email: 'minchau.tran@gmail.com',
+//     bio: 'Nhiếp ảnh phong cảnh | Du lịch bụi khắp miền Trung 🌄',
+//     location: 'Đà Nẵng',
+//     website: 'https://minchau.photos',
+//     avatar: 'https://i.pravatar.cc/300?img=2',
+//   },
+//   {
+//     name: 'Lê Thị Hương Giang',
+//     username: 'huonggiang.le',
+//     email: 'huonggiang.le@gmail.com',
+//     bio: 'Giáo viên tiếng Anh yêu âm nhạc indie 🎵',
+//     location: 'Huế',
+//     website: '',
+//     avatar: 'https://i.pravatar.cc/300?img=3',
+//   },
+//   {
+//     name: 'Phạm Thảo Nguyên',
+//     username: 'thaonguyen.pham',
+//     email: 'thaonguyen.pham@gmail.com',
+//     bio: 'Foodie | Review quán ăn vặt Sài Gòn 🍜',
+//     location: 'TP. Hồ Chí Minh',
+//     website: 'https://thaonguyen.food',
+//     avatar: 'https://i.pravatar.cc/300?img=4',
+//   },
+//   {
+//     name: 'Võ Khánh Linh',
+//     username: 'khanhlinh.vo',
+//     email: 'khanhlinh.vo@gmail.com',
+//     bio: 'UX Designer | Mê đồ handmade và cây cảnh 🌿',
+//     location: 'TP. Hồ Chí Minh',
+//     website: 'https://khanhlinh.design',
+//     avatar: 'https://i.pravatar.cc/300?img=5',
+//   },
+//   {
+//     name: 'Hoàng Thị Mai',
+//     username: 'hoangmai.hth',
+//     email: 'hoangmai.hth@gmail.com',
+//     bio: 'Sinh viên y khoa | Tập gym mỗi ngày 💪',
+//     location: 'Hải Phòng',
+//     website: '',
+//     avatar: 'https://i.pravatar.cc/300?img=6',
+//   },
+//   {
+//     name: 'Đặng Ngọc Bích',
+//     username: 'ngocbich.dang',
+//     email: 'ngocbich.dang@gmail.com',
+//     bio: 'Kế toán ban ngày, bán bánh homemade ban đêm 🍰',
+//     location: 'Cần Thơ',
+//     website: 'https://bichbakery.vn',
+//     avatar: 'https://i.pravatar.cc/300?img=7',
+//   },
+//   {
+//     name: 'Bùi Phương Anh',
+//     username: 'phuonganh.bui',
+//     email: 'phuonganh.bui@gmail.com',
+//     bio: 'Travel blogger | 30 tỉnh thành trong 2 năm ✈️',
+//     location: 'Hà Nội',
+//     website: 'https://phuonganh.travel',
+//     avatar: 'https://i.pravatar.cc/300?img=8',
+//   },
+//   {
+//     name: 'Đinh Thị Quỳnh',
+//     username: 'dinhquynh.dtq',
+//     email: 'dinhquynh.dtq@gmail.com',
+//     bio: 'Lập trình viên React | Cuồng anime và manga 🎌',
+//     location: 'Hà Nội',
+//     website: 'https://github.com/dinhquynh',
+//     avatar: 'https://i.pravatar.cc/300?img=9',
+//   },
+//   {
+//     name: 'Ngô Thị Diễm My',
+//     username: 'diemmy.ngo',
+//     email: 'diemmy.ngo@gmail.com',
+//     bio: 'MC sự kiện | Yoga mỗi sáng 🧘‍♀️',
+//     location: 'Biên Hòa',
+//     website: '',
+//     avatar: 'https://i.pravatar.cc/300?img=10',
+//   },
+//   {
+//     name: 'Trịnh Thanh Hà',
+//     username: 'thanhha.trinh',
+//     email: 'thanhha.trinh@gmail.com',
+//     bio: 'Nhà thiết kế thời trang tự do ✂️👗',
+//     location: 'TP. Hồ Chí Minh',
+//     website: 'https://thanhha.fashion',
+//     avatar: 'https://i.pravatar.cc/300?img=11',
+//   },
+//   {
+//     name: 'Phan Thị Ngọc Hân',
+//     username: 'ngochan.phan',
+//     email: 'ngochan.phan@gmail.com',
+//     bio: 'Bác sĩ thú y | Nuôi 3 mèo và 1 chó 🐾',
+//     location: 'Đà Lạt',
+//     website: '',
+//     avatar: 'https://i.pravatar.cc/300?img=12',
+//   },
+//   {
+//     name: 'Lưu Thị Kim Oanh',
+//     username: 'kimoanh.luu',
+//     email: 'kimoanh.luu@gmail.com',
+//     bio: 'Chuyên viên marketing | Yêu K-drama và trà sữa 🧋',
+//     location: 'Hà Nội',
+//     website: '',
+//     avatar: 'https://i.pravatar.cc/300?img=13',
+//   },
+//   {
+//     name: 'Tạ Hải Yến',
+//     username: 'haiyen.ta',
+//     email: 'haiyen.ta@gmail.com',
+//     bio: 'Giảng viên đại học | Nghiên cứu văn học Việt Nam cổ điển 📖',
+//     location: 'Hà Nội',
+//     website: 'https://haiyen.edu.vn',
+//     avatar: 'https://i.pravatar.cc/300?img=14',
+//   },
+//   {
+//     name: 'Vũ Thị Lan',
+//     username: 'vulan.vtl',
+//     email: 'vulan.vtl@gmail.com',
+//     bio: 'Diễn viên kịch nghiệp dư | Mê phim tài liệu 🎬',
+//     location: 'TP. Hồ Chí Minh',
+//     website: '',
+//     avatar: 'https://i.pravatar.cc/300?img=15',
+//   },
+//   {
+//     name: 'Huỳnh Thị Bảo Châu',
+//     username: 'baochau.huynh',
+//     email: 'baochau.huynh@gmail.com',
+//     bio: 'Chủ tiệm hoa tươi | Chia sẻ cách cắm hoa Ikebana 🌸',
+//     location: 'Cần Thơ',
+//     website: 'https://baochauflower.vn',
+//     avatar: 'https://i.pravatar.cc/300?img=16',
+//   },
+//   {
+//     name: 'Đỗ Minh Tuyết',
+//     username: 'minhttuyet.do',
+//     email: 'minhttuyet.do@gmail.com',
+//     bio: 'Kỹ sư phần mềm | Chạy marathon cuối tuần 🏃‍♀️',
+//     location: 'Hà Nội',
+//     website: 'https://github.com/minhttuyet',
+//     avatar: 'https://i.pravatar.cc/300?img=17',
+//   },
+//   {
+//     name: 'Cao Thị Thu Hằng',
+//     username: 'thuhang.cao',
+//     email: 'thuhang.cao@gmail.com',
+//     bio: 'Nhân viên ngân hàng | Sưu tầm tem thư và đồng xu cổ 🪙',
+//     location: 'Nam Định',
+//     website: '',
+//     avatar: 'https://i.pravatar.cc/300?img=18',
+//   },
+//   {
+//     name: 'Lý Thị Xuân',
+//     username: 'lyxuan.ltx',
+//     email: 'lyxuan.ltx@gmail.com',
+//     bio: 'Đầu bếp | Chuyên ẩm thực miền Tây Nam Bộ 🍲',
+//     location: 'Vĩnh Long',
+//     website: 'https://xuancook.vn',
+//     avatar: 'https://i.pravatar.cc/300?img=19',
+//   },
+//   {
+//     name: 'Mai Thị Hồng Nhung',
+//     username: 'hongnhung.mai',
+//     email: 'hongnhung.mai@gmail.com',
+//     bio: 'Streamer gaming | Main VALORANT và Liên Quân 🎮',
+//     location: 'TP. Hồ Chí Minh',
+//     website: 'https://twitch.tv/hongnhungvn',
+//     avatar: 'https://i.pravatar.cc/300?img=20',
+//   },
+//   {
+//     name: 'Nguyễn Hà Phương',
+//     username: 'haphuong.nguyen',
+//     email: 'haphuong.nguyen@gmail.com',
+//     bio: 'Stylist | Mê vintage và thrift shopping 👒',
+//     location: 'Hội An',
+//     website: '',
+//     avatar: 'https://i.pravatar.cc/300?img=21',
+//   },
+//   {
+//     name: 'Trần Thị Ngọc Trinh',
+//     username: 'ngooctrinh.tran',
+//     email: 'ngooctrinh.tran@gmail.com',
+//     bio: 'Kiến trúc sư cảnh quan | Mê đọc sách self-help 🌳',
+//     location: 'Hà Nội',
+//     website: '',
+//     avatar: 'https://i.pravatar.cc/300?img=22',
+//   },
+//   {
+//     name: 'Lê Ngọc Anh',
+//     username: 'ngocanh.le',
+//     email: 'ngocanh.le@gmail.com',
+//     bio: 'HR Manager | Coaching kỹ năng mềm cho sinh viên 🎯',
+//     location: 'Hà Nội',
+//     website: 'https://ngocanh.coach',
+//     avatar: 'https://i.pravatar.cc/300?img=23',
+//   },
+//   {
+//     name: 'Phạm Thị Mỹ Linh',
+//     username: 'mylinh.pham',
+//     email: 'mylinh.pham@gmail.com',
+//     bio: 'Nhiếp ảnh gia chân dung | Workshop mỗi tháng 📷',
+//     location: 'Đà Nẵng',
+//     website: 'https://mylinhphoto.com',
+//     avatar: 'https://i.pravatar.cc/300?img=24',
+//   },
+//   {
+//     name: 'Nguyễn Thị Bảo Ngọc',
+//     username: 'baongoc.nguyen',
+//     email: 'baongoc.nguyen@gmail.com',
+//     bio: 'Dược sĩ | Chia sẻ kiến thức sức khỏe và dinh dưỡng 💊',
+//     location: 'TP. Hồ Chí Minh',
+//     website: '',
+//     avatar: 'https://i.pravatar.cc/300?img=25',
+//   },
+//   {
+//     name: 'Võ Thị Thanh Thảo',
+//     username: 'thanhthao.vo',
+//     email: 'thanhthao.vo@gmail.com',
+//     bio: 'Nhà văn tự do | Đã xuất bản 2 tập truyện ngắn ✍️',
+//     location: 'Nha Trang',
+//     website: 'https://thanhthaowrites.com',
+//     avatar: 'https://i.pravatar.cc/300?img=26',
+//   },
+//   {
+//     name: 'Hoàng Khánh Huyền',
+//     username: 'khanhhuyen.hoang',
+//     email: 'khanhhuyen.hoang@gmail.com',
+//     bio: 'Luật sư | Tình nguyện viên pháp lý cộng đồng ⚖️',
+//     location: 'Hà Nội',
+//     website: '',
+//     avatar: 'https://i.pravatar.cc/300?img=27',
+//   },
+//   {
+//     name: 'Đặng Thị Tường Vy',
+//     username: 'tuongvy.dang',
+//     email: 'tuongvy.dang@gmail.com',
+//     bio: 'Content creator | Kênh YouTube về cuộc sống du học 🇰🇷',
+//     location: 'Seoul (gốc Cần Thơ)',
+//     website: 'https://youtube.com/@tuongvydang',
+//     avatar: 'https://i.pravatar.cc/300?img=28',
+//   },
+//   {
+//     name: 'Bùi Thị Cẩm Tú',
+//     username: 'camtu.bui',
+//     email: 'camtu.bui@gmail.com',
+//     bio: 'Chuyên viên tư vấn du học | Cựu sinh viên NUS 🎓',
+//     location: 'TP. Hồ Chí Minh',
+//     website: 'https://camtu.edu',
+//     avatar: 'https://i.pravatar.cc/300?img=29',
+//   },
+//   {
+//     name: 'Đinh Thị Phúc An',
+//     username: 'phucan.dinh',
+//     email: 'phucan.dinh@gmail.com',
+//     bio: 'Nha sĩ | Yêu leo núi và cắm trại dã ngoại 🏕️',
+//     location: 'Lâm Đồng',
+//     website: '',
+//     avatar: 'https://i.pravatar.cc/300?img=30',
+//   },
+// ]
 
+// // ─── main ────────────────────────────────────────────────────────────────────
+
+// async function main() {
+//   console.log('▶ Bắt đầu tạo 30 user nữ người Việt...\n')
+
+//   const hashedPassword = await bcrypt.hash('Password@123', 10)
+
+//   let created = 0
+//   let skipped = 0
+
+//   for (const girl of vietnameseGirls) {
+//     const existing = await prisma.user.findFirst({
+//       where: {
+//         OR: [{ email: girl.email }, { username: girl.username }],
+//       },
+//     })
+
+//     if (existing) {
+//       console.log(`  ⚠ Bỏ qua (đã tồn tại): ${girl.username}`)
+//       skipped++
+//       continue
+//     }
+
+//     const user = await prisma.user.create({
+//       data: {
+//         email:    girl.email,
+//         username: girl.username,
+//         password: hashedPassword,
+//         name:     girl.name,
+//         bio:      girl.bio,
+//         avatar:   girl.avatar,
+//         location: girl.location,
+//         website:  girl.website || null,
+//         role:     UserRole.USER,
+//         status:   UserStatus.ACTIVE,
+//         isPrivate: false,
+//         verifiedAt: new Date(), // tài khoản đã xác thực
+//       },
+//     })
+
+//     console.log(`  ✔ [${String(created + 1).padStart(2, '0')}] ${user.name} (@${user.username}) — ${girl.location}`)
+//     created++
+//   }
+
+//   console.log(`\n✅ Hoàn tất! Đã tạo: ${created} | Bỏ qua: ${skipped}`)
+//   console.log('\nMật khẩu mặc định cho tất cả: Password@123')
+// }
+
+// main()
+//   .catch((e) => {
+//     console.error('❌ Seed thất bại:', e)
+//     process.exit(1)
+//   })
+//   .finally(() => prisma.$disconnect())
+// const slice = (users: { id: string }[], start: number, end: number) =>
+//     users.slice(start, end).map((u) => u.id)
+
+// async function createCircleWithMembers({
+//     name,
+//     visibility,
+//     creatorId,
+//     adminIds,
+//     memberIds,
+//     invitationRequestUserIds,
+//     invitationSentToUserIds,
+//     inviterId,
+// }: {
+//     name: string
+//     visibility: Visibility
+//     creatorId: string
+//     adminIds: string[]
+//     memberIds: string[]
+//     invitationRequestUserIds: string[]  // 3 user tự xin vào
+//     invitationSentToUserIds: string[]   // 3 user được mời
+//     inviterId: string                   // người gửi lời mời (OWNER hoặc ADMIN)
+// }) {
+//     console.log(`\n▶ Tạo circle "${name}" [${visibility}]...`)
+
+//     // 1. Tạo Circle
+//     const circle = await prisma.circle.create({
+//         data: {
+//             name,
+//             userId: creatorId,
+//             createById: creatorId,
+//             visibility,
+//         },
+//     })
+//     console.log(`  ✔ circle id=${circle.id}`)
+
+//     // 2. OWNER
+//     await prisma.circleMember.create({
+//         data: { circleId: circle.id, userId: creatorId, role: RoleMembership.OWNER },
+//     })
+
+//     // 3. ADMIN (2 người)
+//     await prisma.circleMember.createMany({
+//         data: adminIds.map((userId) => ({
+//             circleId: circle.id,
+//             userId,
+//             role: RoleMembership.ADMIN,
+//         })),
+//         skipDuplicates: true,
+//     })
+
+//     // 4. MEMBER (phần còn lại)
+//     await prisma.circleMember.createMany({
+//         data: memberIds.map((userId) => ({
+//             circleId: circle.id,
+//             userId,
+//             role: RoleMembership.MEMBER,
+//         })),
+//         skipDuplicates: true,
+//     })
+
+//     const total = 1 + adminIds.length + memberIds.length
+//     console.log(
+//         `  ✔ Members: 1 OWNER + ${adminIds.length} ADMIN + ${memberIds.length} MEMBER = ${total}`
+//     )
+
+//     // 5. InvitationRequest — user tự xin vào nhóm (3 trạng thái)
+//     const reqStatuses = ['PENDING', 'ACCEPTED', 'REJECTED'] as const
+//     await prisma.invitationRequest.createMany({
+//         data: invitationRequestUserIds.map((userId, i) => ({
+//             circleId: circle.id,
+//             userId,
+//             status: reqStatuses[i % 3],
+//         })),
+//         skipDuplicates: true,
+//     })
+//     console.log(
+//         `  ✔ InvitationRequest (xin vào): PENDING=${invitationRequestUserIds[0]?.slice(0, 8)}… | ACCEPTED | REJECTED`
+//     )
+
+//     // 6. CircleInvitation — owner/admin mời người dùng (3 trạng thái)
+//     const invStatuses = [
+//         CircleInvitationStatus.PENDING,
+//         CircleInvitationStatus.ACCEPTED,
+//         CircleInvitationStatus.REJECTED,
+//     ]
+//     await prisma.circleInvitation.createMany({
+//         data: invitationSentToUserIds.map((userId, i) => ({
+//             circleId: circle.id,
+//             userId,
+//             inviterId,
+//             status: invStatuses[i % 3],
+//         })),
+//         skipDuplicates: true,
+//     })
+//     console.log(
+//         `  ✔ CircleInvitation (được mời): PENDING | ACCEPTED | REJECTED`
+//     )
+
+//     return circle
+// }
+
+// // ─── main ────────────────────────────────────────────────────────────────────
+
+// async function main() {
+//     const users = await prisma.user.findMany({
+//         orderBy: { createdAt: 'asc' },
+//         take: 100,
+//         select: { id: true },
+//     })
+
+//     if (users.length < 100) {
+//         throw new Error(
+//             `Seed yêu cầu ít nhất 100 user, hiện chỉ có ${users.length}`
+//         )
+//     }
+
+//     const id = (i: number) => users[i].id
+
+//     /**
+//      * Phân bổ index (không trùng CircleMember giữa các nhóm):
+//      *
+//      * ┌─────────────────────────────────────────────────────────────────┐
+//      * │ PRIVATE (30 members) — users[0..29]                            │
+//      * │   OWNER   : users[0]                                           │
+//      * │   ADMIN   : users[1], users[2]                                 │
+//      * │   MEMBER  : users[3..29]  (27 người)                           │
+//      * │   InvReq  : users[30], [31], [32]  → PENDING/ACCEPTED/REJECTED │
+//      * │   CircInv : users[33], [34], [35]  → PENDING/ACCEPTED/REJECTED │
+//      * ├─────────────────────────────────────────────────────────────────┤
+//      * │ PUBLIC (50 members) — users[36..85]                            │
+//      * │   OWNER   : users[36]                                          │
+//      * │   ADMIN   : users[37], users[38]                               │
+//      * │   MEMBER  : users[39..85]  (47 người)                          │
+//      * │   InvReq  : users[86], [87], [88]                              │
+//      * │   CircInv : users[89], [90], [91]                              │
+//      * ├─────────────────────────────────────────────────────────────────┤
+//      * │ CIRCLE (20 members) — users[92..99] + users[30..43]            │
+//      * │   (users[30..35] chỉ là InvReq/CircInv của nhóm PRIVATE,      │
+//      * │    không phải CircleMember nên không vi phạm unique constraint) │
+//      * │   OWNER   : users[92]                                          │
+//      * │   ADMIN   : users[93], users[94]                               │
+//      * │   MEMBER  : users[95..99] (5) + users[30..41] (12) = 17 người  │
+//      * │             tổng = 1 + 2 + 17 = 20 ✔                          │
+//      * │   InvReq  : users[42], [43], [44]                              │
+//      * │   CircInv : users[45], [46], [47]                              │
+//      * └─────────────────────────────────────────────────────────────────┘
+//      */
+
+//     // ── 1. PRIVATE ──────────────────────────────────────────────────────────
+//     await createCircleWithMembers({
+//         name: 'Nhóm Riêng Tư (Private)',
+//         visibility: Visibility.PRIVATE,
+//         creatorId: id(0),
+//         adminIds: [id(1), id(2)],
+//         memberIds: slice(users, 3, 30),          // 27 → tổng 30
+//         invitationRequestUserIds: [id(30), id(31), id(32)],
+//         invitationSentToUserIds: [id(33), id(34), id(35)],
+//         inviterId: id(1),
+//     })
+
+//     // ── 2. PUBLIC ───────────────────────────────────────────────────────────
+//     await createCircleWithMembers({
+//         name: 'Nhóm Công Khai (Public)',
+//         visibility: Visibility.PUBLIC,
+//         creatorId: id(36),
+//         adminIds: [id(37), id(38)],
+//         memberIds: slice(users, 39, 86),         // 47 → tổng 50
+//         invitationRequestUserIds: [id(86), id(87), id(88)],
+//         invitationSentToUserIds: [id(89), id(90), id(91)],
+//         inviterId: id(37),
+//     })
+
+//     // ── 3. CIRCLE ───────────────────────────────────────────────────────────
+//     await createCircleWithMembers({
+//         name: 'Nhóm Vòng Tròn (Circle)',
+//         visibility: Visibility.CIRCLE,
+//         creatorId: id(92),
+//         adminIds: [id(93), id(94)],
+//         memberIds: [
+//             ...slice(users, 95, 100),  // users[95..99] = 5
+//             ...slice(users, 30, 42),   // users[30..41] = 12  → tổng member = 17, total = 20
+//         ],
+//         invitationRequestUserIds: [id(42), id(43), id(44)],
+//         invitationSentToUserIds: [id(45), id(46), id(47)],
+//         inviterId: id(93),
+//     })
+
+//     console.log('\n✅ Seed hoàn tất — 3 circles đã được tạo thành công!\n')
+//     console.log('Tổng kết:')
+//     console.log('  • Nhóm Riêng Tư  (PRIVATE) : 30 members, 3 InvReq, 3 CircInv')
+//     console.log('  • Nhóm Công Khai (PUBLIC)  : 50 members, 3 InvReq, 3 CircInv')
+//     console.log('  • Nhóm Vòng Tròn (CIRCLE)  : 20 members, 3 InvReq, 3 CircInv')
+// }
+
+// main()
+//     .catch((e) => {
+//         console.error('❌ Seed thất bại:', e)
+//         process.exit(1)
+//     })
+//     .finally(() => prisma.$disconnect())
 // const rootContents = [
 //     // Tech / Dev
 //     `Sau 3 năm làm backend, mình nhận ra rằng: code sạch không phải là viết ít dòng nhất — mà là code người khác đọc vào hiểu ngay mà không cần hỏi. 🧹`,

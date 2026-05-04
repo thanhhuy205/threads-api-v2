@@ -9,6 +9,19 @@ class CircleMemberRepository implements IPagination<Prisma.CircleMemberWhereInpu
         return [];
     }
 
+    async create(data: { circleId: number; userId: string; }, tx: Prisma.TransactionClient): Promise<CircleMember> {
+        const db = tx || prisma;
+        const result = await db.circleMember.create({
+            data: {
+                circleId: data.circleId,
+                userId: data.userId,
+            },
+        });
+
+        return result;
+    }
+
+
     async findByCircleId(circleId: number, userId: string): Promise<CircleMember[]> {
         const members = await prisma.circleMember.findMany({
             where: {

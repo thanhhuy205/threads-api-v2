@@ -1,7 +1,7 @@
 import prisma from "@/config/prisma";
 import { CreateCircleInput } from "@/modules/circle/interfaces/circle-service.interface";
 import { buildPagination } from "@/shared/pagination/pagination";
-import { $Enums, Circle, Prisma, RoleMembership } from "@prisma/client";
+import { $Enums, Circle, CircleInvitationStatus, Prisma, RoleMembership } from "@prisma/client";
 
 class CircleRepository implements IPagination<Prisma.CircleWhereInput, Circle> {
     async findAll({ page, limit, where, orderBy }: { page: number; limit: number; where?: Prisma.CircleWhereInput | undefined; orderBy?: any; }): Promise<{ name: string; id: number; userId: string; createdAt: Date; updatedAt: Date; visibility: $Enums.Visibility; createById: string; }[]> {
@@ -41,6 +41,32 @@ class CircleRepository implements IPagination<Prisma.CircleWhereInput, Circle> {
 
         return result;
     }
+
+    async findInvitation(circleId: number, userId: string) {
+        const invitation = await prisma.circleInvitation.findFirst({
+            where: {
+                circleId,
+                userId,
+                status: CircleInvitationStatus.PENDING,
+            },
+        });
+        return invitation;
+    }
+
+    async acceptInvitation(circleId: number, userId: string, tx: Prisma.TransactionClient) {
+        const db = tx || prisma;
+        await db.circleInvitation.updateMany({
+            where: {
+                circleId,
+                userId,
+                status: CircleInvitationStatus.PENDING,
+            },
+            data: {
+                status: CircleInvitationStatus.ACCEPTED,
+            },
+        });
+    }
+
 
 
 }

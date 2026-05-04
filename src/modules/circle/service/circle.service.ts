@@ -1,4 +1,6 @@
+import prisma from '@/config/prisma';
 import { CreateCircleInput } from '@/modules/circle/interfaces/circle-service.interface';
+import { ResponseInvitationInput } from '@/modules/circle/interfaces/response-invitation.dto';
 import { SendInvitationInput } from '@/modules/circle/interfaces/send-invitation.interface';
 import { RoleMembership } from '@prisma/client';
 import { circleMemberRepository } from '../repository/circle-member.repository';
@@ -38,5 +40,24 @@ class CircleService {
         }
 
     }
+
+    async acceptInvitation(data: ResponseInvitationInput) {
+        const circle = await circleMemberRepository.findByCircleId(data.circleId, data.userId);
+        if (circle.length > 0) {
+            throw new Error(`User ${data.userId} is already a member of circle ${data.circleId}`);
+        }
+        const invitation = await circleRepository.findInvitation(data.circleId, data.userId);
+        if (!invitation) {
+            throw new Error(`No invitation found for user ${data.userId} to join circle ${data.circleId}`);
+        }
+        return prisma.$transaction(async (prisma) => {
+            await circleRepository.acceptInvitation(data.circleId, data.userId, prisma);
+            await circleMemberRepository.create({
+                circleId: data.circleId,
+                userId: data.userId,
+            }, prisma);
+        });
+    }
+
 }
 export const circleService = new CircleService();

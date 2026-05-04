@@ -1,3 +1,4 @@
+import { ResponseInvitationDto } from '@/modules/circle/dto/response-invitation.dto';
 import type { SendInvitationDto } from '@/modules/circle/dto/send-invitation.dto';
 import { getPagination } from '@/shared/pagination/pagination';
 import type { Request, Response } from 'express';
@@ -6,7 +7,7 @@ import { circleService } from '../service/circle.service';
 class CircleController {
     async getCircle(req: Request, res: Response) {
         const { currentPage, perPage } = getPagination(req);
-        const circle = await circleService.getCircle(currentPage , perPage);
+        const circle = await circleService.getCircle(currentPage, perPage);
         return res.success(200, 'Circle module ready', circle);
     }
 
@@ -27,6 +28,20 @@ class CircleController {
         });
         return res.success(200, `Invitation sent to user ${userId} for circle ${circleId}`);
     }
+
+    async acceptInvitation(req: Request<{}, {}, ResponseInvitationDto, {}>, res: Response) {
+        if (!req.user) {
+            return res.error(401, 'Unauthorized');
+        }
+        const { circleId, status } = req.body;
+        await circleService.acceptInvitation({
+            circleId,
+            userId: req.user.id,
+            status: status === 'ACCEPTED' ? 'ACCEPTED' : 'REJECTED',
+        });
+        return res.success(200, `Invitation ${status} for user ${req.user.id} to join circle ${circleId}`);
+    }
+
 }
 
 export const circleController = new CircleController();
