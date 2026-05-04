@@ -10,7 +10,11 @@ declare global {
             isAdmin?: UserRole;
             query_parsed?: any;
         }
-
+        namespace Multer {
+            interface File {
+                resizedBuffer: Buffer<ArrayBufferLike>;
+            }
+        }
         interface Response {
             success(status: HttpsCode, message?: string, data?: any, passProps = {}): Response;
             error(status: HttpsCode, message?: string, errors?: any, passProps = {}): Response;
