@@ -6,7 +6,7 @@ export const postFeedSelect = Prisma.validator<Prisma.PostSelect>()({
     content: true,
     parentId: true,
     originPostId: true,
-    // origin: postOriginSelect,
+    origin: true,
     parent: true,
     rootPostId: true,
     userSnapshot: true,

@@ -194,10 +194,6 @@ model Post {
     originPublicId String? @map("origin_public_id")
     rootPublicId   String? @map("root_public_id")
 
-    isLikedByAuth    Boolean @default(false) @map("is_liked_by_auth")
-    isSavedByAuth    Boolean @default(false) @map("is_saved_by_auth")
-    isRepostedByAuth Boolean @default(false) @map("is_reposted_by_auth")
-
     userSnapshot    Json?  @map("user_snapshot")
     replyPermission String @default("everyone") @map("reply_permission") @db.VarChar(50)
 

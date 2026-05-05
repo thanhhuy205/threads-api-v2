@@ -205,10 +205,16 @@ class PostService {
             throw new Error('User not found');
         }
 
+        const originPost = await postRepository.findByPublicId(payload.publicId);
+
+        if (!originPost) {
+            throw new Error('Origin post not found');
+        }
+
         const post = await postRepository.createRepost({
             userId,
-            content: payload.content
-        }, payload.publicId, userSnapshot);
+            content: payload.content,
+        }, payload.publicId, userSnapshot, originPost.id);
 
         return {
             publicId: post.publicId,
@@ -224,10 +230,17 @@ class PostService {
         if (!userSnapshot) {
             throw new Error('User not found');
         }
+
+        const originPost = await postRepository.findByPublicId(publicId);
+
+        if (!originPost) {
+            throw new Error('Origin post not found');
+        }
+
         const post = await postRepository.createQuote({
             userId: payload.userId,
             content: payload.content
-        }, publicId, userSnapshot);
+        }, publicId, userSnapshot, originPost.id);
 
 
         return {

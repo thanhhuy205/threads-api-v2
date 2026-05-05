@@ -64,7 +64,7 @@ class PostRepository implements IPagination<Prisma.PostWhereInput, any> {
                             },
                             take: 1,
                         },
-                        origin: {
+                        derivatives: {
                             where: {
                                 isQuote: true,
                                 userId: userId
@@ -73,7 +73,7 @@ class PostRepository implements IPagination<Prisma.PostWhereInput, any> {
                                 publicId: true,
                                 userId: true,
                             },
-                            take: 1,
+                            take: 1
                         }
                     }
                     : {}),
@@ -168,14 +168,16 @@ class PostRepository implements IPagination<Prisma.PostWhereInput, any> {
         bio: string | null;
         avatar: string | null;
         followersCount: number;
-    }) {
+    }, originPostId: number) {
         const post = await prisma.post.create({
             data: {
                 userId: payload.userId,
                 originPublicId,
                 content: '', // for repost, content is empty
                 userSnapshot,
-                type: PostType.REPOST
+                isQuote: true,
+                type: PostType.REPOST,
+                originPostId: originPostId,
             },
             select: {
                 id: true,
@@ -201,14 +203,16 @@ class PostRepository implements IPagination<Prisma.PostWhereInput, any> {
         bio: string | null;
         avatar: string | null;
         followersCount: number;
-    }) {
+    }, postId: number) {
         const post = await prisma.post.create({
             data: {
                 content: payload.content,
                 userId: payload.userId,
                 originPublicId,
                 userSnapshot,
-                type: PostType.QUOTE
+                isQuote: true,
+                type: PostType.QUOTE,
+                originPostId: postId,
             },
             select: {
                 id: true,

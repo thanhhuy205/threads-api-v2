@@ -1,3 +1,4 @@
+import { baseLogger } from '@/middlewares/logger';
 import { Prisma } from '@prisma/client';
 import { postFeedSelect } from '../selector/post.selector';
 
@@ -12,21 +13,17 @@ export type PostFeedItem = Prisma.PostGetPayload<{
     likes?: {
         userId: string;
     }[];
-    origin?: PostOriginItem | PostOriginItem[] | null;
+    derivatives?: PostOriginItem[] | null;
 };
 
 export type PostFeedResponse = Omit<PostFeedItem, 'likes'> & {
     isLikedByAuth: boolean;
     isRepostByAuth: boolean;
-    origin: PostOriginItem | null;
 };
 
 export class PostMapper {
     static toFeedResponse(post: PostFeedItem, userId?: string): PostFeedResponse {
-        const origin = Array.isArray(post.origin)
-            ? post.origin[0] ?? null
-            : post.origin ?? null;
-
+        baseLogger.info(`Mapping post with id ${post.publicId} to feed response for user ${userId}. Post derivatives: ${JSON.stringify(post.derivatives)}, Likes: ${JSON.stringify(post.likes)}`);
         return {
             userId: post.userId,
             createdAt: post.createdAt,
@@ -40,14 +37,14 @@ export class PostMapper {
             likesCount: post.likesCount,
             repliesCount: post.repliesCount,
             repostsCountAndQuoteCount: post.repostsCountAndQuoteCount,
+            origin: post.origin,
             viewsCount: post.viewsCount,
             isGhost: post.isGhost,
-            origin,
             parent: post.parent,
             media: post.media,
             mentions: post.mentions,
             isLikedByAuth: Boolean(userId && post.likes?.length),
-            isRepostByAuth: Boolean(userId && origin),
+            isRepostByAuth: Boolean(userId && post.derivatives && post.derivatives.length > 0),
         };
     }
 }
