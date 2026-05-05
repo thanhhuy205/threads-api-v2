@@ -22,6 +22,13 @@ export const redisWorker = new IORedis({
     maxRetriesPerRequest: null,
 });
 
+
+export const redisSub = new IORedis({
+    host: configService.REDIS_HOST || '127.0.0.1',
+    port: Number(configService.REDIS_PORT || 6379),
+    password: configService.REDIS_PASSWORD || undefined,
+});
+
 redisClient.on('error', (err) => console.log('Redis error:', err));
 redisClient.on('connect', () => console.log('Redis connecting...'));
 redisClient.on('ready', () => console.log('Redis ready'));

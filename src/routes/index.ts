@@ -3,6 +3,7 @@ import authRouter from '@/modules/auth/auth.routes';
 import circleRouter from '@/modules/circle/circle.routes';
 import healthRouter from '@/modules/health/health.routes';
 import postRouter from '@/modules/post/post.routes';
+import sseRouter from '@/modules/sse/sse.route';
 import uploadRouter from '@/modules/upload/upload.routes';
 import userFollowRouter from '@/modules/user/user-follow.routes';
 import userRouter from '@/modules/user/user.routes';
@@ -20,5 +21,6 @@ router.use('/users', usersRouter);
 router.use('/user', userFollowRouter);
 router.use('/upload', uploadRouter);
 router.use('/posts', postRouter);
+router.use("/sse", sseRouter)
 
 export default router;
