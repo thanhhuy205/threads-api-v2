@@ -24,6 +24,31 @@ export const circleSwaggerSchemas = {
         },
         required: ['id', 'name', 'userId', 'visibility', 'createById', 'createdAt', 'updatedAt'],
     },
+    CircleInvitationItem: {
+        type: 'object',
+        properties: {
+            userId: { type: 'string', example: 'user_456' },
+            id: { type: 'number', example: 12 },
+            status: { type: 'string', enum: ['PENDING', 'ACCEPTED', 'REJECTED'], example: 'PENDING' },
+            createdAt: { type: 'string', format: 'date-time' },
+            updatedAt: { type: 'string', format: 'date-time' },
+            circleId: { type: 'number', example: 1 },
+            inviterId: { type: 'string', example: 'user_123' },
+        },
+        required: ['userId', 'id', 'status', 'createdAt', 'updatedAt', 'circleId', 'inviterId'],
+    },
+    Pagination: {
+        type: 'object',
+        properties: {
+            currentPage: { type: 'number', example: 1 },
+            perPage: { type: 'number', example: 20 },
+            total: { type: 'number', example: 42 },
+            lastPage: { type: 'number', example: 3 },
+            from: { type: 'number', example: 1 },
+            to: { type: 'number', example: 20 },
+        },
+        required: ['currentPage', 'perPage', 'total', 'lastPage', 'from', 'to'],
+    },
     CreateCircleResponse: {
         type: 'object',
         properties: {
@@ -90,6 +115,18 @@ export const circleSwaggerSchemas = {
         },
         required: ['success', 'message'],
     },
+    RequestInvitationResponse: {
+        type: 'object',
+        properties: {
+            success: { type: 'boolean', example: true },
+            data: {
+                type: 'array',
+                items: { $ref: '#/components/schemas/CircleInvitationItem' },
+            },
+            pagination: { $ref: '#/components/schemas/Pagination' },
+        },
+        required: ['success', 'data', 'pagination'],
+    },
 };
 
 export const circleSwaggerPaths = {
@@ -134,6 +171,24 @@ export const circleSwaggerPaths = {
             responses: {
                 200: { description: 'Invitation sent', content: { 'application/json': { schema: { $ref: '#/components/schemas/SendInvitationResponse' } } } },
                 400: { description: COMMON_MESSAGE.BAD_REQUEST },
+                401: { description: COMMON_MESSAGE.UNAUTHORIZED },
+            },
+        },
+    },
+    '/circle/request-invitation': {
+        get: {
+            tags: ['Circle'],
+            summary: 'Get current user circle invitations',
+            security: bearerAuthSecurity,
+            parameters: [
+                { name: 'page', in: 'query', schema: { type: 'number', example: 1 } },
+                { name: 'limit', in: 'query', schema: { type: 'number', example: 20 } },
+            ],
+            responses: {
+                200: {
+                    description: 'Circle invitations retrieved',
+                    content: { 'application/json': { schema: { $ref: '#/components/schemas/RequestInvitationResponse' } } },
+                },
                 401: { description: COMMON_MESSAGE.UNAUTHORIZED },
             },
         },

@@ -3,13 +3,19 @@ import { SendInvitationInput } from "@/modules/circle/interfaces/send-invitation
 import { buildPagination } from "@/shared/pagination/pagination";
 import { Prisma } from "@prisma/client";
 class CircleInvitationRepository implements IPagination<Prisma.CircleInvitationWhereInput, any> {
-    findAll({ page, limit, where, props: { } }: { page: number; limit: number; where?: Prisma.CircleInvitationWhereInput | undefined; props?: any; }): Promise<any[]> {
+    findAll({ page, limit, where }: { page: number; limit: number; where?: Prisma.CircleInvitationWhereInput | undefined; props?: any; }): Promise<any[]> {
         const { currentLimit, offset } = buildPagination({ page, limit });
         return prisma.circleInvitation.findMany({
             where: where ?? {},
             take: currentLimit,
             skip: offset,
-
+            select: {
+                id: true,
+                circleId: true,
+                userId: true,
+                status: true,
+                circle: true
+            }
         });
     }
     count(params: { where?: Prisma.CircleInvitationWhereInput | undefined; props?: any; }): Promise<number> {

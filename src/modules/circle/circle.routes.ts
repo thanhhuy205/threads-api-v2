@@ -9,7 +9,7 @@ import { sendInvitationSchema } from './dto/send-invitation.dto';
 const circleRouter = Router();
 
 circleRouter.get('/', circleController.getCircle);
-circleRouter.get('request-invitation', authorization, circleController.getCircle);
+circleRouter.get('/request-invitation', authorization, circleController.getRequestInvitation);
 circleRouter.post('/', authorization, validate(createCircleSchema), circleController.createCircle);
 circleRouter.post('/send-invitation', authorization, validate(sendInvitationSchema), circleController.sendInvitation);
 circleRouter.post('/response-invitation', authorization, validate(responseInvitationSchema), circleController.acceptInvitation);

@@ -18,8 +18,11 @@ class CircleController {
 
     async getRequestInvitation(req: Request, res: Response) {
         const { currentPage, perPage } = getPagination(req);
-        const circle = await circleService.getCircle(currentPage, perPage);
-        return res.paginate({ rows: circle.circles, pagination: circle.pagination });
+        if (!req.user) {
+            return res.error(401, 'Unauthorized');
+        }
+        const circle = await circleService.getRequestInvitation(currentPage, perPage, req.user.id);
+        return res.paginate({ rows: circle.invitations, pagination: circle.pagination });
     }
 
     async sendInvitation(req: Request<{}, {}, SendInvitationDto, {}>, res: Response) {
