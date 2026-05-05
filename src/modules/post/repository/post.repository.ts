@@ -64,6 +64,17 @@ class PostRepository implements IPagination<Prisma.PostWhereInput, any> {
                             },
                             take: 1,
                         },
+                        origin: {
+                            where: {
+                                isQuote: true,
+                                userId: userId
+                            },
+                            select: {
+                                publicId: true,
+                                userId: true,
+                            },
+                            take: 1,
+                        }
                     }
                     : {}),
             },
