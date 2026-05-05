@@ -15,22 +15,17 @@ export const buildNewFeedWhere = (userId: string | null, feedType: NewFeedType) 
         }
     };
 
-    if (userId && feedType === NewFeedType.ME) {
+    if (feedType === NewFeedType.FOR_YOU && userId) {
         return {
             ...baseWhere,
-            userId
-        }
+            userId: {
+                not: userId,
+            },
+        };
     }
 
+    return baseWhere;
 
-    // TODO: Tạm thời chưa triển khai
-    if (feedType === NewFeedType.FOLLOWING) {
-        return {
-            ...baseWhere
-        }
-    }
-
-    return baseWhere
 }
 
 

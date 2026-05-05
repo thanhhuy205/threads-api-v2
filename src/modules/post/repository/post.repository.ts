@@ -1,4 +1,5 @@
 import prisma from '@/config/prisma';
+import { baseLogger } from '@/middlewares/logger';
 import { postFeedSelect } from '@/modules/post/selector/post.selector';
 import { buildPagination } from '@/shared/pagination/pagination';
 import { PostType, Prisma } from '@prisma/client';
@@ -32,22 +33,40 @@ class PostRepository implements IPagination<Prisma.PostWhereInput, any> {
         page,
         limit,
         where,
-        orderBy
+        props: { userId, orderBy }
     }: {
         page: number;
         limit: number;
         where?: Prisma.PostWhereInput;
-        orderBy?: Prisma.PostOrderByWithRelationInput | Prisma.PostOrderByWithRelationInput[];
+        props: { orderBy?: any, userId?: string | null };
     }) {
         const { currentLimit, offset } = buildPagination({ page, limit });
         const sortOrder = orderBy ?? { createdAt: 'desc' };
 
+        baseLogger.info(`${JSON.stringify(where)}`);
+        baseLogger.info(`Finding posts with where: ${where ? JSON.stringify(where) : 'none'}, orderBy: ${JSON.stringify(sortOrder)}, limit: ${currentLimit}, offset: ${offset}`);
         return prisma.post.findMany({
             where: where ?? {},
             orderBy: sortOrder,
             skip: offset,
             take: currentLimit,
-            select: postFeedSelect
+            select: {
+                ...postFeedSelect,
+                ...(userId
+                    ? {
+                        likes: {
+                            where: {
+                                userId: userId,
+                                isLike: true,
+                            },
+                            select: {
+                                userId: true,
+                            },
+                            take: 1,
+                        },
+                    }
+                    : {}),
+            },
         });
     }
 

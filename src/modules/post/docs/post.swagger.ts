@@ -275,6 +275,7 @@ export const postSwaggerPaths = {
         get: {
             tags: ['Post'],
             summary: 'Get news feed',
+            security: bearerAuthSecurity,
             parameters: newsFeedQueryParameters,
             responses: {
                 200: {

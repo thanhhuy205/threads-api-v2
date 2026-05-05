@@ -2,6 +2,7 @@ export const QUEUE_NAME = {
     PINECONE_QUEUE: 'pinecone_queue',
     EMAIL_QUEUE: 'email_queue',
     BLOOM_QUEUE: 'bloom_queue',
+    LIKE_QUEUE: 'like_queue',
 }
 
 
@@ -9,6 +10,7 @@ export const WORKER_NAME = {
     PINECONE_WORKER: 'pinecone_worker',
     EMAIL_WORKER: 'email_verification_worker',
     BLOOM_WORKER: 'bloom_worker',
+    LIKE_WORKER: 'like_worker',
 }
 
 export const PINECONE_JOB_NAME = {
@@ -21,6 +23,10 @@ export const EMAIL_JOB_NAME = {
 
 export const BLOOM_JOB_NAME = {
     GENERATE_BLOOM: 'generate_bloom',
+}
+
+export const LIKE_JOB_NAME = {
+    SYNC_POST_LIKE: 'sync-post-like',
 }
 
 export const BLOOM_KEY = {

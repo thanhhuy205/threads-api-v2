@@ -1,4 +1,5 @@
-import { NotFoundException } from '@/errors/error';
+import { baseLogger } from '@/middlewares/logger';
+import { likeProducer } from '@/modules/job/like-job/producer/like.producer';
 import { pineProducer } from '@/modules/job/pine-vector/producer/pine.producer';
 import { mixedBreadService } from '@/modules/mixed-bread/service/mixed-bread.service';
 import { pineconeService } from '@/modules/pinecone/service/pinecone.service';
@@ -8,7 +9,7 @@ import type { CreatePostPayload } from '@/modules/post/interfaces/create-post-pa
 import type { GetPostWithPublicId } from '@/modules/post/interfaces/get-post-with-public-id';
 import type { GetPostWithUser } from '@/modules/post/interfaces/get-post-with-user';
 import type { NewsFeedPayload } from '@/modules/post/interfaces/news-feed-payload';
-import { likeRepository } from '@/modules/post/repository/like.repository';
+import { PostMapper } from '@/modules/post/mapper/post.mapper';
 import { userService } from '@/modules/user/service/user.service';
 import { redisService } from '@/providers/redis.provider';
 import { buildPaginationResponse } from '@/shared/pagination/pagination';
@@ -21,24 +22,26 @@ class PostService {
         currentPage,
         perPage,
         where,
+        userId,
     }: {
         currentPage: number;
         perPage: number;
         where: Prisma.PostWhereInput;
+        userId?: string | null;
     }) {
         const [posts, total] = await Promise.all([
             postRepository.findAll({
                 page: currentPage,
                 limit: perPage,
                 where,
+                props: { userId }
             }),
             postRepository.count({ where })
         ]);
-
         return {
-            posts,
+            posts: posts.map(post => PostMapper.toFeedResponse(post, userId ?? undefined)),
             pagination: buildPaginationResponse(total, currentPage, perPage),
-        }
+        };
     }
 
     async getNewsFeed({
@@ -48,11 +51,12 @@ class PostService {
         feedType = NewFeedType.FOR_YOU,
     }: NewsFeedPayload) {
         const where = buildNewFeedWhere(userId, feedType);
-
+        baseLogger.info(`Getting news feed for user ${JSON.stringify(userId)} with feed type ${JSON.stringify(feedType)}. Generated where clause: ${JSON.stringify(where)}`);
         return this.paginatePosts({
             currentPage,
             perPage,
             where,
+            userId
         });
     }
 
@@ -255,14 +259,19 @@ class PostService {
     }
 
     async like(publicId: string, userId: string, isLiked: boolean): Promise<void> {
-        await likeRepository.upsert({
-            publicId,
-            userId,
-            isLiked,
-        });
+        const key = `post:${publicId}:${userId}:likes`;
+        await redisService.set(key, isLiked ? '1' : '0', { EX: 60 });
 
-        const key = `post:${publicId}:likes`;
-        await redisService.set(key, isLiked ? '1' : '0', { EX: 1000 });
+        const jobKey = `like-sync:${publicId}:${userId}`;
+
+        const isJobAlreadyScheduled = await redisService.set(jobKey, "pending", { NX: true, EX: 30 });
+
+        if (isJobAlreadyScheduled) {
+            await likeProducer.syncPostLike({
+                publicId,
+                userId,
+            });
+        }
     }
 
 
