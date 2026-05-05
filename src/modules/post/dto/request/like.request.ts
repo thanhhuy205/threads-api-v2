@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const likeSchema = z.object({
-    isLiked: z.boolean(),
+    isLiked: z.coerce.boolean(),
 });
 
 export type LikeDto = z.infer<typeof likeSchema>;

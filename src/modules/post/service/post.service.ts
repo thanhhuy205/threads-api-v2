@@ -168,11 +168,7 @@ class PostService {
         }
 
         return {
-            publicId,
-            content: post.content,
-            userId: post.userId,
-            createdAt: post.createdAt,
-            userSnapshot: post.userSnapshot,
+            ...post
         };
     }
 

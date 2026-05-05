@@ -8,12 +8,18 @@ class CircleController {
     async getCircle(req: Request, res: Response) {
         const { currentPage, perPage } = getPagination(req);
         const circle = await circleService.getCircle(currentPage, perPage);
-        return res.success(200, 'Circle module ready', circle);
+        return res.paginate({ rows: circle.circles, pagination: circle.pagination });
     }
 
     async createCircle(req: Request, res: Response) {
         const circle = await circleService.createCircle(req.body);
         return res.success(201, 'Circle created successfully', circle);
+    }
+
+    async getRequestInvitation(req: Request, res: Response) {
+        const { currentPage, perPage } = getPagination(req);
+        const circle = await circleService.getCircle(currentPage, perPage);
+        return res.paginate({ rows: circle.circles, pagination: circle.pagination });
     }
 
     async sendInvitation(req: Request<{}, {}, SendInvitationDto, {}>, res: Response) {

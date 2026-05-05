@@ -2,6 +2,7 @@ import prisma from '@/config/prisma';
 import { CreateCircleInput } from '@/modules/circle/interfaces/circle-service.interface';
 import { ResponseInvitationInput } from '@/modules/circle/interfaces/response-invitation.dto';
 import { SendInvitationInput } from '@/modules/circle/interfaces/send-invitation.interface';
+import { circleInvitationRepository } from '@/modules/circle/repository/circle-invation.repository';
 import { buildPaginationResponse } from '@/shared/pagination/pagination';
 import { RoleMembership, Visibility } from '@prisma/client';
 import { circleMemberRepository } from '../repository/circle-member.repository';
@@ -68,6 +69,17 @@ class CircleService {
                 userId: data.userId,
             }, prisma);
         });
+    }
+
+    async getRequestInvitation(currentPage: number, perPage: number, userId: string) {
+        const [invitations, total] = await Promise.all([
+            await circleInvitationRepository.findAll({ page: currentPage, limit: perPage, where: { userId } }),
+            await circleInvitationRepository.count({ where: { userId } }),
+        ]);
+        return {
+            invitations,
+            pagination: buildPaginationResponse(total, currentPage, perPage),
+        }
     }
 
 }

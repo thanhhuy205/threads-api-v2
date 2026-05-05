@@ -17,6 +17,7 @@ export const logger = pinoHttp({
                 url: req.url,
                 query: req.query,
                 params: req.params,
+                body: req.body,
             };
         },
 

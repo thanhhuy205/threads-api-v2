@@ -1,9 +1,10 @@
-import { LIKE_JOB_NAME, QUEUE_NAME } from '@/constants/queue';
-import { baseLogger } from '@/middlewares/logger';
-import type { CreateJobLikeProducer } from '@/modules/job/like-job/dto/create-job-like-producer';
-import { likeRepository } from '@/modules/post/repository/like.repository';
-import { createWorker } from '@/providers/bullmq.provider';
-import { redisService } from '@/providers/redis.provider';
+import { LIKE_JOB_NAME, QUEUE_NAME } from '../src/constants/queue';
+import { baseLogger } from '../src/middlewares/logger';
+import type { CreateJobLikeProducer } from '../src/modules/job/like-job/dto/create-job-like-producer';
+import { likeRepository } from '../src/modules/post/repository/like.repository';
+import { postRepository } from '../src/modules/post/repository/post.repository';
+import { createWorker } from '../src/providers/bullmq.provider';
+import { redisService } from '../src/providers/redis.provider';
 
 class LikeWorker {
     private readonly worker = createWorker(QUEUE_NAME.LIKE_QUEUE, async (job) => {
@@ -24,7 +25,6 @@ class LikeWorker {
             baseLogger.info(`Skip like sync for ${likeKey} because no Redis state was found`);
             return;
         }
-
         const isLiked = likeState === '1';
 
         await likeRepository.upsert({
@@ -33,6 +33,12 @@ class LikeWorker {
             isLiked,
         });
 
+        if (isLiked) {
+            await postRepository.incrementLikedCount(data.publicId , data.userId);
+        }
+        else {
+            await postRepository.decrementLikedCount(data.publicId, data.userId);
+        }
         baseLogger.info(`Synced like state for ${likeKey}: ${likeState}`);
     }
 }

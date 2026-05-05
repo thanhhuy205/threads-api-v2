@@ -268,6 +268,33 @@ class PostRepository implements IPagination<Prisma.PostWhereInput, any> {
             data: { isGhost },
         });
     }
+    async incrementLikedCount(publicId: string, userId: string): Promise<void> {
+        await prisma.$executeRaw`
+    UPDATE posts p
+    JOIN likes l ON l.post_id = p.id
+    SET 
+      p.likes_count = GREATEST(p.likes_count + 1, 0),
+      l.is_like = 1
+    WHERE 
+      p.public_id = ${publicId}
+      AND l.user_id = ${userId}
+      AND l.is_like = 0
+  `;
+    }
+
+    async decrementLikedCount(publicId: string, userId: string): Promise<void> {
+        await prisma.$executeRaw`
+    UPDATE posts p
+    JOIN likes l ON l.post_id = p.id
+    SET 
+      p.likes_count = GREATEST(p.likes_count - 1, 0),
+      l.is_like = 0
+    WHERE 
+      p.public_id = ${publicId}
+      AND l.user_id = ${userId}
+      AND l.is_like = 1
+  `;
+    }
 }
 
 export const postRepository = new PostRepository();
