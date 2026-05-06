@@ -50,8 +50,8 @@ class SseService {
                 createdAt: data.createdAt ?? new Date().toISOString(),
             }
         };
-
-        redisPub.publish(this.CHANNEL, JSON.stringify(payload));
+        const channel = `user:${userId}`;
+        redisPub.publish(channel, JSON.stringify(payload));
     }
 
     connect(userId: string, res: Response) {

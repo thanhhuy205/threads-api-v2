@@ -2,4 +2,5 @@ import type { CreateKnowledgeRankingDto } from '@/modules/knowledge-ranking/dto/
 
 export type CreateKnowledgeRankingPayload = CreateKnowledgeRankingDto & {
     knowledgePostId: string;
+    userId: string;
 };

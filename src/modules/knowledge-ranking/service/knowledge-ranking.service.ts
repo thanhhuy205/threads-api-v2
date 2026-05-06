@@ -2,10 +2,10 @@ import type { CreateKnowledgeRankingPayload } from '../interfaces/create-knowled
 import { knowledgeRankingRepository } from '../repository/knowledge-ranking.repository';
 
 class KnowledgeRankingService {
-    async create(knowledgePostId: string, payload: CreateKnowledgeRankingPayload) {
+    async create(payload: CreateKnowledgeRankingPayload) {
         return knowledgeRankingRepository.create({
             ...payload,
-            knowledgePostId,
+
         });
     }
 

@@ -11,6 +11,7 @@ class NotificationController {
         }
 
         const result = notificationService.createWelcome(userId);
+        
         return res.success(200, 'Welcome notification sent', result);
     }
 }
