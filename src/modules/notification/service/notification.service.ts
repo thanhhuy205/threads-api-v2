@@ -2,7 +2,7 @@ import type { WelcomeNotificationPayload } from '@/modules/notification/interfac
 import { sseService } from '@/modules/sse/service/sse.service';
 
 class NotificationService {
-    createWelcome(userId: string) {
+    async createWelcome(userId: string) {
         const payload: WelcomeNotificationPayload = {
             title: 'Welcome',
             message: 'Welcome to Threads',
@@ -10,10 +10,10 @@ class NotificationService {
             createdAt: new Date().toISOString(),
         };
 
-        const sentCount = sseService.sendNotificationToUser(userId, payload);
+        const subscriberCount = await sseService.sendNotificationToUser(userId, payload);
 
         return {
-            sentCount,
+            subscriberCount,
             payload,
         };
     }

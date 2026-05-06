@@ -4,5 +4,5 @@ import { Router } from 'express';
 
 const sseRouter = Router();
 
-sseRouter.get('/event', authorization, sseController.connect);
+sseRouter.get('/', authorization, sseController.connect);
 export default sseRouter;

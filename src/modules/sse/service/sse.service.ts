@@ -1,8 +1,6 @@
-import { SsePayload } from '@/modules/sse/interface/sse.types';
+import { SseEventName, SsePayload } from '@/modules/sse/interface/sse.types';
 import { redisService as redisPub, redisSub } from '@/providers/redis.provider'; // ← cần cả pub và sub
 import type { Response } from 'express';
-
-type SseEventName = 'connected' | 'notification' | 'heartbeat';
 
 type NotificationPayload = {
     title: string;
@@ -21,19 +19,16 @@ class SseService {
     }
 
     private initRedisSubscriber() {
-        redisSub.subscribe(this.CHANNEL);
+        void redisSub.subscribe(this.CHANNEL).catch((error) => {
+            console.error('[SSE] Redis subscribe error:', error);
+        });
 
         redisSub.on('message', (channel, message) => {
             if (channel !== this.CHANNEL) return;
 
             try {
                 const { userId, event, data }: SsePayload = JSON.parse(message);
-
-                if (event === 'notification') {
-                    this.sendNotificationToUser(userId, data as NotificationPayload);
-                } else {
-                    this.sendToUser(userId, event, data);
-                }
+                this.sendToUser(userId, event, data);
             } catch (err) {
                 console.error('[SSE] Parse message error:', err);
             }
@@ -41,7 +36,7 @@ class SseService {
     }
 
     // Hàm này các service khác sẽ gọi để gửi thông báo
-    public sendNotificationToUser(userId: string, data: NotificationPayload) {
+    public async sendNotificationToUser(userId: string, data: NotificationPayload) {
         const payload: SsePayload = {
             userId,
             event: 'notification',
@@ -50,8 +45,7 @@ class SseService {
                 createdAt: data.createdAt ?? new Date().toISOString(),
             }
         };
-        const channel = `user:${userId}`;
-        redisPub.publish(channel, JSON.stringify(payload));
+        return redisPub.publish(this.CHANNEL, JSON.stringify(payload));
     }
 
     connect(userId: string, res: Response) {
