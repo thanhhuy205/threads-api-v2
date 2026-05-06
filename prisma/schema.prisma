@@ -113,6 +113,31 @@ enum PostMediaStatus {
     FAILED
 }
 
+enum APPROVE_STATUS {
+    PENDING
+    APPROVED
+    REJECTED
+}
+
+enum StatusKnowledgePost {
+    DRAFT
+    PUBLISHED
+    ARCHIVED
+}
+
+enum KnowledgeType {
+    KNOWLEDGE
+    OPINION
+    SPAM
+    SCAM
+}
+
+enum RiskLevel {
+    LOW
+    MEDIUM
+    HIGH
+}
+
 model User {
     id       String @id @default(cuid())
     email    String @unique @db.VarChar(255)
@@ -140,20 +165,22 @@ model User {
     createdAt DateTime  @default(now()) @map("created_at")
     updatedAt DateTime  @updatedAt @map("updated_at")
 
-    posts              Post[]
-    refreshTokens      RefreshToken[]
-    verificationCodes  VerificationCode[]
-    follows            Follow[]            @relation("FollowUser")
-    followers          Follow[]            @relation("FollowFollowing")
-    circles            Circle[]            @relation("CircleCreated")
-    circleMembers      CircleMember[]
-    antiSpams          AntiSpam[]
-    emailLogs          EmailLog[]
-    notifications      Notification[]
-    invitationRequests InvitationRequest[]
-    circleInvitations  CircleInvitation[]  @relation("CircleInvitationUser")
-    circleInvited      CircleInvitation[]  @relation("CircleInvitationInviter")
-    likes              Like[]
+    posts                Post[]
+    refreshTokens        RefreshToken[]
+    verificationCodes    VerificationCode[]
+    follows              Follow[]              @relation("FollowUser")
+    followers            Follow[]              @relation("FollowFollowing")
+    circles              Circle[]              @relation("CircleCreated")
+    circleMembers        CircleMember[]
+    antiSpams            AntiSpam[]
+    emailLogs            EmailLog[]
+    notifications        Notification[]
+    invitationRequests   InvitationRequest[]
+    circleInvitations    CircleInvitation[]    @relation("CircleInvitationUser")
+    circleInvited        CircleInvitation[]    @relation("CircleInvitationInviter")
+    likes                Like[]
+    knowledgePosts       KnowledgePost[]
+    knowledgeUnderstands KnowledgeUnderstand[]
 
     @@index([deletedAt], map: "idx_users_deleted_at")
     @@map("users")
@@ -232,6 +259,62 @@ model Post {
     @@index([rootPostId])
     @@index([createdAt])
     @@map("posts")
+}
+
+model KnowledgePost {
+    id                 String @id @default(cuid())
+    userId             String @map("user_id")
+    learningGoal       String @map("learning_goal") @db.Text
+    commonConfusion    String @map("common_confusion") @db.Text
+    coreExplanation    String @map("core_explanation") @db.Text
+    understandingCheck String @map("understanding_check") @db.Text
+
+    status         StatusKnowledgePost @default(DRAFT)
+    approvalStatus APPROVE_STATUS      @default(PENDING)
+
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    user                 User                  @relation(fields: [userId], references: [id])
+    knowledgeReasonId    Int?                  @map("knowledge_reason_id")
+    knowledgeReason      KnowledgeReason?      @relation(fields: [knowledgeReasonId], references: [id])
+    knowledgeUnderstands KnowledgeUnderstand[]
+
+    @@index([userId], map: "idx_knowledge_posts_user_id")
+    @@map("knowledge_posts")
+}
+
+model KnowledgeReason {
+    id              Int    @id @default(autoincrement())
+    knowledgePostId String @map("knowledge_post_id")
+
+    contentType    KnowledgeType   @map("content_type")
+    trustScore     Int             @map("trust_score")
+    riskLevel      RiskLevel       @map("risk_level")
+    reason         String          @map("reason") @db.Text
+    createdAt      DateTime        @default(now()) @map("created_at")
+    knowledgePosts KnowledgePost[]
+
+    @@index([knowledgePostId], map: "idx_knowledge_reasons_post_id")
+    @@map("knowledge_reasons")
+}
+
+model KnowledgeUnderstand {
+    id              Int      @id @default(autoincrement())
+    userId          String   @map("user_id")
+    knowledgePostId String   @map("knowledge_post_id")
+    isUnderstood    Boolean  @default(false) @map("is_understood")
+    feedback        String?  @map("feedback") @db.Text
+    createdAt       DateTime @default(now()) @map("created_at")
+    updatedAt       DateTime @updatedAt @map("updated_at")
+
+    user          User          @relation(fields: [userId], references: [id])
+    knowledgePost KnowledgePost @relation(fields: [knowledgePostId], references: [id])
+
+    @@unique([userId, knowledgePostId], map: "uq_knowledge_understands_user_post")
+    @@index([userId], map: "idx_knowledge_understands_user_id")
+    @@index([knowledgePostId], map: "idx_knowledge_understands_post_id")
+    @@map("knowledge_understands")
 }
 
 model PostMedia {
