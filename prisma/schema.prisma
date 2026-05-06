@@ -138,6 +138,14 @@ enum RiskLevel {
     HIGH
 }
 
+enum RankingCriteria {
+    CORRECTNESS
+    USEFULNESS
+    EXCELLENCE
+    INCOMPREHENSIBILITY
+    SUSPICIOUSNESS
+}
+
 model User {
     id       String @id @default(cuid())
     email    String @unique @db.VarChar(255)
@@ -165,22 +173,24 @@ model User {
     createdAt DateTime  @default(now()) @map("created_at")
     updatedAt DateTime  @updatedAt @map("updated_at")
 
-    posts                Post[]
-    refreshTokens        RefreshToken[]
-    verificationCodes    VerificationCode[]
-    follows              Follow[]              @relation("FollowUser")
-    followers            Follow[]              @relation("FollowFollowing")
-    circles              Circle[]              @relation("CircleCreated")
-    circleMembers        CircleMember[]
-    antiSpams            AntiSpam[]
-    emailLogs            EmailLog[]
-    notifications        Notification[]
-    invitationRequests   InvitationRequest[]
-    circleInvitations    CircleInvitation[]    @relation("CircleInvitationUser")
-    circleInvited        CircleInvitation[]    @relation("CircleInvitationInviter")
-    likes                Like[]
-    knowledgePosts       KnowledgePost[]
-    knowledgeUnderstands KnowledgeUnderstand[]
+    posts                 Post[]
+    refreshTokens         RefreshToken[]
+    verificationCodes     VerificationCode[]
+    follows               Follow[]               @relation("FollowUser")
+    followers             Follow[]               @relation("FollowFollowing")
+    circles               Circle[]               @relation("CircleCreated")
+    circleMembers         CircleMember[]
+    antiSpams             AntiSpam[]
+    emailLogs             EmailLog[]
+    notifications         Notification[]
+    invitationRequests    InvitationRequest[]
+    circleInvitations     CircleInvitation[]     @relation("CircleInvitationUser")
+    circleInvited         CircleInvitation[]     @relation("CircleInvitationInviter")
+    likes                 Like[]
+    knowledgePosts        KnowledgePost[]
+    knowledgeUnderstands  KnowledgeUnderstand[]
+    knowledgePostComments KnowledgePostComment[]
+    knowledgeRankings     KnowledgeRanking[]
 
     @@index([deletedAt], map: "idx_users_deleted_at")
     @@map("users")
@@ -275,15 +285,51 @@ model KnowledgePost {
     createdAt DateTime @default(now()) @map("created_at")
     updatedAt DateTime @updatedAt @map("updated_at")
 
-    user                 User                  @relation(fields: [userId], references: [id])
-    knowledgeReasonId    Int?                  @map("knowledge_reason_id")
-    knowledgeReason      KnowledgeReason?      @relation(fields: [knowledgeReasonId], references: [id])
-    knowledgeUnderstands KnowledgeUnderstand[]
+    user                  User                   @relation(fields: [userId], references: [id])
+    knowledgeReasonId     Int?                   @map("knowledge_reason_id")
+    knowledgeReason       KnowledgeReason?       @relation(fields: [knowledgeReasonId], references: [id])
+    knowledgeUnderstands  KnowledgeUnderstand[]
+    knowledgePostComments KnowledgePostComment[]
+    knowledgeRankings     KnowledgeRanking[]
 
     @@index([userId], map: "idx_knowledge_posts_user_id")
     @@map("knowledge_posts")
 }
 
+// Người dùng comment
+model KnowledgePostComment {
+    id              Int      @id @default(autoincrement())
+    knowledgePostId String   @map("knowledge_post_id")
+    userId          String   @map("user_id")
+    content         String   @map("content") @db.Text
+    createdAt       DateTime @default(now()) @map("created_at")
+    updatedAt       DateTime @updatedAt @map("updated_at")
+
+    user          User          @relation(fields: [userId], references: [id])
+    knowledgePost KnowledgePost @relation(fields: [knowledgePostId], references: [id])
+
+    @@index([knowledgePostId], map: "idx_knowledge_post_comments_post_id")
+    @@index([userId], map: "idx_knowledge_post_comments_user_id")
+    @@map("knowledge_post_comments")
+}
+
+// Người dùng đánh giá bài viết về mức độ chính xác, hữu ích, xuất sắc, khó hiểu, đáng ngờ
+model KnowledgeRanking {
+    id              Int             @id @default(autoincrement())
+    knowledgePostId String          @map("knowledge_post_id")
+    criteria        RankingCriteria @map("criteria_enum")
+    userId          String          @map("user_id")
+
+    createdAt     DateTime      @default(now()) @map("created_at")
+    knowledgePost KnowledgePost @relation(fields: [knowledgePostId], references: [id])
+
+    user User @relation(fields: [userId], references: [id])
+
+    @@index([knowledgePostId], map: "idx_knowledge_rankings_post_id")
+    @@map("knowledge_rankings")
+}
+
+// AI đánh giá 
 model KnowledgeReason {
     id              Int    @id @default(autoincrement())
     knowledgePostId String @map("knowledge_post_id")
@@ -299,6 +345,7 @@ model KnowledgeReason {
     @@map("knowledge_reasons")
 }
 
+// Người dùng đánh giá mức độ hiểu bài viết riêng tư 
 model KnowledgeUnderstand {
     id              Int      @id @default(autoincrement())
     userId          String   @map("user_id")

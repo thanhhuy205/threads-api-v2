@@ -3,6 +3,7 @@ import authRouter from '@/modules/auth/auth.routes';
 import circleRouter from '@/modules/circle/circle.routes';
 import healthRouter from '@/modules/health/health.routes';
 import knowledgePostRouter from '@/modules/knowledge-post/knowledge-post.route';
+import knowledgeRankingRouter from '@/modules/knowledge-ranking/knowledge-ranking.route';
 import notificationRouter from '@/modules/notification/notification.route';
 import postRouter from '@/modules/post/post.routes';
 import sseRouter from '@/modules/sse/sse.route';
@@ -24,6 +25,7 @@ router.use('/user', userFollowRouter);
 router.use('/upload', uploadRouter);
 router.use('/posts', postRouter);
 router.use('/knowledge-posts', knowledgePostRouter);
+router.use('/knowledge-rankings', knowledgeRankingRouter);
 router.use('/notification', notificationRouter);
 router.use('/sse', sseRouter);
 
