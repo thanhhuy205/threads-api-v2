@@ -145,7 +145,6 @@ model User {
     verificationCodes  VerificationCode[]
     follows            Follow[]            @relation("FollowUser")
     followers          Follow[]            @relation("FollowFollowing")
-    userIntents        UserIntent[]
     circles            Circle[]            @relation("CircleCreated")
     circleMembers      CircleMember[]
     antiSpams          AntiSpam[]
@@ -376,23 +375,6 @@ model EmailLog {
     @@index([type], map: "idx_email_logs_type")
     @@index([status], map: "idx_email_logs_status")
     @@map("email_logs")
-}
-
-model UserIntent {
-    id     Int    @id @default(autoincrement())
-    userId String @map("user_id")
-
-    positiveText String? @db.VarChar(255)
-    negativeText String? @db.VarChar(255)
-
-    createdAt DateTime @default(now()) @map("created_at")
-    updatedAt DateTime @updatedAt @map("updated_at")
-
-    user User @relation(fields: [userId], references: [id])
-
-    @@unique([userId], map: "uq_user_intents_user_id")
-    @@index([userId], map: "idx_user_intents_user_id")
-    @@map("user_intents")
 }
 
 model Circle {

@@ -55,14 +55,6 @@ export const USER_MESSAGE = {
     UNFOLLOW_SUCCESS: 'Unfollow success',
 } as const;
 
-export const USER_INTENT_MESSAGE = {
-    RETRIEVED: 'Feed intent retrieved',
-    CREATED: 'Feed intent created',
-    UPDATED: 'Feed intent updated',
-    DELETED: 'Feed intent deleted',
-    AT_LEAST_ONE_TEXT_REQUIRED: 'At least one of positiveText or negativeText is required',
-} as const;
-
 export const POST_MESSAGE = {
     NEWS_FEED_RETRIEVED: 'News feed retrieved',
     REPLIES_RETRIEVED: 'Replies retrieved',

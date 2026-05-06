@@ -1,4 +1,4 @@
-import { AUTH_MESSAGE, COMMON_MESSAGE, USER_INTENT_MESSAGE, USER_MESSAGE } from '@/constants/message';
+import { AUTH_MESSAGE, USER_MESSAGE } from '@/constants/message';
 
 const bearerAuthSecurity = [{ bearerAuth: [] }];
 
@@ -84,35 +84,7 @@ export const userSwaggerSchemas = {
         },
         required: ['success', 'message', 'data'],
     },
-    UserIntentRequest: {
-        type: 'object',
-        properties: {
-            positiveText: {
-                type: 'string',
-                maxLength: 255,
-                example: 'technology, startups, AI',
-            },
-            negativeText: {
-                type: 'string',
-                maxLength: 255,
-                example: 'spam, clickbait',
-            },
-        },
-    },
-    UserIntentMessageResponse: {
-        type: 'object',
-        properties: {
-            success: {
-                type: 'boolean',
-                example: true,
-            },
-            message: {
-                type: 'string',
-                example: USER_INTENT_MESSAGE.RETRIEVED,
-            },
-        },
-        required: ['success', 'message'],
-    },
+
 };
 
 const userIdPathParameter = [
@@ -208,111 +180,5 @@ export const userSwaggerPaths = {
             },
         },
     },
-    '/me/feed-intent': {
-        get: {
-            tags: ['User'],
-            summary: 'Get current user feed intent',
-            security: bearerAuthSecurity,
-            responses: {
-                200: {
-                    description: USER_INTENT_MESSAGE.RETRIEVED,
-                    content: {
-                        'application/json': {
-                            schema: {
-                                $ref: '#/components/schemas/UserIntentMessageResponse',
-                            },
-                        },
-                    },
-                },
-                401: {
-                    description: AUTH_MESSAGE.TOKEN_INVALID,
-                },
-            },
-        },
-        post: {
-            tags: ['User'],
-            summary: 'Create current user feed intent',
-            security: bearerAuthSecurity,
-            requestBody: {
-                required: true,
-                content: {
-                    'application/json': {
-                        schema: {
-                            $ref: '#/components/schemas/UserIntentRequest',
-                        },
-                    },
-                },
-            },
-            responses: {
-                201: {
-                    description: USER_INTENT_MESSAGE.CREATED,
-                    content: {
-                        'application/json': {
-                            schema: {
-                                $ref: '#/components/schemas/UserIntentMessageResponse',
-                            },
-                            example: {
-                                success: true,
-                                message: USER_INTENT_MESSAGE.CREATED,
-                            },
-                        },
-                    },
-                },
-                400: {
-                    description: COMMON_MESSAGE.VALIDATION_FAILED,
-                },
-                401: {
-                    description: AUTH_MESSAGE.TOKEN_INVALID,
-                },
-            },
-        },
-        patch: {
-            tags: ['User'],
-            summary: 'Update current user feed intent',
-            security: bearerAuthSecurity,
-            responses: {
-                200: {
-                    description: USER_INTENT_MESSAGE.UPDATED,
-                    content: {
-                        'application/json': {
-                            schema: {
-                                $ref: '#/components/schemas/UserIntentMessageResponse',
-                            },
-                            example: {
-                                success: true,
-                                message: USER_INTENT_MESSAGE.UPDATED,
-                            },
-                        },
-                    },
-                },
-                401: {
-                    description: AUTH_MESSAGE.TOKEN_INVALID,
-                },
-            },
-        },
-        delete: {
-            tags: ['User'],
-            summary: 'Delete current user feed intent',
-            security: bearerAuthSecurity,
-            responses: {
-                200: {
-                    description: USER_INTENT_MESSAGE.DELETED,
-                    content: {
-                        'application/json': {
-                            schema: {
-                                $ref: '#/components/schemas/UserIntentMessageResponse',
-                            },
-                            example: {
-                                success: true,
-                                message: USER_INTENT_MESSAGE.DELETED,
-                            },
-                        },
-                    },
-                },
-                401: {
-                    description: AUTH_MESSAGE.TOKEN_INVALID,
-                },
-            },
-        },
-    },
+
 };
