@@ -148,7 +148,6 @@ model User {
     circles            Circle[]            @relation("CircleCreated")
     circleMembers      CircleMember[]
     antiSpams          AntiSpam[]
-    collections        Collection[]
     emailLogs          EmailLog[]
     notifications      Notification[]
     invitationRequests InvitationRequest[]
@@ -225,9 +224,7 @@ model Post {
     media       PostMedia[]
     mentions    PostMention[]
     topicsPosts TopicsPost[]
-
-    collectionPosts CollectionPost[]
-    likes           Like[]
+    likes       Like[]
 
     @@index([userId, createdAt])
     @@index([parentId])
@@ -458,35 +455,6 @@ model AntiSpam {
 
     @@index([userId], map: "idx_anti_spam_user_id")
     @@map("anti_spam")
-}
-
-model Collection {
-    id        Int      @id @default(autoincrement())
-    userId    String   @map("user_id")
-    name      String   @db.VarChar(255)
-    createdAt DateTime @default(now()) @map("created_at")
-    updatedAt DateTime @updatedAt @map("updated_at")
-
-    user            User             @relation(fields: [userId], references: [id])
-    collectionPosts CollectionPost[]
-
-    @@index([userId], map: "idx_collections_user_id")
-    @@map("collections")
-}
-
-model CollectionPost {
-    id           Int      @id @default(autoincrement())
-    collectionId Int      @map("collection_id")
-    postId       Int      @map("post_id")
-    createdAt    DateTime @default(now()) @map("created_at")
-
-    collection Collection @relation(fields: [collectionId], references: [id])
-    post       Post       @relation(fields: [postId], references: [id])
-
-    @@unique([collectionId, postId], map: "uq_collection_posts_collection_post")
-    @@index([collectionId], map: "idx_collection_posts_collection_id")
-    @@index([postId], map: "idx_collection_posts_post_id")
-    @@map("collection_posts")
 }
 
 model Notification {
