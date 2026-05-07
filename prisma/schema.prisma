@@ -280,7 +280,7 @@ model KnowledgePost {
     understandingCheck String @map("understanding_check") @db.Text
 
     status         StatusKnowledgePost @default(DRAFT)
-    approvalStatus APPROVE_STATUS      @default(PENDING)
+    approvalStatus APPROVE_STATUS      @default(PENDING) @map("approval_status")
 
     createdAt DateTime @default(now()) @map("created_at")
     updatedAt DateTime @updatedAt @map("updated_at")

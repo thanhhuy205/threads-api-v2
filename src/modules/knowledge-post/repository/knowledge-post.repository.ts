@@ -1,4 +1,5 @@
 import prisma from '@/config/prisma';
+import { Prisma } from '@prisma/client';
 import type { CreateKnowledgePostPayload } from '../interfaces/create-knowledge-post-payload';
 
 export type KnowledgePostRecord = {
@@ -14,7 +15,17 @@ export type KnowledgePostRecord = {
     updatedAt: string;
 };
 
-class KnowledgePostRepository {
+class KnowledgePostRepository implements ICursorPagination<Prisma.KnowledgePostWhereInput, any> {
+    findAll({ after, take, where, props: { } }: { after?: string; take?: number; where?: Prisma.KnowledgePostWhereInput | undefined; props?: any; }): Promise<any[]> {
+        return prisma.knowledgePost.findMany({
+            where,
+            orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+            take : after ? take! + 1 : take,
+            cursor: after ? { id: after } : undefined,
+        });
+    }
+
+
     async create(payload: CreateKnowledgePostPayload): Promise<KnowledgePostRecord> {
         const knowledgePost = await prisma.knowledgePost.create({
             data: {

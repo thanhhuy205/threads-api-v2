@@ -42,7 +42,10 @@ class KnowledgePostCommentController {
             take,
         });
 
-        return res.success(200, 'Replies retrieved', replies);
+        return res.paginate({
+            rows: replies.rows,
+            pagination: replies.pagination
+        });
     }
 }
 

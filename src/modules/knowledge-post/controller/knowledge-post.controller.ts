@@ -1,8 +1,18 @@
+import { buildPagination } from '@/shared/pagination/cursor-pagination';
 import { Request, Response } from 'express';
-import type { CreateKnowledgePostRequestDto, KnowledgePostIdParamsDto } from '../dto/request/knowledge-post.request';
+import type { CreateKnowledgePostRequestDto, GetKnowledgePostQueryDto, KnowledgePostIdParamsDto } from '../dto/request/knowledge-post.request';
 import { knowledgePostService } from '../service/knowledge-post.service';
 
 class KnowledgePostController {
+    async getAll(req: Request<{}, GetKnowledgePostQueryDto, {}>, res: Response) {
+        const { currentAfter, currentLimit } = buildPagination(req.query);
+        const result = await knowledgePostService.findAll({ after: currentAfter ?? undefined, take: currentLimit });
+        return res.paginate({
+            rows: result.rows,
+            pagination: result.pagination
+        });
+    }
+
     async create(req: Request<{}, {}, CreateKnowledgePostRequestDto>, res: Response) {
         const knowledgePost = await knowledgePostService.create(req.body);
         return res.success(201, 'Knowledge post created', knowledgePost);

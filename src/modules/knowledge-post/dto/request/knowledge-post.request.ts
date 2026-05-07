@@ -12,3 +12,13 @@ export const knowledgePostIdParamsSchema = z.object({
 });
 
 export type KnowledgePostIdParamsDto = z.infer<typeof knowledgePostIdParamsSchema>;
+
+
+
+
+export const getKnowledgePostQuerySchema = z.object({
+    after: z.string().trim().min(1).optional(),
+    take: z.coerce.number().int().positive().max(100).optional(),
+});
+
+export type GetKnowledgePostQueryDto = z.infer<typeof getKnowledgePostQuerySchema>;
