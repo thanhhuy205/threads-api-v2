@@ -4,6 +4,7 @@ import { jwtConfig } from '@/config/jwt';
 import { mixedbreadAIConfig } from '@/config/mixedbread-ai';
 import { nodemailerConfig } from '@/config/nodemailer';
 import { pineconeConfig } from '@/config/pinecone';
+import { pusherConfig } from '@/config/pusher';
 import { rateLimitConfig } from '@/config/ratelimit';
 import { redisConfig } from '@/config/redis';
 import { ENV_MESSAGE } from '@/constants/message';
@@ -24,7 +25,8 @@ const envSchema = z.object({
     ...mixedbreadAIConfig.shape,
     ...pineconeConfig.shape,
     ...nodemailerConfig.shape,
-    ...cloudflareConfig.shape
+    ...cloudflareConfig.shape,
+    ...pusherConfig.shape,
 
 });
 

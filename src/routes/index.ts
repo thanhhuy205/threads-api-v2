@@ -6,7 +6,6 @@ import knowledgePostRouter from '@/modules/knowledge-post/knowledge-post.route';
 import knowledgeRankingRouter from '@/modules/knowledge-ranking/knowledge-ranking.route';
 import notificationRouter from '@/modules/notification/notification.route';
 import postRouter from '@/modules/post/post.routes';
-import sseRouter from '@/modules/sse/sse.route';
 import uploadRouter from '@/modules/upload/upload.routes';
 import userFollowRouter from '@/modules/user/user-follow.routes';
 import userRouter from '@/modules/user/user.routes';
@@ -27,6 +26,5 @@ router.use('/posts', postRouter);
 router.use('/knowledge-posts', knowledgePostRouter);
 router.use('/knowledge-rankings', knowledgeRankingRouter);
 router.use('/notification', notificationRouter);
-router.use('/sse', sseRouter);
 
 export default router;

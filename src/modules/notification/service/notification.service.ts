@@ -1,5 +1,5 @@
 import type { WelcomeNotificationPayload } from '@/modules/notification/interface/notification.types';
-import { sseService } from '@/modules/sse/service/sse.service';
+
 
 class NotificationService {
     async createWelcome(userId: string) {
@@ -10,10 +10,10 @@ class NotificationService {
             createdAt: new Date().toISOString(),
         };
 
-        const subscriberCount = await sseService.sendNotificationToUser(userId, payload);
+        // TODO: Implement Pusher trigger here
 
         return {
-            subscriberCount,
+            subscriberCount: 0,
             payload,
         };
     }

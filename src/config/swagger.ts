@@ -43,10 +43,6 @@ import {
     notificationSwaggerPaths,
     notificationSwaggerSchemas,
 } from '../modules/notification/docs/notification.swagger';
-import {
-    sseSwaggerPaths,
-    sseSwaggerSchemas,
-} from '../modules/sse/docs/sse.swagger';
 
 export const swaggerDocument = {
     openapi: '3.0.0',
@@ -101,10 +97,6 @@ export const swaggerDocument = {
             name: 'Notification',
             description: 'Notification APIs',
         },
-        {
-            name: 'SSE',
-            description: 'Server-sent events APIs',
-        },
     ],
 
     paths: {
@@ -117,7 +109,6 @@ export const swaggerDocument = {
         ...knowledgePostSwaggerPaths,
         ...knowledgeRankingSwaggerPaths,
         ...notificationSwaggerPaths,
-        ...sseSwaggerPaths,
     },
 
     components: {
@@ -131,7 +122,6 @@ export const swaggerDocument = {
             ...knowledgePostSwaggerSchemas,
             ...knowledgeRankingSwaggerSchemas,
             ...notificationSwaggerSchemas,
-            ...sseSwaggerSchemas,
             ...jwtSwaggerSchemas,
         },
 
