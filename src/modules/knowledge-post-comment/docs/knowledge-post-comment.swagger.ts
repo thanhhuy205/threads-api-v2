@@ -16,9 +16,9 @@ export const knowledgePostCommentSwaggerSchemas = {
     KnowledgePostCommentItem: {
         type: 'object',
         properties: {
-            id: {
+            publicId: {
                 type: 'string',
-                example: 'cmabc123xyz',
+                example: 'cmabc123xyz00000000000000',
             },
             knowledgePostId: {
                 type: 'string',
@@ -41,7 +41,7 @@ export const knowledgePostCommentSwaggerSchemas = {
                 format: 'date-time',
             },
         },
-        required: ['id', 'knowledgePostId', 'userId', 'content', 'createdAt', 'updatedAt'],
+        required: ['publicId', 'knowledgePostId', 'userId', 'content', 'createdAt', 'updatedAt'],
     },
     KnowledgePostCommentCreatedSuccessResponse: {
         type: 'object',
@@ -80,7 +80,7 @@ export const knowledgePostCommentSwaggerSchemas = {
                             $ref: '#/components/schemas/KnowledgePostCommentItem',
                         },
                     },
-                    pageInfo: {
+                    pagination: {
                         type: 'object',
                         properties: {
                             take: {
@@ -100,7 +100,7 @@ export const knowledgePostCommentSwaggerSchemas = {
                         required: ['take', 'after', 'hasMore'],
                     },
                 },
-                required: ['rows', 'pageInfo'],
+                required: ['rows', 'pagination'],
             },
         },
         required: ['success', 'message', 'data'],
@@ -123,14 +123,14 @@ const knowledgePostIdPathParameter = [
 const knowledgePostCommentIdPathParameter = [
     ...knowledgePostIdPathParameter,
     {
-        name: 'commentId',
+        name: 'commentPublicId',
         in: 'path',
         required: true,
         schema: {
             type: 'string',
-            example: 'cmabc123xyz',
+            example: 'cmabc123xyz00000000000000',
         },
-        description: 'Knowledge post comment id',
+        description: 'Knowledge post comment public id',
     },
 ];
 
@@ -181,7 +181,7 @@ export const knowledgePostCommentSwaggerPaths = {
                         type: 'string',
                         example: 'cmabc123xyz',
                     },
-                    description: 'Cursor id from previous response pageInfo.after',
+                    description: 'Cursor id from previous response pagination.after',
                 },
                 {
                     name: 'take',
@@ -213,7 +213,7 @@ export const knowledgePostCommentSwaggerPaths = {
             },
         },
     },
-    '/knowledge-post-comments/{knowledgePostId}/replies/{commentId}': {
+    '/knowledge-post-comments/{knowledgePostId}/replies/{commentPublicId}': {
         get: {
             tags: ['KnowledgePostComment'],
             summary: 'Get a reply by id',

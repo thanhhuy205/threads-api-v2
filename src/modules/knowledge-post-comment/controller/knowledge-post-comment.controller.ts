@@ -1,9 +1,10 @@
 import { AUTH_MESSAGE } from '@/constants/message';
+import { getPagination } from '@/shared/pagination/cursor-pagination';
 import type { Request, Response } from 'express';
 import type {
     CreateKnowledgePostCommentRequestDto,
     GetKnowledgePostCommentQueryDto,
-    KnowledgePostCommentIdParamsDto,
+    KnowledgePostCommentPublicIdParamsDto,
     KnowledgePostIdParamsDto,
 } from '../dto/request/knowledge-post-comment.request';
 import { knowledgePostCommentService } from '../service/knowledge-post-comment.service';
@@ -24,8 +25,8 @@ class KnowledgePostCommentController {
         return res.success(201, 'Reply created', reply);
     }
 
-    async getReplyById(req: Request<KnowledgePostCommentIdParamsDto>, res: Response) {
-        const reply = await knowledgePostCommentService.getReplyById(req.params.knowledgePostId, req.params.commentId);
+    async getReplyById(req: Request<KnowledgePostCommentPublicIdParamsDto>, res: Response) {
+        const reply = await knowledgePostCommentService.getReplyById(req.params.knowledgePostId, req.params.commentPublicId);
         if (!reply) {
             return res.error(404, 'Reply not found');
         }
@@ -34,11 +35,11 @@ class KnowledgePostCommentController {
     }
 
     async getReplies(req: Request<KnowledgePostIdParamsDto, {}, {}, GetKnowledgePostCommentQueryDto>, res: Response) {
-        const query = req.query_parsed as GetKnowledgePostCommentQueryDto;
+        const { after, take } = getPagination(req);
         const replies = await knowledgePostCommentService.getReplies({
             knowledgePostId: req.params.knowledgePostId,
-            after: query.after,
-            take: query.take,
+            after: after ?? undefined,
+            take,
         });
 
         return res.success(200, 'Replies retrieved', replies);

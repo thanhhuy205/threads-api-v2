@@ -1,7 +1,8 @@
 import type { BaseResponse } from '@/shared/interface/base-response.interface';
+import { CursorPaginationResponse } from '@/shared/pagination/cursor-pagination';
 
 export type KnowledgePostCommentItemDataDto = {
-    id: string;
+    publicId: string;
     knowledgePostId: string;
     userId: string;
     content: string;
@@ -9,14 +10,7 @@ export type KnowledgePostCommentItemDataDto = {
     updatedAt: string;
 };
 
-export type KnowledgePostCommentCursorDataDto = {
-    rows: KnowledgePostCommentItemDataDto[];
-    pageInfo: {
-        take: number;
-        after: string | null;
-        hasMore: boolean;
-    };
-};
+export type KnowledgePostCommentCursorDataDto = CursorPaginationResponse<KnowledgePostCommentItemDataDto, string>
 
 export type CreateKnowledgePostCommentResponseDto = BaseResponse<KnowledgePostCommentItemDataDto>;
 export type GetKnowledgePostCommentResponseDto = BaseResponse<KnowledgePostCommentCursorDataDto>;

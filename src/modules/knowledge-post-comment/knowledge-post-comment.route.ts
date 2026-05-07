@@ -5,7 +5,7 @@ import { knowledgePostCommentController } from './controller/knowledge-post-comm
 import {
     createKnowledgePostCommentRequestSchema,
     getKnowledgePostCommentQuerySchema,
-    knowledgePostCommentIdParamsSchema,
+    knowledgePostCommentPublicIdParamsSchema,
     knowledgePostIdParamsSchema,
 } from './dto/request/knowledge-post-comment.request';
 
@@ -28,8 +28,8 @@ knowledgePostCommentRouter.get(
 );
 
 knowledgePostCommentRouter.get(
-    '/:knowledgePostId/replies/:commentId',
-    validate(knowledgePostCommentIdParamsSchema, 'params'),
+    '/:knowledgePostId/replies/:commentPublicId',
+    validate(knowledgePostCommentPublicIdParamsSchema, 'params'),
     knowledgePostCommentController.getReplyById,
 );
 

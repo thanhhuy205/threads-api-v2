@@ -299,6 +299,7 @@ model KnowledgePost {
 // Người dùng comment
 model KnowledgePostComment {
     id              Int      @id @default(autoincrement())
+    publicId        String   @unique @default(cuid()) @map("public_id")
     knowledgePostId String   @map("knowledge_post_id")
     userId          String   @map("user_id")
     content         String   @map("content") @db.Text

@@ -10,11 +10,11 @@ export const knowledgePostIdParamsSchema = z.object({
 
 export type KnowledgePostIdParamsDto = z.infer<typeof knowledgePostIdParamsSchema>;
 
-export const knowledgePostCommentIdParamsSchema = knowledgePostIdParamsSchema.extend({
-    commentId: z.string().min(1),
+export const knowledgePostCommentPublicIdParamsSchema = knowledgePostIdParamsSchema.extend({
+    commentPublicId: z.string().min(1),
 });
 
-export type KnowledgePostCommentIdParamsDto = z.infer<typeof knowledgePostCommentIdParamsSchema>;
+export type KnowledgePostCommentPublicIdParamsDto = z.infer<typeof knowledgePostCommentPublicIdParamsSchema>;
 
 export const getKnowledgePostCommentQuerySchema = z.object({
     after: z.string().trim().min(1).optional(),
