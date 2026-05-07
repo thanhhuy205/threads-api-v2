@@ -16,11 +16,12 @@ export type KnowledgePostRecord = {
 };
 
 class KnowledgePostRepository implements ICursorPagination<Prisma.KnowledgePostWhereInput, any> {
-    findAll({ after, take, where, props: { } }: { after?: string; take?: number; where?: Prisma.KnowledgePostWhereInput | undefined; props?: any; }): Promise<any[]> {
+    findAll({ after, take, where, props = {} }: { after?: string; take: number; where?: Prisma.KnowledgePostWhereInput | undefined; props?: any; }): Promise<any[]> {
         return prisma.knowledgePost.findMany({
             where,
             orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-            take : after ? take! + 1 : take,
+            take: take + 1, // Lấy thêm 1 item để kiểm tra xem còn dữ liệu tiếp theo hay không
+            skip: after ? 1 : 0, // Nếu có cursor, bỏ qua item đầu tiên (item tại cursor)
             cursor: after ? { id: after } : undefined,
         });
     }

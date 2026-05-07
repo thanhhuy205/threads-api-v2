@@ -25,6 +25,109 @@ export const knowledgePostSwaggerSchemas = {
         },
         required: ['learningGoal', 'commonConfusion', 'coreExplanation', 'understandingCheck'],
     },
+    KnowledgePostItem: {
+        type: 'object',
+        properties: {
+            id: {
+                type: 'string',
+                example: 'ckv8p4u1q0000x3jz8d2b6g7h',
+            },
+            userId: {
+                type: 'string',
+                example: 'ckv8p4u1q0000x3jz8d2b6g7i',
+            },
+            knowledgeReasonId: {
+                type: 'integer',
+                nullable: true,
+                example: null,
+            },
+            learningGoal: {
+                type: 'string',
+                example: 'Understand how the event loop works',
+            },
+            commonConfusion: {
+                type: 'string',
+                example: 'Why callbacks are executed after IO operations',
+            },
+            coreExplanation: {
+                type: 'string',
+                example: 'The event loop processes tasks from the callback queue after the current stack clears.',
+            },
+            understandingCheck: {
+                type: 'string',
+                example: 'What happens when setTimeout is called with 0ms?',
+            },
+            status: {
+                type: 'string',
+                enum: ['DRAFT', 'PUBLISHED', 'ARCHIVED'],
+                example: 'DRAFT',
+            },
+            approvalStatus: {
+                type: 'string',
+                enum: ['PENDING', 'APPROVED', 'REJECTED'],
+                example: 'PENDING',
+            },
+            createdAt: {
+                type: 'string',
+                format: 'date-time',
+            },
+            updatedAt: {
+                type: 'string',
+                format: 'date-time',
+            },
+        },
+        required: [
+            'id',
+            'userId',
+            'knowledgeReasonId',
+            'learningGoal',
+            'commonConfusion',
+            'coreExplanation',
+            'understandingCheck',
+            'status',
+            'approvalStatus',
+            'createdAt',
+            'updatedAt',
+        ],
+    },
+    KnowledgePostPagination: {
+        type: 'object',
+        properties: {
+            take: {
+                type: 'number',
+                example: 10,
+            },
+            after: {
+                type: 'string',
+                nullable: true,
+                example: 'ckv8p4u1q0000x3jz8d2b6g7h',
+            },
+            hasMore: {
+                type: 'boolean',
+                example: true,
+            },
+        },
+        required: ['take', 'after', 'hasMore'],
+    },
+    KnowledgePostListSuccessResponse: {
+        type: 'object',
+        properties: {
+            success: {
+                type: 'boolean',
+                example: true,
+            },
+            data: {
+                type: 'array',
+                items: {
+                    $ref: '#/components/schemas/KnowledgePostItem',
+                },
+            },
+            pagination: {
+                $ref: '#/components/schemas/KnowledgePostPagination',
+            },
+        },
+        required: ['success', 'data', 'pagination'],
+    },
     KnowledgePostCreatedSuccessResponse: {
         type: 'object',
         properties: {
@@ -79,6 +182,46 @@ const knowledgePostIdPathParameter = [
 
 export const knowledgePostSwaggerPaths = {
     '/knowledge-posts': {
+        get: {
+            tags: ['KnowledgePost'],
+            summary: 'Get knowledge posts using cursor pagination',
+            parameters: [
+                {
+                    name: 'after',
+                    in: 'query',
+                    required: false,
+                    schema: {
+                        type: 'string',
+                        example: 'ckv8p4u1q0000x3jz8d2b6g7h',
+                    },
+                    description: 'Cursor id from previous response pagination.after',
+                },
+                {
+                    name: 'take',
+                    in: 'query',
+                    required: false,
+                    schema: {
+                        type: 'number',
+                        example: 10,
+                        minimum: 1,
+                        maximum: 100,
+                    },
+                    description: 'Number of knowledge posts to return',
+                },
+            ],
+            responses: {
+                200: {
+                    description: 'Knowledge posts retrieved',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                $ref: '#/components/schemas/KnowledgePostListSuccessResponse',
+                            },
+                        },
+                    },
+                },
+            },
+        },
         post: {
             tags: ['KnowledgePost'],
             summary: 'Create a knowledge post',

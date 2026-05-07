@@ -1,4 +1,5 @@
 import { DEFAULT_PAGE, MAX_LIMIT, PER_PAGE } from '@/constants/pagination';
+import { baseLogger } from '@/middlewares/logger';
 import { Request } from 'express';
 
 type BuildPaginationOptions = {
@@ -31,7 +32,7 @@ export const getPagination = (
 ): { after: string | null; take: number } => {
     const { currentAfter, currentLimit } = buildPagination({
         after: typeof req.query.after === 'string' ? req.query.after : undefined,
-        take: req.query.take === undefined ? undefined : Number(req.query.take),
+        take: req.query.take === undefined ? DEFAULT_PAGE : Number(req.query.take),
     });
 
     return { after: currentAfter, take: currentLimit };
@@ -45,11 +46,13 @@ export function buildPagination({
     defaultLimit = PER_PAGE,
     maxLimit = MAX_LIMIT,
 }: BuildPaginationOptions) {
+    baseLogger.info(`Building pagination with parameters - after: ${after}, take: ${take}, defaultPage: ${defaultPage}, defaultAfter: ${defaultAfter}, defaultLimit: ${defaultLimit}, maxLimit: ${maxLimit}`);
+
     const currentAfter = typeof after === 'string' && after.trim().length > 0 ? after.trim() : defaultAfter;
     const currentPage = currentAfter ? defaultPage + 1 : defaultPage;
     const rawLimit = Number.isInteger(take) && take! > 0 ? take! : defaultLimit;
     const currentLimit = Math.min(rawLimit, maxLimit);
-
+    baseLogger.info(`Pagination parameters - page: ${currentPage}, after: ${currentAfter}, limit: ${currentLimit}`);
     return {
         currentPage,
         currentAfter,
@@ -68,6 +71,7 @@ export function buildCursorPagination<T>({
 }): { rows: T[]; pagination: PaginationResponse<string | number | null> } {
     const hasMore = rows.length > take;
     const currentRows = hasMore ? rows.slice(0, take) : rows;
+    baseLogger.info(`Building cursor pagination response - total rows: ${rows.length}, take: ${take}, hasMore: ${hasMore}`);
     const nextAfter = hasMore && currentRows.length ? getAfter(currentRows[currentRows.length - 1]) : null;
 
     return {
