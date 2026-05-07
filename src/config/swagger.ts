@@ -1,4 +1,3 @@
-
 import {
     authSwaggerPaths,
     authSwaggerSchemas,
@@ -31,6 +30,10 @@ import {
 import {
     jwtSwaggerSchemas,
 } from '../modules/jwt/docs/jwt.swagger';
+import {
+    knowledgePostCommentSwaggerPaths,
+    knowledgePostCommentSwaggerSchemas,
+} from '../modules/knowledge-post-comment/docs/knowledge-post-comment.swagger';
 import {
     knowledgePostSwaggerPaths,
     knowledgePostSwaggerSchemas,
@@ -86,6 +89,10 @@ export const swaggerDocument = {
             description: 'Circle / community APIs',
         },
         {
+            name: 'KnowledgePostComment',
+            description: 'Knowledge post comment APIs',
+        },
+        {
             name: 'KnowledgePost',
             description: 'Knowledge post APIs',
         },
@@ -106,6 +113,7 @@ export const swaggerDocument = {
         ...userSwaggerPaths,
         ...uploadSwaggerPaths,
         ...circleSwaggerPaths,
+        ...knowledgePostCommentSwaggerPaths,
         ...knowledgePostSwaggerPaths,
         ...knowledgeRankingSwaggerPaths,
         ...notificationSwaggerPaths,
@@ -119,6 +127,7 @@ export const swaggerDocument = {
             ...userSwaggerSchemas,
             ...uploadSwaggerSchemas,
             ...circleSwaggerSchemas,
+            ...knowledgePostCommentSwaggerSchemas,
             ...knowledgePostSwaggerSchemas,
             ...knowledgeRankingSwaggerSchemas,
             ...notificationSwaggerSchemas,
