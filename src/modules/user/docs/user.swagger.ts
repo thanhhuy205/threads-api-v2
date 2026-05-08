@@ -84,6 +84,35 @@ export const userSwaggerSchemas = {
         },
         required: ['success', 'message', 'data'],
     },
+    UserProfileData: {
+        type: 'object',
+        properties: {
+            id: { type: 'string' },
+            username: { type: 'string' },
+            name: { type: 'string', nullable: true },
+            bio: { type: 'string', nullable: true },
+            avatar: { type: 'string', nullable: true },
+            verifiedAt: { type: 'string', format: 'date-time', nullable: true },
+            followersCount: { type: 'integer' },
+            followingCount: { type: 'integer' },
+            postsCount: { type: 'integer' },
+            isPrivate: { type: 'boolean' },
+            location: { type: 'string', nullable: true },
+            website: { type: 'string', nullable: true },
+        },
+        required: [
+            'id', 'username', 'followersCount', 'followingCount', 'postsCount', 'isPrivate'
+        ],
+    },
+    UserProfileSuccessResponse: {
+        type: 'object',
+        properties: {
+            success: { type: 'boolean', example: true },
+            message: { type: 'string', example: 'User fetched successfully' },
+            data: { $ref: '#/components/schemas/UserProfileData' },
+        },
+        required: ['success', 'message', 'data'],
+    },
 
 };
 
@@ -97,6 +126,19 @@ const userIdPathParameter = [
             example: 'ckv8p4u1q0000x3jz8d2b6g7h',
         },
         description: 'Target user id',
+    },
+];
+
+const usernamePathParameter = [
+    {
+        name: 'username',
+        in: 'path',
+        required: true,
+        schema: {
+            type: 'string',
+            example: 'john_doe',
+        },
+        description: 'Username',
     },
 ];
 
@@ -176,6 +218,28 @@ export const userSwaggerPaths = {
                 },
                 401: {
                     description: AUTH_MESSAGE.TOKEN_INVALID,
+                },
+            },
+        },
+    },
+    '/users/{username}': {
+        get: {
+            tags: ['User'],
+            summary: 'Get user profile by username',
+            parameters: usernamePathParameter,
+            responses: {
+                200: {
+                    description: 'User fetched successfully',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                $ref: '#/components/schemas/UserProfileSuccessResponse',
+                            },
+                        },
+                    },
+                },
+                404: {
+                    description: 'User not found',
                 },
             },
         },

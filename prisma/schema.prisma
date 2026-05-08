@@ -146,6 +146,17 @@ enum RankingCriteria {
     SUSPICIOUSNESS
 }
 
+enum ContentFormat {
+    PLAIN
+    MARKDOWN
+}
+
+enum DifficultyLevel {
+    BEGINNER
+    INTERMEDIATE
+    ADVANCED
+}
+
 model User {
     id       String @id @default(cuid())
     email    String @unique @db.VarChar(255)
@@ -191,6 +202,7 @@ model User {
     knowledgeUnderstands  KnowledgeUnderstand[]
     knowledgePostComments KnowledgePostComment[]
     knowledgeRankings     KnowledgeRanking[]
+    knowledgeBookmarks    KnowledgeBookmark[]
 
     @@index([deletedAt], map: "idx_users_deleted_at")
     @@map("users")
@@ -279,8 +291,14 @@ model KnowledgePost {
     coreExplanation    String @map("core_explanation") @db.Text
     understandingCheck String @map("understanding_check") @db.Text
 
-    status         StatusKnowledgePost @default(DRAFT)
-    approvalStatus APPROVE_STATUS      @default(PENDING) @map("approval_status")
+    summary         String?             @map("summary") @db.VarChar(255)
+    coverImage      String?             @map("cover_image") @db.VarChar(2048)
+    tags            Json?               @map("tags")
+    difficultyLevel DifficultyLevel     @default(BEGINNER) @map("difficulty_level")
+    contentFormat   ContentFormat       @default(PLAIN) @map("content_format")
+    readingTime     Int                 @default(3) @map("reading_time")
+    status          StatusKnowledgePost @default(DRAFT)
+    approvalStatus  APPROVE_STATUS      @default(PENDING) @map("approval_status")
 
     createdAt DateTime @default(now()) @map("created_at")
     updatedAt DateTime @updatedAt @map("updated_at")
@@ -291,9 +309,57 @@ model KnowledgePost {
     knowledgeUnderstands  KnowledgeUnderstand[]
     knowledgePostComments KnowledgePostComment[]
     knowledgeRankings     KnowledgeRanking[]
+    knowledgeMedias       KnowledgeMedia[]
+    knowledgeSources      KnowledgeSource[]
+    knowledgeBookmarks    KnowledgeBookmark[]
 
     @@index([userId], map: "idx_knowledge_posts_user_id")
     @@map("knowledge_posts")
+}
+
+model KnowledgeMedia {
+    id              Int           @id @default(autoincrement())
+    knowledgePostId String        @map("knowledge_post_id")
+    url             String        @db.VarChar(2048)
+    type            PostMediaType
+    caption         String?       @map("caption") @db.VarChar(500)
+    order           Int           @default(0) @map("order")
+    createdAt       DateTime      @default(now()) @map("created_at")
+
+    knowledgePost KnowledgePost @relation(fields: [knowledgePostId], references: [id])
+
+    @@index([knowledgePostId], map: "idx_knowledge_medias_post_id")
+    @@map("knowledge_medias")
+}
+
+model KnowledgeSource {
+    id              Int      @id @default(autoincrement())
+    knowledgePostId String   @map("knowledge_post_id")
+    title           String   @map("title") @db.VarChar(255)
+    url             String?  @map("url") @db.VarChar(2048)
+    description     String?  @map("description") @db.VarChar(500)
+    order           Int      @default(0) @map("order")
+    createdAt       DateTime @default(now()) @map("created_at")
+
+    knowledgePost KnowledgePost @relation(fields: [knowledgePostId], references: [id])
+
+    @@index([knowledgePostId], map: "idx_knowledge_sources_post_id")
+    @@map("knowledge_sources")
+}
+
+model KnowledgeBookmark {
+    id              Int      @id @default(autoincrement())
+    userId          String   @map("user_id")
+    knowledgePostId String   @map("knowledge_post_id")
+    createdAt       DateTime @default(now()) @map("created_at")
+
+    user          User          @relation(fields: [userId], references: [id])
+    knowledgePost KnowledgePost @relation(fields: [knowledgePostId], references: [id])
+
+    @@unique([userId, knowledgePostId], map: "uq_knowledge_bookmarks_user_post")
+    @@index([userId], map: "idx_knowledge_bookmarks_user_id")
+    @@index([knowledgePostId], map: "idx_knowledge_bookmarks_post_id")
+    @@map("knowledge_bookmarks")
 }
 
 // Người dùng comment
