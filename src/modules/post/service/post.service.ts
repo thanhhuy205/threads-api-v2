@@ -268,27 +268,44 @@ class PostService {
     return;
   }
 
+  // Kỉ thuật lạ l cập nhập like theo pop
   async like(
     publicId: string,
     userId: string,
     isLiked: boolean,
   ): Promise<void> {
-    const key = `post:${publicId}:${userId}:likes`;
-    await redisService.set(key, isLiked ? "1" : "0", { EX: 60 });
+    const key = `post:${publicId}:likes`;
 
-    const jobKey = `like-sync:${publicId}:${userId}`;
-
-    const isJobAlreadyScheduled = await redisService.set(jobKey, "pending", {
-      NX: true,
-      EX: 30,
-    });
-
-    if (isJobAlreadyScheduled) {
-      await likeProducer.syncPostLike({
-        publicId,
-        userId,
-      });
+    if (isLiked) {
+      const added = await redisService.sAdd(key, userId);
+      baseLogger.info(`Added like for post ${publicId} by user ${userId}`);
+      if (added === 1) {
+        await redisService.lPush(
+          "queue:likes_add",
+          JSON.stringify({ key, userId }),
+        );
+      }
+    } else {
+      const removed = await redisService.sRem(key, userId);
+      baseLogger.info(`Removed like for post ${publicId} by user ${userId}`);
+      if (removed === 1) {
+        await redisService.lPush(
+          "queue:likes_remove",
+          JSON.stringify({ key, userId }),
+        );
+      }
     }
+
+    // const jobKey = `like-sync:${publicId}`;
+
+    // const isJobAlreadyScheduled = await redisService.set(jobKey, "pending", {
+    //   NX: true,
+    //   EX: 30,
+    // });
+
+    // if (isJobAlreadyScheduled) {
+    //   await likeProducer.syncPostLike({ publicId });
+    // }
   }
 
   async delete(publicId: string, userId: string): Promise<void> {
