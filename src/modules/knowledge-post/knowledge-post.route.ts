@@ -7,6 +7,7 @@ import { createKnowledgePostRequestSchema, getKnowledgePostQuerySchema, knowledg
 const knowledgePostRouter = Router();
 
 knowledgePostRouter.get('/', validate(getKnowledgePostQuerySchema, 'query'), knowledgePostController.getAll);
+knowledgePostRouter.get('/:id', validate(knowledgePostIdParamsSchema, 'params'), knowledgePostController.getById);
 knowledgePostRouter.use(authorization);
 knowledgePostRouter.post('/', validate(createKnowledgePostRequestSchema), knowledgePostController.create);
 knowledgePostRouter.delete('/:id', validate(knowledgePostIdParamsSchema, 'params'), knowledgePostController.delete);

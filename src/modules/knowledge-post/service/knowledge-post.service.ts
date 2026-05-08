@@ -26,6 +26,10 @@ class KnowledgePostService {
     async delete(id: string) {
         return knowledgePostRepository.deleteById(id);
     }
+
+    async findById(id: string) {
+        return knowledgePostRepository.findById(id);
+    }
 }
 
 export const knowledgePostService = new KnowledgePostService();

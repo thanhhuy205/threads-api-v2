@@ -22,6 +22,14 @@ class KnowledgePostController {
         await knowledgePostService.delete(req.params.id);
         return res.success(200, 'Knowledge post deleted');
     }
+
+    async getById(req: Request<KnowledgePostIdParamsDto>, res: Response) {
+        const knowledgePost = await knowledgePostService.findById(req.params.id);
+        if (!knowledgePost) {
+            return res.error(404, 'Knowledge post not found');
+        }
+        return res.success(200, 'Knowledge post fetched', knowledgePost);
+    }
 }
 
 export const knowledgePostController = new KnowledgePostController();
