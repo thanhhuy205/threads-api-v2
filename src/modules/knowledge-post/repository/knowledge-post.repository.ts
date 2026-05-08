@@ -38,18 +38,16 @@ class KnowledgePostRepository implements ICursorPagination<
       cursor: after ? { id: after } : undefined,
       select: {
         id: true,
-        userId: true,
         learningGoal: true,
-        commonConfusion: true,
-        coreExplanation: true,
-        understandingCheck: true,
-        status: true,
-        approvalStatus: true,
+        summary: true,
+        coverImage: true,
+        tags: true,
+        difficultyLevel: true,
+        readingTime: true,
         createdAt: true,
-        updatedAt: true,
+
         user: {
           select: {
-            id: true,
             username: true,
             name: true,
             avatar: true,

@@ -12,7 +12,7 @@ const usernameSchema = z
 
 const emailSchema = z.string().trim().email({ message: AuthErrorMessage.EMAIL_INVALID }).max(255);
 
-const passwordSchema = z.string().min(6).max(128);
+const passwordSchema = z.string().min(6, 'Password must be at least 6 characters').max(128, 'Password must be at most 128 characters');
 
 export const registerSchema = z
     .object({
