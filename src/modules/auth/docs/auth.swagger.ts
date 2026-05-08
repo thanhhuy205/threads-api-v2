@@ -147,16 +147,12 @@ export const authSwaggerSchemas = {
     AuthLogoutRequest: {
         type: 'object',
         properties: {
-            accessToken: {
-                type: 'string',
-                example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
-            },
             refreshToken: {
                 type: 'string',
                 example: '14a39707c8cc5a8ea0421545e7f952171371586b1b4d98eb482e44c2b8d48884',
             },
         },
-        required: ['accessToken', 'refreshToken'],
+        required: ['refreshToken'],
     },
     AuthTokenPairResponse: {
         type: 'object',
@@ -761,6 +757,7 @@ export const authSwaggerPaths = {
         post: {
             tags: ['Auth'],
             summary: 'Logout current session',
+            security: bearerAuthSecurity,
             requestBody: {
                 required: true,
                 content: {
@@ -769,7 +766,6 @@ export const authSwaggerPaths = {
                             $ref: '#/components/schemas/AuthLogoutRequest',
                         },
                         example: {
-                            accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
                             refreshToken: '14a39707c8cc5a8ea0421545e7f952171371586b1b4d98eb482e44c2b8d48884',
                         },
                     },

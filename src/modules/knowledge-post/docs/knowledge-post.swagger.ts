@@ -75,6 +75,16 @@ export const knowledgePostSwaggerSchemas = {
                 type: 'string',
                 format: 'date-time',
             },
+            user: {
+                type: 'object',
+                properties: {
+                    id: { type: 'string' },
+                    username: { type: 'string' },
+                    name: { type: 'string', nullable: true },
+                    avatar: { type: 'string', nullable: true },
+                },
+                required: ['id', 'username'],
+            },
         },
         required: [
             'id',
@@ -88,6 +98,7 @@ export const knowledgePostSwaggerSchemas = {
             'approvalStatus',
             'createdAt',
             'updatedAt',
+            'user',
         ],
     },
     KnowledgePostPagination: {
@@ -164,6 +175,23 @@ export const knowledgePostSwaggerSchemas = {
             },
         },
         required: ['success', 'message'],
+    },
+    KnowledgePostDetailSuccessResponse: {
+        type: 'object',
+        properties: {
+            success: {
+                type: 'boolean',
+                example: true,
+            },
+            message: {
+                type: 'string',
+                example: 'Knowledge post fetched',
+            },
+            data: {
+                $ref: '#/components/schemas/KnowledgePostItem',
+            },
+        },
+        required: ['success', 'message', 'data'],
     },
 };
 
@@ -254,6 +282,26 @@ export const knowledgePostSwaggerPaths = {
         },
     },
     '/knowledge-posts/{id}': {
+        get: {
+            tags: ['KnowledgePost'],
+            summary: 'Get knowledge post detail',
+            parameters: knowledgePostIdPathParameter,
+            responses: {
+                200: {
+                    description: 'Knowledge post fetched',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                $ref: '#/components/schemas/KnowledgePostDetailSuccessResponse',
+                            },
+                        },
+                    },
+                },
+                404: {
+                    description: 'Knowledge post not found',
+                },
+            },
+        },
         delete: {
             tags: ['KnowledgePost'],
             summary: 'Delete a knowledge post',
