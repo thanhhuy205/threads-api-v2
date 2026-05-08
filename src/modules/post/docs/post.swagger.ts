@@ -27,24 +27,20 @@ export const postSwaggerSchemas = {
     PostPagination: {
         type: 'object',
         properties: {
-            currentPage: {
+            take: {
                 type: 'integer',
-                example: 1,
+                example: 10,
             },
-            perPage: {
-                type: 'integer',
-                example: 20,
+            after: {
+                type: ['string', 'null'],
+                example: 'ckvqsn1gq00003s4k9sp17mcz',
             },
-            total: {
-                type: 'integer',
-                example: 42,
-            },
-            rowCount: {
-                type: 'integer',
-                example: 20,
+            hasMore: {
+                type: 'boolean',
+                example: true,
             },
         },
-        required: ['currentPage', 'perPage', 'total', 'rowCount'],
+        required: ['take', 'after', 'hasMore'],
     },
     PaginatedPostResponse: {
         type: 'object',
@@ -178,7 +174,45 @@ export const postSwaggerSchemas = {
     },
 };
 
-const postPaginationQueryParameters = [
+const cursorPaginationQueryParameters = [
+    {
+        name: 'after',
+        in: 'query',
+        required: false,
+        schema: {
+            type: 'string',
+            example: 'ckvqsn1gq00003s4k9sp17mcz',
+        },
+        description: 'Cursor publicId from previous response pagination.after',
+    },
+    {
+        name: 'take',
+        in: 'query',
+        required: false,
+        schema: {
+            type: 'integer',
+            example: 10,
+        },
+        description: 'Number of items to return',
+    },
+];
+
+const newsFeedQueryParameters = [
+    ...cursorPaginationQueryParameters,
+    {
+        name: 'type',
+        in: 'query',
+        required: false,
+        schema: {
+            type: 'string',
+            enum: ['for_you', 'following', 'me'],
+            example: 'for_you',
+        },
+        description: 'News feed type',
+    },
+];
+
+const searchPaginationQueryParameters = [
     {
         name: 'page',
         in: 'query',
@@ -201,23 +235,8 @@ const postPaginationQueryParameters = [
     },
 ];
 
-const newsFeedQueryParameters = [
-    ...postPaginationQueryParameters,
-    {
-        name: 'type',
-        in: 'query',
-        required: false,
-        schema: {
-            type: 'string',
-            enum: ['for_you', 'following', 'me'],
-            example: 'for_you',
-        },
-        description: 'News feed type',
-    },
-];
-
 const postSearchQueryParameters = [
-    ...postPaginationQueryParameters,
+    ...searchPaginationQueryParameters,
     {
         name: 'q',
         in: 'query',
@@ -251,7 +270,7 @@ const publicIdParameters = [
         },
         description: 'Post public id',
     },
-    ...postPaginationQueryParameters,
+    ...cursorPaginationQueryParameters,
 ];
 
 const usernameParameters = [
@@ -265,7 +284,7 @@ const usernameParameters = [
         },
         description: 'Username',
     },
-    ...postPaginationQueryParameters,
+    ...cursorPaginationQueryParameters,
 ];
 
 const bearerAuthSecurity = [{ bearerAuth: [] }];
@@ -385,7 +404,7 @@ export const postSwaggerPaths = {
             tags: ['Post'],
             summary: 'Get current user posts',
             security: bearerAuthSecurity,
-            parameters: postPaginationQueryParameters,
+            parameters: cursorPaginationQueryParameters,
             responses: {
                 200: {
                     description: POST_MESSAGE.RETRIEVED,
@@ -408,7 +427,7 @@ export const postSwaggerPaths = {
             tags: ['Post'],
             summary: 'Get current user replies',
             security: bearerAuthSecurity,
-            parameters: postPaginationQueryParameters,
+            parameters: cursorPaginationQueryParameters,
             responses: {
                 200: {
                     description: POST_MESSAGE.REPLIES_RETRIEVED,
@@ -431,7 +450,7 @@ export const postSwaggerPaths = {
             tags: ['Post'],
             summary: 'Get current user quotes and reposts',
             security: bearerAuthSecurity,
-            parameters: postPaginationQueryParameters,
+            parameters: cursorPaginationQueryParameters,
             responses: {
                 200: {
                     description: POST_MESSAGE.RETRIEVED,

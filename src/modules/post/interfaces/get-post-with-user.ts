@@ -1,5 +1,5 @@
 export type GetPostWithUser = {
-    currentPage: number;
-    perPage: number;
+    after?: string;
+    take: number;
     userId: string;
 };

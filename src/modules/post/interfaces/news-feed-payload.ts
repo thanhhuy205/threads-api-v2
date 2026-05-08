@@ -1,8 +1,8 @@
 import { NewFeedType } from '@/modules/post/enum';
 
 export type NewsFeedPayload = {
-    currentPage: number;
-    perPage: number;
+    after?: string;
+    take: number;
     userId: string | null;
     feedType?: NewFeedType;
 };

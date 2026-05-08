@@ -4,7 +4,12 @@ import { pineProducer } from "@/modules/job/pine-vector/producer/pine.producer";
 import { mixedBreadService } from "@/modules/mixed-bread/service/mixed-bread.service";
 import { pineconeService } from "@/modules/pinecone/service/pinecone.service";
 import { NewFeedType } from "@/modules/post/enum";
-import { buildNewFeedWhere, buildUserPostsWhere } from "@/modules/post/helper";
+import {
+  buildNewFeedWhere,
+  buildQuoteWhere,
+  buildRepliesWhere,
+  buildUserPostsWhere,
+} from "@/modules/post/helper";
 import type { CreatePostPayload } from "@/modules/post/interfaces/create-post-payload";
 import type { GetPostWithPublicId } from "@/modules/post/interfaces/get-post-with-public-id";
 import type { GetPostWithUser } from "@/modules/post/interfaces/get-post-with-user";
@@ -12,112 +17,135 @@ import type { NewsFeedPayload } from "@/modules/post/interfaces/news-feed-payloa
 import { PostMapper } from "@/modules/post/mapper/post.mapper";
 import { userService } from "@/modules/user/service/user.service";
 import { redisService } from "@/providers/redis.provider";
-import { buildPaginationResponse } from "@/shared/pagination/pagination";
+import { buildCursorPagination, buildPagination } from "@/shared/pagination/cursor-pagination";
 import { PostType, Prisma } from "@prisma/client";
 import { CreatePostDto } from "../dto/post.dto";
 import { PostRecord, postRepository } from "../repository/post.repository";
 
+type PostCursorInfo = {
+  id: number;
+  createdAt: Date;
+};
+
 class PostService {
   private async paginatePosts({
-    currentPage,
-    perPage,
+    after,
+    take,
     where,
     userId,
   }: {
-    currentPage: number;
-    perPage: number;
+    after?: string;
+    take: number;
     where: Prisma.PostWhereInput;
     userId?: string | null;
   }) {
-    const [posts, total] = await Promise.all([
-      postRepository.findAll({
-        page: currentPage,
-        limit: perPage,
-        where,
-        props: { userId },
-      }),
-      postRepository.count({ where }),
-    ]);
+    const { currentAfter, currentLimit } = buildPagination({ after, take });
+
+    const posts = await postRepository.findAll({
+      after: currentAfter ?? undefined,
+      take: currentLimit + 1,
+      where,
+      props: {
+        userId,
+        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      },
+    });
+
+    const rows = posts.map((post) =>
+      PostMapper.toFeedResponse(post, userId ?? undefined),
+    );
+
+    const paginationResult = buildCursorPagination({
+      rows,
+      take: currentLimit,
+      getAfter: (item) => item.publicId,
+    });
+
     return {
-      posts: posts.map((post) =>
-        PostMapper.toFeedResponse(post, userId ?? undefined),
-      ),
-      pagination: buildPaginationResponse(total, currentPage, perPage),
+      posts: paginationResult.rows,
+      pagination: paginationResult.pagination,
     };
   }
 
   async getNewsFeed({
-    currentPage,
-    perPage,
+    after,
+    take,
     userId,
     feedType = NewFeedType.FOR_YOU,
   }: NewsFeedPayload) {
-    const where = buildNewFeedWhere(userId, feedType);
+    const where = buildNewFeedWhere({
+      after,
+      userId,
+      feedType,
+    });
     baseLogger.info(
       `Getting news feed for user ${JSON.stringify(userId)} with feed type ${JSON.stringify(feedType)}. Generated where clause: ${JSON.stringify(where)}`,
     );
     return this.paginatePosts({
-      currentPage,
-      perPage,
+      userId,
+      after,
+      take,
       where,
+    });
+  }
+
+  async getPostMe({ after, take, userId }: GetPostWithUser) {
+    return this.paginatePosts({
+      after,
+      take,
+      where: buildUserPostsWhere({
+        after,
+        userId,
+        postType: PostType.POST,
+      }),
       userId,
     });
   }
 
-  async getPostMe({ currentPage, perPage, userId }: GetPostWithUser) {
+
+  async getPostsByUser({ after, take, userId }: GetPostWithUser) {
     return this.paginatePosts({
-      currentPage,
-      perPage,
+      after,
+      take,
       where: buildUserPostsWhere({
+        after,
         userId,
         postType: PostType.POST,
       }),
     });
   }
 
-  async getPostsByUser({ currentPage, perPage, userId }: GetPostWithUser) {
+  async getRepliesByUser({ after, take, userId }: GetPostWithUser) {
     return this.paginatePosts({
-      currentPage,
-      perPage,
+      after,
+      take,
       where: buildUserPostsWhere({
-        userId,
-        postType: PostType.POST,
-      }),
-    });
-  }
-
-  async getRepliesByUser({ currentPage, perPage, userId }: GetPostWithUser) {
-    return this.paginatePosts({
-      currentPage,
-      perPage,
-      where: buildUserPostsWhere({
+        after,
         userId,
         postType: PostType.REPLY,
       }),
     });
   }
 
-  async getReplies({ currentPage, perPage, publicId }: GetPostWithPublicId) {
+  async getReplies({ after, take, publicId }: GetPostWithPublicId) {
     return this.paginatePosts({
-      currentPage,
-      perPage,
-      where: {
-        parentPublicId: publicId,
-        type: PostType.REPLY,
-      },
+      after,
+      take,
+      where: buildRepliesWhere({
+        after,
+        publicId,
+      }),
     });
   }
 
-  async getQuote({ currentPage, perPage, userId }: GetPostWithUser) {
+  async getQuote({ after, take, userId }: GetPostWithUser) {
     return this.paginatePosts({
-      currentPage,
-      perPage,
-      where: {
+      after,
+      take,
+      where: buildQuoteWhere({
+        after,
         userId,
-        type: {
-          in: [PostType.REPOST, PostType.QUOTE],
-        },
-      },
+      }),
     });
   }
 

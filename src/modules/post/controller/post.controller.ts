@@ -1,14 +1,14 @@
 import { AUTH_MESSAGE, POST_MESSAGE } from '@/constants/message';
 import { jwtService } from '@/modules/jwt/service/jwt.service';
 import { userService } from '@/modules/user/service/user.service';
-import { getPagination } from '@/shared/pagination/pagination';
+import { getPagination } from '@/shared/pagination/cursor-pagination';
 import { Request, Response } from 'express';
 import { CreatePostDto } from '../dto/post.dto';
 import type { LikeDto } from '../dto/request/like.request';
 import type { ReportDto } from '../dto/request/post.request';
 import {
+    CursorPaginationQueryDto,
     NewsFeedQueryDto,
-    PaginationQueryDto,
     PublicIdParamsDto,
     UsernameParamsDto,
 } from '../dto/request/post.request';
@@ -23,12 +23,12 @@ type SearchQueryDto = {
 
 class PostController {
     async getNewsFeedController(req: Request<{}, {}, {}, NewsFeedQueryDto>, res: Response) {
-        const { currentPage, perPage } = getPagination(req);
+        const { after, take } = getPagination(req);
         const userId = await jwtService.requestAuthToken(req);
 
         const { posts, pagination } = await postService.getNewsFeed({
-            currentPage,
-            perPage,
+            after: after ?? undefined,
+            take,
             userId,
             feedType: req.query_parsed.type,
         });
@@ -36,25 +36,25 @@ class PostController {
         return res.paginate({ rows: posts, pagination });
     }
 
-    async getPostMe(req: Request<{}, {}, {}, PaginationQueryDto>, res: Response) {
+    async getPostMe(req: Request<{}, {}, {}, CursorPaginationQueryDto>, res: Response) {
         const userId = req.user?.sub;
 
         if (!userId) {
             return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
         }
 
-        const { currentPage, perPage } = getPagination(req);
+        const { after, take } = getPagination(req);
         const { posts, pagination } = await postService.getPostMe({
-            currentPage,
-            perPage,
+            after: after ?? undefined,
+            take,
             userId,
         });
 
         return res.paginate({ rows: posts, pagination });
     }
 
-    async getPostsByUser(req: Request<UsernameParamsDto, {}, {}, PaginationQueryDto>, res: Response) {
-        const { currentPage, perPage } = getPagination(req);
+    async getPostsByUser(req: Request<UsernameParamsDto, {}, {}, CursorPaginationQueryDto>, res: Response) {
+        const { after, take } = getPagination(req);
         const user = await userService.findByUsername(req.params.username);
         
 
@@ -63,44 +63,44 @@ class PostController {
         }
 
         const { posts, pagination } = await postService.getPostsByUser({
-            currentPage,
-            perPage,
+            after: after ?? undefined,
+            take,
             userId: user.id,
         });
 
         return res.paginate({ rows: posts, pagination });
     }
 
-    async getReplies(req: Request<PublicIdParamsDto, {}, {}, PaginationQueryDto>, res: Response) {
-        const { currentPage, perPage } = getPagination(req);
+    async getReplies(req: Request<PublicIdParamsDto, {}, {}, CursorPaginationQueryDto>, res: Response) {
+        const { after, take } = getPagination(req);
         const { posts, pagination } = await postService.getReplies({
-            currentPage,
-            perPage,
+            after: after ?? undefined,
+            take,
             publicId: req.params.publicId,
         });
 
         return res.paginate({ rows: posts, pagination });
     }
 
-    async getRepliesMe(req: Request<{}, {}, {}, PaginationQueryDto>, res: Response) {
+    async getRepliesMe(req: Request<{}, {}, {}, CursorPaginationQueryDto>, res: Response) {
         const userId = req.user?.sub;
 
         if (!userId) {
             return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
         }
 
-        const { currentPage, perPage } = getPagination(req);
+        const { after, take } = getPagination(req);
         const { posts, pagination } = await postService.getRepliesByUser({
-            currentPage,
-            perPage,
+            after: after ?? undefined,
+            take,
             userId,
         });
 
         return res.paginate({ rows: posts, pagination });
     }
 
-    async getRepliesByUser(req: Request<UsernameParamsDto, {}, {}, PaginationQueryDto>, res: Response) {
-        const { currentPage, perPage } = getPagination(req);
+    async getRepliesByUser(req: Request<UsernameParamsDto, {}, {}, CursorPaginationQueryDto>, res: Response) {
+        const { after, take } = getPagination(req);
         const user = await userService.findByUsername(req.params.username);
 
         if (!user) {
@@ -108,33 +108,33 @@ class PostController {
         }
 
         const { posts, pagination } = await postService.getRepliesByUser({
-            currentPage,
-            perPage,
+            after: after ?? undefined,
+            take,
             userId: user.id,
         });
 
         return res.paginate({ rows: posts, pagination });
     }
 
-    async getQuoteMe(req: Request<{}, {}, {}, PaginationQueryDto>, res: Response) {
+    async getQuoteMe(req: Request<{}, {}, {}, CursorPaginationQueryDto>, res: Response) {
         const userId = req.user?.sub;
 
         if (!userId) {
             return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
         }
 
-        const { currentPage, perPage } = getPagination(req);
+        const { after, take } = getPagination(req);
         const { posts, pagination } = await postService.getQuote({
-            currentPage,
-            perPage,
+            after: after ?? undefined,
+            take,
             userId,
         });
 
         return res.paginate({ rows: posts, pagination });
     }
 
-    async getQuote(req: Request<UsernameParamsDto, {}, {}, PaginationQueryDto>, res: Response) {
-        const { currentPage, perPage } = getPagination(req);
+    async getQuote(req: Request<UsernameParamsDto, {}, {}, CursorPaginationQueryDto>, res: Response) {
+        const { after, take } = getPagination(req);
         const user = await userService.findByUsername(req.params.username);
 
         if (!user) {
@@ -142,8 +142,8 @@ class PostController {
         }
 
         const { posts, pagination } = await postService.getQuote({
-            currentPage,
-            perPage,
+            after: after ?? undefined,
+            take,
             userId: user.id,
         });
 

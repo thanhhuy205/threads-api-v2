@@ -4,8 +4,8 @@ import { Router } from 'express';
 import { postController } from './controller/post.controller';
 import { createPostSchema } from './dto/post.dto';
 import {
+    cursorPaginationQuerySchema,
     newsFeedQuerySchema,
-    paginationQuerySchema,
     publicIdParamsSchema,
     reportSchema,
     usernameParamsSchema,
@@ -15,17 +15,17 @@ const postRouter = Router();
 
 postRouter.get('/news-feed', validate(newsFeedQuerySchema, 'query'), postController.getNewsFeedController);
 postRouter.get('/search', postController.search);
-postRouter.get('/:publicId/replies', validate(publicIdParamsSchema, 'params'), validate(paginationQuerySchema, 'query'), postController.getReplies);
+postRouter.get('/:publicId/replies', validate(publicIdParamsSchema, 'params'), validate(cursorPaginationQuerySchema, 'query'), postController.getReplies);
 postRouter.get('/:publicId', validate(publicIdParamsSchema, 'params'), postController.getPost);
-postRouter.get('/user/:username', validate(usernameParamsSchema, 'params'), validate(paginationQuerySchema, 'query'), postController.getPostsByUser);
-postRouter.get('/user/:username/replies', validate(usernameParamsSchema, 'params'), validate(paginationQuerySchema, 'query'), postController.getRepliesByUser);
-postRouter.get('/user/:username/quotes', validate(usernameParamsSchema, 'params'), validate(paginationQuerySchema, 'query'), postController.getQuote);
+postRouter.get('/user/:username', validate(usernameParamsSchema, 'params'), validate(cursorPaginationQuerySchema, 'query'), postController.getPostsByUser);
+postRouter.get('/user/:username/replies', validate(usernameParamsSchema, 'params'), validate(cursorPaginationQuerySchema, 'query'), postController.getRepliesByUser);
+postRouter.get('/user/:username/quotes', validate(usernameParamsSchema, 'params'), validate(cursorPaginationQuerySchema, 'query'), postController.getQuote);
 
 postRouter.use(authorization);
 
-postRouter.get('/me', validate(paginationQuerySchema, 'query'), postController.getPostMe);
-postRouter.get('/me/replies', validate(paginationQuerySchema, 'query'), postController.getRepliesMe);
-postRouter.get('/me/quote', validate(paginationQuerySchema, 'query'), postController.getQuoteMe);
+postRouter.get('/me', validate(cursorPaginationQuerySchema, 'query'), postController.getPostMe);
+postRouter.get('/me/replies', validate(cursorPaginationQuerySchema, 'query'), postController.getRepliesMe);
+postRouter.get('/me/quote', validate(cursorPaginationQuerySchema, 'query'), postController.getQuoteMe);
 
 postRouter.post('/', validate(createPostSchema), postController.createPostController);
 

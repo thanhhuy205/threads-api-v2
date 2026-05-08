@@ -1,14 +1,14 @@
 import { NewFeedType } from '@/modules/post/enum';
 import { z } from 'zod';
 
-export const paginationQuerySchema = z.object({
-    page: z.coerce.number().int('Page must be an integer').positive('Page must be a positive number').optional(),
-    limit: z.coerce.number().int('Limit must be an integer').positive('Limit must be a positive number').optional(),
+export const cursorPaginationQuerySchema = z.object({
+    after: z.string().trim().min(1, 'Cursor must not be empty').optional(),
+    take: z.coerce.number().int('Take must be an integer').positive('Take must be a positive number').max(100, 'Take must be at most 100').optional(),
 });
 
-export type PaginationQueryDto = z.infer<typeof paginationQuerySchema>;
+export type CursorPaginationQueryDto = z.infer<typeof cursorPaginationQuerySchema>;
 
-export const newsFeedQuerySchema = paginationQuerySchema.extend({
+export const newsFeedQuerySchema = cursorPaginationQuerySchema.extend({
     type: z.nativeEnum(NewFeedType, {
         errorMap: () => ({ message: `Type must be one of: ${Object.values(NewFeedType).join(', ')}` }),
     }).optional(),

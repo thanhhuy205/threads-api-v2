@@ -1,5 +1,5 @@
 export type GetPostWithPublicId = {
-    currentPage: number;
-    perPage: number;
+    after?: string;
+    take: number;
     publicId: string;
 };

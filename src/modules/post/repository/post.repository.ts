@@ -1,7 +1,6 @@
 import prisma from "@/config/prisma";
 import { baseLogger } from "@/middlewares/logger";
 import { postFeedSelect } from "@/modules/post/selector/post.selector";
-import { buildPagination } from "@/shared/pagination/pagination";
 import { PostType, Prisma } from "@prisma/client";
 import { CreatePostDto } from "../dto/post.dto";
 import { UserSnapshot } from "../mapper/post.mapper";
@@ -27,30 +26,34 @@ type CreateRepostPayload = CreatePostDto & {
   userId: string;
 };
 
-class PostRepository implements IPagination<Prisma.PostWhereInput, any> {
+class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
   findAll({
-    page,
-    limit,
+    after,
+    take,
     where,
     props: { userId, orderBy },
   }: {
-    page: number;
-    limit: number;
+    after?: string;
+    take: number;
     where?: Prisma.PostWhereInput;
     props: { orderBy?: any; userId?: string | null };
   }) {
-    const { currentLimit, offset } = buildPagination({ page, limit });
-    const sortOrder = orderBy ?? { createdAt: "desc" };
+    const sortOrder = orderBy ?? [{ createdAt: "desc" }, { id: "desc" }];
 
     baseLogger.info(`${JSON.stringify(where)}`);
     baseLogger.info(
-      `Finding posts with where: ${where ? JSON.stringify(where) : "none"}, orderBy: ${JSON.stringify(sortOrder)}, limit: ${currentLimit}, offset: ${offset}`,
+      `Finding posts with where: ${where ? JSON.stringify(where) : "none"}, orderBy: ${JSON.stringify(sortOrder)}, limit: ${take}, after: ${after ? 1 : 0}`,
     );
     return prisma.post.findMany({
       where: where ?? {},
       orderBy: sortOrder,
-      skip: offset,
-      take: currentLimit,
+      take: after ? take + 1 : take,
+      skip: after ? 1 : 0,
+      cursor: after
+        ? {
+          publicId: after,
+        }
+        : undefined,
       select: {
         ...postFeedSelect,
         ...(userId
@@ -84,6 +87,24 @@ class PostRepository implements IPagination<Prisma.PostWhereInput, any> {
 
   count({ where = {} }: { where?: Prisma.PostWhereInput } = {}) {
     return prisma.post.count({ where });
+  }
+
+  findCursorInfo({
+    publicId,
+    where,
+  }: {
+    publicId: string;
+    where?: Prisma.PostWhereInput;
+  }) {
+    return prisma.post.findFirst({
+      where: {
+        AND: [where ?? {}, { publicId }],
+      },
+      select: {
+        id: true,
+        createdAt: true,
+      },
+    });
   }
 
   async create(
