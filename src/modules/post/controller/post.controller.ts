@@ -1,5 +1,6 @@
 import { AUTH_MESSAGE, POST_MESSAGE } from '@/constants/message';
 import { jwtService } from '@/modules/jwt/service/jwt.service';
+import { userService } from '@/modules/user/service/user.service';
 import { getPagination } from '@/shared/pagination/pagination';
 import { Request, Response } from 'express';
 import { CreatePostDto } from '../dto/post.dto';
@@ -9,7 +10,7 @@ import {
     NewsFeedQueryDto,
     PaginationQueryDto,
     PublicIdParamsDto,
-    UserIdParamsDto,
+    UsernameParamsDto,
 } from '../dto/request/post.request';
 import { postService } from '../service/post.service';
 
@@ -52,12 +53,19 @@ class PostController {
         return res.paginate({ rows: posts, pagination });
     }
 
-    async getPostsByUser(req: Request<UserIdParamsDto, {}, {}, PaginationQueryDto>, res: Response) {
+    async getPostsByUser(req: Request<UsernameParamsDto, {}, {}, PaginationQueryDto>, res: Response) {
         const { currentPage, perPage } = getPagination(req);
+        const user = await userService.findByUsername(req.params.username);
+        
+
+        if (!user) {
+            return res.error(404, 'User not found');
+        }
+
         const { posts, pagination } = await postService.getPostsByUser({
             currentPage,
             perPage,
-            userId: req.params.userId,
+            userId: user.id,
         });
 
         return res.paginate({ rows: posts, pagination });
@@ -91,12 +99,18 @@ class PostController {
         return res.paginate({ rows: posts, pagination });
     }
 
-    async getRepliesByUser(req: Request<UserIdParamsDto, {}, {}, PaginationQueryDto>, res: Response) {
+    async getRepliesByUser(req: Request<UsernameParamsDto, {}, {}, PaginationQueryDto>, res: Response) {
         const { currentPage, perPage } = getPagination(req);
+        const user = await userService.findByUsername(req.params.username);
+
+        if (!user) {
+            return res.error(404, 'User not found');
+        }
+
         const { posts, pagination } = await postService.getRepliesByUser({
             currentPage,
             perPage,
-            userId: req.params.userId,
+            userId: user.id,
         });
 
         return res.paginate({ rows: posts, pagination });
@@ -119,12 +133,18 @@ class PostController {
         return res.paginate({ rows: posts, pagination });
     }
 
-    async getQuote(req: Request<UserIdParamsDto, {}, {}, PaginationQueryDto>, res: Response) {
+    async getQuote(req: Request<UsernameParamsDto, {}, {}, PaginationQueryDto>, res: Response) {
         const { currentPage, perPage } = getPagination(req);
+        const user = await userService.findByUsername(req.params.username);
+
+        if (!user) {
+            return res.error(404, 'User not found');
+        }
+
         const { posts, pagination } = await postService.getQuote({
             currentPage,
             perPage,
-            userId: req.params.userId,
+            userId: user.id,
         });
 
         return res.paginate({ rows: posts, pagination });

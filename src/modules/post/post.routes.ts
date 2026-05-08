@@ -8,7 +8,7 @@ import {
     paginationQuerySchema,
     publicIdParamsSchema,
     reportSchema,
-    userIdParamsSchema,
+    usernameParamsSchema,
 } from './dto/request/post.request';
 
 const postRouter = Router();
@@ -17,15 +17,15 @@ postRouter.get('/news-feed', validate(newsFeedQuerySchema, 'query'), postControl
 postRouter.get('/search', postController.search);
 postRouter.get('/:publicId/replies', validate(publicIdParamsSchema, 'params'), validate(paginationQuerySchema, 'query'), postController.getReplies);
 postRouter.get('/:publicId', validate(publicIdParamsSchema, 'params'), postController.getPost);
+postRouter.get('/user/:username', validate(usernameParamsSchema, 'params'), validate(paginationQuerySchema, 'query'), postController.getPostsByUser);
+postRouter.get('/user/:username/replies', validate(usernameParamsSchema, 'params'), validate(paginationQuerySchema, 'query'), postController.getRepliesByUser);
+postRouter.get('/user/:username/quotes', validate(usernameParamsSchema, 'params'), validate(paginationQuerySchema, 'query'), postController.getQuote);
 
 postRouter.use(authorization);
 
 postRouter.get('/me', validate(paginationQuerySchema, 'query'), postController.getPostMe);
 postRouter.get('/me/replies', validate(paginationQuerySchema, 'query'), postController.getRepliesMe);
 postRouter.get('/me/quote', validate(paginationQuerySchema, 'query'), postController.getQuoteMe);
-postRouter.get('/user/:userId', validate(userIdParamsSchema, 'params'), validate(paginationQuerySchema, 'query'), postController.getPostsByUser);
-postRouter.get('/user/:userId/replies', validate(userIdParamsSchema, 'params'), validate(paginationQuerySchema, 'query'), postController.getRepliesByUser);
-postRouter.get('/user/:userId/quotes', validate(userIdParamsSchema, 'params'), validate(paginationQuerySchema, 'query'), postController.getQuote);
 
 postRouter.post('/', validate(createPostSchema), postController.createPostController);
 

@@ -254,16 +254,16 @@ const publicIdParameters = [
     ...postPaginationQueryParameters,
 ];
 
-const userIdParameters = [
+const usernameParameters = [
     {
-        name: 'userId',
+        name: 'username',
         in: 'path',
         required: true,
         schema: {
             type: 'string',
-            example: 'ckv8p4u1q0000x3jz8d2b6g7h',
+            example: 'alice',
         },
-        description: 'User id',
+        description: 'Username',
     },
     ...postPaginationQueryParameters,
 ];
@@ -403,15 +403,15 @@ export const postSwaggerPaths = {
             },
         },
     },
-    '/posts/{userId}/repost': {
+    '/posts/me/replies': {
         get: {
             tags: ['Post'],
-            summary: 'Get user reposts',
+            summary: 'Get current user replies',
             security: bearerAuthSecurity,
-            parameters: userIdParameters,
+            parameters: postPaginationQueryParameters,
             responses: {
                 200: {
-                    description: POST_MESSAGE.REPOSTS_RETRIEVED,
+                    description: POST_MESSAGE.REPLIES_RETRIEVED,
                     content: {
                         'application/json': {
                             schema: {
@@ -426,15 +426,84 @@ export const postSwaggerPaths = {
             },
         },
     },
-    '/posts/{userId}/quote': {
+    '/posts/me/quote': {
         get: {
             tags: ['Post'],
-            summary: 'Get user quotes',
+            summary: 'Get current user quotes and reposts',
             security: bearerAuthSecurity,
-            parameters: userIdParameters,
+            parameters: postPaginationQueryParameters,
             responses: {
                 200: {
-                    description: POST_MESSAGE.QUOTES_RETRIEVED,
+                    description: POST_MESSAGE.RETRIEVED,
+                    content: {
+                        'application/json': {
+                            schema: {
+                                $ref: '#/components/schemas/PaginatedPostResponse',
+                            },
+                        },
+                    },
+                },
+                401: {
+                    description: AUTH_MESSAGE.TOKEN_INVALID,
+                },
+            },
+        },
+    },
+    '/posts/user/{username}': {
+        get: {
+            tags: ['Post'],
+            summary: 'Get user posts',
+            security: bearerAuthSecurity,
+            parameters: usernameParameters,
+            responses: {
+                200: {
+                    description: POST_MESSAGE.RETRIEVED,
+                    content: {
+                        'application/json': {
+                            schema: {
+                                $ref: '#/components/schemas/PaginatedPostResponse',
+                            },
+                        },
+                    },
+                },
+                401: {
+                    description: AUTH_MESSAGE.TOKEN_INVALID,
+                },
+            },
+        },
+    },
+    '/posts/user/{username}/replies': {
+        get: {
+            tags: ['Post'],
+            summary: 'Get user replies',
+            security: bearerAuthSecurity,
+            parameters: usernameParameters,
+            responses: {
+                200: {
+                    description: POST_MESSAGE.REPLIES_RETRIEVED,
+                    content: {
+                        'application/json': {
+                            schema: {
+                                $ref: '#/components/schemas/PaginatedPostResponse',
+                            },
+                        },
+                    },
+                },
+                401: {
+                    description: AUTH_MESSAGE.TOKEN_INVALID,
+                },
+            },
+        },
+    },
+    '/posts/user/{username}/quotes': {
+        get: {
+            tags: ['Post'],
+            summary: 'Get user quotes and reposts',
+            security: bearerAuthSecurity,
+            parameters: usernameParameters,
+            responses: {
+                200: {
+                    description: POST_MESSAGE.RETRIEVED,
                     content: {
                         'application/json': {
                             schema: {

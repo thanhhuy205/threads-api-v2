@@ -22,11 +22,11 @@ export const publicIdParamsSchema = z.object({
 
 export type PublicIdParamsDto = z.infer<typeof publicIdParamsSchema>;
 
-export const userIdParamsSchema = z.object({
-    userId: z.string().min(1, 'User ID is required'),
+export const usernameParamsSchema = z.object({
+    username: z.string().min(1, 'Username is required'),
 });
 
-export type UserIdParamsDto = z.infer<typeof userIdParamsSchema>;
+export type UsernameParamsDto = z.infer<typeof usernameParamsSchema>;
 
 export const reportSchema = z.object({
     reason: z.string().min(1, 'Report reason is required').max(1000, 'Report reason must be at most 1000 characters'),
