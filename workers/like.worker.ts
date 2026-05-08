@@ -1,8 +1,7 @@
 import { LIKE_JOB_NAME, QUEUE_NAME } from "../src/constants/queue";
-import { baseLogger } from "../src/middlewares/logger";
 import type { CreateJobLikeProducer } from "../src/modules/job/like-job/dto/create-job-like-producer";
-import { likeRepository } from "../src/modules/post/repository/like.repository";
-import { postRepository } from "../src/modules/post/repository/post.repository";
+import { likeRepository } from '../src/modules/post/repository/like.repository';
+import { postRepository } from '../src/modules/post/repository/post.repository';
 import { createWorker } from "../src/providers/bullmq.provider";
 import { redisService } from "../src/providers/redis.provider";
 
@@ -11,7 +10,8 @@ class LikeWorker {
     switch (job.name) {
       case LIKE_JOB_NAME.SYNC_POST_LIKE:
         return this.syncPostLike(job.data);
-
+      case LIKE_JOB_NAME.INIT_SYNC_JOB:
+        return this.initSyncJob();
       default:
         throw new Error(`Unknown job name: ${job.name}`);
     }
@@ -51,28 +51,56 @@ class LikeWorker {
     //     return;
     //   }
     // }
-    baseLogger.info(`Synced like state for ${likeKey}: ${likeState}`);
   }
 
-  //   async initSyncJob() {
-  //     const [__, adds] = (await redisService.lmpop(
-  //       1,
-  //       "queue:likes_add",
-  //       "LEFT",
-  //       "COUNT",
-  //       500,
-  //     )) ?? [null, []];
+  async initSyncJob() {
+    await Promise.all([
+      this.processAddLike(),
+      this.processRemoveLike(),
+    ]);
+  }
 
-  //     const [, removes] = (await redisService.lmpop(
-  //       1,
-  //       "queue:likes_remove",
-  //       "LEFT",
-  //       "COUNT",
-  //       500,
-  //     )) ?? [null, []];
+  async processAddLike() {
+    const results = await this.rPopCustomBatch(QUEUE_NAME.LIKED_ADD_QUEUE, 500);
+    const grouped = Map.groupBy(results, (item) => item.postPublicId as string);
+    if (results.length === 0) return;
+    await Promise.all([
+      likeRepository.createMany(results.map((item) => ({
+        userId: item.userId as string,
+        postId: item.postPublicId as string,
+      }))),
+      ...Array.from(grouped.entries()).map(([postPublicId, items]) =>
+        postRepository.incrementLikedCount(postPublicId, items.length)
+      ),
+    ]);
+  }
 
-  //     if (!adds?.length && !removes?.length) return;
-  //   }
+  async processRemoveLike() {
+    const results = await this.rPopCustomBatch(QUEUE_NAME.LIKED_REMOVE_QUEUE, 500);
+
+    if (results.length === 0) return;
+    const grouped = Map.groupBy(results, (item) => item.postPublicId as string);
+    await Promise.all([
+      likeRepository.createMany(results.map((item) => ({
+        userId: item.userId as string,
+        postId: item.postPublicId as string,
+      }))),
+
+      ...Array.from(grouped.entries()).map(([postPublicId, items]) =>
+        postRepository.decrementLikedCount(postPublicId, items.length)
+      ),
+    ]);
+  }
+
+
+
+  private async rPopCustomBatch(key: string, count: number): Promise<Record<string, unknown>[]> {
+    const results: Record<string, unknown>[] = [];
+    const result = await redisService.lMPop([key], "RIGHT", { count });
+    if (!result) return [];
+    return results;
+  }
+
 }
 
 export const likeWorker = new LikeWorker();

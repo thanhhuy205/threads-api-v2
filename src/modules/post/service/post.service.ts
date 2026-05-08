@@ -1,5 +1,5 @@
+import { QUEUE_NAME } from "@/constants/queue";
 import { baseLogger } from "@/middlewares/logger";
-import { likeProducer } from "@/modules/job/like-job/producer/like.producer";
 import { pineProducer } from "@/modules/job/pine-vector/producer/pine.producer";
 import { mixedBreadService } from "@/modules/mixed-bread/service/mixed-bread.service";
 import { pineconeService } from "@/modules/pinecone/service/pinecone.service";
@@ -273,39 +273,33 @@ class PostService {
     publicId: string,
     userId: string,
     isLiked: boolean,
-  ): Promise<void> {
-    const key = `post:${publicId}:likes`;
+  ): Promise<number> {
+    const likeKey = `post:${publicId}:likes`;
+    const countKey = `post:${publicId}:likeCount`;
 
     if (isLiked) {
-      const added = await redisService.sAdd(key, userId);
+      const added = await redisService.sAdd(likeKey, userId);
       baseLogger.info(`Added like for post ${publicId} by user ${userId}`);
       if (added === 1) {
+        await redisService.incr(countKey);
         await redisService.lPush(
-          "queue:likes_add",
-          JSON.stringify({ key, userId }),
+          QUEUE_NAME.LIKED_ADD_QUEUE,
+          JSON.stringify({ postPublicId: publicId, createdAt: new Date().toISOString(), userId }),
         );
       }
     } else {
-      const removed = await redisService.sRem(key, userId);
+      const removed = await redisService.sRem(likeKey, userId);
       baseLogger.info(`Removed like for post ${publicId} by user ${userId}`);
       if (removed === 1) {
+        await redisService.decr(countKey);
         await redisService.lPush(
-          "queue:likes_remove",
-          JSON.stringify({ key, userId }),
+          QUEUE_NAME.LIKED_REMOVE_QUEUE,
+          JSON.stringify({ postPublicId: publicId, createdAt: new Date().toISOString(), userId }),
         );
       }
     }
-
-    // const jobKey = `like-sync:${publicId}`;
-
-    // const isJobAlreadyScheduled = await redisService.set(jobKey, "pending", {
-    //   NX: true,
-    //   EX: 30,
-    // });
-
-    // if (isJobAlreadyScheduled) {
-    //   await likeProducer.syncPostLike({ publicId });
-    // }
+    const likeCount = await redisService.sCard(likeKey);
+    return likeCount
   }
 
   async delete(publicId: string, userId: string): Promise<void> {

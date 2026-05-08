@@ -53,6 +53,9 @@ CREATE TABLE `posts` (
     `parent_id` INTEGER NULL,
     `origin_post_id` INTEGER NULL,
     `root_post_id` INTEGER NULL,
+    `parent_public_id` VARCHAR(191) NULL,
+    `origin_public_id` VARCHAR(191) NULL,
+    `root_public_id` VARCHAR(191) NULL,
     `user_snapshot` JSON NULL,
     `reply_permission` VARCHAR(50) NOT NULL DEFAULT 'everyone',
     `likes_count` INTEGER NOT NULL DEFAULT 0,
@@ -61,6 +64,7 @@ CREATE TABLE `posts` (
     `views_count` INTEGER NOT NULL DEFAULT 0,
     `is_quote` BOOLEAN NOT NULL DEFAULT false,
     `is_pinned` BOOLEAN NOT NULL DEFAULT false,
+    `is_ghost` BOOLEAN NOT NULL DEFAULT false,
     `is_deleted` BOOLEAN NOT NULL DEFAULT false,
     `deleted_at` DATETIME(3) NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -76,14 +80,139 @@ CREATE TABLE `posts` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
+CREATE TABLE `knowledge_posts` (
+    `id` VARCHAR(191) NOT NULL,
+    `user_id` VARCHAR(191) NOT NULL,
+    `learning_goal` TEXT NOT NULL,
+    `common_confusion` TEXT NOT NULL,
+    `core_explanation` TEXT NOT NULL,
+    `understanding_check` TEXT NOT NULL,
+    `summary` VARCHAR(255) NULL,
+    `cover_image` VARCHAR(2048) NULL,
+    `tags` JSON NULL,
+    `difficulty_level` ENUM('BEGINNER', 'INTERMEDIATE', 'ADVANCED') NOT NULL DEFAULT 'BEGINNER',
+    `content_format` ENUM('PLAIN', 'MARKDOWN') NOT NULL DEFAULT 'PLAIN',
+    `reading_time` INTEGER NOT NULL DEFAULT 3,
+    `status` ENUM('DRAFT', 'PUBLISHED', 'ARCHIVED') NOT NULL DEFAULT 'DRAFT',
+    `approval_status` ENUM('PENDING', 'APPROVED', 'REJECTED') NOT NULL DEFAULT 'PENDING',
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at` DATETIME(3) NOT NULL,
+    `knowledge_reason_id` INTEGER NULL,
+
+    INDEX `idx_knowledge_posts_user_id`(`user_id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `knowledge_medias` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `knowledge_post_id` VARCHAR(191) NOT NULL,
+    `url` VARCHAR(2048) NOT NULL,
+    `type` ENUM('IMAGE', 'VIDEO', 'GIF', 'OTHER') NOT NULL,
+    `caption` VARCHAR(500) NULL,
+    `order` INTEGER NOT NULL DEFAULT 0,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    INDEX `idx_knowledge_medias_post_id`(`knowledge_post_id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `knowledge_sources` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `knowledge_post_id` VARCHAR(191) NOT NULL,
+    `title` VARCHAR(255) NOT NULL,
+    `url` VARCHAR(2048) NULL,
+    `description` VARCHAR(500) NULL,
+    `order` INTEGER NOT NULL DEFAULT 0,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    INDEX `idx_knowledge_sources_post_id`(`knowledge_post_id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `knowledge_bookmarks` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `user_id` VARCHAR(191) NOT NULL,
+    `knowledge_post_id` VARCHAR(191) NOT NULL,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    INDEX `idx_knowledge_bookmarks_user_id`(`user_id`),
+    INDEX `idx_knowledge_bookmarks_post_id`(`knowledge_post_id`),
+    UNIQUE INDEX `uq_knowledge_bookmarks_user_post`(`user_id`, `knowledge_post_id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `knowledge_post_comments` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `public_id` VARCHAR(191) NOT NULL,
+    `knowledge_post_id` VARCHAR(191) NOT NULL,
+    `user_id` VARCHAR(191) NOT NULL,
+    `content` TEXT NOT NULL,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at` DATETIME(3) NOT NULL,
+
+    UNIQUE INDEX `knowledge_post_comments_public_id_key`(`public_id`),
+    INDEX `idx_knowledge_post_comments_post_id`(`knowledge_post_id`),
+    INDEX `idx_knowledge_post_comments_user_id`(`user_id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `knowledge_rankings` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `knowledge_post_id` VARCHAR(191) NOT NULL,
+    `criteria_enum` ENUM('CORRECTNESS', 'USEFULNESS', 'EXCELLENCE', 'INCOMPREHENSIBILITY', 'SUSPICIOUSNESS') NOT NULL,
+    `user_id` VARCHAR(191) NOT NULL,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    INDEX `idx_knowledge_rankings_post_id`(`knowledge_post_id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `knowledge_reasons` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `knowledge_post_id` VARCHAR(191) NOT NULL,
+    `content_type` ENUM('KNOWLEDGE', 'OPINION', 'SPAM', 'SCAM') NOT NULL,
+    `trust_score` INTEGER NOT NULL,
+    `risk_level` ENUM('LOW', 'MEDIUM', 'HIGH') NOT NULL,
+    `reason` TEXT NOT NULL,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    INDEX `idx_knowledge_reasons_post_id`(`knowledge_post_id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `knowledge_understands` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `user_id` VARCHAR(191) NOT NULL,
+    `knowledge_post_id` VARCHAR(191) NOT NULL,
+    `is_understood` BOOLEAN NOT NULL DEFAULT false,
+    `feedback` TEXT NULL,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at` DATETIME(3) NOT NULL,
+
+    INDEX `idx_knowledge_understands_user_id`(`user_id`),
+    INDEX `idx_knowledge_understands_post_id`(`knowledge_post_id`),
+    UNIQUE INDEX `uq_knowledge_understands_user_post`(`user_id`, `knowledge_post_id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
 CREATE TABLE `post_media` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `post_id` INTEGER NOT NULL,
+    `post_id` INTEGER NULL,
     `url` VARCHAR(2048) NOT NULL,
-    `type` VARCHAR(50) NULL,
+    `type_enum` ENUM('IMAGE', 'VIDEO', 'GIF', 'OTHER') NULL,
     `width` INTEGER NULL,
     `height` INTEGER NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `key` VARCHAR(255) NULL,
+    `status_enum` ENUM('TEMPORARY', 'UPLOADING', 'UPLOADED', 'FAILED') NULL DEFAULT 'TEMPORARY',
 
     INDEX `idx_post_media_post_id`(`post_id`),
     PRIMARY KEY (`id`)
@@ -122,7 +251,8 @@ CREATE TABLE `follows` (
 CREATE TABLE `likes` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `user_id` VARCHAR(191) NOT NULL,
-    `post_id` INTEGER NOT NULL,
+    `post_id` VARCHAR(191) NOT NULL,
+    `is_like` BOOLEAN NOT NULL DEFAULT false,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NOT NULL,
 
@@ -199,20 +329,6 @@ CREATE TABLE `email_logs` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `user_intents` (
-    `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `user_id` VARCHAR(191) NOT NULL,
-    `positiveText` VARCHAR(255) NULL,
-    `negativeText` VARCHAR(255) NULL,
-    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    `updated_at` DATETIME(3) NOT NULL,
-
-    INDEX `idx_user_intents_user_id`(`user_id`),
-    UNIQUE INDEX `uq_user_intents_user_id`(`user_id`),
-    PRIMARY KEY (`id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- CreateTable
 CREATE TABLE `circles` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(255) NOT NULL,
@@ -227,15 +343,48 @@ CREATE TABLE `circles` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
+CREATE TABLE `invitation_requests` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `circle_id` INTEGER NOT NULL,
+    `user_id` VARCHAR(191) NOT NULL,
+    `status` VARCHAR(50) NOT NULL,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at` DATETIME(3) NOT NULL,
+
+    INDEX `idx_invitation_requests_circle_id`(`circle_id`),
+    INDEX `idx_invitation_requests_user_id`(`user_id`),
+    UNIQUE INDEX `uq_invitation_requests_circle_user`(`circle_id`, `user_id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
 CREATE TABLE `circle_members` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `circle_id` INTEGER NOT NULL,
     `user_id` VARCHAR(191) NOT NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `role` ENUM('OWNER', 'ADMIN', 'MEMBER') NOT NULL DEFAULT 'MEMBER',
 
     INDEX `idx_circle_members_circle_id`(`circle_id`),
     INDEX `idx_circle_members_user_id`(`user_id`),
     UNIQUE INDEX `uq_circle_members_circle_user`(`circle_id`, `user_id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `circle_invitations` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `circle_id` INTEGER NOT NULL,
+    `user_id` VARCHAR(191) NOT NULL,
+    `inviter_id` VARCHAR(191) NOT NULL,
+    `status` ENUM('PENDING', 'ACCEPTED', 'REJECTED') NOT NULL DEFAULT 'PENDING',
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at` DATETIME(3) NOT NULL,
+
+    INDEX `idx_circle_invitations_circle_id`(`circle_id`),
+    INDEX `idx_circle_invitations_user_id`(`user_id`),
+    INDEX `idx_circle_invitations_inviter_id`(`inviter_id`),
+    UNIQUE INDEX `uq_circle_invitations_circle_user`(`circle_id`, `user_id`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -248,31 +397,6 @@ CREATE TABLE `anti_spam` (
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
     INDEX `idx_anti_spam_user_id`(`user_id`),
-    PRIMARY KEY (`id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- CreateTable
-CREATE TABLE `collections` (
-    `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `user_id` VARCHAR(191) NOT NULL,
-    `name` VARCHAR(255) NOT NULL,
-    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    `updated_at` DATETIME(3) NOT NULL,
-
-    INDEX `idx_collections_user_id`(`user_id`),
-    PRIMARY KEY (`id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- CreateTable
-CREATE TABLE `collection_posts` (
-    `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `collection_id` INTEGER NOT NULL,
-    `post_id` INTEGER NOT NULL,
-    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-
-    INDEX `idx_collection_posts_collection_id`(`collection_id`),
-    INDEX `idx_collection_posts_post_id`(`post_id`),
-    UNIQUE INDEX `uq_collection_posts_collection_post`(`collection_id`, `post_id`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -306,7 +430,43 @@ ALTER TABLE `posts` ADD CONSTRAINT `posts_origin_post_id_fkey` FOREIGN KEY (`ori
 ALTER TABLE `posts` ADD CONSTRAINT `posts_root_post_id_fkey` FOREIGN KEY (`root_post_id`) REFERENCES `posts`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `post_media` ADD CONSTRAINT `post_media_post_id_fkey` FOREIGN KEY (`post_id`) REFERENCES `posts`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `knowledge_posts` ADD CONSTRAINT `knowledge_posts_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `knowledge_posts` ADD CONSTRAINT `knowledge_posts_knowledge_reason_id_fkey` FOREIGN KEY (`knowledge_reason_id`) REFERENCES `knowledge_reasons`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `knowledge_medias` ADD CONSTRAINT `knowledge_medias_knowledge_post_id_fkey` FOREIGN KEY (`knowledge_post_id`) REFERENCES `knowledge_posts`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `knowledge_sources` ADD CONSTRAINT `knowledge_sources_knowledge_post_id_fkey` FOREIGN KEY (`knowledge_post_id`) REFERENCES `knowledge_posts`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `knowledge_bookmarks` ADD CONSTRAINT `knowledge_bookmarks_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `knowledge_bookmarks` ADD CONSTRAINT `knowledge_bookmarks_knowledge_post_id_fkey` FOREIGN KEY (`knowledge_post_id`) REFERENCES `knowledge_posts`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `knowledge_post_comments` ADD CONSTRAINT `knowledge_post_comments_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `knowledge_post_comments` ADD CONSTRAINT `knowledge_post_comments_knowledge_post_id_fkey` FOREIGN KEY (`knowledge_post_id`) REFERENCES `knowledge_posts`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `knowledge_rankings` ADD CONSTRAINT `knowledge_rankings_knowledge_post_id_fkey` FOREIGN KEY (`knowledge_post_id`) REFERENCES `knowledge_posts`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `knowledge_rankings` ADD CONSTRAINT `knowledge_rankings_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `knowledge_understands` ADD CONSTRAINT `knowledge_understands_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `knowledge_understands` ADD CONSTRAINT `knowledge_understands_knowledge_post_id_fkey` FOREIGN KEY (`knowledge_post_id`) REFERENCES `knowledge_posts`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `post_media` ADD CONSTRAINT `post_media_post_id_fkey` FOREIGN KEY (`post_id`) REFERENCES `posts`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `post_mentions` ADD CONSTRAINT `post_mentions_post_id_fkey` FOREIGN KEY (`post_id`) REFERENCES `posts`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -321,7 +481,7 @@ ALTER TABLE `follows` ADD CONSTRAINT `follows_following_id_fkey` FOREIGN KEY (`f
 ALTER TABLE `likes` ADD CONSTRAINT `likes_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `likes` ADD CONSTRAINT `likes_post_id_fkey` FOREIGN KEY (`post_id`) REFERENCES `posts`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `likes` ADD CONSTRAINT `likes_post_id_fkey` FOREIGN KEY (`post_id`) REFERENCES `posts`(`public_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `topics_posts` ADD CONSTRAINT `topics_posts_post_id_fkey` FOREIGN KEY (`post_id`) REFERENCES `posts`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -339,10 +499,13 @@ ALTER TABLE `refresh_tokens` ADD CONSTRAINT `refresh_tokens_user_id_fkey` FOREIG
 ALTER TABLE `email_logs` ADD CONSTRAINT `email_logs_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `user_intents` ADD CONSTRAINT `user_intents_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `circles` ADD CONSTRAINT `circles_create_by_id_fkey` FOREIGN KEY (`create_by_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `circles` ADD CONSTRAINT `circles_create_by_id_fkey` FOREIGN KEY (`create_by_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `invitation_requests` ADD CONSTRAINT `invitation_requests_circle_id_fkey` FOREIGN KEY (`circle_id`) REFERENCES `circles`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `invitation_requests` ADD CONSTRAINT `invitation_requests_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `circle_members` ADD CONSTRAINT `circle_members_circle_id_fkey` FOREIGN KEY (`circle_id`) REFERENCES `circles`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -351,16 +514,16 @@ ALTER TABLE `circle_members` ADD CONSTRAINT `circle_members_circle_id_fkey` FORE
 ALTER TABLE `circle_members` ADD CONSTRAINT `circle_members_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `circle_invitations` ADD CONSTRAINT `circle_invitations_circle_id_fkey` FOREIGN KEY (`circle_id`) REFERENCES `circles`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `circle_invitations` ADD CONSTRAINT `circle_invitations_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `circle_invitations` ADD CONSTRAINT `circle_invitations_inviter_id_fkey` FOREIGN KEY (`inviter_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE `anti_spam` ADD CONSTRAINT `anti_spam_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `collections` ADD CONSTRAINT `collections_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `collection_posts` ADD CONSTRAINT `collection_posts_collection_id_fkey` FOREIGN KEY (`collection_id`) REFERENCES `collections`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `collection_posts` ADD CONSTRAINT `collection_posts_post_id_fkey` FOREIGN KEY (`post_id`) REFERENCES `posts`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `notifications` ADD CONSTRAINT `notifications_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;

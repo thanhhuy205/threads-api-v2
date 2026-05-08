@@ -3,7 +3,10 @@ export const QUEUE_NAME = {
   EMAIL_QUEUE: "email_queue",
   BLOOM_QUEUE: "bloom_queue",
   LIKE_QUEUE: "like_queue",
+  LIKED_ADD_QUEUE: "likes_add",
+  LIKED_REMOVE_QUEUE: "likes_remove",
 };
+
 
 export const WORKER_NAME = {
   PINECONE_WORKER: "pinecone_worker",

@@ -55,28 +55,28 @@ class PostRepository implements IPagination<Prisma.PostWhereInput, any> {
         ...postFeedSelect,
         ...(userId
           ? {
-              likes: {
-                where: {
-                  userId: userId,
-                  isLike: true,
-                },
-                select: {
-                  userId: true,
-                },
-                take: 1,
+            likes: {
+              where: {
+                userId: userId,
+                isLike: true,
               },
-              derivatives: {
-                where: {
-                  isQuote: true,
-                  userId: userId,
-                },
-                select: {
-                  publicId: true,
-                  userId: true,
-                },
-                take: 1,
+              select: {
+                userId: true,
               },
-            }
+              take: 1,
+            },
+            derivatives: {
+              where: {
+                isQuote: true,
+                userId: userId,
+              },
+              select: {
+                publicId: true,
+                userId: true,
+              },
+              take: 1,
+            },
+          }
           : {}),
       },
     });
@@ -97,10 +97,10 @@ class PostRepository implements IPagination<Prisma.PostWhereInput, any> {
         userSnapshot,
         media: payload.media?.length
           ? {
-              connect: payload.media.map((media) => ({
-                id: media.id,
-              })),
-            }
+            connect: payload.media.map((media) => ({
+              id: media.id,
+            })),
+          }
           : undefined,
       },
 
@@ -137,10 +137,10 @@ class PostRepository implements IPagination<Prisma.PostWhereInput, any> {
         type: PostType.REPLY,
         media: payload.media?.length
           ? {
-              connect: payload.media.map((media) => ({
-                id: media.id,
-              })),
-            }
+            connect: payload.media.map((media) => ({
+              id: media.id,
+            })),
+          }
           : undefined,
       },
       select: {
@@ -265,27 +265,28 @@ class PostRepository implements IPagination<Prisma.PostWhereInput, any> {
       data: { isGhost },
     });
   }
-  async incrementLikedCount(publicId: string, userId: string): Promise<void> {
+
+
+
+  async incrementLikedCount(publicId: string, count: number): Promise<void> {
     await prisma.$executeRaw`
     UPDATE posts p
     JOIN likes l ON l.post_id = p.id
     SET 
-      p.likes_count = GREATEST(p.likes_count + 1, 0)
+      p.likes_count = GREATEST(p.likes_count + ${count}, 0)
     WHERE 
       p.public_id = ${publicId}
-      AND l.user_id = ${userId}
   `;
   }
 
-  async decrementLikedCount(publicId: string, userId: string): Promise<void> {
+  async decrementLikedCount(publicId: string, count: number): Promise<void> {
     await prisma.$executeRaw`
     UPDATE posts p
     JOIN likes l ON l.post_id = p.id
     SET 
-      p.likes_count = GREATEST(p.likes_count - 1, 0)
+      p.likes_count = GREATEST(p.likes_count - ${count}, 0)
     WHERE 
       p.public_id = ${publicId}
-      AND l.user_id = ${userId}
   `;
   }
 }
