@@ -173,6 +173,7 @@ class PostService {
       {
         content: payload.content,
         userId: payload.userId,
+        media: payload.media,
       },
       publicId,
       mappedSnapshot,

@@ -135,6 +135,13 @@ class PostRepository implements IPagination<Prisma.PostWhereInput, any> {
         parentPublicId,
         userSnapshot,
         type: PostType.REPLY,
+        media: payload.media?.length
+          ? {
+              connect: payload.media.map((media) => ({
+                id: media.id,
+              })),
+            }
+          : undefined,
       },
       select: {
         id: true,
@@ -263,12 +270,10 @@ class PostRepository implements IPagination<Prisma.PostWhereInput, any> {
     UPDATE posts p
     JOIN likes l ON l.post_id = p.id
     SET 
-      p.likes_count = GREATEST(p.likes_count + 1, 0),
-      l.is_like = 1
+      p.likes_count = GREATEST(p.likes_count + 1, 0)
     WHERE 
       p.public_id = ${publicId}
       AND l.user_id = ${userId}
-      AND l.is_like = 0
   `;
   }
 
@@ -277,12 +282,10 @@ class PostRepository implements IPagination<Prisma.PostWhereInput, any> {
     UPDATE posts p
     JOIN likes l ON l.post_id = p.id
     SET 
-      p.likes_count = GREATEST(p.likes_count - 1, 0),
-      l.is_like = 0
+      p.likes_count = GREATEST(p.likes_count - 1, 0)
     WHERE 
       p.public_id = ${publicId}
       AND l.user_id = ${userId}
-      AND l.is_like = 1
   `;
   }
 }
