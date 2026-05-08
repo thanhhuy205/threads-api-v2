@@ -75,6 +75,28 @@ class PostService {
     });
   }
 
+  async getPostsByUser({ currentPage, perPage, userId }: GetPostWithUser) {
+    return this.paginatePosts({
+      currentPage,
+      perPage,
+      where: buildUserPostsWhere({
+        userId,
+        postType: PostType.POST,
+      }),
+    });
+  }
+
+  async getRepliesByUser({ currentPage, perPage, userId }: GetPostWithUser) {
+    return this.paginatePosts({
+      currentPage,
+      perPage,
+      where: buildUserPostsWhere({
+        userId,
+        postType: PostType.REPLY,
+      }),
+    });
+  }
+
   async getReplies({ currentPage, perPage, publicId }: GetPostWithPublicId) {
     return this.paginatePosts({
       currentPage,
@@ -86,25 +108,16 @@ class PostService {
     });
   }
 
-  async getRepost({ currentPage, perPage, userId }: GetPostWithUser) {
-    return this.paginatePosts({
-      currentPage,
-      perPage,
-      where: buildUserPostsWhere({
-        userId,
-        postType: PostType.REPOST,
-      }),
-    });
-  }
-
   async getQuote({ currentPage, perPage, userId }: GetPostWithUser) {
     return this.paginatePosts({
       currentPage,
       perPage,
-      where: buildUserPostsWhere({
+      where: {
         userId,
-        postType: PostType.QUOTE,
-      }),
+        type: {
+          in: [PostType.REPOST, PostType.QUOTE],
+        },
+      },
     });
   }
 

@@ -79,13 +79,15 @@ class LikeWorker {
     const results = await this.rPopCustomBatch(QUEUE_NAME.LIKED_REMOVE_QUEUE, 500);
 
     if (results.length === 0) return;
+    // gom nhóm theo postPublicId để giảm số lần gọi postRepository.decrementLikedCount
     const grouped = Map.groupBy(results, (item) => item.postPublicId as string);
     await Promise.all([
       likeRepository.createMany(results.map((item) => ({
         userId: item.userId as string,
         postId: item.postPublicId as string,
       }))),
-
+      // vì mỗi item trong results là một like bị xóa, nên số lần giảm liked count sẽ bằng số item trong nhóm
+      // grouped.entries() trả về [postPublicId, items], trong đó items là mảng các like bị xóa của post đó
       ...Array.from(grouped.entries()).map(([postPublicId, items]) =>
         postRepository.decrementLikedCount(postPublicId, items.length)
       ),
@@ -96,6 +98,7 @@ class LikeWorker {
 
   private async rPopCustomBatch(key: string, count: number): Promise<Record<string, unknown>[]> {
     const results: Record<string, unknown>[] = [];
+    // lấy batch từ Redis cho đến khi không còn dữ liệu nào hoặc đã lấy đủ batch
     const result = await redisService.lMPop([key], "RIGHT", { count });
     if (!result) return [];
     return results;

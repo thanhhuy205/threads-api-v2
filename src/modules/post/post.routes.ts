@@ -21,8 +21,11 @@ postRouter.get('/:publicId', validate(publicIdParamsSchema, 'params'), postContr
 postRouter.use(authorization);
 
 postRouter.get('/me', validate(paginationQuerySchema, 'query'), postController.getPostMe);
-postRouter.get('/:userId/repost', validate(userIdParamsSchema, 'params'), validate(paginationQuerySchema, 'query'), postController.getRepost);
-postRouter.get('/:userId/quote', validate(userIdParamsSchema, 'params'), validate(paginationQuerySchema, 'query'), postController.getQuote);
+postRouter.get('/me/replies', validate(paginationQuerySchema, 'query'), postController.getRepliesMe);
+postRouter.get('/me/quote', validate(paginationQuerySchema, 'query'), postController.getQuoteMe);
+postRouter.get('/user/:userId', validate(userIdParamsSchema, 'params'), validate(paginationQuerySchema, 'query'), postController.getPostsByUser);
+postRouter.get('/user/:userId/replies', validate(userIdParamsSchema, 'params'), validate(paginationQuerySchema, 'query'), postController.getRepliesByUser);
+postRouter.get('/user/:userId/quotes', validate(userIdParamsSchema, 'params'), validate(paginationQuerySchema, 'query'), postController.getQuote);
 
 postRouter.post('/', validate(createPostSchema), postController.createPostController);
 

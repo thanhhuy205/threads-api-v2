@@ -1,5 +1,5 @@
 import { baseLogger } from "@/middlewares/logger";
-import { Prisma, User, UserStatus } from "@prisma/client";
+import { Prisma, UserStatus } from "@prisma/client";
 import { postFeedSelect } from "../selector/post.selector";
 
 type PostOriginItem = {
@@ -22,7 +22,7 @@ export type PostFeedResponse = Omit<PostFeedItem, "likes"> & {
 };
 export type UserSnapshot = {
   id: string;
-  bio: string;
+  bio: string | null;
   name: string;
   avatar: string;
   status: UserStatus;
