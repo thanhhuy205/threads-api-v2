@@ -1,5 +1,4 @@
 import { QUEUE_NAME } from "@/constants/queue";
-import prisma from "@/config/prisma";
 import { BadRequestException } from "@/errors/error";
 import { baseLogger } from "@/middlewares/logger";
 import { pineProducer } from "@/modules/job/pine-vector/producer/pine.producer";
@@ -20,26 +19,14 @@ import { PostMapper } from "@/modules/post/mapper/post.mapper";
 import { userService } from "@/modules/user/service/user.service";
 import { redisService } from "@/providers/redis.provider";
 import { buildCursorPagination, buildPagination } from "@/shared/pagination/cursor-pagination";
+import { transactionService } from "@/shared/transaction/transaction.service";
 import { PostType, Prisma } from "@prisma/client";
 import { CreatePostDto } from "../dto/post.dto";
+import { normalizeTopic } from '../helper/nomalize.hepler';
 import { PostRecord, postRepository } from "../repository/post.repository";
 import { topicsPostRepository } from "../repository/topics-post.repository";
 
-type PostCursorInfo = {
-  id: number;
-  createdAt: Date;
-};
-
 class PostService {
-  private normalizeTopic(topic?: string): string | undefined {
-    if (!topic) {
-      return undefined;
-    }
-
-    const normalized = topic.trim().replace(/\s+/g, " ").toLowerCase();
-    return normalized || undefined;
-  }
-
   private async validateMentions(
     mentions?: CreatePostDto["mentions"],
   ): Promise<string[]> {
@@ -81,7 +68,7 @@ class PostService {
       });
     }
 
-    const normalizedTopic = this.normalizeTopic(payload.topic);
+    const normalizedTopic = normalizeTopic(payload.topic);
 
     if (normalizedTopic) {
       await topicsPostRepository.create(
@@ -222,8 +209,12 @@ class PostService {
       throw new Error("User not found");
     }
     const mappedSnapshot = PostMapper.toUserSnapshot(userSnapshot);
+
+    //Validate mentions 
     const mentionIds = await this.validateMentions(payload.mentions);
-    const post = await prisma.$transaction(async (tx) => {
+
+    // Create post and attach meta in a transaction
+    const post = await transactionService.doInTransaction(async (tx) => {
       const createdPost = await postRepository.create(payload, mappedSnapshot, tx);
 
       if (!createdPost.id) {
@@ -236,9 +227,10 @@ class PostService {
       });
       return createdPost;
     });
+
     await pineProducer.addToPineconeQueue({
       content: payload.content,
-      topic: [this.normalizeTopic(payload.topic) ?? "not"],
+      topic: [normalizeTopic(payload.topic) ?? "not"],
       postId: post.id || 0,
       userId: payload.userId,
     });
@@ -289,7 +281,7 @@ class PostService {
 
     const mappedSnapshot = PostMapper.toUserSnapshot(userSnapshot);
     const mentionIds = await this.validateMentions(payload.mentions);
-    const post = await prisma.$transaction(async (tx) => {
+    const post = await transactionService.doInTransaction(async (tx) => {
       const createdPost = await postRepository.createReply(
         {
           content: payload.content,
@@ -368,7 +360,9 @@ class PostService {
 
     const mappedSnapshot = PostMapper.toUserSnapshot(userSnapshot);
     const mentionIds = await this.validateMentions(payload.mentions);
-    const post = await prisma.$transaction(async (tx) => {
+
+
+    const post = await transactionService.doInTransaction(async (tx) => {
       const createdPost = await postRepository.createQuote(
         {
           userId: payload.userId,
@@ -392,7 +386,9 @@ class PostService {
         mentionIds,
       });
       return createdPost;
-    });
+    })
+
+
 
     return {
       publicId: post.publicId,
