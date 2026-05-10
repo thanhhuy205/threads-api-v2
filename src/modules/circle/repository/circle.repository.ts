@@ -56,13 +56,12 @@ class CircleRepository implements IPagination<Prisma.CircleWhereInput, CircleFor
     async create(data: CreateCircleInput): Promise<Circle> {
         const result = await prisma.circle.create({
             data: {
-                userId: data.userId,
                 name: data.name,
                 visibility: data.visibility,
                 createById: data.createById,
                 circleMembers: {
                     create: {
-                        userId: data.userId,
+                        userId: data.createById,
                         role: RoleMembership.ADMIN
                     }
                 }

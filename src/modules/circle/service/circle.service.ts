@@ -32,7 +32,6 @@ class CircleService {
             name: data.name,
             visibility: data.visibility,
             createById: data.createById,
-            userId: data.userId,
         });
 
         return newCircle;

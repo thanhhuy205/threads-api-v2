@@ -4,5 +4,4 @@ export interface CreateCircleInput {
     name: string;
     visibility: Visibility;
     createById: string;
-    userId: string;
 }

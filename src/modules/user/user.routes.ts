@@ -7,6 +7,7 @@ import { followersQuerySchema } from './dto/request/followers.query.dto';
 const userRouter = Router();
 
 userRouter.use(authorization);
+// Hơi sai sai 
 userRouter.get('/followers', validate(followersQuerySchema, 'query'), userController.getFollower);
 
 export default userRouter;
