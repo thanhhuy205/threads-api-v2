@@ -68,6 +68,12 @@ export const postSwaggerSchemas = {
                 type: 'string',
                 example: 'Hello Threads',
             },
+            replyPermission: {
+                type: 'string',
+                enum: ['everyone', 'followers', 'following', 'mentioned'],
+                example: 'everyone',
+                description: 'Optional. Case-insensitive, server normalizes to uppercase.',
+            },
         },
         required: ['content'],
     },

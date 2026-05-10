@@ -1,9 +1,19 @@
 import { z } from "zod";
+import { ReplyPermission } from "@prisma/client";
 
 const mentionSchema = z.object({
   userId: z.string().trim().min(1, "Mention userId is required"),
   username: z.string().trim().min(1, "Mention username is required"),
 });
+
+const replyPermissionSchema = z.preprocess(
+  (value) => (typeof value === "string" ? value.trim().toUpperCase() : value),
+  z.nativeEnum(ReplyPermission, {
+    errorMap: () => ({
+      message: `replyPermission must be one of: ${Object.values(ReplyPermission).join(", ")}`,
+    }),
+  }),
+);
 
 const createPostSchema = z.object({
   content: z
@@ -26,6 +36,7 @@ const createPostSchema = z.object({
       }),
     )
     .optional(),
+  replyPermission: replyPermissionSchema.default(ReplyPermission.EVERYONE),
 }).superRefine((payload, ctx) => {
   if (!payload.mentions?.length) {
     return;

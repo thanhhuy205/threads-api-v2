@@ -216,7 +216,7 @@ class PostController {
         return res.success(200, POST_MESSAGE.RETRIEVED, { liked: req.body.isLiked });
     }
 
-    async repostPost(req: Request<PublicIdParamsDto>, res: Response) {
+    async repostPost(req: Request<PublicIdParamsDto, {}, CreatePostDto>, res: Response) {
         const userId = req.user?.sub;
 
         if (!userId) {
@@ -231,6 +231,7 @@ class PostController {
         const repost = await postService.repost({
             publicId: req.params.publicId,
             content: req.body.content ?? '',
+            replyPermission: req.body.replyPermission,
         }, userId);
 
         return res.success(201, POST_MESSAGE.CREATED, repost);

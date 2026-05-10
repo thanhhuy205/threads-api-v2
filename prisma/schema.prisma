@@ -46,6 +46,7 @@ enum JobStatus {
 
 enum ReplyPermission {
     EVERYONE
+    FOLLOWERS
     FOLLOWING
     MENTIONED
 }
@@ -157,31 +158,6 @@ enum DifficultyLevel {
     ADVANCED
 }
 
-model Role {
-    id        Int        @id @default(autoincrement())
-    name      String     @unique @db.VarChar(255)
-    createdAt DateTime   @default(now()) @map("created_at")
-    updatedAt DateTime   @updatedAt @map("updated_at")
-    userRoles UserRole[]
-
-    @@map("roles")
-}
-
-model UserRole {
-    id        Int      @id @default(autoincrement())
-    userId    String   @map("user_id")
-    roleId    Int      @map("role_id")
-    createdAt DateTime @default(now()) @map("created_at")
-
-    user User @relation(fields: [userId], references: [id])
-    role Role @relation(fields: [roleId], references: [id])
-
-    @@unique([userId, roleId], map: "uq_user_roles_user_role")
-    @@index([userId], map: "idx_user_roles_user_id")
-    @@index([roleId], map: "idx_user_roles_role_id")
-    @@map("user_roles")
-}
-
 model User {
     id       String @id @default(cuid())
     email    String @unique @db.VarChar(255)
@@ -190,11 +166,12 @@ model User {
 
     name String? @map("name") @db.VarChar(100)
 
-    bio        String?      @db.Text
-    avatar     String?      @db.VarChar(255)
-    role       UserRoleType @default(USER)
-    verifiedAt DateTime?    @map("verified_at")
-    status     UserStatus   @default(ACTIVE)
+    bio             String?         @db.Text
+    avatar          String?         @db.VarChar(255)
+    role            UserRoleType?   @default(USER)
+    verifiedAt      DateTime?       @map("verified_at")
+    status          UserStatus      @default(ACTIVE)
+    replyPermission ReplyPermission @default(EVERYONE) @map("reply_permission")
 
     followersCount Int @default(0) @map("followers_count")
     followingCount Int @default(0) @map("following_count")
@@ -227,7 +204,6 @@ model User {
     knowledgePostComments KnowledgePostComment[]
     knowledgeRankings     KnowledgeRanking[]
     knowledgeBookmarks    KnowledgeBookmark[]
-    userRoles             UserRole[]
     messageGroups         MessageGroup[]         @relation("MessageGroupCreator")
     memberMessageGroups   MemberMessageGroup[]
 

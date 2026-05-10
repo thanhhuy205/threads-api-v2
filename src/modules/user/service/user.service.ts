@@ -56,18 +56,21 @@ class UserService {
 
     const existingFollow = await followRepository.findFollowRecord(userId, targetUserId);
     if (existingFollow && existingFollow.isFollowing) {
-      await followRepository.updateStatusByFollowId(existingFollow.id, false)
+      await followRepository.updateStatusByFollowId(existingFollow.id, false);
+      await userRepository.decrementFollowersCount(targetUserId);
       return {
         isFollowing: false
-      }
+      };
     }
     else if (existingFollow && !existingFollow.isFollowing) {
-      await followRepository.updateStatusByFollowId(existingFollow.id, true)
+      await followRepository.updateStatusByFollowId(existingFollow.id, true);
+      await userRepository.incrementFollowersCount(targetUserId);
       return {
         isFollowing: true
-      }
+      };
     }
     const follow = await followRepository.create(userId, targetUserId);
+    await userRepository.incrementFollowersCount(targetUserId);
     return {
       isFollowing: follow.isFollowing,
     };

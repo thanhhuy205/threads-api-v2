@@ -20,13 +20,24 @@ import { userService } from "@/modules/user/service/user.service";
 import { redisService } from "@/providers/redis.provider";
 import { buildCursorPagination, buildPagination } from "@/shared/pagination/cursor-pagination";
 import { transactionService } from "@/shared/transaction/transaction.service";
-import { PostType, Prisma } from "@prisma/client";
+import { PostType, Prisma, ReplyPermission } from "@prisma/client";
 import { CreatePostDto } from "../dto/post.dto";
 import { normalizeTopic } from '../helper/nomalize.hepler';
 import { PostRecord, postRepository } from "../repository/post.repository";
 import { topicsPostRepository } from "../repository/topics-post.repository";
 
 class PostService {
+  private resolveReplyPermission(replyPermission?: string): ReplyPermission {
+    const normalized = (replyPermission ?? ReplyPermission.EVERYONE).trim().toUpperCase();
+    if (!Object.values(ReplyPermission).includes(normalized as ReplyPermission)) {
+      throw new BadRequestException(
+        `replyPermission must be one of: ${Object.values(ReplyPermission).join(", ")}`,
+      );
+    }
+
+    return normalized as ReplyPermission;
+  }
+
   private async validateMentions(
     mentions?: CreatePostDto["mentions"],
   ): Promise<string[]> {
@@ -289,6 +300,7 @@ class PostService {
           media: payload.media,
           mentions: payload.mentions,
           topic: payload.topic,
+          replyPermission: this.resolveReplyPermission(payload.replyPermission),
         },
         publicId,
         mappedSnapshot,
@@ -332,6 +344,7 @@ class PostService {
       {
         userId,
         content: payload.content,
+        replyPermission: this.resolveReplyPermission(payload.replyPermission),
       },
       payload.publicId,
       mappedSnapshot,
@@ -370,6 +383,7 @@ class PostService {
           media: payload.media,
           mentions: payload.mentions,
           topic: payload.topic,
+          replyPermission: this.resolveReplyPermission(payload.replyPermission),
         },
         publicId,
         mappedSnapshot,

@@ -1,7 +1,7 @@
 import prisma from "@/config/prisma";
 import { baseLogger } from "@/middlewares/logger";
 import { postFeedSelect } from "@/modules/post/selector/post.selector";
-import { PostType, Prisma } from "@prisma/client";
+import { PostType, Prisma, ReplyPermission } from "@prisma/client";
 import { CreatePostDto } from "../dto/post.dto";
 import { UserSnapshot } from "../mapper/post.mapper";
 
@@ -116,6 +116,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
       data: {
         content: payload.content,
         userId: payload.userId,
+        replyPermission: payload.replyPermission ?? ReplyPermission.EVERYONE,
         userSnapshot,
         media: payload.media?.length
           ? {
@@ -155,6 +156,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
       data: {
         content: payload.content,
         userId: payload.userId,
+        replyPermission: payload.replyPermission ?? ReplyPermission.EVERYONE,
         parentPublicId,
         userSnapshot,
         type: PostType.REPLY,
@@ -197,6 +199,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
         userId: payload.userId,
         originPublicId,
         content: "", // for repost, content is empty
+        replyPermission: payload.replyPermission ?? ReplyPermission.EVERYONE,
         userSnapshot,
         isQuote: true,
         type: PostType.REPOST,
@@ -232,6 +235,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
         content: payload.content,
         userId: payload.userId,
         originPublicId,
+        replyPermission: payload.replyPermission ?? ReplyPermission.EVERYONE,
         userSnapshot,
         isQuote: true,
         type: PostType.QUOTE,

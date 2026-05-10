@@ -74,6 +74,39 @@ class UserRepository {
 
     return users.map((user) => user.id);
   }
+
+  async incrementFollowersCount(userId: string) {
+    return prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        followersCount: {
+          increment: 1,
+        },
+      },
+      select: {
+        id: true,
+        followersCount: true,
+      },
+    });
+  }
+
+  async decrementFollowersCount(userId: string) {
+    return prisma.user.updateMany({
+      where: {
+        id: userId,
+        followersCount: {
+          gt: 0,
+        },
+      },
+      data: {
+        followersCount: {
+          decrement: 1,
+        },
+      },
+    });
+  }
 }
 
 export const userRepository = new UserRepository();
