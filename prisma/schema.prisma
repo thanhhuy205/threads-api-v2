@@ -468,7 +468,7 @@ model PostMedia {
     width     Int?
     height    Int?
     createdAt DateTime         @default(now()) @map("created_at")
-    key       String?          @db.VarChar(255)
+    key       String           @unique @db.VarChar(255)
     status    PostMediaStatus? @default(TEMPORARY) @map("status_enum")
     post      Post?            @relation(fields: [postId], references: [id])
 

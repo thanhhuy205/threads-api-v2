@@ -1,4 +1,6 @@
 import prisma from '@/config/prisma';
+import type { MuxWebhooksResponseDto } from '@/modules/webhooks/dto/response/mux.webhooks';
+import { PostMediaStatus, PostMediaType } from '@prisma/client';
 
 export type PostMediaItemData = {
     id: number;
@@ -32,6 +34,32 @@ class PostMediaRepository {
             key: mediaList[index].key,
             url: media.url,
         }));
+    }
+
+    async updateMediaStatusByMuxWebhook(body: MuxWebhooksResponseDto) {
+        return prisma.postMedia.upsert({
+            where: {
+                key: body.data.id,
+            },
+            update: {
+                url: body.data.playback_ids?.[0]?.id,
+                type: PostMediaType.VIDEO,
+                status:
+                    body.data.status === 'ready'
+                        ? PostMediaStatus.UPLOADED
+                        : PostMediaStatus.UPLOADING,
+            },
+
+            create: {
+                key: body.data.id,
+                url: body.data.playback_ids?.[0]?.id,
+                type: PostMediaType.VIDEO,
+                status:
+                    body.data.status === 'ready'
+                        ? PostMediaStatus.UPLOADED
+                        : PostMediaStatus.UPLOADING,
+            },
+        })
     }
 }
 
