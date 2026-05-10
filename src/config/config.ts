@@ -2,6 +2,7 @@ import { cloudflareConfig } from '@/config/cloudflare';
 import { databaseConfig } from '@/config/database';
 import { jwtConfig } from '@/config/jwt';
 import { mixedbreadAIConfig } from '@/config/mixedbread-ai';
+import { muxConfig } from '@/config/mux';
 import { nodemailerConfig } from '@/config/nodemailer';
 import { pineconeConfig } from '@/config/pinecone';
 import { pusherConfig } from '@/config/pusher';
@@ -27,6 +28,7 @@ const envSchema = z.object({
     ...nodemailerConfig.shape,
     ...cloudflareConfig.shape,
     ...pusherConfig.shape,
+    ...muxConfig.shape,
 
 });
 
