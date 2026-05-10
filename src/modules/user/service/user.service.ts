@@ -1,11 +1,49 @@
+import { NotFoundException } from "@/errors/error";
+import { followRepository } from "@/modules/user/repository/follow.repository";
 import { userRepository } from "@/modules/user/repository/user.repository";
+import { buildCursorPagination, type PaginationResponse } from "@/shared/pagination/cursor-pagination";
 import type { FollowActionDataDto } from "../dto/response/follow-action.response.dto";
-import type { GetFollowersDataDto } from "../dto/response/followers.response.dto";
+import type { FollowerUserDto } from "../mapper/follower.mapper";
+
+type GetFollowersInput = {
+  userId: string;
+  after?: string;
+  take: number;
+};
+
+type GetFollowersResult = {
+  followers: FollowerUserDto[];
+  pagination: PaginationResponse<string | number | null>;
+};
 
 class UserService {
-  async getFollower(userId: string): Promise<GetFollowersDataDto> {
+  async getFollower({ userId, after, take }: GetFollowersInput): Promise<GetFollowersResult> {
+    const user = await userRepository.findById(userId);
+    if (!user) {
+      throw new NotFoundException("User not found");
+    }
+
+    const followerRows = await followRepository.findAll({
+      after,
+      take,
+      where: {
+        followingId: userId,
+        isFollowing: true,
+      },
+      props: {
+        followingId: userId
+      }
+    });
+
+    const { rows, pagination } = buildCursorPagination({
+      rows: followerRows,
+      take,
+      getAfter: (follower) => follower.id,
+    });
+
     return {
-      followers: [],
+      followers: rows,
+      pagination,
     };
   }
 
@@ -16,20 +54,20 @@ class UserService {
       };
     }
 
-    const existingFollow = await userRepository.findFollowRecord(userId, targetUserId);
+    const existingFollow = await followRepository.findFollowRecord(userId, targetUserId);
     if (existingFollow && existingFollow.isFollowing) {
-      await userRepository.updateStatusByFollowId(existingFollow.id, false)
+      await followRepository.updateStatusByFollowId(existingFollow.id, false)
       return {
         isFollowing: false
       }
     }
     else if (existingFollow && !existingFollow.isFollowing) {
-      await userRepository.updateStatusByFollowId(existingFollow.id, true)
+      await followRepository.updateStatusByFollowId(existingFollow.id, true)
       return {
         isFollowing: true
       }
     }
-    const follow = await userRepository.create(userId, targetUserId);
+    const follow = await followRepository.create(userId, targetUserId);
     return {
       isFollowing: follow.isFollowing,
     };

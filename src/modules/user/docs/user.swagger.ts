@@ -28,6 +28,24 @@ export const userSwaggerSchemas = {
         },
         required: ['id', 'username'],
     },
+    UserFollowersPagination: {
+        type: 'object',
+        properties: {
+            take: {
+                type: 'integer',
+                example: 10,
+            },
+            after: {
+                type: ['string', 'null'],
+                example: 'ckv8p4u1q0000x3jz8d2b6g7h',
+            },
+            hasMore: {
+                type: 'boolean',
+                example: true,
+            },
+        },
+        required: ['take', 'after', 'hasMore'],
+    },
     UserFollowersData: {
         type: 'object',
         properties: {
@@ -56,6 +74,25 @@ export const userSwaggerSchemas = {
             },
         },
         required: ['success', 'message', 'data'],
+    },
+    UserFollowersPaginatedResponse: {
+        type: 'object',
+        properties: {
+            success: {
+                type: 'boolean',
+                example: true,
+            },
+            data: {
+                type: 'array',
+                items: {
+                    $ref: '#/components/schemas/UserFollowerItem',
+                },
+            },
+            pagination: {
+                $ref: '#/components/schemas/UserFollowersPagination',
+            },
+        },
+        required: ['success', 'data', 'pagination'],
     },
     UserFollowActionData: {
         type: 'object',
@@ -142,22 +179,49 @@ const usernamePathParameter = [
     },
 ];
 
+const followersPaginationQueryParameters = [
+    {
+        name: 'after',
+        in: 'query',
+        required: false,
+        schema: {
+            type: 'string',
+            example: 'ckv8p4u1q0000x3jz8d2b6g7h',
+        },
+        description: 'Follower userId cursor from previous response pagination.after',
+    },
+    {
+        name: 'take',
+        in: 'query',
+        required: false,
+        schema: {
+            type: 'integer',
+            example: 10,
+        },
+        description: 'Number of followers to return',
+    },
+];
+
 export const userSwaggerPaths = {
-    '/users/{id}/followers': {
+    '/me/followers': {
         get: {
             tags: ['User'],
-            summary: 'Get followers by user id',
-            parameters: userIdPathParameter,
+            summary: 'Get followers of current user',
+            security: bearerAuthSecurity,
+            parameters: followersPaginationQueryParameters,
             responses: {
                 200: {
                     description: USER_MESSAGE.GET_FOLLOWERS_SUCCESS,
                     content: {
                         'application/json': {
                             schema: {
-                                $ref: '#/components/schemas/UserFollowersSuccessResponse',
+                                $ref: '#/components/schemas/UserFollowersPaginatedResponse',
                             },
                         },
                     },
+                },
+                401: {
+                    description: AUTH_MESSAGE.TOKEN_INVALID,
                 },
             },
         },

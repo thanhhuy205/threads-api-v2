@@ -1,0 +1,95 @@
+import prisma from "@/config/prisma";
+import { toFollowerUserDto, type FollowerUserDto } from "@/modules/user/mapper/follower.mapper";
+import type { Prisma } from "@prisma/client";
+
+class FollowRepository implements ICursorPagination<Prisma.FollowWhereInput, FollowerUserDto> {
+  async findAll({
+    after,
+    take = 10,
+    where = {},
+    props
+  }: {
+    after?: string;
+    take?: number;
+    where?: Prisma.FollowWhereInput;
+    props: {
+      followingId: string
+    };
+  }): Promise<FollowerUserDto[]> {
+    const { followingId } = props
+
+    const follows = await prisma.follow.findMany({
+      where,
+      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+      take: after ? take + 1 : take,
+      skip: after ? 1 : 0,
+      cursor:
+        after && followingId
+          ? {
+            userId_followingId: {
+              userId: after,
+              followingId,
+            },
+          }
+          : undefined,
+      select: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            name: true,
+            verifiedAt: true,
+          },
+        },
+      },
+    });
+
+    return follows.map(toFollowerUserDto);
+  }
+
+  async findFollowRecord(userId: string, followingId: string) {
+    return prisma.follow.findUnique({
+      where: {
+        userId_followingId: {
+          userId,
+          followingId,
+        },
+      },
+      select: {
+        id: true,
+        isFollowing: true,
+      },
+    });
+  }
+
+  async create(userId: string, followingId: string) {
+    return prisma.follow.create({
+      data: {
+        userId,
+        followingId,
+        isFollowing: true,
+      },
+      select: {
+        id: true,
+        isFollowing: true,
+      },
+    });
+  }
+
+  async updateStatusByFollowId(followId: number, isFollowing: boolean) {
+    return prisma.follow.update({
+      where: {
+        id: followId,
+      },
+      data: {
+        isFollowing,
+      },
+      select: {
+        id: true,
+        isFollowing: true,
+      },
+    });
+  }
+}
+
+export const followRepository = new FollowRepository();

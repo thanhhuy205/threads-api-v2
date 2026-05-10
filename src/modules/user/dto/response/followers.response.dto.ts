@@ -1,7 +1,5 @@
 import type { BaseResponse } from '@/shared/interface/base-response.interface';
-import type { UserProfile } from '../../repository/user.repository';
-
-export type FollowerUserDto = Pick<UserProfile, 'id' | 'username' | 'name' | 'verifiedAt'>;
+import type { FollowerUserDto } from '../../mapper/follower.mapper';
 
 export type GetFollowersDataDto = {
     followers: FollowerUserDto[];
