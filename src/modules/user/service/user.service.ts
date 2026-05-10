@@ -9,21 +9,29 @@ class UserService {
     };
   }
 
-  async followUser(
-    userId: string,
-    targetUserId: string,
-  ): Promise<FollowActionDataDto> {
-    return {
-      following: true,
-    };
-  }
+  async follower(userId: string, targetUserId: string): Promise<FollowActionDataDto> {
+    if (userId === targetUserId) {
+      return {
+        isFollowing: false,
+      };
+    }
 
-  async unFollowUser(
-    userId: string,
-    targetUserId: string,
-  ): Promise<FollowActionDataDto> {
+    const existingFollow = await userRepository.findFollowRecord(userId, targetUserId);
+    if (existingFollow && existingFollow.isFollowing) {
+      await userRepository.updateStatusByFollowId(existingFollow.id, false)
+      return {
+        isFollowing: false
+      }
+    }
+    else if (existingFollow && !existingFollow.isFollowing) {
+      await userRepository.updateStatusByFollowId(existingFollow.id, true)
+      return {
+        isFollowing: true
+      }
+    }
+    const follow = await userRepository.create(userId, targetUserId);
     return {
-      following: false,
+      isFollowing: follow.isFollowing,
     };
   }
 

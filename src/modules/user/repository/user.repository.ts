@@ -74,6 +74,50 @@ class UserRepository {
 
     return users.map((user) => user.id);
   }
+
+  async findFollowRecord(userId: string, followingId: string) {
+    return prisma.follow.findUnique({
+      where: {
+        userId_followingId: {
+          userId,
+          followingId,
+        },
+      },
+      select: {
+        id: true,
+        isFollowing: true,
+      },
+    });
+  }
+
+  async create(userId: string, followingId: string) {
+    return prisma.follow.create({
+      data: {
+        userId,
+        followingId,
+        isFollowing: true,
+      },
+      select: {
+        id: true,
+        isFollowing: true,
+      },
+    });
+  }
+
+  async updateStatusByFollowId(followId: number, isFollowing: boolean) {
+    return prisma.follow.update({
+      where: {
+        id: followId,
+      },
+      data: {
+        isFollowing,
+      },
+      select: {
+        id: true,
+        isFollowing: true,
+      },
+    });
+  }
 }
 
 export const userRepository = new UserRepository();

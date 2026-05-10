@@ -348,6 +348,9 @@ export const postSwaggerPaths = {
                         },
                     },
                 },
+                400: {
+                    description: COMMON_MESSAGE.VALIDATION_FAILED,
+                },
             },
         },
     },
@@ -368,6 +371,9 @@ export const postSwaggerPaths = {
                     },
                 },
                 404: { description: 'Post not found' },
+                400: {
+                    description: COMMON_MESSAGE.VALIDATION_FAILED,
+                },
             },
         },
         delete: {
@@ -396,6 +402,9 @@ export const postSwaggerPaths = {
                 401: {
                     description: AUTH_MESSAGE.TOKEN_INVALID,
                 },
+                404: {
+                    description: 'Post not found',
+                },
             },
         },
     },
@@ -418,6 +427,9 @@ export const postSwaggerPaths = {
                 },
                 401: {
                     description: AUTH_MESSAGE.TOKEN_INVALID,
+                },
+                404: {
+                    description: 'User not found',
                 },
             },
         },
@@ -442,6 +454,9 @@ export const postSwaggerPaths = {
                 401: {
                     description: AUTH_MESSAGE.TOKEN_INVALID,
                 },
+                404: {
+                    description: 'User not found',
+                },
             },
         },
     },
@@ -464,6 +479,9 @@ export const postSwaggerPaths = {
                 },
                 401: {
                     description: AUTH_MESSAGE.TOKEN_INVALID,
+                },
+                404: {
+                    description: 'User not found',
                 },
             },
         },
@@ -488,6 +506,9 @@ export const postSwaggerPaths = {
                 401: {
                     description: AUTH_MESSAGE.TOKEN_INVALID,
                 },
+                404: {
+                    description: 'Post not found',
+                },
             },
         },
     },
@@ -510,6 +531,9 @@ export const postSwaggerPaths = {
                 },
                 401: {
                     description: AUTH_MESSAGE.TOKEN_INVALID,
+                },
+                404: {
+                    description: 'Post not found',
                 },
             },
         },
@@ -654,6 +678,19 @@ export const postSwaggerPaths = {
             summary: 'Repost a post',
             security: bearerAuthSecurity,
             parameters: [publicIdParameters[0]],
+            requestBody: {
+                required: false,
+                content: {
+                    'application/json': {
+                        schema: {
+                            $ref: '#/components/schemas/CreatePostRequest',
+                        },
+                        example: {
+                            content: 'Optional caption for repost',
+                        },
+                    },
+                },
+            },
             responses: {
                 201: {
                     description: POST_MESSAGE.CREATED,
@@ -667,6 +704,9 @@ export const postSwaggerPaths = {
                 },
                 401: {
                     description: AUTH_MESSAGE.TOKEN_INVALID,
+                },
+                404: {
+                    description: 'Origin post not found',
                 },
             },
         },
@@ -701,6 +741,9 @@ export const postSwaggerPaths = {
                 401: {
                     description: AUTH_MESSAGE.TOKEN_INVALID,
                 },
+                404: {
+                    description: 'Post not found',
+                },
             },
         },
     },
@@ -731,6 +774,9 @@ export const postSwaggerPaths = {
                 401: {
                     description: AUTH_MESSAGE.TOKEN_INVALID,
                 },
+                404: {
+                    description: 'Post not found',
+                },
             },
         },
     },
@@ -760,6 +806,9 @@ export const postSwaggerPaths = {
                 },
                 401: {
                     description: AUTH_MESSAGE.TOKEN_INVALID,
+                },
+                404: {
+                    description: 'Post not found',
                 },
             },
         },
@@ -800,6 +849,9 @@ export const postSwaggerPaths = {
                 },
                 401: {
                     description: AUTH_MESSAGE.TOKEN_INVALID,
+                },
+                404: {
+                    description: 'Post not found',
                 },
             },
         },

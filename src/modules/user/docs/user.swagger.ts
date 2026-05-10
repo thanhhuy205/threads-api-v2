@@ -60,12 +60,12 @@ export const userSwaggerSchemas = {
     UserFollowActionData: {
         type: 'object',
         properties: {
-            following: {
+            isFollowing: {
                 type: 'boolean',
                 example: true,
             },
         },
-        required: ['following'],
+        required: ['isFollowing'],
     },
     UserFollowActionSuccessResponse: {
         type: 'object',
@@ -162,12 +162,12 @@ export const userSwaggerPaths = {
             },
         },
     },
-    '/users/{id}/follow': {
+    '/user/{username}/follower': {
         post: {
             tags: ['User'],
-            summary: 'Follow a user',
+            summary: 'Follow a user by username',
             security: bearerAuthSecurity,
-            parameters: userIdPathParameter,
+            parameters: usernamePathParameter,
             responses: {
                 200: {
                     description: USER_MESSAGE.FOLLOW_SUCCESS,
@@ -180,7 +180,7 @@ export const userSwaggerPaths = {
                                 success: true,
                                 message: USER_MESSAGE.FOLLOW_SUCCESS,
                                 data: {
-                                    following: true,
+                                    isFollowing: true,
                                 },
                             },
                         },
@@ -189,35 +189,8 @@ export const userSwaggerPaths = {
                 401: {
                     description: AUTH_MESSAGE.TOKEN_INVALID,
                 },
-            },
-        },
-    },
-    '/user/{id}/follow': {
-        post: {
-            tags: ['User'],
-            summary: 'Unfollow a user',
-            security: bearerAuthSecurity,
-            parameters: userIdPathParameter,
-            responses: {
-                200: {
-                    description: USER_MESSAGE.UNFOLLOW_SUCCESS,
-                    content: {
-                        'application/json': {
-                            schema: {
-                                $ref: '#/components/schemas/UserFollowActionSuccessResponse',
-                            },
-                            example: {
-                                success: true,
-                                message: USER_MESSAGE.UNFOLLOW_SUCCESS,
-                                data: {
-                                    following: false,
-                                },
-                            },
-                        },
-                    },
-                },
-                401: {
-                    description: AUTH_MESSAGE.TOKEN_INVALID,
+                404: {
+                    description: 'User not found',
                 },
             },
         },

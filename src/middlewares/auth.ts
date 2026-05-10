@@ -3,7 +3,7 @@ import { ForbiddenException, UnauthorizedException } from '@/errors/error';
 import { jwtService } from '@/modules/jwt/service/jwt.service';
 import { userRepository } from '@/modules/user/repository/user.repository';
 import { redisService } from '@/providers/redis.provider';
-import { UserRole, UserStatus } from '@prisma/client';
+import { UserStatus } from '@prisma/client';
 import { NextFunction, Request, Response } from 'express';
 
 export const authorization = async (req: Request, _res: Response, next: NextFunction) => {
@@ -40,7 +40,7 @@ export const authorization = async (req: Request, _res: Response, next: NextFunc
 
         req.user = decoded;
         req.accessToken = token;
-        req.isAdmin = user.role as UserRole;
+        // req.isAdmin = user.role as UserRoleType;
         return next();
     } catch (error) {
         if (process.env.NODE_ENV === 'development') {
