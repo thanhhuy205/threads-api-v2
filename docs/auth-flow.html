@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Auth Flow Map</title>
+<style>
+  :root {
+    --ivory: #FAF9F5;
+    --paper: #FFFFFF;
+    --ink: #141413;
+    --muted: #706F68;
+    --line: #D1CFC5;
+    --soft: #F0EEE6;
+    --oat: #E3DACC;
+    --clay: #D97757;
+    --clay-dark: #B85C3E;
+    --olive: #788C5D;
+    --sage: #E7ECD9;
+    --rose: #F8E9E0;
+    --mono: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --serif: ui-serif, Georgia, "Times New Roman", Times, serif;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background:
+      radial-gradient(circle at 12% 0%, rgba(217, 119, 87, .13), transparent 34rem),
+      linear-gradient(180deg, #FCFAF3 0%, var(--ivory) 42%, #F7F2E8 100%);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.58;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 56px 32px 110px; }
+  .back { color: var(--clay-dark); text-decoration-color: var(--oat); text-underline-offset: 3px; font-size: 14px; }
+
+  header.hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 40px;
+    align-items: end;
+    padding: 34px 0 48px;
+    border-bottom: 1.5px solid var(--line);
+  }
+  @media (max-width: 860px) { header.hero { grid-template-columns: 1fr; } }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 28px 0 14px;
+  }
+  h1, h2, h3 { font-family: var(--serif); font-weight: 500; color: var(--ink); letter-spacing: -.014em; }
+  h1 { max-width: 780px; margin: 0; font-size: clamp(38px, 5.6vw, 66px); line-height: 1.02; }
+  h1 em { color: var(--clay-dark); font-style: italic; }
+  .lead { max-width: 760px; margin: 20px 0 0; color: #3D3D3A; font-size: 16.5px; }
+
+  .token-card {
+    background: var(--paper);
+    border: 1.5px solid var(--ink);
+    border-radius: 18px;
+    padding: 20px;
+    box-shadow: 0 18px 42px rgba(20, 20, 19, .10);
+    transform: rotate(1deg);
+  }
+  .token-card .label { font-family: var(--mono); font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+  .token-card .row { display: grid; grid-template-columns: 90px 1fr; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--soft); }
+  .token-card .row:last-child { border-bottom: 0; }
+  .token-card code { font-family: var(--mono); font-size: 12px; color: var(--clay-dark); word-break: break-word; }
+
+  nav.jump { display: flex; flex-wrap: wrap; gap: 8px; margin: 24px 0 4px; }
+  nav.jump a {
+    color: #3D3D3A;
+    background: var(--paper);
+    border: 1.5px solid var(--line);
+    border-radius: 999px;
+    padding: 7px 13px;
+    text-decoration: none;
+    font-size: 13px;
+  }
+  nav.jump a:hover { border-color: var(--ink); color: var(--ink); }
+
+  section { margin-top: 58px; scroll-margin-top: 28px; }
+  .section-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 16px; }
+  .num { font-family: var(--mono); color: var(--clay-dark); font-size: 12px; font-weight: 700; }
+  h2 { font-size: 30px; margin: 0; }
+  .section-intro { color: var(--muted); max-width: 780px; margin: -4px 0 24px 40px; }
+  @media (max-width: 640px) { .section-intro { margin-left: 0; } }
+
+  .system-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  @media (max-width: 900px) { .system-grid { grid-template-columns: 1fr; } }
+  .system-card {
+    background: rgba(255,255,255,.78);
+    border: 1.5px solid var(--line);
+    border-radius: 16px;
+    padding: 18px;
+  }
+  .system-card h3 { margin: 0 0 8px; font-size: 20px; }
+  .system-card p { margin: 0; color: var(--muted); font-size: 14px; }
+  .chip { display: inline-block; font-family: var(--mono); font-size: 11px; background: var(--soft); border: 1px solid var(--line); border-radius: 999px; padding: 3px 8px; margin: 0 6px 8px 0; }
+
+  .flow {
+    background: var(--paper);
+    border: 1.5px solid var(--line);
+    border-radius: 20px;
+    overflow: hidden;
+  }
+  .flow-row {
+    display: grid;
+    grid-template-columns: 190px minmax(0, 1fr) 250px;
+    gap: 0;
+    border-bottom: 1px solid var(--soft);
+  }
+  .flow-row:last-child { border-bottom: 0; }
+  @media (max-width: 900px) { .flow-row { grid-template-columns: 1fr; } }
+  .lane {
+    background: var(--soft);
+    padding: 18px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+  }
+  .steps { padding: 18px 22px; }
+  .steps ol { margin: 0; padding-left: 22px; }
+  .steps li { margin: 7px 0; }
+  .state { padding: 18px; background: #FCFAF3; border-left: 1px solid var(--soft); }
+  .state strong { display: block; margin-bottom: 6px; }
+  code { font-family: var(--mono); font-size: .92em; background: var(--soft); padding: 1px 5px; border-radius: 5px; color: var(--ink); }
+
+  .sequence {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(130px, 1fr));
+    gap: 10px;
+    align-items: stretch;
+  }
+  @media (max-width: 980px) { .sequence { grid-template-columns: 1fr; } }
+  .seq-step {
+    position: relative;
+    background: var(--paper);
+    border: 1.5px solid var(--line);
+    border-radius: 16px;
+    padding: 16px;
+  }
+  .seq-step::after {
+    content: "";
+    position: absolute;
+    right: -10px;
+    top: 50%;
+    width: 10px;
+    height: 1.5px;
+    background: var(--line);
+  }
+  .seq-step:last-child::after { display: none; }
+  @media (max-width: 980px) { .seq-step::after { display: none; } }
+  .seq-step .k { font-family: var(--mono); font-size: 11px; color: var(--clay-dark); text-transform: uppercase; letter-spacing: .08em; }
+  .seq-step .t { font-weight: 650; margin: 6px 0; }
+  .seq-step p { margin: 0; color: var(--muted); font-size: 14px; }
+
+  .two-col { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); gap: 18px; }
+  @media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+  .panel {
+    background: var(--paper);
+    border: 1.5px solid var(--line);
+    border-radius: 18px;
+    padding: 22px;
+  }
+  .panel h3 { margin: 0 0 12px; font-size: 21px; }
+  .panel ul { margin: 0; padding-left: 20px; }
+  .panel li { margin: 9px 0; }
+
+  .risk-list { display: grid; gap: 12px; }
+  .risk {
+    background: var(--rose);
+    border: 1.5px solid #E8C2AE;
+    border-radius: 14px;
+    padding: 15px 16px;
+  }
+  .risk .tag { font-family: var(--mono); font-size: 11px; color: var(--clay-dark); text-transform: uppercase; letter-spacing: .08em; }
+  .risk p { margin: 6px 0 0; color: #4A3B34; }
+
+  .schema-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  @media (max-width: 800px) { .schema-strip { grid-template-columns: 1fr; } }
+  .schema {
+    background: #181715;
+    color: #F5EFE4;
+    border-radius: 16px;
+    padding: 16px;
+    min-height: 140px;
+  }
+  .schema .name { color: #F4BA93; font-family: var(--mono); font-size: 12px; margin-bottom: 10px; }
+  .schema pre { margin: 0; white-space: pre-wrap; font-family: var(--mono); font-size: 12px; line-height: 1.55; }
+
+  footer { margin-top: 70px; padding-top: 24px; border-top: 1.5px solid var(--line); color: var(--muted); font-size: 13px; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="index.html">Back to docs hub</a>
+
+  <header class="hero">
+    <div>
+      <div class="eyebrow">Auth & User</div>
+      <h1>Auth flow map cho <em>Threads API v2</em></h1>
+      <p class="lead">
+        Trang này ghi lại luồng vận hành thật của module auth hiện tại: token được tạo ở đâu,
+        refresh token được lưu và rotate ra sao, middleware chặn request thế nào, email verification/reset password đi qua queue nào.
+        Swagger vẫn là nguồn cho payload chi tiết; tài liệu này tập trung vào flow và dependency.
+      </p>
+      <nav class="jump">
+        <a href="#system">System map</a>
+        <a href="#session">Session lifecycle</a>
+        <a href="#guard">Request guard</a>
+        <a href="#email">Email flows</a>
+        <a href="#availability">Availability checks</a>
+        <a href="#state">State & risks</a>
+      </nav>
+    </div>
+    <div class="token-card" aria-label="JWT token shape">
+      <div class="label">access token payload</div>
+      <div class="row"><strong>sub</strong><code>user.id</code></div>
+      <div class="row"><strong>sid</strong><code>sessionId</code></div>
+      <div class="row"><strong>status</strong><code>UserStatus</code></div>
+      <div class="row"><strong>ttl</strong><code>ACCESS_EXPIRES</code></div>
+    </div>
+  </header>
+
+  <section id="system">
+    <div class="section-head"><span class="num">01</span><h2>System Map</h2></div>
+    <p class="section-intro">Auth hiện tại chia thành ba lớp: HTTP route/controller, domain service/repository, và hạ tầng token/Redis/queue.</p>
+    <div class="system-grid">
+      <div class="system-card">
+        <h3>HTTP boundary</h3>
+        <span class="chip">auth.routes</span><span class="chip">validate</span><span class="chip">auth.controller</span>
+        <p>Routes validate body/query bằng Zod trước, controller lấy IP/user-agent rồi gọi service. Các route cần phiên dùng middleware <code>authorization</code>.</p>
+      </div>
+      <div class="system-card">
+        <h3>Domain core</h3>
+        <span class="chip">auth.service</span><span class="chip">auth.repository</span><span class="chip">verification.repository</span>
+        <p>Service xử lý register/login/refresh/logout/email/reset. Repository bọc Prisma cho <code>users</code>, <code>refresh_tokens</code>, <code>verification_codes</code>.</p>
+      </div>
+      <div class="system-card">
+        <h3>Infrastructure</h3>
+        <span class="chip">jwt.service</span><span class="chip">Redis</span><span class="chip">BullMQ</span><span class="chip">Nodemailer</span>
+        <p>JWT ký access token, refresh token là random hex được hash SHA-256 trước khi lưu DB. Redis giữ blacklist và Bloom filter, queue xử lý email/Bloom async.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="session">
+    <div class="section-head"><span class="num">02</span><h2>Session Lifecycle</h2></div>
+    <p class="section-intro">Đây là đường đi chính từ lúc tạo tài khoản tới khi refresh/logout. Tài liệu cố ý không ghi payload chi tiết vì Swagger đã cover phần đó.</p>
+    <div class="flow">
+      <div class="flow-row">
+        <div class="lane">Register</div>
+        <div class="steps">
+          <ol>
+            <li>Zod validate username, email, password, confirm password.</li>
+            <li>Password được hash bằng <code>bcrypt.hashSync(password, 10)</code>.</li>
+            <li>Tạo user mới trong <code>users</code> với email, username, password.</li>
+            <li><code>jwtService.generateTokenPair</code> tạo access token và refresh token.</li>
+            <li>Refresh token được hash SHA-256 rồi lưu vào <code>refresh_tokens</code> cùng sessionId, IP, user-agent, expireAt.</li>
+            <li>Đẩy job thêm username/email vào Redis Bloom filter.</li>
+          </ol>
+        </div>
+        <div class="state"><strong>Result</strong>Client nhận user summary, accessToken, refreshToken, sessionId. Email verify chưa tự gửi trong register flow hiện tại.</div>
+      </div>
+
+      <div class="flow-row">
+        <div class="lane">Login</div>
+        <div class="steps">
+          <ol>
+            <li>Login field có thể là email hoặc username.</li>
+            <li>Repository tìm user bằng <code>OR email/username</code>.</li>
+            <li>Password được so bằng <code>bcrypt.compareSync</code>.</li>
+            <li>Nếu hợp lệ, tạo token pair mới và lưu refresh token hash vào DB.</li>
+          </ol>
+        </div>
+        <div class="state"><strong>Result</strong>Sai user/password trả về invalid credentials ở controller; đúng thì tạo một session mới.</div>
+      </div>
+
+      <div class="flow-row">
+        <div class="lane">Refresh</div>
+        <div class="steps">
+          <ol>
+            <li>Client gửi refresh token hiện tại.</li>
+            <li>Service hash token rồi tìm trong <code>refresh_tokens.token</code>.</li>
+            <li>Nếu token không tồn tại, đã revoke, hoặc hết hạn thì trả invalid.</li>
+            <li>Token cũ bị revoke bằng <code>revokedAt = now</code>.</li>
+            <li>Tạo access/refresh mới, giữ cùng <code>sessionId</code>, lưu refresh token mới đã hash.</li>
+          </ol>
+        </div>
+        <div class="state"><strong>Result</strong>Refresh token rotation: mỗi lần refresh làm token cũ hết hiệu lực và sinh token mới.</div>
+      </div>
+
+      <div class="flow-row">
+        <div class="lane">Logout</div>
+        <div class="steps">
+          <ol>
+            <li>Middleware auth lấy access token hiện tại từ header và gắn vào <code>req.accessToken</code>.</li>
+            <li>Service set Redis key <code>bl:at:&lt;accessToken&gt;</code> với TTL 15 phút.</li>
+            <li>Refresh token trong body được hash, tìm trong DB, nếu có thì revoke.</li>
+          </ol>
+        </div>
+        <div class="state"><strong>Result</strong>Access token bị chặn bởi blacklist cho tới khi TTL hết; refresh token bị revoke trong DB.</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="guard">
+    <div class="section-head"><span class="num">03</span><h2>Protected Request Guard</h2></div>
+    <p class="section-intro">Mọi route dùng middleware <code>authorization</code> đi qua cùng một cửa kiểm tra.</p>
+    <div class="sequence">
+      <div class="seq-step"><div class="k">1 header</div><div class="t">Parse bearer</div><p>Đọc <code>Authorization</code>, lấy phần sau dấu cách. Thiếu token thì Unauthorized.</p></div>
+      <div class="seq-step"><div class="k">2 redis</div><div class="t">Blacklist check</div><p>Kiểm tra <code>bl:at:&lt;token&gt;</code>. Nếu tồn tại, token bị coi là invalid.</p></div>
+      <div class="seq-step"><div class="k">3 jwt</div><div class="t">Verify signature</div><p><code>jwt.verify</code> bằng <code>JWT_SECRET</code>, payload cần có <code>sub</code>.</p></div>
+      <div class="seq-step"><div class="k">4 db</div><div class="t">Load user</div><p>Tìm user theo <code>sub</code>. Không có user thì invalid token.</p></div>
+      <div class="seq-step"><div class="k">5 attach</div><div class="t">Request context</div><p>Nếu user không bị BANNED, gắn <code>req.user</code> và <code>req.accessToken</code>.</p></div>
+    </div>
+  </section>
+
+  <section id="email">
+    <div class="section-head"><span class="num">04</span><h2>Email Verification & Password Recovery</h2></div>
+    <p class="section-intro">Hai luồng email dùng cùng pattern: sinh token random, hash token lưu DB, gửi token raw qua email worker.</p>
+    <div class="two-col">
+      <div class="panel">
+        <h3>Verify email</h3>
+        <ul>
+          <li>Route resend verify yêu cầu access token hợp lệ.</li>
+          <li>Service sinh token 32 bytes hex, hash SHA-256 rồi lưu vào <code>verification_codes</code> với type <code>VERIFY_ACCOUNT</code>.</li>
+          <li>Job <code>SEND_VERIFICATION_EMAIL</code> render <code>template/verify-email.ejs</code> và gửi link <code>/verify-email?token=...</code>.</li>
+          <li>Verify email nhận token, hash lại, tìm record đúng type, kiểm tra <code>expiresAt</code>, rồi set <code>users.verified_at = now</code>.</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3>Forgot/reset password</h3>
+        <ul>
+          <li>Forgot password tìm user theo email; không thấy thì NotFound.</li>
+          <li>Nếu có user, tạo token, lưu hash với type <code>FORGOT_PASSWORD</code>, gửi email reset qua queue.</li>
+          <li>Email worker render <code>template/forgot-password.ejs</code> và gửi link <code>/reset-password?token=...</code>.</li>
+          <li>Reset password hash token, tìm record type forgot password, kiểm tra expiry, tìm user theo email, so confirm password, hash password mới rồi update DB.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="availability">
+    <div class="section-head"><span class="num">05</span><h2>Email/Username Availability</h2></div>
+    <p class="section-intro">Validate email/username hiện đọc Redis Bloom filter thay vì query trực tiếp database.</p>
+    <div class="sequence">
+      <div class="seq-step"><div class="k">register</div><div class="t">Create user</div><p>User được tạo trong DB trước.</p></div>
+      <div class="seq-step"><div class="k">queue</div><div class="t">Bloom job</div><p>Register enqueue job <code>GENERATE_BLOOM</code>.</p></div>
+      <div class="seq-step"><div class="k">worker</div><div class="t">Redis BF.ADD</div><p>Worker thêm username vào <code>filter:usernames</code> và email vào <code>filter:emails</code>.</p></div>
+      <div class="seq-step"><div class="k">validate</div><div class="t">Redis BF.EXISTS</div><p>Validate trả <code>available = !exists</code>.</p></div>
+      <div class="seq-step"><div class="k">tradeoff</div><div class="t">Fast but approximate</div><p>Bloom filter nhanh, nhưng về bản chất có thể false positive.</p></div>
+    </div>
+  </section>
+
+  <section id="state">
+    <div class="section-head"><span class="num">06</span><h2>State, Storage & Observations</h2></div>
+    <p class="section-intro">Các điểm dưới đây là mô tả hiện trạng để team nắm rõ. Tài liệu không sửa behavior.</p>
+    <div class="schema-strip">
+      <div class="schema"><div class="name">users</div><pre>id, email, username, password
+verified_at, status
+profile fields
+created_at, updated_at</pre></div>
+      <div class="schema"><div class="name">refresh_tokens</div><pre>token = sha256(raw refresh)
+session_id
+expire_at
+revoked_at
+ip, user_agent</pre></div>
+      <div class="schema"><div class="name">verification_codes</div><pre>token_hash = sha256(raw token)
+type = VERIFY_ACCOUNT | FORGOT_PASSWORD
+expires_at
+used_at currently not updated</pre></div>
+    </div>
+
+    <div class="risk-list" style="margin-top:18px">
+      <div class="risk"><div class="tag">current behavior</div><p><code>register</code> tạo token pair và enqueue Bloom job, nhưng không tự gửi verification email. Verification email hiện đi qua route resend.</p></div>
+      <div class="risk"><div class="tag">current behavior</div><p><code>updateProfile</code> hiện trả <code>{ updated: true }</code> theo input, chưa persist profile xuống database.</p></div>
+      <div class="risk"><div class="tag">current behavior</div><p><code>validateResetPasswordToken</code> hiện luôn trả <code>{ valid: true }</code>, chưa kiểm tra <code>verification_codes</code>.</p></div>
+      <div class="risk"><div class="tag">current behavior</div><p>Verification code expiry đang dùng <code>ACCESS_EXPIRES</code> khi lưu DB; text hiển thị trong email dùng config riêng cho verify/reset.</p></div>
+      <div class="risk"><div class="tag">current behavior</div><p>Middleware auth chỉ block rõ trạng thái <code>BANNED</code>. Các trạng thái khác như SUSPENDED hoặc DEACTIVATED chưa có nhánh xử lý riêng trong guard.</p></div>
+      <div class="risk"><div class="tag">current behavior</div><p><code>jwtService.requestAuthToken</code> dùng cho optional auth verify JWT trực tiếp, không kiểm Redis blacklist như middleware <code>authorization</code>.</p></div>
+    </div>
+  </section>
+
+  <footer>
+    <span>Threads API v2 auth flow map</span>
+    <span>Focused on flows; Swagger remains the API reference.</span>
+  </footer>
+</div>
+</body>
+</html>
