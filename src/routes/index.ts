@@ -6,12 +6,12 @@ import knowledgePostCommentRouter from '@/modules/knowledge-post-comment/knowled
 import knowledgePostRouter from '@/modules/knowledge-post/knowledge-post.route';
 import knowledgeRankingRouter from '@/modules/knowledge-ranking/knowledge-ranking.route';
 import notificationRouter from '@/modules/notification/notification.route';
-import webhooksRouter from '@/modules/webhooks/router';
 import postRouter from '@/modules/post/post.routes';
 import uploadRouter from '@/modules/upload/upload.routes';
 import userFollowRouter from '@/modules/user/user-follow.routes';
 import userRouter from '@/modules/user/user.routes';
 import usersRouter from '@/modules/user/users.routes';
+import webhooksRouter from '@/modules/webhooks/router';
 import { Router } from 'express';
 import swaggerUi from 'swagger-ui-express';
 

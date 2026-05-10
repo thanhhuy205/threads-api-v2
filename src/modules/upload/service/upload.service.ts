@@ -50,9 +50,11 @@ class UploadService {
             cors_origin: configService.FRONTEND_URL,
         });
         return {
-            uploadUrl: upload.url,
-            uploadId: upload.id
-        };
+            url: upload.url,
+            timeout: upload.timeout,
+            status: upload.status,
+            id: upload.id,
+        }
     }
 
 }

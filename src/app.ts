@@ -18,7 +18,14 @@ app.disable('x-powered-by');
 app.use(helmet());
 app.use(cors({ origin: corsOrigin }));
 app.use(compression());
+app.set('trust proxy', 1)
 app.use(morgan(configService.NODE_ENV === 'development' ? 'dev' : 'combined'));
+// Mux sends webhooks with 'application/json' content type
+app.use(
+    '/api/v1/webhooks/mux',
+    express.raw({ type: 'application/json' }),
+);
+
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(logger);
