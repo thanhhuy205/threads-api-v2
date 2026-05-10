@@ -157,21 +157,6 @@ enum DifficultyLevel {
     ADVANCED
 }
 
-enum SubjectType {
-    USER
-    ADMIN
-    CIRCLE
-}
-
-enum Relation {
-    MODERATOR
-    MEMBER
-    ADMIN
-    FOLLOWER
-    FOLLOWING
-    FRIEND
-}
-
 model User {
     id       String @id @default(cuid())
     email    String @unique @db.VarChar(255)
@@ -221,20 +206,6 @@ model User {
 
     @@index([deletedAt], map: "idx_users_deleted_at")
     @@map("users")
-}
-
-model Relationship {
-    id          Int         @id @default(autoincrement())
-    subject     String      @db.VarChar(255)
-    subjectType SubjectType @map("subject_type")
-    relation    Relation
-    object      String      @db.VarChar(255)
-    createdAt   DateTime    @default(now()) @map("created_at")
-
-    @@unique([subject, relation, object])
-    @@index([subject, relation])
-    @@index([object, relation])
-    @@map("relationships")
 }
 
 model VerificationCode {
@@ -552,8 +523,8 @@ model TopicsPost {
     topic        Topic? @relation("TopicPublic", fields: [topicId], references: [id])
     privateTopic Topic? @relation("TopicPrivate", fields: [privateTopicId], references: [id])
 
-    @@index([postId], map: "idx_topics_posts_post_id")
     @@unique([postId], map: "uq_topics_posts_post_id")
+    @@index([postId], map: "idx_topics_posts_post_id")
     @@index([topicId], map: "idx_topics_posts_topic_id")
     @@index([privateTopicId], map: "idx_topics_posts_private_topic_id")
     @@index([postId, topicId], map: "idx_topics_posts_post_topic")
@@ -604,7 +575,6 @@ model EmailLog {
 model Circle {
     id                 Int                 @id @default(autoincrement())
     name               String              @db.VarChar(255)
-    userId             String              @map("user_id")
     createdAt          DateTime            @default(now()) @map("created_at")
     updatedAt          DateTime            @updatedAt @map("updated_at")
     visibility         Visibility          @default(PRIVATE)
@@ -614,7 +584,7 @@ model Circle {
     invitationRequests InvitationRequest[]
     circleInvitations  CircleInvitation[]
 
-    @@index([userId], map: "idx_circles_user_id")
+    @@index([createById], map: "idx_circles_created_by")
     @@map("circles")
 }
 
