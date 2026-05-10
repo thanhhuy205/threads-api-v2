@@ -110,8 +110,9 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
   async create(
     payload: CreatePostPayload,
     userSnapshot: UserSnapshot,
+    tx: Prisma.TransactionClient = prisma,
   ): Promise<PostRecord> {
-    const post = await prisma.post.create({
+    const post = await tx.post.create({
       data: {
         content: payload.content,
         userId: payload.userId,
@@ -148,8 +149,9 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
     payload: CreatePostPayload,
     parentPublicId: string,
     userSnapshot: UserSnapshot,
+    tx: Prisma.TransactionClient = prisma,
   ) {
-    const post = await prisma.post.create({
+    const post = await tx.post.create({
       data: {
         content: payload.content,
         userId: payload.userId,
@@ -188,8 +190,9 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
     originPublicId: string,
     userSnapshot: UserSnapshot,
     originPostId: number,
+    tx: Prisma.TransactionClient = prisma,
   ) {
-    const post = await prisma.post.create({
+    const post = await tx.post.create({
       data: {
         userId: payload.userId,
         originPublicId,
@@ -222,8 +225,9 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
     originPublicId: string,
     userSnapshot: UserSnapshot,
     postId: number,
+    tx: Prisma.TransactionClient = prisma,
   ) {
-    const post = await prisma.post.create({
+    const post = await tx.post.create({
       data: {
         content: payload.content,
         userId: payload.userId,
@@ -232,6 +236,13 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
         isQuote: true,
         type: PostType.QUOTE,
         originPostId: postId,
+        media: payload.media?.length
+          ? {
+            connect: payload.media.map((media) => ({
+              id: media.id,
+            })),
+          }
+          : undefined,
       },
       select: {
         id: true,

@@ -553,6 +553,7 @@ model TopicsPost {
     privateTopic Topic? @relation("TopicPrivate", fields: [privateTopicId], references: [id])
 
     @@index([postId], map: "idx_topics_posts_post_id")
+    @@unique([postId], map: "uq_topics_posts_post_id")
     @@index([topicId], map: "idx_topics_posts_topic_id")
     @@index([privateTopicId], map: "idx_topics_posts_private_topic_id")
     @@index([postId, topicId], map: "idx_topics_posts_post_topic")

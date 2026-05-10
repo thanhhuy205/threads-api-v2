@@ -1,4 +1,6 @@
 import { QUEUE_NAME } from "@/constants/queue";
+import prisma from "@/config/prisma";
+import { BadRequestException } from "@/errors/error";
 import { baseLogger } from "@/middlewares/logger";
 import { pineProducer } from "@/modules/job/pine-vector/producer/pine.producer";
 import { mixedBreadService } from "@/modules/mixed-bread/service/mixed-bread.service";
@@ -21,6 +23,7 @@ import { buildCursorPagination, buildPagination } from "@/shared/pagination/curs
 import { PostType, Prisma } from "@prisma/client";
 import { CreatePostDto } from "../dto/post.dto";
 import { PostRecord, postRepository } from "../repository/post.repository";
+import { topicsPostRepository } from "../repository/topics-post.repository";
 
 type PostCursorInfo = {
   id: number;
@@ -28,6 +31,69 @@ type PostCursorInfo = {
 };
 
 class PostService {
+  private normalizeTopic(topic?: string): string | undefined {
+    if (!topic) {
+      return undefined;
+    }
+
+    const normalized = topic.trim().replace(/\s+/g, " ").toLowerCase();
+    return normalized || undefined;
+  }
+
+  private async validateMentions(
+    mentions?: CreatePostDto["mentions"],
+  ): Promise<string[]> {
+    if (!mentions?.length) {
+      return [];
+    }
+
+    if (mentions.length > 5) {
+      throw new BadRequestException("Mentions must be at most 5 users");
+    }
+
+    const mentionIds = mentions.map((mention) => mention.userId);
+    const uniqueMentionIds = [...new Set(mentionIds)];
+
+    if (uniqueMentionIds.length !== mentionIds.length) {
+      throw new BadRequestException("Mentions must not contain duplicate users");
+    }
+
+    const existingIds = await userService.findExistingIds(uniqueMentionIds);
+
+    if (existingIds.length !== uniqueMentionIds.length) {
+      throw new BadRequestException("One or more mentioned users do not exist");
+    }
+
+    return uniqueMentionIds;
+  }
+
+  private async attachPostMeta(
+    tx: Prisma.TransactionClient,
+    postId: number,
+    payload: { topic?: string; mentionIds: string[] },
+  ): Promise<void> {
+    if (payload.mentionIds.length) {
+      await tx.postMention.createMany({
+        data: payload.mentionIds.map((userId) => ({
+          postId,
+          userId,
+        })),
+      });
+    }
+
+    const normalizedTopic = this.normalizeTopic(payload.topic);
+
+    if (normalizedTopic) {
+      await topicsPostRepository.create(
+        {
+          postId,
+          topicName: normalizedTopic,
+        },
+        tx,
+      );
+    }
+  }
+
   private async paginatePosts({
     after,
     take,
@@ -155,12 +221,24 @@ class PostService {
     if (!userSnapshot) {
       throw new Error("User not found");
     }
-    console.log(payload);
     const mappedSnapshot = PostMapper.toUserSnapshot(userSnapshot);
-    const post = await postRepository.create(payload, mappedSnapshot);
+    const mentionIds = await this.validateMentions(payload.mentions);
+    const post = await prisma.$transaction(async (tx) => {
+      const createdPost = await postRepository.create(payload, mappedSnapshot, tx);
+
+      if (!createdPost.id) {
+        throw new BadRequestException("Failed to create post");
+      }
+
+      await this.attachPostMeta(tx, createdPost.id, {
+        topic: payload.topic,
+        mentionIds,
+      });
+      return createdPost;
+    });
     await pineProducer.addToPineconeQueue({
       content: payload.content,
-      topic: ["not"],
+      topic: [this.normalizeTopic(payload.topic) ?? "not"],
       postId: post.id || 0,
       userId: payload.userId,
     });
@@ -210,15 +288,31 @@ class PostService {
     }
 
     const mappedSnapshot = PostMapper.toUserSnapshot(userSnapshot);
-    const post = await postRepository.createReply(
-      {
-        content: payload.content,
-        userId: payload.userId,
-        media: payload.media,
-      },
-      publicId,
-      mappedSnapshot,
-    );
+    const mentionIds = await this.validateMentions(payload.mentions);
+    const post = await prisma.$transaction(async (tx) => {
+      const createdPost = await postRepository.createReply(
+        {
+          content: payload.content,
+          userId: payload.userId,
+          media: payload.media,
+          mentions: payload.mentions,
+          topic: payload.topic,
+        },
+        publicId,
+        mappedSnapshot,
+        tx,
+      );
+
+      if (!createdPost.id) {
+        throw new BadRequestException("Failed to create reply");
+      }
+
+      await this.attachPostMeta(tx, createdPost.id, {
+        topic: payload.topic,
+        mentionIds,
+      });
+      return createdPost;
+    });
 
     return {
       publicId: post.publicId,
@@ -273,15 +367,32 @@ class PostService {
     }
 
     const mappedSnapshot = PostMapper.toUserSnapshot(userSnapshot);
-    const post = await postRepository.createQuote(
-      {
-        userId: payload.userId,
-        content: payload.content,
-      },
-      publicId,
-      mappedSnapshot,
-      originPost.id,
-    );
+    const mentionIds = await this.validateMentions(payload.mentions);
+    const post = await prisma.$transaction(async (tx) => {
+      const createdPost = await postRepository.createQuote(
+        {
+          userId: payload.userId,
+          content: payload.content,
+          media: payload.media,
+          mentions: payload.mentions,
+          topic: payload.topic,
+        },
+        publicId,
+        mappedSnapshot,
+        originPost.id,
+        tx,
+      );
+
+      if (!createdPost.id) {
+        throw new BadRequestException("Failed to create quote");
+      }
+
+      await this.attachPostMeta(tx, createdPost.id, {
+        topic: payload.topic,
+        mentionIds,
+      });
+      return createdPost;
+    });
 
     return {
       publicId: post.publicId,

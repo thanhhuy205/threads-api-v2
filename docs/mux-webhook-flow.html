@@ -1,0 +1,616 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mux Webhook Flow · Tài liệu nghiệp vụ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              ivory: "#FAF9F5",
+              paper: "#FFFFFF",
+              slatex: "#141413",
+              clay: "#D97757",
+              clayDark: "#B85C3E",
+              oat: "#E3DACC",
+              olive: "#788C5D",
+              g100: "#F0EEE6",
+              g200: "#E6E3DA",
+              g300: "#D1CFC5",
+              g500: "#87867F",
+              g700: "#3D3D3A",
+            },
+            fontFamily: {
+              serif: [
+                "ui-serif",
+                "Georgia",
+                "Times New Roman",
+                "Times",
+                "serif",
+              ],
+              sans: [
+                "system-ui",
+                "-apple-system",
+                "Segoe UI",
+                "Roboto",
+                "Helvetica",
+                "Arial",
+                "sans-serif",
+              ],
+              mono: [
+                "ui-monospace",
+                "SF Mono",
+                "Menlo",
+                "Monaco",
+                "Consolas",
+                "monospace",
+              ],
+            },
+            boxShadow: {
+              paper: "0 10px 30px rgba(20,20,19,.10)",
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      html {
+        scroll-behavior: smooth;
+      }
+      .toc-link.active {
+        border-color: #141413;
+        color: #141413;
+        background: #e3dacc;
+      }
+    </style>
+  </head>
+  <body class="bg-ivory text-slatex font-sans antialiased">
+    <button
+      id="mobile-toggle"
+      class="fixed right-4 top-4 z-40 rounded-lg border border-g300 bg-paper px-3 py-2 text-xs font-semibold tracking-wide text-g700 shadow-sm lg:hidden">
+      MỤC LỤC
+    </button>
+
+    <div class="min-h-screen lg:grid lg:grid-cols-[320px_minmax(0,1fr)]">
+      <aside
+        id="sidebar"
+        class="fixed inset-y-0 left-0 z-30 w-[300px] -translate-x-[104%] overflow-y-auto border-r border-g300 bg-g100 p-4 transition-transform duration-200 lg:sticky lg:top-0 lg:h-screen lg:w-auto lg:translate-x-0">
+        <div class="rounded-xl border border-g300 bg-paper p-4">
+          <p
+            class="font-mono text-[11px] uppercase tracking-[0.14em] text-g500">
+            Business Document
+          </p>
+          <h1 class="mt-1 font-serif text-2xl leading-tight text-slatex">
+            Mux Webhook Flow
+          </h1>
+          <p class="mt-2 text-sm leading-6 text-g700">
+            Tài liệu nghiệp vụ định hướng phối hợp Product, FE, BE, QA, Ops.
+          </p>
+        </div>
+
+        <nav id="toc" class="mt-4 space-y-3 text-sm">
+          <details
+            class="overflow-hidden rounded-xl border border-g300 bg-paper"
+            open>
+            <summary
+              class="cursor-pointer list-none border-b border-g200 px-3 py-2 font-mono text-[11px] uppercase tracking-[0.12em] text-g500">
+              Bối cảnh
+            </summary>
+            <div class="space-y-1 p-2">
+              <a
+                href="#tong-quan"
+                class="toc-link block rounded-full border border-g300 px-3 py-2 text-g700 transition hover:border-slatex hover:text-slatex"
+                >Tổng quan nghiệp vụ</a
+              >
+              <a
+                href="#pham-vi"
+                class="toc-link block rounded-full border border-g300 px-3 py-2 text-g700 transition hover:border-slatex hover:text-slatex"
+                >Phạm vi & tác nhân</a
+              >
+              <a
+                href="#luong"
+                class="toc-link block rounded-full border border-g300 px-3 py-2 text-g700 transition hover:border-slatex hover:text-slatex"
+                >Flow xử lý chính</a
+              >
+              <a
+                href="#raw-body"
+                class="toc-link block rounded-full border border-g300 px-3 py-2 text-g700 transition hover:border-slatex hover:text-slatex"
+                >Vì sao dùng express.raw</a
+              >
+            </div>
+          </details>
+
+          <details
+            class="overflow-hidden rounded-xl border border-g300 bg-paper"
+            open>
+            <summary
+              class="cursor-pointer list-none border-b border-g200 px-3 py-2 font-mono text-[11px] uppercase tracking-[0.12em] text-g500">
+              Vận hành
+            </summary>
+            <div class="space-y-1 p-2">
+              <a
+                href="#ma-tran"
+                class="toc-link block rounded-full border border-g300 px-3 py-2 text-g700 transition hover:border-slatex hover:text-slatex"
+                >Ma trận quyết định event</a
+              >
+              <a
+                href="#quy-uoc"
+                class="toc-link block rounded-full border border-g300 px-3 py-2 text-g700 transition hover:border-slatex hover:text-slatex"
+                >Quy ước liên nhóm</a
+              >
+              <a
+                href="#rui-ro"
+                class="toc-link block rounded-full border border-g300 px-3 py-2 text-g700 transition hover:border-slatex hover:text-slatex"
+                >Rủi ro & phản ứng</a
+              >
+              <a
+                href="#checklist"
+                class="toc-link block rounded-full border border-g300 px-3 py-2 text-g700 transition hover:border-slatex hover:text-slatex"
+                >Checklist trước release</a
+              >
+            </div>
+          </details>
+        </nav>
+      </aside>
+
+      <main class="px-4 pb-12 pt-20 lg:px-10 lg:pt-10">
+        <header id="tong-quan" class="scroll-mt-8 border-b border-g300 pb-8">
+          <p
+            class="mb-3 flex items-center gap-2 font-mono text-xs uppercase tracking-[0.12em] text-g500">
+            <span class="inline-block h-px w-6 bg-clay"></span>
+            Mux Video Pipeline
+          </p>
+          <h2
+            class="max-w-4xl font-serif text-4xl font-medium leading-tight text-slatex lg:text-5xl">
+            Flow webhook Mux theo góc nhìn nghiệp vụ
+          </h2>
+          <p class="mt-5 max-w-3xl text-[15.5px] leading-7 text-g700">
+            Tài liệu này tập trung vào quyết định vận hành và phối hợp liên
+            nhóm. Không thay thế Swagger, không lặp lại schema endpoint. Mục
+            tiêu là giúp mọi bên thống nhất cách hệ thống phản ứng khi Mux gửi
+            sự kiện liên quan đến trạng thái video.
+          </p>
+          <div class="mt-5 flex flex-wrap gap-2">
+            <span
+              class="rounded-full border border-g300 bg-paper px-3 py-1 text-xs font-semibold text-g700"
+              >Route: /api/v1/webhooks/mux</span
+            >
+            <span
+              class="rounded-full border border-oat bg-[#F7F1E9] px-3 py-1 text-xs font-semibold text-clayDark"
+              >Bắt buộc verify chữ ký</span
+            >
+            <span
+              class="rounded-full border border-g300 bg-paper px-3 py-1 text-xs font-semibold text-g700"
+              >Whitelist event nghiệp vụ</span
+            >
+          </div>
+        </header>
+
+        <section id="pham-vi" class="scroll-mt-8 mt-10">
+          <div class="mb-4 flex items-end gap-3">
+            <span class="font-mono text-xs text-clay">01</span>
+            <h3 class="font-serif text-3xl">Phạm vi và tác nhân</h3>
+          </div>
+          <div class="grid gap-4 md:grid-cols-2">
+            <article
+              class="rounded-xl border border-g300 bg-paper p-4 shadow-paper/40">
+              <h4 class="text-sm font-semibold">Mục tiêu kinh doanh</h4>
+              <p class="mt-1 text-sm leading-6 text-g700">
+                Đồng bộ trạng thái video để feed/profile không hiển thị sai tình
+                trạng media.
+              </p>
+            </article>
+            <article
+              class="rounded-xl border border-g300 bg-paper p-4 shadow-paper/40">
+              <h4 class="text-sm font-semibold">Tác nhân chính</h4>
+              <p class="mt-1 text-sm leading-6 text-g700">
+                Mux, Backend API, bảng
+                <code class="rounded bg-g100 px-1 py-0.5 font-mono text-xs"
+                  >post_media</code
+                >, và ứng dụng client.
+              </p>
+            </article>
+            <article
+              class="rounded-xl border border-g300 bg-paper p-4 shadow-paper/40">
+              <h4 class="text-sm font-semibold">Đầu vào</h4>
+              <p class="mt-1 text-sm leading-6 text-g700">
+                Webhook event chứa thông tin asset/playback/status, chỉ nhận nếu
+                chữ ký hợp lệ.
+              </p>
+            </article>
+            <article
+              class="rounded-xl border border-g300 bg-paper p-4 shadow-paper/40">
+              <h4 class="text-sm font-semibold">Đầu ra</h4>
+              <p class="mt-1 text-sm leading-6 text-g700">
+                Cập nhật trạng thái media nội bộ hoặc bỏ qua an toàn nếu event
+                ngoài phạm vi.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section id="luong" class="scroll-mt-8 mt-10">
+          <div class="mb-4 flex items-end gap-3">
+            <span class="font-mono text-xs text-clay">02</span>
+            <h3 class="font-serif text-3xl">Flow xử lý chính</h3>
+          </div>
+          <ol class="space-y-3">
+            <li
+              class="rounded-xl border border-g300 bg-paper p-4 text-sm leading-6 text-g700">
+              <span class="font-semibold text-slatex">1.</span> Mux gửi webhook
+              đến endpoint của backend.
+            </li>
+            <li
+              class="rounded-xl border border-g300 bg-paper p-4 text-sm leading-6 text-g700">
+              <span class="font-semibold text-slatex">2.</span> Backend xác thực
+              chữ ký để chặn payload giả mạo.
+            </li>
+            <li
+              class="rounded-xl border border-g300 bg-paper p-4 text-sm leading-6 text-g700">
+              <span class="font-semibold text-slatex">3.</span> Hệ thống chỉ xử
+              lý event đã whitelist (<span class="font-mono text-xs"
+                >ready/errored/deleted</span
+              >).
+            </li>
+            <li
+              class="rounded-xl border border-g300 bg-paper p-4 text-sm leading-6 text-g700">
+              <span class="font-semibold text-slatex">4.</span> Event hợp lệ
+              được ánh xạ thành trạng thái media và ghi vào
+              <span class="font-mono text-xs">post_media</span>.
+            </li>
+            <li
+              class="rounded-xl border border-g300 bg-paper p-4 text-sm leading-6 text-g700">
+              <span class="font-semibold text-slatex">5.</span> API ACK cho Mux,
+              client đọc trạng thái mới để hiển thị đúng UX.
+            </li>
+          </ol>
+          <div
+            class="mt-4 rounded-xl border border-[#E7C9BE] bg-[#FFF6F2] p-4 text-sm leading-6 text-[#8F4A36]">
+            <strong>Lưu ý quan trọng:</strong> verify chữ ký là hàng rào bảo vệ
+            bắt buộc, không được bypass trong bất kỳ nhánh nghiệp vụ nào.
+          </div>
+        </section>
+
+        <section id="raw-body" class="scroll-mt-8 mt-10">
+          <div class="mb-4 flex items-end gap-3">
+            <span class="font-mono text-xs text-clay">02A</span>
+            <h3 class="font-serif text-3xl">Giải thích logic <code class="rounded bg-g100 px-1 py-0.5 font-mono text-sm">express.raw()</code></h3>
+          </div>
+          <p class="max-w-3xl text-sm leading-6 text-g700">
+            Ở <code class="rounded bg-g100 px-1 py-0.5 font-mono text-xs">src/app.ts</code> có đoạn:
+            <code class="rounded bg-g100 px-1 py-0.5 font-mono text-xs">app.use('/api/v1/webhooks/mux', express.raw({ type: 'application/json' }))</code>.
+            Mục đích là giữ nguyên <strong>bytes gốc</strong> của payload webhook Mux để verify chữ ký.
+          </p>
+
+          <div class="mt-4 grid gap-4 md:grid-cols-2">
+            <article class="rounded-xl border border-g300 bg-paper p-4">
+              <h4 class="text-sm font-semibold">Mux ký payload theo raw body</h4>
+              <p class="mt-2 text-sm leading-6 text-g700">
+                Signature của Mux theo kiểu:
+                <code class="rounded bg-g100 px-1 py-0.5 font-mono text-xs">HMAC_SHA256(secret, `${timestamp}.${rawBody}`)</code>.
+                Tức là hash được tạo trên đúng chuỗi JSON gốc Mux gửi.
+              </p>
+              <p class="mt-2 text-sm leading-6 text-g700">
+                Header thường có dạng:
+                <code class="rounded bg-g100 px-1 py-0.5 font-mono text-xs">mux-signature: t=1710000000,v1=abcdef...</code>
+                với <code class="rounded bg-g100 px-1 py-0.5 font-mono text-xs">t</code> là timestamp,
+                <code class="rounded bg-g100 px-1 py-0.5 font-mono text-xs">v1</code> là HMAC hash.
+              </p>
+            </article>
+
+            <article class="rounded-xl border border-g300 bg-paper p-4">
+              <h4 class="text-sm font-semibold">Vì sao <code class="rounded bg-g100 px-1 py-0.5 font-mono text-xs">express.json()</code> dễ fail verify</h4>
+              <p class="mt-2 text-sm leading-6 text-g700">
+                <code class="rounded bg-g100 px-1 py-0.5 font-mono text-xs">express.json()</code> sẽ parse body thành object JS.
+                Khi stringify lại, thứ tự key, spacing, newline hoặc unicode có thể khác raw payload.
+              </p>
+              <p class="mt-2 text-sm leading-6 text-g700">
+                Chỉ cần khác 1 byte là hash khác hoàn toàn → chữ ký mismatch → verify fail.
+              </p>
+            </article>
+          </div>
+
+          <div class="mt-4 overflow-x-auto rounded-xl border border-g300 bg-paper">
+            <table class="min-w-[760px] w-full border-collapse text-sm">
+              <thead class="bg-g100 font-mono text-[11px] uppercase tracking-[0.08em] text-g500">
+                <tr>
+                  <th class="px-3 py-2 text-left">Bước</th>
+                  <th class="px-3 py-2 text-left">Dùng express.json()</th>
+                  <th class="px-3 py-2 text-left">Dùng express.raw()</th>
+                  <th class="px-3 py-2 text-left">Tác động verify</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-g200 text-g700">
+                <tr>
+                  <td class="px-3 py-2">Nhận body</td>
+                  <td class="px-3 py-2">Body thành object JS</td>
+                  <td class="px-3 py-2">Body giữ dạng Buffer bytes gốc</td>
+                  <td class="px-3 py-2">Raw bytes mới khớp cách Mux ký</td>
+                </tr>
+                <tr>
+                  <td class="px-3 py-2">Dữ liệu đem hash</td>
+                  <td class="px-3 py-2">Phải stringify lại object</td>
+                  <td class="px-3 py-2">Dùng trực tiếp rawBody</td>
+                  <td class="px-3 py-2">Tránh sai khác do re-serialize</td>
+                </tr>
+                <tr>
+                  <td class="px-3 py-2">Rủi ro byte-level</td>
+                  <td class="px-3 py-2">Dễ đổi key order/spacing</td>
+                  <td class="px-3 py-2">Không đổi payload gốc</td>
+                  <td class="px-3 py-2">Verify chính xác hơn</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="mt-4 rounded-xl border border-[#E7C9BE] bg-[#FFF6F2] p-4 text-sm leading-6 text-[#8F4A36]">
+            Hình dung đơn giản: Mux ký trên “file gốc”. Nếu server mở file rồi lưu lại mới đi verify, bytes đã khác nên chữ ký sẽ không còn khớp.
+          </div>
+        </section>
+
+        <section id="ma-tran" class="scroll-mt-8 mt-10">
+          <div class="mb-4 flex items-end gap-3">
+            <span class="font-mono text-xs text-clay">03</span>
+            <h3 class="font-serif text-3xl">Ma trận quyết định event</h3>
+          </div>
+          <div class="overflow-x-auto rounded-xl border border-g300 bg-paper">
+            <table class="min-w-[780px] w-full border-collapse text-sm">
+              <thead
+                class="bg-g100 font-mono text-[11px] uppercase tracking-[0.08em] text-g500">
+                <tr>
+                  <th class="px-3 py-2 text-left">Event</th>
+                  <th class="px-3 py-2 text-left">Xử lý</th>
+                  <th class="px-3 py-2 text-left">Cập nhật nghiệp vụ</th>
+                  <th class="px-3 py-2 text-left">Tác động user</th>
+                  <th class="px-3 py-2 text-left">Ưu tiên</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-g200 text-g700">
+                <tr>
+                  <td class="px-3 py-2 font-mono text-xs">video.asset.ready</td>
+                  <td class="px-3 py-2">
+                    <span
+                      class="rounded-full border border-[#BFD2AB] bg-[#EDF4E5] px-2 py-0.5 text-xs font-semibold text-olive"
+                      >Có</span
+                    >
+                  </td>
+                  <td class="px-3 py-2">Đánh dấu media sẵn sàng phát.</td>
+                  <td class="px-3 py-2">Video hiển thị và phát được.</td>
+                  <td class="px-3 py-2">Cao</td>
+                </tr>
+                <tr>
+                  <td class="px-3 py-2 font-mono text-xs">
+                    video.asset.errored
+                  </td>
+                  <td class="px-3 py-2">
+                    <span
+                      class="rounded-full border border-[#E7C9BE] bg-[#FFF4EE] px-2 py-0.5 text-xs font-semibold text-clayDark"
+                      >Có</span
+                    >
+                  </td>
+                  <td class="px-3 py-2">Đánh dấu lỗi xử lý media.</td>
+                  <td class="px-3 py-2">UI hiển thị fallback lỗi.</td>
+                  <td class="px-3 py-2">Cao</td>
+                </tr>
+                <tr>
+                  <td class="px-3 py-2 font-mono text-xs">
+                    video.asset.deleted
+                  </td>
+                  <td class="px-3 py-2">
+                    <span
+                      class="rounded-full border border-g300 bg-g100 px-2 py-0.5 text-xs font-semibold text-g700"
+                      >Có</span
+                    >
+                  </td>
+                  <td class="px-3 py-2">Đồng bộ media không còn khả dụng.</td>
+                  <td class="px-3 py-2">Ẩn/đánh dấu không tồn tại.</td>
+                  <td class="px-3 py-2">Trung bình</td>
+                </tr>
+                <tr>
+                  <td class="px-3 py-2">Event ngoài danh sách</td>
+                  <td class="px-3 py-2">
+                    <span
+                      class="rounded-full border border-g300 bg-g100 px-2 py-0.5 text-xs font-semibold text-g700"
+                      >Bỏ qua</span
+                    >
+                  </td>
+                  <td class="px-3 py-2">Không ghi DB, ACK sớm.</td>
+                  <td class="px-3 py-2">Không thay đổi UI.</td>
+                  <td class="px-3 py-2">Thấp</td>
+                </tr>
+                <tr>
+                  <td class="px-3 py-2">Chữ ký sai / thiếu</td>
+                  <td class="px-3 py-2">
+                    <span
+                      class="rounded-full border border-[#E7C9BE] bg-[#FFF4EE] px-2 py-0.5 text-xs font-semibold text-clayDark"
+                      >Từ chối</span
+                    >
+                  </td>
+                  <td class="px-3 py-2">Không xử lý dữ liệu.</td>
+                  <td class="px-3 py-2">Không đổi UI, cần cảnh báo ops.</td>
+                  <td class="px-3 py-2">Rất cao</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="quy-uoc" class="scroll-mt-8 mt-10">
+          <div class="mb-4 flex items-end gap-3">
+            <span class="font-mono text-xs text-clay">04</span>
+            <h3 class="font-serif text-3xl">Quy ước liên nhóm</h3>
+          </div>
+          <div class="grid gap-4 md:grid-cols-2">
+            <article class="rounded-xl border border-g300 bg-paper p-4">
+              <h4 class="text-sm font-semibold">Backend</h4>
+              <p class="mt-1 text-sm leading-6 text-g700">
+                Verify trước, xử lý sau. Event ngoài phạm vi phải trả ACK nhanh
+                và không side-effect.
+              </p>
+            </article>
+            <article class="rounded-xl border border-g300 bg-paper p-4">
+              <h4 class="text-sm font-semibold">Frontend</h4>
+              <p class="mt-1 text-sm leading-6 text-g700">
+                Hiển thị rõ trạng thái uploading/uploaded/failed, không giả định
+                video luôn sẵn sàng ngay.
+              </p>
+            </article>
+            <article class="rounded-xl border border-g300 bg-paper p-4">
+              <h4 class="text-sm font-semibold">QA</h4>
+              <p class="mt-1 text-sm leading-6 text-g700">
+                Test đầy đủ nhánh: event hợp lệ, event bị bỏ qua, chữ ký sai,
+                retry webhook.
+              </p>
+            </article>
+            <article class="rounded-xl border border-g300 bg-paper p-4">
+              <h4 class="text-sm font-semibold">Ops</h4>
+              <p class="mt-1 text-sm leading-6 text-g700">
+                Theo dõi tỉ lệ signature fail, tỉ lệ event lỗi và độ trễ upload
+                đến ready.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section id="rui-ro" class="scroll-mt-8 mt-10">
+          <div class="mb-4 flex items-end gap-3">
+            <span class="font-mono text-xs text-clay">05</span>
+            <h3 class="font-serif text-3xl">Rủi ro và phản ứng</h3>
+          </div>
+          <div class="overflow-x-auto rounded-xl border border-g300 bg-paper">
+            <table class="min-w-[720px] w-full border-collapse text-sm">
+              <thead
+                class="bg-g100 font-mono text-[11px] uppercase tracking-[0.08em] text-g500">
+                <tr>
+                  <th class="px-3 py-2 text-left">Tình huống</th>
+                  <th class="px-3 py-2 text-left">Dấu hiệu</th>
+                  <th class="px-3 py-2 text-left">Phản ứng đề xuất</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-g200 text-g700">
+                <tr>
+                  <td class="px-3 py-2">Giả mạo webhook</td>
+                  <td class="px-3 py-2">Signature mismatch tăng đột biến</td>
+                  <td class="px-3 py-2">
+                    Giữ policy từ chối, rà soát secret và log điều tra.
+                  </td>
+                </tr>
+                <tr>
+                  <td class="px-3 py-2">Event đến trễ/lặp</td>
+                  <td class="px-3 py-2">
+                    Trạng thái media nhảy hoặc cập nhật muộn
+                  </td>
+                  <td class="px-3 py-2">
+                    Đảm bảo cập nhật idempotent và theo dõi retry pattern.
+                  </td>
+                </tr>
+                <tr>
+                  <td class="px-3 py-2">Ready nhưng không phát được</td>
+                  <td class="px-3 py-2">Có playback id nhưng client báo lỗi</td>
+                  <td class="px-3 py-2">
+                    Kiểm tra mapping playback id/CDN và fallback UX.
+                  </td>
+                </tr>
+                <tr>
+                  <td class="px-3 py-2">Nhiều event không hỗ trợ</td>
+                  <td class="px-3 py-2">Tỉ lệ event bỏ qua cao bất thường</td>
+                  <td class="px-3 py-2">
+                    Rà soát cấu hình webhook Mux và cập nhật whitelist nếu cần.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="checklist" class="scroll-mt-8 mt-10">
+          <div class="mb-4 flex items-end gap-3">
+            <span class="font-mono text-xs text-clay">06</span>
+            <h3 class="font-serif text-3xl">Checklist trước release</h3>
+          </div>
+          <div class="grid gap-4 md:grid-cols-2">
+            <article class="rounded-xl border border-g300 bg-paper p-4">
+              <h4 class="text-sm font-semibold">Security gate</h4>
+              <p class="mt-1 text-sm leading-6 text-g700">
+                [ ] Thiếu signature bị từ chối. [ ] Signature sai bị từ chối.
+              </p>
+            </article>
+            <article class="rounded-xl border border-g300 bg-paper p-4">
+              <h4 class="text-sm font-semibold">Business mapping</h4>
+              <p class="mt-1 text-sm leading-6 text-g700">
+                [ ] ready → phát được. [ ] errored → fallback. [ ] deleted →
+                trạng thái không khả dụng.
+              </p>
+            </article>
+            <article class="rounded-xl border border-g300 bg-paper p-4">
+              <h4 class="text-sm font-semibold">Observability</h4>
+              <p class="mt-1 text-sm leading-6 text-g700">
+                [ ] Có log truy vết event. [ ] Có metric signature fail và error
+                ratio.
+              </p>
+            </article>
+            <article class="rounded-xl border border-g300 bg-paper p-4">
+              <h4 class="text-sm font-semibold">Phối hợp liên nhóm</h4>
+              <p class="mt-1 text-sm leading-6 text-g700">
+                [ ] FE/QA chốt UX lỗi media. [ ] Ops có ngưỡng cảnh báo bất
+                thường webhook.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <p
+          class="mt-8 border-t border-g300 pt-4 font-mono text-[11px] uppercase tracking-[0.1em] text-g500">
+          Last reviewed: 2026-05-10 · Mux webhook business alignment
+        </p>
+      </main>
+    </div>
+
+    <script>
+      const sidebar = document.getElementById("sidebar");
+      const mobileToggle = document.getElementById("mobile-toggle");
+      const links = Array.from(document.querySelectorAll(".toc-link"));
+
+      mobileToggle.addEventListener("click", () => {
+        sidebar.classList.toggle("-translate-x-[104%]");
+      });
+
+      links.forEach((link) => {
+        link.addEventListener("click", () => {
+          if (window.innerWidth < 1024) {
+            sidebar.classList.add("-translate-x-[104%]");
+          }
+        });
+      });
+
+      const sections = links
+        .map((link) => document.querySelector(link.getAttribute("href")))
+        .filter(Boolean);
+
+      const byId = new Map(
+        links.map((link) => [link.getAttribute("href"), link]),
+      );
+
+      const setActive = (id) => {
+        links.forEach((link) => link.classList.remove("active"));
+        const current = byId.get(`#${id}`);
+        if (current) current.classList.add("active");
+      };
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          const visible = entries
+            .filter((entry) => entry.isIntersecting)
+            .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+          if (visible?.target?.id) setActive(visible.target.id);
+        },
+        { rootMargin: "-35% 0px -55% 0px", threshold: [0.15, 0.35, 0.6] },
+      );
+
+      sections.forEach((section) => observer.observe(section));
+    </script>
+  </body>
+</html>

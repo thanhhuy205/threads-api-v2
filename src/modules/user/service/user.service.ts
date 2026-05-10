@@ -34,6 +34,10 @@ class UserService {
   async findByUsername(username: string) {
     return userRepository.findByUsername(username);
   }
+
+  async findExistingIds(userIds: string[]) {
+    return userRepository.findExistingIds(userIds);
+  }
 }
 
 export const userService = new UserService();

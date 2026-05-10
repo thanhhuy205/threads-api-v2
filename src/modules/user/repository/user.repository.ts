@@ -55,6 +55,25 @@ class UserRepository {
       },
     });
   }
+
+  async findExistingIds(userIds: string[]) {
+    if (!userIds.length) {
+      return [];
+    }
+
+    const users = await prisma.user.findMany({
+      where: {
+        id: {
+          in: userIds,
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    return users.map((user) => user.id);
+  }
 }
 
 export const userRepository = new UserRepository();
