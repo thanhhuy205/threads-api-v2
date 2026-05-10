@@ -3,7 +3,7 @@ import { jwtService } from '@/modules/jwt/service/jwt.service';
 import { userService } from '@/modules/user/service/user.service';
 import { getPagination } from '@/shared/pagination/cursor-pagination';
 import { Request, Response } from 'express';
-import { CreatePostDto } from '../dto/post.dto';
+import { CreatePostDto, UpdatePostDto } from '../dto/post.dto';
 import type { LikeDto } from '../dto/request/like.request';
 import type { ReportDto } from '../dto/request/post.request';
 import {
@@ -232,6 +232,7 @@ class PostController {
             publicId: req.params.publicId,
             content: req.body.content ?? '',
             replyPermission: req.body.replyPermission,
+            visibility: req.body.visibility,
         }, userId);
 
         return res.success(201, POST_MESSAGE.CREATED, repost);
@@ -290,6 +291,17 @@ class PostController {
 
         await postService.delete(req.params.publicId, userId);
         return res.success(200, POST_MESSAGE.RETRIEVED, { deleted: true });
+    }
+
+    async updatePost(req: Request<PublicIdParamsDto, {}, UpdatePostDto>, res: Response) {
+        const userId = req.user?.sub;
+
+        if (!userId) {
+            return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
+        }
+
+        const post = await postService.update(req.params.publicId, userId, req.body);
+        return res.success(200, POST_MESSAGE.RETRIEVED, post);
     }
 
     async search(req: Request<{}, {}, {}, SearchQueryDto>, res: Response) {

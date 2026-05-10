@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ReplyPermission } from "@prisma/client";
+import { ReplyPermission, VisibilityPost } from "@prisma/client";
 
 const mentionSchema = z.object({
   userId: z.string().trim().min(1, "Mention userId is required"),
@@ -11,6 +11,15 @@ const replyPermissionSchema = z.preprocess(
   z.nativeEnum(ReplyPermission, {
     errorMap: () => ({
       message: `replyPermission must be one of: ${Object.values(ReplyPermission).join(", ")}`,
+    }),
+  }),
+);
+
+const visibilityPostSchema = z.preprocess(
+  (value) => (typeof value === "string" ? value.trim().toUpperCase() : value),
+  z.nativeEnum(VisibilityPost, {
+    errorMap: () => ({
+      message: `visibility must be one of: ${Object.values(VisibilityPost).join(", ")}`,
     }),
   }),
 );
@@ -37,6 +46,7 @@ const createPostSchema = z.object({
     )
     .optional(),
   replyPermission: replyPermissionSchema.default(ReplyPermission.EVERYONE),
+  visibility: visibilityPostSchema.default(VisibilityPost.PUBLIC),
 }).superRefine((payload, ctx) => {
   if (!payload.mentions?.length) {
     return;
@@ -56,4 +66,17 @@ const createPostSchema = z.object({
 
 export type CreatePostDto = z.infer<typeof createPostSchema>;
 
-export { createPostSchema };
+const updatePostSchema = z.object({
+  content: z
+    .string()
+    .min(1, "Content must be at least 1 character")
+    .max(5000, "Content must be at most 5000 characters")
+    .optional(),
+  visibility: visibilityPostSchema.optional(),
+}).refine((payload) => payload.content !== undefined || payload.visibility !== undefined, {
+  message: "At least one of content or visibility is required",
+});
+
+export type UpdatePostDto = z.infer<typeof updatePostSchema>;
+
+export { createPostSchema, updatePostSchema };

@@ -64,6 +64,12 @@ enum Visibility {
     CIRCLE
 }
 
+enum VisibilityPost {
+    PUBLIC
+    FRIEND
+    PRIVATE
+}
+
 enum ActionType {
     POST_CREATED
     POST_DELETED
@@ -260,9 +266,10 @@ model Post {
     id       Int    @id @default(autoincrement())
     publicId String @unique @default(cuid()) @map("public_id")
 
-    userId  String   @map("user_id")
-    content String   @db.Text
-    type    PostType @default(POST)
+    userId     String         @map("user_id")
+    content    String         @db.Text
+    type       PostType       @default(POST)
+    visibility VisibilityPost @default(PUBLIC)
 
     parentId     Int? @map("parent_id") // reply -> parent
     originPostId Int? @map("origin_post_id") // repost/quote -> original

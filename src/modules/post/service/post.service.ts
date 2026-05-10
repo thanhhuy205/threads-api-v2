@@ -1,5 +1,5 @@
 import { QUEUE_NAME } from "@/constants/queue";
-import { BadRequestException } from "@/errors/error";
+import { BadRequestException, ForbiddenException, NotFoundException } from "@/errors/error";
 import { baseLogger } from "@/middlewares/logger";
 import { pineProducer } from "@/modules/job/pine-vector/producer/pine.producer";
 import { mixedBreadService } from "@/modules/mixed-bread/service/mixed-bread.service";
@@ -20,8 +20,8 @@ import { userService } from "@/modules/user/service/user.service";
 import { redisService } from "@/providers/redis.provider";
 import { buildCursorPagination, buildPagination } from "@/shared/pagination/cursor-pagination";
 import { transactionService } from "@/shared/transaction/transaction.service";
-import { PostType, Prisma, ReplyPermission } from "@prisma/client";
-import { CreatePostDto } from "../dto/post.dto";
+import { PostType, Prisma, ReplyPermission, VisibilityPost } from "@prisma/client";
+import { CreatePostDto, UpdatePostDto } from "../dto/post.dto";
 import { normalizeTopic } from '../helper/nomalize.hepler';
 import { PostRecord, postRepository } from "../repository/post.repository";
 import { topicsPostRepository } from "../repository/topics-post.repository";
@@ -36,6 +36,17 @@ class PostService {
     }
 
     return normalized as ReplyPermission;
+  }
+
+  private resolveVisibility(visibility?: string): VisibilityPost {
+    const normalized = (visibility ?? VisibilityPost.PUBLIC).trim().toUpperCase();
+    if (!Object.values(VisibilityPost).includes(normalized as VisibilityPost)) {
+      throw new BadRequestException(
+        `visibility must be one of: ${Object.values(VisibilityPost).join(", ")}`,
+      );
+    }
+
+    return normalized as VisibilityPost;
   }
 
   private async validateMentions(
@@ -301,6 +312,7 @@ class PostService {
           mentions: payload.mentions,
           topic: payload.topic,
           replyPermission: this.resolveReplyPermission(payload.replyPermission),
+          visibility: this.resolveVisibility(payload.visibility),
         },
         publicId,
         mappedSnapshot,
@@ -322,6 +334,7 @@ class PostService {
       publicId: post.publicId,
       content: post.content!,
       userId: post.userId,
+      visibility: post.visibility,
       createdAt: post.createdAt,
     } as PostRecord;
   }
@@ -345,6 +358,7 @@ class PostService {
         userId,
         content: payload.content,
         replyPermission: this.resolveReplyPermission(payload.replyPermission),
+        visibility: this.resolveVisibility(payload.visibility),
       },
       payload.publicId,
       mappedSnapshot,
@@ -353,7 +367,9 @@ class PostService {
 
     return {
       publicId: post.publicId,
+      content: post.content,
       userId: post.userId,
+      visibility: post.visibility,
       createdAt: post.createdAt,
     } as PostRecord;
   }
@@ -384,6 +400,7 @@ class PostService {
           mentions: payload.mentions,
           topic: payload.topic,
           replyPermission: this.resolveReplyPermission(payload.replyPermission),
+          visibility: this.resolveVisibility(payload.visibility),
         },
         publicId,
         mappedSnapshot,
@@ -408,6 +425,7 @@ class PostService {
       publicId: post.publicId,
       content: post.content,
       userId: payload.userId,
+      visibility: post.visibility,
       createdAt: new Date().toISOString(),
     } as PostRecord;
   }
@@ -465,8 +483,31 @@ class PostService {
   }
 
   async delete(publicId: string, userId: string): Promise<void> {
-    // stub: no-op
-    return;
+    const post = await postRepository.findByPublicId(publicId);
+
+    if (!post) {
+      throw new NotFoundException("Post not found");
+    }
+
+    if (post.userId !== userId) {
+      throw new ForbiddenException("Users can only delete their own posts");
+    }
+
+    await postRepository.softDeleteByPublicId(publicId);
+  }
+
+  async update(publicId: string, userId: string, payload: UpdatePostDto): Promise<PostRecord> {
+    const post = await postRepository.findByPublicId(publicId);
+
+    if (!post) {
+      throw new NotFoundException("Post not found");
+    }
+
+    if (post.userId !== userId) {
+      throw new ForbiddenException("Users can only update their own posts");
+    }
+
+    return postRepository.updateByPublicId(publicId, payload);
   }
 
   async report(

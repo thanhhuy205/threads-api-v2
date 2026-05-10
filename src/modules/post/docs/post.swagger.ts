@@ -16,13 +16,19 @@ export const postSwaggerSchemas = {
                 type: 'string',
                 example: 'ckv8p4u1q0000x3jz8d2b6g7h',
             },
+            visibility: {
+                type: 'string',
+                enum: ['PUBLIC', 'FRIEND', 'PRIVATE'],
+                example: 'PUBLIC',
+                description: 'FRIEND means mutual follow. Visibility read filtering is documented but not enforced yet.',
+            },
             createdAt: {
                 type: 'string',
                 format: 'date-time',
                 example: '2026-05-01T00:00:00.000Z',
             },
         },
-        required: ['publicId', 'content', 'userId', 'createdAt'],
+        required: ['publicId', 'content', 'userId', 'visibility', 'createdAt'],
     },
     PostPagination: {
         type: 'object',
@@ -74,8 +80,32 @@ export const postSwaggerSchemas = {
                 example: 'everyone',
                 description: 'Optional. Case-insensitive, server normalizes to uppercase.',
             },
+            visibility: {
+                type: 'string',
+                enum: ['PUBLIC', 'FRIEND', 'PRIVATE'],
+                example: 'PUBLIC',
+                description: 'Optional. Case-insensitive. Defaults to PUBLIC. FRIEND means mutual follow, but read filtering is not enforced yet.',
+            },
         },
         required: ['content'],
+    },
+    UpdatePostRequest: {
+        type: 'object',
+        properties: {
+            content: {
+                type: 'string',
+                minLength: 1,
+                maxLength: 5000,
+                example: 'Updated post content',
+            },
+            visibility: {
+                type: 'string',
+                enum: ['PUBLIC', 'FRIEND', 'PRIVATE'],
+                example: 'FRIEND',
+                description: 'FRIEND means mutual follow. Visibility read filtering is not enforced yet.',
+            },
+        },
+        minProperties: 1,
     },
     PostSuccessResponse: {
         type: 'object',
@@ -382,9 +412,53 @@ export const postSwaggerPaths = {
                 },
             },
         },
+        patch: {
+            tags: ['Post'],
+            summary: 'Update post content or visibility by public id',
+            security: bearerAuthSecurity,
+            parameters: [publicIdParameters[0]],
+            requestBody: {
+                required: true,
+                content: {
+                    'application/json': {
+                        schema: {
+                            $ref: '#/components/schemas/UpdatePostRequest',
+                        },
+                        example: {
+                            content: 'Updated post content',
+                            visibility: 'FRIEND',
+                        },
+                    },
+                },
+            },
+            responses: {
+                200: {
+                    description: POST_MESSAGE.RETRIEVED,
+                    content: {
+                        'application/json': {
+                            schema: {
+                                $ref: '#/components/schemas/PostSuccessResponse',
+                            },
+                        },
+                    },
+                },
+                400: {
+                    description: COMMON_MESSAGE.VALIDATION_FAILED,
+                },
+                401: {
+                    description: AUTH_MESSAGE.TOKEN_INVALID,
+                },
+                403: {
+                    description: COMMON_MESSAGE.FORBIDDEN,
+                },
+                404: {
+                    description: 'Post not found',
+                },
+            },
+        },
         delete: {
             tags: ['Post'],
-            summary: 'Delete post by public id',
+            summary: 'Soft delete post by public id',
             security: bearerAuthSecurity,
             parameters: [publicIdParameters[0]],
             responses: {
@@ -407,6 +481,9 @@ export const postSwaggerPaths = {
                 },
                 401: {
                     description: AUTH_MESSAGE.TOKEN_INVALID,
+                },
+                403: {
+                    description: COMMON_MESSAGE.FORBIDDEN,
                 },
                 404: {
                     description: 'Post not found',

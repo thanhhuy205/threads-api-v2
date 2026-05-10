@@ -2,7 +2,7 @@ import { authorization } from '@/middlewares/auth';
 import { validate } from '@/middlewares/validate';
 import { Router } from 'express';
 import { postController } from './controller/post.controller';
-import { createPostSchema } from './dto/post.dto';
+import { createPostSchema, updatePostSchema } from './dto/post.dto';
 import {
     cursorPaginationQuerySchema,
     newsFeedQuerySchema,
@@ -36,6 +36,7 @@ postRouter.post('/:publicId/quote', validate(publicIdParamsSchema, 'params'), va
 postRouter.post('/:publicId/save', validate(publicIdParamsSchema, 'params'), postController.savePost);
 postRouter.post('/:publicId/hide', validate(publicIdParamsSchema, 'params'), postController.hidePost);
 postRouter.post('/:publicId/report', validate(publicIdParamsSchema, 'params'), validate(reportSchema), postController.reportPost);
+postRouter.patch('/:publicId', validate(publicIdParamsSchema, 'params'), validate(updatePostSchema), postController.updatePost);
 postRouter.delete('/:publicId', validate(publicIdParamsSchema, 'params'), postController.deletePost);
 
 export default postRouter;

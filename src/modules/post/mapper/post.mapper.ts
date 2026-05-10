@@ -52,6 +52,7 @@ export class PostMapper {
       createdAt: post.createdAt,
       publicId: post.publicId,
       content: post.content,
+      visibility: post.visibility,
       parentId: post.parentId,
       originPostId: post.originPostId,
       rootPostId: post.rootPostId,
