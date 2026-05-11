@@ -116,20 +116,20 @@ footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--gray-300);fon
       <tr>
         <td><span class="step-num">02</span></td>
         <td><div class="step-name">GET danh sách followers</div><div class="step-desc"><code>GET /user/:username/followers</code></div></td>
-        <td>✅ Service có <code>getFollower()</code> nhưng <strong>chưa có route</strong>. Cần thêm route + controller method. Cursor pagination sẵn.</td>
-        <td><span class="badge badge-stub">stub</span></td>
+        <td>✅ Đã hoàn thành. Route + controller method sử dụng username params. Cursor pagination.</td>
+        <td><span class="badge badge-done">done</span></td>
       </tr>
       <tr>
         <td><span class="step-num">03</span></td>
         <td><div class="step-name">GET danh sách following</div><div class="step-desc"><code>GET /user/:username/following</code></div></td>
-        <td>⛔ Chưa có. Clone logic <code>getFollower</code> nhưng filter <code>where: { followerId: userId }</code>. Thêm route + service + controller.</td>
-        <td><span class="badge badge-todo">todo</span></td>
+        <td>✅ Đã hoàn thành. Filter <code>where: { followerId: userId }</code>. Cursor pagination.</td>
+        <td><span class="badge badge-done">done</span></td>
       </tr>
       <tr>
         <td><span class="step-num">04</span></td>
         <td><div class="step-name">Bảng FriendRequest</div><div class="step-desc">Prisma migration</div></td>
-        <td>Tạo model: <code>FriendRequest { id, senderId, receiverId, status (PENDING/ACCEPTED/REJECTED), createdAt, updatedAt }</code>. Unique constraint <code>(senderId, receiverId)</code>.</td>
-        <td><span class="badge badge-todo">todo</span></td>
+        <td>✅ Đã thêm model <code>FriendRequest</code> vào schema. Prisma client đã được generate.</td>
+        <td><span class="badge badge-done">done</span></td>
       </tr>
       <tr>
         <td><span class="step-num">05</span></td>

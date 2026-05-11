@@ -164,6 +164,12 @@ enum DifficultyLevel {
     ADVANCED
 }
 
+enum FriendRequestStatus {
+    PENDING
+    ACCEPTED
+    REJECTED
+}
+
 model User {
     id       String @id @default(cuid())
     email    String @unique @db.VarChar(255)
@@ -212,6 +218,8 @@ model User {
     knowledgeBookmarks    KnowledgeBookmark[]
     messageGroups         MessageGroup[]         @relation("MessageGroupCreator")
     memberMessageGroups   MemberMessageGroup[]
+    friendRequests        FriendRequest[]        @relation("FriendRequestSender")
+    receivedRequests      FriendRequest[]        @relation("FriendRequestReceiver")
 
     @@index([deletedAt], map: "idx_users_deleted_at")
     @@map("users")
@@ -517,6 +525,23 @@ model Follow {
     @@index([followingId])
     @@index([followingId, status])
     @@map("follows")
+}
+
+model FriendRequest {
+    id         Int                 @id @default(autoincrement())
+    senderId   String              @map("sender_id")
+    receiverId String              @map("receiver_id")
+    status     FriendRequestStatus @default(PENDING)
+    createdAt  DateTime            @default(now()) @map("created_at")
+    updatedAt  DateTime            @updatedAt @map("updated_at")
+
+    sender   User @relation("FriendRequestSender", fields: [senderId], references: [id])
+    receiver User @relation("FriendRequestReceiver", fields: [receiverId], references: [id])
+
+    @@unique([senderId, receiverId])
+    @@index([senderId])
+    @@index([receiverId])
+    @@map("friend_requests")
 }
 
 model Like {

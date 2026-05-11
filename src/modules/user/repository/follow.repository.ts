@@ -1,9 +1,9 @@
 import prisma from "@/config/prisma";
-import { toFollowerUserDto, type FollowerUserDto } from "@/modules/user/mapper/follower.mapper";
+import { toFollowerUserDto, toFollowingUserDto, type FollowerUserDto } from "@/modules/user/mapper/follower.mapper";
 import type { Prisma } from "@prisma/client";
 
-class FollowRepository implements ICursorPagination<Prisma.FollowWhereInput, FollowerUserDto> {
-  async findAll({
+class FollowRepository {
+  async findFollowers({
     after,
     take = 10,
     where = {},
@@ -45,6 +45,54 @@ class FollowRepository implements ICursorPagination<Prisma.FollowWhereInput, Fol
     });
 
     return follows.map(toFollowerUserDto);
+  }
+
+  async findFollowing({
+    after,
+    take = 10,
+    where = {},
+    props
+  }: {
+    after?: string;
+    take?: number;
+    where?: Prisma.FollowWhereInput;
+    props: {
+      userId: string
+    };
+  }): Promise<FollowerUserDto[]> {
+    const { userId } = props
+
+    const follows = await prisma.follow.findMany({
+      where,
+      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+      take: after ? take + 1 : take,
+      skip: after ? 1 : 0,
+      cursor:
+        after && userId
+          ? {
+            userId_followingId: {
+              userId,
+              followingId: after,
+            },
+          }
+          : undefined,
+      select: {
+        following: {
+          select: {
+            id: true,
+            username: true,
+            name: true,
+            verifiedAt: true,
+          },
+        },
+      },
+    });
+
+    return follows.map(toFollowingUserDto);
+  }
+
+  async findAll(params: any) {
+    return this.findFollowers(params);
   }
 
   async findFollowRecord(userId: string, followingId: string) {
