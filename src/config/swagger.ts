@@ -46,6 +46,10 @@ import {
     notificationSwaggerPaths,
     notificationSwaggerSchemas,
 } from '../modules/notification/docs/notification.swagger';
+import {
+    adminSwaggerPaths,
+    adminSwaggerSchemas,
+} from '../modules/admin/docs/admin.swagger';
 
 export const swaggerDocument = {
     openapi: '3.0.0',
@@ -104,6 +108,10 @@ export const swaggerDocument = {
             name: 'Notification',
             description: 'Notification APIs',
         },
+        {
+            name: 'Admin',
+            description: 'Admin APIs',
+        },
     ],
 
     paths: {
@@ -117,6 +125,7 @@ export const swaggerDocument = {
         ...knowledgePostSwaggerPaths,
         ...knowledgeRankingSwaggerPaths,
         ...notificationSwaggerPaths,
+        ...adminSwaggerPaths,
     },
 
     components: {
@@ -132,6 +141,7 @@ export const swaggerDocument = {
             ...knowledgeRankingSwaggerSchemas,
             ...notificationSwaggerSchemas,
             ...jwtSwaggerSchemas,
+            ...adminSwaggerSchemas,
         },
 
         securitySchemes: {

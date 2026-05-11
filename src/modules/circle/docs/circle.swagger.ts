@@ -37,17 +37,14 @@ export const circleSwaggerSchemas = {
         },
         required: ['userId', 'id', 'status', 'createdAt', 'updatedAt', 'circleId', 'inviterId'],
     },
-    Pagination: {
+    CursorPagination: {
         type: 'object',
         properties: {
-            currentPage: { type: 'number', example: 1 },
-            perPage: { type: 'number', example: 20 },
-            total: { type: 'number', example: 42 },
-            lastPage: { type: 'number', example: 3 },
-            from: { type: 'number', example: 1 },
-            to: { type: 'number', example: 20 },
+            take: { type: 'number', example: 10 },
+            after: { type: ['string', 'number', 'null'], example: 'cuid_string_here' },
+            hasMore: { type: 'boolean', example: true },
         },
-        required: ['currentPage', 'perPage', 'total', 'lastPage', 'from', 'to'],
+        required: ['take', 'hasMore'],
     },
     CreateCircleResponse: {
         type: 'object',
@@ -67,17 +64,7 @@ export const circleSwaggerSchemas = {
                 type: 'object',
                 properties: {
                     items: { type: 'array', items: { $ref: '#/components/schemas/CircleItem' } },
-                    pagination: {
-                        type: 'object',
-                        properties: {
-                            currentPage: { type: 'number' },
-                            perPage: { type: 'number' },
-                            total: { type: 'number' },
-                            lastPage: { type: 'number' },
-                            from: { type: 'number' },
-                            to: { type: 'number' },
-                        },
-                    },
+                    pagination: { $ref: '#/components/schemas/CursorPagination' },
                 },
             },
         },
@@ -123,7 +110,7 @@ export const circleSwaggerSchemas = {
                 type: 'array',
                 items: { $ref: '#/components/schemas/CircleInvitationItem' },
             },
-            pagination: { $ref: '#/components/schemas/Pagination' },
+            pagination: { $ref: '#/components/schemas/CursorPagination' },
         },
         required: ['success', 'data', 'pagination'],
     },
@@ -135,8 +122,8 @@ export const circleSwaggerPaths = {
             tags: ['Circle'],
             summary: 'List circles',
             parameters: [
-                { name: 'page', in: 'query', schema: { type: 'number' } },
-                { name: 'limit', in: 'query', schema: { type: 'number' } },
+                { name: 'after', in: 'query', schema: { type: 'string' } },
+                { name: 'take', in: 'query', schema: { type: 'number' } },
             ],
             responses: {
                 200: {
@@ -181,8 +168,8 @@ export const circleSwaggerPaths = {
             summary: 'Get current user circle invitations',
             security: bearerAuthSecurity,
             parameters: [
-                { name: 'page', in: 'query', schema: { type: 'number', example: 1 } },
-                { name: 'limit', in: 'query', schema: { type: 'number', example: 20 } },
+                { name: 'after', in: 'query', schema: { type: 'string', example: '1' } },
+                { name: 'take', in: 'query', schema: { type: 'number', example: 10 } },
             ],
             responses: {
                 200: {

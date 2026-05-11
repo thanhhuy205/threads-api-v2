@@ -54,18 +54,19 @@ class CircleController {
     req: Request<{}, {}, ResponseInvitationDto, {}>,
     res: Response,
   ) {
-    if (!req.user) {
+    const userId = req.user?.sub;
+    if (!userId) {
       return res.error(401, "Unauthorized");
     }
     const { circleId, status } = req.body;
     await circleService.acceptInvitation({
       circleId,
-      userId: req.user.id,
+      userId,
       status: status === "ACCEPTED" ? "ACCEPTED" : "REJECTED",
     });
     return res.success(
       200,
-      `Invitation ${status} for user ${req.user.id} to join circle ${circleId}`,
+      `Invitation ${status} for user ${userId} to join circle ${circleId}`,
     );
   }
 }
