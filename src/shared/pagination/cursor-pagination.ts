@@ -87,6 +87,9 @@ export function buildCursorPagination<T>({
       ? getAfter(currentRows[currentRows.length - 1])
       : null;
 
+  baseLogger.info(
+    `Cursor pagination response - nextAfter: ${nextAfter}, take: ${take}, hasMore: ${hasMore}`,
+  );
   return {
     rows: currentRows,
     pagination: {

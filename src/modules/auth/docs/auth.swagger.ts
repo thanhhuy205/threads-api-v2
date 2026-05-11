@@ -541,6 +541,7 @@ export const authSwaggerPaths = {
         post: {
             tags: ['Auth'],
             summary: 'Register a new user',
+            security: [],
             requestBody: {
                 required: true,
                 content: {
@@ -578,6 +579,7 @@ export const authSwaggerPaths = {
         post: {
             tags: ['Auth'],
             summary: 'Login with email or username',
+            security: [],
             requestBody: {
                 required: true,
                 content: {
@@ -616,6 +618,7 @@ export const authSwaggerPaths = {
         post: {
             tags: ['Auth'],
             summary: 'Request a forgot password email',
+            security: [],
             requestBody: {
                 required: true,
                 content: {
@@ -695,6 +698,7 @@ export const authSwaggerPaths = {
         post: {
             tags: ['Auth'],
             summary: 'Refresh token pair',
+            security: [],
             requestBody: {
                 required: true,
                 content: {

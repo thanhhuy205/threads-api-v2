@@ -62,6 +62,7 @@ export const USER_MESSAGE = {
   GET_RECEIVED_FRIEND_REQUESTS_SUCCESS:
     "Received friend requests fetched successfully",
   GET_SENT_FRIEND_REQUESTS_SUCCESS: "Sent friend requests fetched successfully",
+  GET_FOLLOWING_SUCCESS: "Get following success",
 } as const;
 
 export const POST_MESSAGE = {

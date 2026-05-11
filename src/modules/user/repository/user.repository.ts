@@ -34,8 +34,11 @@ class UserRepository {
     });
   }
 
-  async findByUsername(username: string) {
-    return prisma.user.findUnique({
+  async findByUsername(
+    username: string,
+    tx: Prisma.TransactionClient = prisma,
+  ) {
+    return tx.user.findUnique({
       where: {
         username,
       },
@@ -75,8 +78,11 @@ class UserRepository {
     return users.map((user) => user.id);
   }
 
-  async incrementFollowersCount(userId: string) {
-    return prisma.user.update({
+  async incrementFollowersCount(
+    userId: string,
+    tx: Prisma.TransactionClient = prisma,
+  ) {
+    return tx.user.update({
       where: {
         id: userId,
       },
@@ -92,8 +98,11 @@ class UserRepository {
     });
   }
 
-  async decrementFollowersCount(userId: string) {
-    return prisma.user.updateMany({
+  async decrementFollowersCount(
+    userId: string,
+    tx: Prisma.TransactionClient = prisma,
+  ) {
+    return tx.user.updateMany({
       where: {
         id: userId,
         followersCount: {

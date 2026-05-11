@@ -11,11 +11,13 @@ class FriendRequestRepository implements ICursorPagination<
     take,
     where,
     cursor,
+    select,
   }: {
     after?: string;
     take?: number;
     where: Prisma.FriendRequestWhereInput;
     cursor?: Prisma.FriendRequestWhereUniqueInput;
+    select?: Prisma.FriendRequestSelect;
   }): Promise<FriendRequest[]> {
     const { currentAfter, currentLimit } = buildPagination({ after, take });
 
@@ -23,6 +25,7 @@ class FriendRequestRepository implements ICursorPagination<
       where,
       take: currentLimit + 1,
       skip: currentAfter ? 1 : 0,
+      select,
       cursor: currentAfter ? cursor : undefined,
       orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     });
@@ -47,6 +50,20 @@ class FriendRequestRepository implements ICursorPagination<
         ? { senderId_receiverId: { senderId, receiverId } }
         : undefined,
       take,
+      select: {
+        id: true,
+        status: true,
+        createdAt: true,
+        senderId: true,
+        sender: {
+          select: {
+            id: true,
+            username: true,
+            name: true,
+            avatar: true,
+          },
+        },
+      },
     });
   }
 
@@ -68,17 +85,35 @@ class FriendRequestRepository implements ICursorPagination<
       cursor: receiverId
         ? {
             senderId_receiverId: {
-              senderId: receiverId,
-              receiverId: senderId,
+              senderId,
+              receiverId,
             },
           }
         : undefined,
+      select: {
+        id: true,
+        status: true,
+        createdAt: true,
+        receiverId: true,
+        receiver: {
+          select: {
+            id: true,
+            username: true,
+            name: true,
+            avatar: true,
+          },
+        },
+      },
       take,
     });
   }
 
-  async create(senderId: string, receiverId: string) {
-    return prisma.friendRequest.create({
+  async create(
+    senderId: string,
+    receiverId: string,
+    tx: Prisma.TransactionClient = prisma,
+  ) {
+    return tx.friendRequest.create({
       data: {
         senderId,
         receiverId,
@@ -87,8 +122,12 @@ class FriendRequestRepository implements ICursorPagination<
     });
   }
 
-  async findBySenderAndReceiver(senderId: string, receiverId: string) {
-    return prisma.friendRequest.findUnique({
+  async findBySenderAndReceiver(
+    senderId: string,
+    receiverId: string,
+    tx: Prisma.TransactionClient = prisma,
+  ) {
+    return tx.friendRequest.findUnique({
       where: {
         senderId_receiverId: {
           senderId,
@@ -98,14 +137,18 @@ class FriendRequestRepository implements ICursorPagination<
     });
   }
 
-  async findById(id: number) {
-    return prisma.friendRequest.findUnique({
+  async findById(id: number, tx: Prisma.TransactionClient = prisma) {
+    return tx.friendRequest.findUnique({
       where: { id },
     });
   }
 
-  async updateStatusById(id: number, status: FriendRequestStatus) {
-    return prisma.friendRequest.update({
+  async updateStatusById(
+    id: number,
+    status: FriendRequestStatus,
+    tx: Prisma.TransactionClient = prisma,
+  ) {
+    return tx.friendRequest.update({
       where: { id },
       data: { status },
     });

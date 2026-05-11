@@ -10,6 +10,7 @@ import type { FollowActionDataDto } from "../dto/response/follow-action.response
 import type { FollowerUserDto } from "../mapper/follower.mapper";
 import { FriendRequestStatus } from "@prisma/client";
 import { USER_MESSAGE } from "@/constants/message";
+import { transactionService } from "@/shared/transaction/transaction.service";
 
 type GetFollowersInput = {
   userId: string;
@@ -149,28 +150,40 @@ class UserService {
 
   async handleFriendRequest(
     userId: string,
-    requestId: number,
+    senderUsername: string,
     isAccept: boolean,
   ) {
-    const friendRequest = await friendRequestRepository.findById(requestId);
-    if (!friendRequest) {
-      throw new NotFoundException(USER_MESSAGE.FRIEND_REQUEST_NOT_FOUND);
-    }
-    if (friendRequest.receiverId !== userId) {
-      throw new NotFoundException(USER_MESSAGE.FRIEND_REQUEST_NOT_FOUND);
-    }
+    return transactionService.doInTransaction(async (tx) => {
+      const sender = await userRepository.findByUsername(senderUsername, tx);
+      if (!sender) {
+        throw new NotFoundException(USER_MESSAGE.USER_NOT_FOUND);
+      }
 
-    if (isAccept) {
-      await friendRequestRepository.updateStatusById(
-        requestId,
-        FriendRequestStatus.ACCEPTED,
-      );
-    } else {
-      await friendRequestRepository.updateStatusById(
-        requestId,
-        FriendRequestStatus.REJECTED,
-      );
-    }
+      const friendRequest =
+        await friendRequestRepository.findBySenderAndReceiver(
+          sender.id,
+          userId,
+          tx,
+        );
+
+      if (!friendRequest) {
+        throw new NotFoundException(USER_MESSAGE.FRIEND_REQUEST_NOT_FOUND);
+      }
+
+      if (isAccept) {
+        await friendRequestRepository.updateStatusById(
+          friendRequest.id,
+          FriendRequestStatus.ACCEPTED,
+          tx,
+        );
+      } else {
+        await friendRequestRepository.updateStatusById(
+          friendRequest.id,
+          FriendRequestStatus.REJECTED,
+          tx,
+        );
+      }
+    });
   }
 
   async getReceivedFriendRequests({

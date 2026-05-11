@@ -1,24 +1,243 @@
-// // prisma/seed.ts
-// import { PrismaMariaDb } from "@prisma/adapter-mariadb";
-// import {
-//     DifficultyLevel,
-//     PrismaClient
-// } from "@prisma/client";
-// import dotenv from "dotenv";
-// dotenv.config();
+// prisma/seed.ts
+import { PrismaMariaDb } from "@prisma/adapter-mariadb";
+import {
+  DifficultyLevel,
+  FriendRequestStatus,
+  PrismaClient,
+} from "@prisma/client";
+import * as bcrypt from "bcrypt";
+import dotenv from "dotenv";
+dotenv.config();
 
+const adapter = new PrismaMariaDb({
+  port: Number(process.env.DB_PORT) || 3306,
+  host: process.env.DB_HOST || "localhost",
+  user: process.env.DB_USER || "root",
+  password: process.env.DB_PASSWORD || "password",
+  database: process.env.DB_NAME || "threads_api",
+});
+const prisma = new PrismaClient({
+  adapter,
+});
+const newUsers = [
+  { email: "user001@example.com", username: "user001", name: "User 001" },
+  { email: "user002@example.com", username: "user002", name: "User 002" },
+  { email: "user003@example.com", username: "user003", name: "User 003" },
+  { email: "user004@example.com", username: "user004", name: "User 004" },
+  { email: "user005@example.com", username: "user005", name: "User 005" },
+  { email: "user006@example.com", username: "user006", name: "User 006" },
+  { email: "user007@example.com", username: "user007", name: "User 007" },
+  { email: "user008@example.com", username: "user008", name: "User 008" },
+  { email: "user009@example.com", username: "user009", name: "User 009" },
+  { email: "user010@example.com", username: "user010", name: "User 010" },
+  { email: "user011@example.com", username: "user011", name: "User 011" },
+  { email: "user012@example.com", username: "user012", name: "User 012" },
+  { email: "user013@example.com", username: "user013", name: "User 013" },
+  { email: "user014@example.com", username: "user014", name: "User 014" },
+  { email: "user015@example.com", username: "user015", name: "User 015" },
+  { email: "user016@example.com", username: "user016", name: "User 016" },
+  { email: "user017@example.com", username: "user017", name: "User 017" },
+  { email: "user018@example.com", username: "user018", name: "User 018" },
+  { email: "user019@example.com", username: "user019", name: "User 019" },
+  { email: "user020@example.com", username: "user020", name: "User 020" },
+  { email: "user021@example.com", username: "user021", name: "User 021" },
+  { email: "user022@example.com", username: "user022", name: "User 022" },
+  { email: "user023@example.com", username: "user023", name: "User 023" },
+  { email: "user024@example.com", username: "user024", name: "User 024" },
+  { email: "user025@example.com", username: "user025", name: "User 025" },
+  { email: "user026@example.com", username: "user026", name: "User 026" },
+  { email: "user027@example.com", username: "user027", name: "User 027" },
+  { email: "user028@example.com", username: "user028", name: "User 028" },
+  { email: "user029@example.com", username: "user029", name: "User 029" },
+  { email: "user030@example.com", username: "user030", name: "User 030" },
+  { email: "user031@example.com", username: "user031", name: "User 031" },
+  { email: "user032@example.com", username: "user032", name: "User 032" },
+  { email: "user033@example.com", username: "user033", name: "User 033" },
+  { email: "user034@example.com", username: "user034", name: "User 034" },
+  { email: "user035@example.com", username: "user035", name: "User 035" },
+  { email: "user036@example.com", username: "user036", name: "User 036" },
+  { email: "user037@example.com", username: "user037", name: "User 037" },
+  { email: "user038@example.com", username: "user038", name: "User 038" },
+  { email: "user039@example.com", username: "user039", name: "User 039" },
+  { email: "user040@example.com", username: "user040", name: "User 040" },
+  { email: "user041@example.com", username: "user041", name: "User 041" },
+  { email: "user042@example.com", username: "user042", name: "User 042" },
+  { email: "user043@example.com", username: "user043", name: "User 043" },
+  { email: "user044@example.com", username: "user044", name: "User 044" },
+  { email: "user045@example.com", username: "user045", name: "User 045" },
+  { email: "user046@example.com", username: "user046", name: "User 046" },
+  { email: "user047@example.com", username: "user047", name: "User 047" },
+  { email: "user048@example.com", username: "user048", name: "User 048" },
+  { email: "user049@example.com", username: "user049", name: "User 049" },
+  { email: "user050@example.com", username: "user050", name: "User 050" },
+];
+async function seed() {
+  const targetUser = await prisma.user.findUnique({
+    where: { username: "minhvn.photo" },
+    select: { id: true, username: true },
+  });
 
-// const adapter = new PrismaMariaDb({
-//     port: Number(process.env.DB_PORT) || 3306,
-//     host: process.env.DB_HOST || "localhost",
-//     user: process.env.DB_USER || "root",
-//     password: process.env.DB_PASSWORD || "password",
-//     database: process.env.DB_NAME || "threads_api",
-// });
-// const prisma = new PrismaClient({
-//     adapter,
-// });
+  if (!targetUser) {
+    console.log("Không tìm thấy user minhvn.photo");
+    return;
+  }
 
+  console.log(`Target: ${targetUser.username} (${targetUser.id})`);
+
+  const hashedPassword = await bcrypt.hash("Password123!", 10);
+  const createdUsers: { id: string; username: string }[] = [];
+
+  for (const u of newUsers) {
+    try {
+      const created = await prisma.user.create({
+        data: {
+          email: u.email,
+          username: u.username,
+          name: u.name,
+          password: hashedPassword,
+        },
+        select: { id: true, username: true },
+      });
+      createdUsers.push(created);
+    } catch {
+      const existing = await prisma.user.findUnique({
+        where: { username: u.username },
+        select: { id: true, username: true },
+      });
+      if (existing) createdUsers.push(existing);
+    }
+  }
+
+  console.log(`✅ Users ready: ${createdUsers.length}`);
+
+  const first25 = createdUsers.slice(0, 25); // minhvn.photo gửi đến 25 người này
+  const last25 = createdUsers.slice(25, 50); // 25 người này gửi đến minhvn.photo
+
+  let created = 0;
+  let skipped = 0;
+
+  for (const receiver of first25) {
+    try {
+      await prisma.friendRequest.create({
+        data: {
+          senderId: targetUser.id,
+          receiverId: receiver.id,
+          status: FriendRequestStatus.PENDING,
+        },
+      });
+      created++;
+    } catch {
+      skipped++;
+    }
+  }
+
+  for (const sender of last25) {
+    try {
+      await prisma.friendRequest.create({
+        data: {
+          senderId: sender.id,
+          receiverId: targetUser.id,
+          status: FriendRequestStatus.PENDING,
+        },
+      });
+      created++;
+    } catch {
+      skipped++;
+    }
+  }
+
+  console.log(`✅ Friend requests — created: ${created}, skipped: ${skipped}`);
+
+  const sentCount = await prisma.friendRequest.count({
+    where: { senderId: targetUser.id, status: FriendRequestStatus.PENDING },
+  });
+  const receivedCount = await prisma.friendRequest.count({
+    where: { receiverId: targetUser.id, status: FriendRequestStatus.PENDING },
+  });
+
+  console.log(`\n📊 minhvn.photo:`);
+  console.log(`  Gửi đi:  ${sentCount} PENDING`);
+  console.log(`  Nhận về: ${receivedCount} PENDING`);
+}
+seed()
+  .catch(console.error)
+  .finally(() => prisma.$disconnect());
+// async function seed() {
+//   const targetUser = await prisma.user.findUnique({
+//     where: { username: "minhvn.photo" },
+//     select: { id: true, username: true },
+//   });
+
+//   if (!targetUser) {
+//     console.log("Không tìm thấy user minhvn.photo");
+//     return;
+//   }
+
+//   const otherUsers = await prisma.user.findMany({
+//     where: { username: { not: "minhvn.photo" } },
+//     select: { id: true, username: true },
+//   });
+
+//   console.log(`Target: ${targetUser.username} (${targetUser.id})`);
+//   console.log(`Other users: ${otherUsers.length}`);
+
+//   let created = 0;
+//   let skipped = 0;
+
+//   const shuffled = otherUsers.sort(() => Math.random() - 0.5);
+
+//   // Nửa đầu: họ gửi đến minhvn.photo (minhvn.photo là receiver)
+//   const receivers = shuffled.slice(0, Math.ceil(shuffled.length / 2));
+//   for (const sender of receivers) {
+//     try {
+//       await prisma.friendRequest.create({
+//         data: {
+//           senderId: sender.id,
+//           receiverId: targetUser.id,
+//           status: FriendRequestStatus.PENDING,
+//         },
+//       });
+//       created++;
+//     } catch {
+//       skipped++;
+//     }
+//   }
+
+//   // Nửa sau: minhvn.photo gửi đến họ (minhvn.photo là sender)
+//   const senders = shuffled.slice(Math.ceil(shuffled.length / 2));
+//   for (const receiver of senders) {
+//     try {
+//       await prisma.friendRequest.create({
+//         data: {
+//           senderId: targetUser.id,
+//           receiverId: receiver.id,
+//           status: FriendRequestStatus.PENDING,
+//         },
+//       });
+//       created++;
+//     } catch {
+//       skipped++;
+//     }
+//   }
+
+//   console.log(`✅ Created: ${created}, Skipped (duplicate): ${skipped}`);
+
+//   // Summary
+//   const receivedCount = await prisma.friendRequest.count({
+//     where: { receiverId: targetUser.id, status: FriendRequestStatus.PENDING },
+//   });
+//   const sentCount = await prisma.friendRequest.count({
+//     where: { senderId: targetUser.id, status: FriendRequestStatus.PENDING },
+//   });
+
+//   console.log(`\n📊 ${targetUser.username}:`);
+//   console.log(`  Nhận: ${receivedCount} PENDING requests`);
+//   console.log(`  Gửi:  ${sentCount} PENDING requests`);
+// }
+
+// seed()
+//   .catch(console.error)
+//   .finally(() => prisma.$disconnect());
 // async function main() {
 //     // Lấy tất cả user hiện có để phân bổ bài viết
 //     const users = await prisma.user.findMany({

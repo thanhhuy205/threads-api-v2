@@ -52,6 +52,7 @@ export const healthSwaggerPaths = {
         get: {
             tags: ['Health'],
             summary: 'Check service health',
+            security: [],
             responses: {
                 200: {
                     description: HEALTH_MESSAGE.SERVICE_IS_HEALTHY,

@@ -78,18 +78,18 @@ class UserController {
   }
 
   async handleFriendRequest(
-    req: Request<FriendRequestIdParamsDto, {}, FriendRequestDto>,
+    req: Request<UsernameParamsDto, {}, FriendRequestDto>,
     res: Response,
   ) {
     const userId = req.user?.sub;
     if (!userId) {
       return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
     }
-    const { id } = req.params;
+    const { username } = req.params;
     const { isAccept } = req.body;
     const result = await userService.handleFriendRequest(
       userId,
-      Number(id),
+      username,
       isAccept,
     );
     return res.success(200, USER_MESSAGE.FRIEND_REQUEST_PROCESSED, result);

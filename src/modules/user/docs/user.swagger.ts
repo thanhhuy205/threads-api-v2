@@ -94,6 +94,38 @@ export const userSwaggerSchemas = {
         },
         required: ['success', 'data', 'pagination'],
     },
+    FriendRequestHandleRequest: {
+        type: 'object',
+        properties: {
+            isAccept: {
+                type: 'boolean',
+                example: true,
+            },
+        },
+        required: ['isAccept'],
+    },
+    FriendRequestItem: {
+        type: 'object',
+        properties: {
+            id: { type: 'integer', example: 1 },
+            senderId: { type: 'string', example: 'user-id-1' },
+            receiverId: { type: 'string', example: 'user-id-2' },
+            status: { type: 'string', example: 'PENDING' },
+            createdAt: { type: 'string', format: 'date-time' },
+        },
+    },
+    FriendRequestPaginatedResponse: {
+        type: 'object',
+        properties: {
+            success: { type: 'boolean', example: true },
+            data: {
+                type: 'array',
+                items: { $ref: '#/components/schemas/FriendRequestItem' },
+            },
+            pagination: { $ref: '#/components/schemas/UserFollowersPagination' },
+        },
+        required: ['success', 'data', 'pagination'],
+    },
     UserFollowActionData: {
         type: 'object',
         properties: {
@@ -159,10 +191,10 @@ const userIdPathParameter = [
         in: 'path',
         required: true,
         schema: {
-            type: 'string',
-            example: 'ckv8p4u1q0000x3jz8d2b6g7h',
+            type: 'integer',
+            example: 1,
         },
-        description: 'Target user id',
+        description: 'Target id (e.g. friend request id)',
     },
 ];
 
@@ -188,7 +220,7 @@ const followersPaginationQueryParameters = [
             type: 'string',
             example: 'ckv8p4u1q0000x3jz8d2b6g7h',
         },
-        description: 'Follower userId cursor from previous response pagination.after',
+        description: 'Cursor (userId/senderId/receiverId) from previous response pagination.after',
     },
     {
         name: 'take',
@@ -198,7 +230,7 @@ const followersPaginationQueryParameters = [
             type: 'integer',
             example: 10,
         },
-        description: 'Number of followers to return',
+        description: 'Number of items to return',
     },
 ];
 
@@ -226,10 +258,108 @@ export const userSwaggerPaths = {
             },
         },
     },
+    '/me/friend-requests/received': {
+        get: {
+            tags: ['User'],
+            summary: 'Get received friend requests',
+            security: bearerAuthSecurity,
+            parameters: followersPaginationQueryParameters,
+            responses: {
+                200: {
+                    description: USER_MESSAGE.GET_RECEIVED_FRIEND_REQUESTS_SUCCESS,
+                    content: {
+                        'application/json': {
+                            schema: { $ref: '#/components/schemas/FriendRequestPaginatedResponse' },
+                        },
+                    },
+                },
+            },
+        },
+    },
+    '/me/friend-requests/sent': {
+        get: {
+            tags: ['User'],
+            summary: 'Get sent friend requests',
+            security: bearerAuthSecurity,
+            parameters: followersPaginationQueryParameters,
+            responses: {
+                200: {
+                    description: USER_MESSAGE.GET_SENT_FRIEND_REQUESTS_SUCCESS,
+                    content: {
+                        'application/json': {
+                            schema: { $ref: '#/components/schemas/FriendRequestPaginatedResponse' },
+                        },
+                    },
+                },
+            },
+        },
+    },
+    '/me/friend-requests/{username}': {
+        patch: {
+            tags: ['User'],
+            summary: 'Accept or Reject friend request',
+            security: bearerAuthSecurity,
+            parameters: usernamePathParameter,
+            requestBody: {
+                content: {
+                    'application/json': {
+                        schema: { $ref: '#/components/schemas/FriendRequestHandleRequest' },
+                    },
+                },
+            },
+            responses: {
+                200: {
+                    description: USER_MESSAGE.FRIEND_REQUEST_PROCESSED,
+                },
+            },
+        },
+    },
+    '/user/{username}/followers': {
+        get: {
+            tags: ['User'],
+            summary: 'Get followers of a user',
+            security: [],
+            parameters: [
+                ...usernamePathParameter,
+                ...followersPaginationQueryParameters,
+            ],
+            responses: {
+                200: {
+                    description: USER_MESSAGE.GET_FOLLOWERS_SUCCESS,
+                    content: {
+                        'application/json': {
+                            schema: { $ref: '#/components/schemas/UserFollowersPaginatedResponse' },
+                        },
+                    },
+                },
+            },
+        },
+    },
+    '/user/{username}/following': {
+        get: {
+            tags: ['User'],
+            summary: 'Get following of a user',
+            security: [],
+            parameters: [
+                ...usernamePathParameter,
+                ...followersPaginationQueryParameters,
+            ],
+            responses: {
+                200: {
+                    description: USER_MESSAGE.GET_FOLLOWING_SUCCESS,
+                    content: {
+                        'application/json': {
+                            schema: { $ref: '#/components/schemas/UserFollowersPaginatedResponse' },
+                        },
+                    },
+                },
+            },
+        },
+    },
     '/user/{username}/follower': {
         post: {
             tags: ['User'],
-            summary: 'Follow a user by username',
+            summary: 'Follow/Unfollow toggle',
             security: bearerAuthSecurity,
             parameters: usernamePathParameter,
             responses: {
@@ -240,21 +370,21 @@ export const userSwaggerPaths = {
                             schema: {
                                 $ref: '#/components/schemas/UserFollowActionSuccessResponse',
                             },
-                            example: {
-                                success: true,
-                                message: USER_MESSAGE.FOLLOW_SUCCESS,
-                                data: {
-                                    isFollowing: true,
-                                },
-                            },
                         },
                     },
                 },
-                401: {
-                    description: AUTH_MESSAGE.TOKEN_INVALID,
-                },
-                404: {
-                    description: 'User not found',
+            },
+        },
+    },
+    '/user/{username}/friend-request': {
+        post: {
+            tags: ['User'],
+            summary: 'Send friend request',
+            security: bearerAuthSecurity,
+            parameters: usernamePathParameter,
+            responses: {
+                200: {
+                    description: USER_MESSAGE.FRIEND_REQUEST_SENT,
                 },
             },
         },
@@ -263,6 +393,7 @@ export const userSwaggerPaths = {
         get: {
             tags: ['User'],
             summary: 'Get user profile by username',
+            security: [],
             parameters: usernamePathParameter,
             responses: {
                 200: {
@@ -281,5 +412,4 @@ export const userSwaggerPaths = {
             },
         },
     },
-
 };

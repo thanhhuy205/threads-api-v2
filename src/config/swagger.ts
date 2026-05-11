@@ -142,5 +142,10 @@ export const swaggerDocument = {
             },
         },
     },
-};
 
+    security: [
+        {
+            bearerAuth: [],
+        },
+    ],
+};
