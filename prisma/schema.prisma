@@ -107,6 +107,12 @@ enum CircleInvitationStatus {
     REJECTED
 }
 
+enum InvitationRequestStatus {
+    PENDING
+    ACCEPTED
+    REJECTED
+}
+
 enum PostMediaType {
     IMAGE
     VIDEO
@@ -258,7 +264,6 @@ model User {
     antiSpams             AntiSpam[]
     emailLogs             EmailLog[]
     notifications         Notification[]
-    invitationRequests    InvitationRequest[]
     circleInvitations     CircleInvitation[]     @relation("CircleInvitationUser")
     circleInvited         CircleInvitation[]     @relation("CircleInvitationInviter")
     likes                 Like[]
@@ -689,37 +694,19 @@ model EmailLog {
 }
 
 model Circle {
-    id                 Int                 @id @default(autoincrement())
-    publicId           String              @unique @default(cuid()) @db.VarChar(255)
-    name               String              @db.VarChar(255)
-    createdAt          DateTime            @default(now()) @map("created_at")
-    updatedAt          DateTime            @updatedAt @map("updated_at")
-    visibility         Visibility          @default(PRIVATE)
-    createdBy          User                @relation("CircleCreated", fields: [createById], references: [id])
-    createById         String              @map("create_by_id")
-    circleMembers      CircleMember[]
-    invitationRequests InvitationRequest[]
-    circleInvitations  CircleInvitation[]
+    id                Int                @id @default(autoincrement())
+    publicId          String             @unique @default(cuid()) @db.VarChar(255)
+    name              String             @db.VarChar(255)
+    createdAt         DateTime           @default(now()) @map("created_at")
+    updatedAt         DateTime           @updatedAt @map("updated_at")
+    visibility        Visibility         @default(PRIVATE)
+    createdBy         User               @relation("CircleCreated", fields: [createById], references: [id])
+    createById        String             @map("create_by_id")
+    circleMembers     CircleMember[]
+    circleInvitations CircleInvitation[]
 
     @@index([createById], map: "idx_circles_created_by")
     @@map("circles")
-}
-
-model InvitationRequest {
-    id        Int      @id @default(autoincrement())
-    circleId  Int      @map("circle_id")
-    userId    String   @map("user_id")
-    status    String   @db.VarChar(50)
-    createdAt DateTime @default(now()) @map("created_at")
-    updatedAt DateTime @updatedAt @map("updated_at")
-
-    circle Circle @relation(fields: [circleId], references: [id])
-    user   User   @relation(fields: [userId], references: [id])
-
-    @@unique([circleId, userId], map: "uq_invitation_requests_circle_user")
-    @@index([circleId], map: "idx_invitation_requests_circle_id")
-    @@index([userId], map: "idx_invitation_requests_user_id")
-    @@map("invitation_requests")
 }
 
 model CircleMember {
