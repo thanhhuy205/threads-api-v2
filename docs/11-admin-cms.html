@@ -31,10 +31,10 @@ footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--gray-300);fon
 
 <section>
   <div class="overview-strip">
-    <div class="ov-card"><div class="ov-num">4</div><div class="ov-label">Chức năng</div><div class="ov-note">user · report · hashtag · stats</div></div>
-    <div class="ov-card"><div class="ov-num">4</div><div class="ov-label">Routes</div><div class="ov-note">tất cả stub</div></div>
-    <div class="ov-card"><div class="ov-num">ADMIN</div><div class="ov-label">Role required</div><div class="ov-note">UserRoleType enum</div></div>
-    <div class="ov-card"><div class="ov-num">0</div><div class="ov-label">Guard middleware</div><div class="ov-note">chưa có admin guard</div></div>
+    <div class="ov-card"><div class="ov-num">5</div><div class="ov-label">Routes</div><div class="ov-note">users · ban · report · hashtag · stats</div></div>
+    <div class="ov-card"><div class="ov-num">2</div><div class="ov-label">Implemented</div><div class="ov-note">GET users · PATCH ban</div></div>
+    <div class="ov-card"><div class="ov-num">RBAC</div><div class="ov-label">Auth system</div><div class="ov-note">JWT roles[] + checkRole</div></div>
+    <div class="ov-card"><div class="ov-num">2</div><div class="ov-label">Guard middleware</div><div class="ov-note">adminHandler + checkRole</div></div>
   </div>
 </section>
 
@@ -144,16 +144,16 @@ footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--gray-300);fon
   <table class="step-table">
     <thead><tr><th style="width:48px">#</th><th style="width:260px">Task</th><th>Chi tiết</th><th style="width:80px">Status</th></tr></thead>
     <tbody>
-      <tr><td><span class="step-num">01</span></td><td><div class="step-name">Admin guard middleware</div></td><td>Middleware kiểm tra <code>user.role === ADMIN</code>. Đặt trước tất cả admin routes. Return 403 nếu không phải admin.</td><td><span class="badge badge-todo">todo</span></td></tr>
-      <tr><td><span class="step-num">02</span></td><td><div class="step-name">PATCH /admin/users/:userId</div><div class="step-desc">Quản lý user</div></td><td>Route có, service stub (<code>implemented: false</code>). Cần: update <code>UserStatus</code> enum, thêm <code>bannedUntil</code> field, invalidate sessions.</td><td><span class="badge badge-stub">stub</span></td></tr>
-      <tr><td><span class="step-num">03</span></td><td><div class="step-name">GET /admin/users</div><div class="step-desc">Danh sách users</div></td><td>Chưa có. Lấy all users + filter: status, role, search name. Pagination. Include: postCount, reportCount.</td><td><span class="badge badge-todo">todo</span></td></tr>
-      <tr><td><span class="step-num">04</span></td><td><div class="step-name">Bảng Report</div><div class="step-desc">Prisma migration</div></td><td>Model <code>Report { id, reporterId, targetType (POST/USER), targetId, reason, status (PENDING/REVIEWED/DISMISSED), adminNote, createdAt }</code>.</td><td><span class="badge badge-todo">todo</span></td></tr>
-      <tr><td><span class="step-num">05</span></td><td><div class="step-name">GET /admin/reports</div><div class="step-desc">Danh sách báo cáo</div></td><td>Filter: status=PENDING. Sort mới nhất. Include: reporter info, target post/user info, report count cùng target.</td><td><span class="badge badge-stub">stub</span></td></tr>
-      <tr><td><span class="step-num">06</span></td><td><div class="step-name">PATCH /admin/reports/:id</div><div class="step-desc">Xử lý báo cáo</div></td><td>Body: <code>{ action: "dismiss" | "hide_post" | "delete_post" | "ban_user" }</code>. Cascade: hide/delete post + optionally ban user.</td><td><span class="badge badge-stub">stub</span></td></tr>
-      <tr><td><span class="step-num">07</span></td><td><div class="step-name">GET /admin/hashtags/trending</div><div class="step-desc">Hashtag trending</div></td><td>Query <code>TopicsPost</code> GROUP BY topic, COUNT posts in last 24h/7d. Sort DESC. Pin/unpin specific hashtags.</td><td><span class="badge badge-stub">stub</span></td></tr>
-      <tr><td><span class="step-num">08</span></td><td><div class="step-name">GET /admin/stats</div><div class="step-desc">Thống kê tổng quan</div></td><td>Queries: posts/day (7 ngày), active users/day, total users, top 10 hashtags, report count by status.</td><td><span class="badge badge-stub">stub</span></td></tr>
-      <tr><td><span class="step-num">09</span></td><td><div class="step-name">Cron: auto-unban</div></td><td>Job chạy mỗi giờ: tìm users có <code>bannedUntil < now()</code> → update status ACTIVE. Dùng BullMQ repeatable job.</td><td><span class="badge badge-todo">todo</span></td></tr>
-      <tr><td><span class="step-num">10</span></td><td><div class="step-name">Auth check tại login</div></td><td>Middleware login kiểm tra <code>UserStatus</code>: LOCKED → 403 "Account locked". BANNED → 403 "Banned until {date}".</td><td><span class="badge badge-todo">todo</span></td></tr>
+      <tr><td><span class="step-num">01</span></td><td><div class="step-name">Admin guard middleware</div></td><td><code>adminHandler</code> kiểm tra <code>req.user.roles.includes(ADMIN)</code> từ JWT payload. Đặt trước tất cả admin routes. ⚠️ Lưu ý: đang bị duplicate với <code>checkRole</code> per-route.</td><td><span class="badge badge-done">done</span></td></tr>
+      <tr><td><span class="step-num">02</span></td><td><div class="step-name">PATCH /admin/users/:userId/ban</div><div class="step-desc">Ban user</div></td><td>Cập nhật <code>UserStatus</code> thành <code>BANNED</code> qua <code>userManagementService.banUser()</code>.</td><td><span class="badge badge-done">done</span></td></tr>
+      <tr><td><span class="step-num">03</span></td><td><div class="step-name">GET /admin/users</div><div class="step-desc">Danh sách users</div></td><td>Trả về: id, name, email, username, status, verifiedAt, createdAt, roles[], isVerified. Chưa có filter/search/pagination.</td><td><span class="badge badge-done">done</span></td></tr>
+      <tr><td><span class="step-num">04</span></td><td><div class="step-name">RBAC: JWT roles[]</div><div class="step-desc">Tích hợp role vào JWT</div></td><td>Register → auto assign USER. Login/Refresh → load roles vào JWT payload <code>{userId, status, roles[]}</code>.</td><td><span class="badge badge-done">done</span></td></tr>
+      <tr><td><span class="step-num">05</span></td><td><div class="step-name">RBAC: checkRole + checkPermission</div></td><td><code>checkRole</code> kiểm tra JWT roles. <code>checkPermission</code> query DB (⚠️ cache chưa hoạt động đúng). Cần fix: <code>UnauthorizedException</code> → <code>ForbiddenException</code>.</td><td><span class="badge badge-done">done</span></td></tr>
+      <tr><td><span class="step-num">06</span></td><td><div class="step-name">Bảng Report</div><div class="step-desc">Prisma migration</div></td><td>Model <code>Report { id, reporterId, targetType (POST/USER), targetId, reason, status, adminNote, createdAt }</code>.</td><td><span class="badge badge-todo">todo</span></td></tr>
+      <tr><td><span class="step-num">07</span></td><td><div class="step-name">PATCH /admin/reports/:id</div><div class="step-desc">Xử lý báo cáo</div></td><td>Route + controller có. Service/repo stub.</td><td><span class="badge badge-stub">stub</span></td></tr>
+      <tr><td><span class="step-num">08</span></td><td><div class="step-name">GET /admin/hashtags/trending</div></td><td>Route + controller có. Service/repo stub.</td><td><span class="badge badge-stub">stub</span></td></tr>
+      <tr><td><span class="step-num">09</span></td><td><div class="step-name">GET /admin/stats</div></td><td>Route + controller có. Service/repo stub.</td><td><span class="badge badge-stub">stub</span></td></tr>
+      <tr><td><span class="step-num">10</span></td><td><div class="step-name">Cron: auto-unban</div></td><td>Job chạy mỗi giờ: tìm users có <code>bannedUntil < now()</code> → update status ACTIVE.</td><td><span class="badge badge-todo">todo</span></td></tr>
     </tbody>
   </table>
 </section>
@@ -169,7 +169,28 @@ footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--gray-300);fon
   </div>
 </section>
 
-<footer>Module: admin &nbsp;—&nbsp; Threads API v2</footer>
+<!-- ═══════════════ CODE REVIEW: BUGS ═══════════════ -->
+<section>
+  <h2>🔍 Code Review — Bugs &amp; Issues Found</h2>
+  <hr class="rule">
+  <table class="step-table">
+    <thead><tr><th style="width:48px">#</th><th style="width:80px">Severity</th><th style="width:260px">Issue</th><th>Chi tiết</th><th style="width:80px">Status</th></tr></thead>
+    <tbody>
+      <tr><td><span class="step-num">B1</span></td><td><span class="badge badge-todo">blocking</span></td><td><div class="step-name">Duplicate admin role check</div><div class="step-desc"><code>routes/index.ts</code> + <code>admin.routes.ts</code></div></td><td><code>adminHandler</code> ở router level VÀ <code>checkRole(ADMIN)</code> ở mỗi route → check 2 lần. Chọn 1: bỏ <code>adminHandler</code> hoặc bỏ <code>checkRole</code> per-route.</td><td><span class="badge badge-todo">todo</span></td></tr>
+      <tr><td><span class="step-num">B2</span></td><td><span class="badge badge-todo">blocking</span></td><td><div class="step-name">Dead import: <code>userRepository</code></div><div class="step-desc"><code>middlewares/admin.ts:3</code></div></td><td>Import <code>userRepository</code> không còn sử dụng sau khi refactor sang JWT roles. Cần xóa.</td><td><span class="badge badge-todo">todo</span></td></tr>
+      <tr><td><span class="step-num">B3</span></td><td><span class="badge badge-todo">blocking</span></td><td><div class="step-name">Dead import: <code>NotFound</code> (AWS SDK)</div><div class="step-desc"><code>access-control/middleware/index.ts:6</code></div></td><td>Import <code>NotFound</code> từ <code>@aws-sdk/client-s3</code> không liên quan access control. Dead import.</td><td><span class="badge badge-todo">todo</span></td></tr>
+      <tr><td><span class="step-num">B4</span></td><td><span class="badge badge-stub">medium</span></td><td><div class="step-name"><code>checkPermission</code> cache không đọc</div><div class="step-desc"><code>access-control/middleware/index.ts:9-41</code></div></td><td>Ghi cache vào Redis <code>user:{id}:permission</code> nhưng không bao giờ đọc cache trước khi query DB. Mỗi request đều hit DB → cache vô nghĩa.</td><td><span class="badge badge-todo">todo</span></td></tr>
+      <tr><td><span class="step-num">B5</span></td><td><span class="badge badge-stub">medium</span></td><td><div class="step-name"><code>checkRole</code> throw sai error type</div><div class="step-desc"><code>access-control/middleware/index.ts:51</code></div></td><td>Thiếu role → 403 Forbidden, không phải 401. Dùng <code>ForbiddenException</code> thay <code>UnauthorizedException</code>.</td><td><span class="badge badge-todo">todo</span></td></tr>
+      <tr><td><span class="step-num">B6</span></td><td><span class="badge badge-stub">medium</span></td><td><div class="step-name"><code>sendInvitation</code> empty if block</div><div class="step-desc"><code>circle/service/circle.service.ts:55-64</code></div></td><td>Logic ngược: if (has role) {} else { throw }. Nên dùng guard clause: if (!role) throw.</td><td><span class="badge badge-todo">todo</span></td></tr>
+      <tr><td><span class="step-num">B7</span></td><td><span class="badge badge-stub">medium</span></td><td><div class="step-name"><code>sendInvitation</code> không tạo invitation</div><div class="step-desc"><code>circle/service/circle.service.ts:40-64</code></div></td><td>Hàm check role xong nhưng không gọi <code>circleInvitationRepository.createInvitation()</code>. Function kết thúc mà không tạo gì.</td><td><span class="badge badge-todo">todo</span></td></tr>
+      <tr><td><span class="step-num">B8</span></td><td><span class="badge badge-stub">medium</span></td><td><div class="step-name">CircleInvitation cursor: <code>Number(after)</code> có thể NaN</div><div class="step-desc"><code>circle/repository/circle-invation.repository.ts:45</code></div></td><td>Cursor dùng int id nhưng <code>after</code> là string. Không validate → <code>Number("abc")</code> = NaN. Nên thêm validation hoặc dùng <code>publicId</code>.</td><td><span class="badge badge-todo">todo</span></td></tr>
+      <tr><td><span class="step-num">B9</span></td><td><span class="badge badge-done">nit</span></td><td><div class="step-name"><code>acceptInvitation</code> dùng <code>req.user.id</code></div><div class="step-desc"><code>circle/controller/circle.controller.ts:63</code></div></td><td>Các method khác đã chuyển sang <code>req.user.sub</code>. Method này vẫn dùng <code>req.user.id</code> cũ.</td><td><span class="badge badge-todo">todo</span></td></tr>
+      <tr><td><span class="step-num">B10</span></td><td><span class="badge badge-done">nit</span></td><td><div class="step-name"><code>prisma</code> import trực tiếp trong service</div><div class="step-desc"><code>circle/service/circle.service.ts:1,86</code></div></td><td>Yêu cầu "không để prisma ở service". Transaction logic <code>prisma.$transaction</code> nên chuyển xuống repository.</td><td><span class="badge badge-todo">todo</span></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<footer>Module: admin &nbsp;—&nbsp; Threads API v2 &nbsp;—&nbsp; Last reviewed: 2026-05-11</footer>
 </div>
 </body>
 </html>

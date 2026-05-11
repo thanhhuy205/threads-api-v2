@@ -3,18 +3,31 @@ import type { Request, Response, NextFunction } from "express";
 import { permissionRepository } from "../permission/repository/permission.repository";
 import { rolePermissionRepository } from "../permission/repository/role-permission.repository";
 import { UserRoleType } from "@prisma/client";
-import { NotFound } from "@aws-sdk/client-s3";
 import { redisService } from "@/providers/redis.provider";
 
 export const checkPermission = (permission: string) => {
   return async (req: Request, res: Response, next: NextFunction) => {
-    if (!req.user) {
+    const userId = req.user?.sub;
+    if (!req.user || !userId) {
       throw new UnauthorizedException("User not found");
+    }
+
+    const cacheKey = `user:${userId}:permission`;
+    const cachedPermissions = await redisService.get(cacheKey);
+
+    if (cachedPermissions) {
+      const permissions = JSON.parse(cachedPermissions) as string[];
+      if (!permissions.includes(permission)) {
+        throw new ForbiddenException(
+          "You don't have permission to access this resource",
+        );
+      }
+      return next();
     }
 
     const result = await permissionRepository.findByCode(permission);
     if (!result) {
-      throw new UnauthorizedException("Permission not found");
+      throw new ForbiddenException("Permission not found");
     }
 
     const rolePermission = await rolePermissionRepository.findPermission(
@@ -31,11 +44,9 @@ export const checkPermission = (permission: string) => {
       );
     }
 
-    await redisService.set(
-      `user:${req.user.id}:permission`,
-      JSON.stringify(permissionUnique),
-      { EX: 60 * 60 * 24 },
-    );
+    await redisService.set(cacheKey, JSON.stringify([...permissionUnique]), {
+      EX: 60 * 60 * 24,
+    });
 
     return next();
   };
@@ -48,7 +59,7 @@ export const checkRole = (role: UserRoleType) => {
     }
 
     if (!req.user.roles.includes(role)) {
-      throw new UnauthorizedException("Role not found");
+      throw new ForbiddenException("Role not found");
     }
 
     next();

@@ -8,7 +8,6 @@ const userProfileSelect = {
   name: true,
   bio: true,
   avatar: true,
-  role: true,
   verifiedAt: true,
   status: true,
   followersCount: true,
