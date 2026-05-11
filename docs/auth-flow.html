@@ -106,6 +106,79 @@
   .system-card p { margin: 0; color: var(--muted); font-size: 14px; }
   .chip { display: inline-block; font-family: var(--mono); font-size: 11px; background: var(--soft); border: 1px solid var(--line); border-radius: 999px; padding: 3px 8px; margin: 0 6px 8px 0; }
 
+  .chart-shell {
+    background: rgba(255,255,255,.84);
+    border: 1.5px solid var(--line);
+    border-radius: 22px;
+    box-shadow: 0 24px 70px rgba(20, 20, 19, .08);
+    overflow-x: auto;
+    padding: 24px;
+  }
+  .auth-chart {
+    display: block;
+    min-width: 1060px;
+    width: 100%;
+    height: auto;
+  }
+  .auth-chart text {
+    font-family: var(--mono);
+    font-size: 12px;
+    fill: var(--ink);
+    pointer-events: none;
+  }
+  .auth-chart .small { font-size: 10.5px; fill: var(--muted); }
+  .auth-chart .lane-band { fill: #FCFAF3; stroke: var(--soft); stroke-width: 1; }
+  .auth-chart .lane-title {
+    fill: var(--muted);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+  .auth-chart .node rect,
+  .auth-chart .terminal rect {
+    fill: #fff;
+    stroke: var(--line);
+    stroke-width: 1.5;
+  }
+  .auth-chart .terminal rect { fill: var(--soft); }
+  .auth-chart .core rect { fill: rgba(227, 218, 204, .42); stroke: var(--clay); }
+  .auth-chart .storage rect { fill: rgba(120, 140, 93, .12); stroke: var(--olive); }
+  .auth-chart .async rect { fill: rgba(217, 119, 87, .10); stroke: var(--clay); }
+  .auth-chart .reject rect { fill: var(--rose); stroke: #E8C2AE; }
+  .auth-chart .decision { fill: #fff; stroke: var(--clay-dark); stroke-width: 1.5; }
+  .auth-chart .edge {
+    fill: none;
+    stroke: var(--muted);
+    stroke-width: 1.6;
+    marker-end: url(#auth-arrow);
+  }
+  .auth-chart .edge.ok { stroke: var(--olive); marker-end: url(#auth-arrow-ok); }
+  .auth-chart .edge.bad {
+    stroke: var(--clay-dark);
+    stroke-dasharray: 5 5;
+    marker-end: url(#auth-arrow-bad);
+  }
+  .auth-chart .edge.async-edge {
+    stroke: var(--clay);
+    stroke-dasharray: 7 5;
+    marker-end: url(#auth-arrow-async);
+  }
+  .chart-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 18px;
+    margin-top: 18px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  .chart-legend span { display: inline-flex; align-items: center; gap: 8px; }
+  .legend-swatch { width: 24px; height: 14px; border: 1.5px solid var(--line); border-radius: 5px; background: #fff; }
+  .legend-swatch.core { background: rgba(227, 218, 204, .42); border-color: var(--clay); }
+  .legend-swatch.storage { background: rgba(120, 140, 93, .12); border-color: var(--olive); }
+  .legend-swatch.async { background: rgba(217, 119, 87, .10); border-color: var(--clay); }
+  .legend-line { width: 28px; height: 0; border-top: 2px solid var(--clay); border-style: dashed; border-bottom: 0; border-left: 0; border-right: 0; }
+
   .flow {
     background: var(--paper);
     border: 1.5px solid var(--line);
@@ -217,6 +290,7 @@
       </p>
       <nav class="jump">
         <a href="#system">System map</a>
+        <a href="#flowchart">Flow chart</a>
         <a href="#session">Session lifecycle</a>
         <a href="#guard">Request guard</a>
         <a href="#email">Email flows</a>
@@ -255,8 +329,229 @@
     </div>
   </section>
 
+  <section id="flowchart">
+    <div class="section-head"><span class="num">02</span><h2>Auth Flow Chart</h2></div>
+    <p class="section-intro">
+      Flow chart này gom toàn bộ auth module theo lớp chạy thật: client đi vào route/controller, request cần quyền đi qua guard,
+      service xử lý session/token, state nằm ở MySQL/Redis, còn email và Bloom filter chạy qua BullMQ worker.
+    </p>
+    <div class="chart-shell">
+      <svg class="auth-chart" viewBox="0 0 1120 860" role="img" aria-labelledby="auth-flow-title auth-flow-desc">
+        <title id="auth-flow-title">Threads API v2 auth flow chart</title>
+        <desc id="auth-flow-desc">Flow chart mô tả route auth, middleware authorization, AuthService, Prisma database, Redis, BullMQ email worker và Bloom worker.</desc>
+        <defs>
+          <marker id="auth-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="#706F68"></path>
+          </marker>
+          <marker id="auth-arrow-ok" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="#788C5D"></path>
+          </marker>
+          <marker id="auth-arrow-bad" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="#B85C3E"></path>
+          </marker>
+          <marker id="auth-arrow-async" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="#D97757"></path>
+          </marker>
+        </defs>
+
+        <rect class="lane-band" x="10" y="20" width="1100" height="112" rx="18"></rect>
+        <rect class="lane-band" x="10" y="150" width="1100" height="126" rx="18"></rect>
+        <rect class="lane-band" x="10" y="300" width="1100" height="146" rx="18"></rect>
+        <rect class="lane-band" x="10" y="475" width="1100" height="142" rx="18"></rect>
+        <rect class="lane-band" x="10" y="650" width="1100" height="176" rx="18"></rect>
+
+        <text class="lane-title" x="34" y="45">Client / route entry</text>
+        <text class="lane-title" x="34" y="175">Controller / middleware</text>
+        <text class="lane-title" x="34" y="325">AuthService core</text>
+        <text class="lane-title" x="34" y="500">State storage</text>
+        <text class="lane-title" x="34" y="675">Async workers</text>
+
+        <!-- entry edges -->
+        <path class="edge" d="M220,86 L268,86"></path>
+        <path class="edge" d="M450,86 L486,86"></path>
+        <path class="edge ok" d="M646,86 L865,86"></path>
+        <path class="edge" d="M565,123 C565,142 150,142 150,190"></path>
+        <path class="edge" d="M565,123 C565,288 150,288 150,346"></path>
+
+        <!-- guard edges -->
+        <path class="edge" d="M240,210 L268,210"></path>
+        <path class="edge" d="M450,210 L478,210"></path>
+        <path class="edge" d="M660,210 L688,210"></path>
+        <path class="edge ok" d="M870,210 L896,210"></path>
+        <path class="edge bad" d="M360,240 C360,268 925,268 925,250"></path>
+        <path class="edge bad" d="M570,240 C570,282 925,282 925,250"></path>
+        <path class="edge bad" d="M780,240 C780,267 925,267 925,250"></path>
+
+        <!-- service edges -->
+        <path class="edge" d="M240,372 L268,372"></path>
+        <path class="edge" d="M150,406 C250,450 500,450 560,406"></path>
+        <path class="edge" d="M150,406 C330,468 705,468 770,406"></path>
+        <path class="edge" d="M150,406 C425,484 940,484 980,406"></path>
+        <path class="edge ok" d="M360,342 C360,110 865,110 865,92"></path>
+        <path class="edge ok" d="M570,342 C570,125 865,125 865,92"></path>
+        <path class="edge ok" d="M780,342 C780,140 865,140 865,92"></path>
+        <path class="edge ok" d="M990,342 C990,125 1055,125 1055,92"></path>
+
+        <!-- storage edges -->
+        <path class="edge" d="M150,398 L150,532"></path>
+        <path class="edge" d="M360,402 L360,532"></path>
+        <path class="edge" d="M570,402 L570,532"></path>
+        <path class="edge" d="M780,402 L780,532"></path>
+        <path class="edge" d="M990,402 L990,532"></path>
+        <path class="edge bad" d="M870,392 C910,420 900,500 858,544"></path>
+
+        <!-- async edges -->
+        <path class="edge async-edge" d="M990,588 L990,706"></path>
+        <path class="edge async-edge" d="M1000,402 C1065,452 1070,650 965,706"></path>
+        <path class="edge async-edge" d="M150,402 C95,455 92,642 150,706"></path>
+        <path class="edge async-edge" d="M235,734 L268,734"></path>
+        <path class="edge async-edge" d="M450,734 L478,734"></path>
+        <path class="edge async-edge" d="M660,734 L688,734"></path>
+        <path class="edge async-edge" d="M870,734 L898,734"></path>
+
+        <!-- entry nodes -->
+        <g class="terminal">
+          <rect x="60" y="58" width="160" height="56" rx="28"></rect>
+          <text x="140" y="82" text-anchor="middle">Client request</text>
+          <text class="small" x="140" y="99" text-anchor="middle">Swagger / app / web</text>
+        </g>
+        <g class="node">
+          <rect x="268" y="58" width="182" height="56" rx="14"></rect>
+          <text x="359" y="82" text-anchor="middle">Zod validate</text>
+          <text class="small" x="359" y="99" text-anchor="middle">body, params, query</text>
+        </g>
+        <polygon class="decision" points="565,48 646,86 565,124 484,86"></polygon>
+        <text x="565" y="82" text-anchor="middle">Route?</text>
+        <text class="small" x="565" y="99" text-anchor="middle">public or protected</text>
+        <g class="terminal">
+          <rect x="865" y="58" width="190" height="56" rx="28"></rect>
+          <text x="960" y="82" text-anchor="middle">JSON response</text>
+          <text class="small" x="960" y="99" text-anchor="middle">token pair / user / status</text>
+        </g>
+
+        <!-- guard nodes -->
+        <g class="node">
+          <rect x="60" y="190" width="180" height="58" rx="14"></rect>
+          <text x="150" y="214" text-anchor="middle">Protected route</text>
+          <text class="small" x="150" y="232" text-anchor="middle">Authorization: Bearer</text>
+        </g>
+        <g class="node storage">
+          <rect x="268" y="190" width="182" height="58" rx="14"></rect>
+          <text x="359" y="214" text-anchor="middle">Blacklist check</text>
+          <text class="small" x="359" y="232" text-anchor="middle">Redis bl:at:&lt;token&gt;</text>
+        </g>
+        <g class="node core">
+          <rect x="478" y="190" width="182" height="58" rx="14"></rect>
+          <text x="569" y="214" text-anchor="middle">Verify JWT</text>
+          <text class="small" x="569" y="232" text-anchor="middle">JWT_SECRET + sub</text>
+        </g>
+        <g class="node storage">
+          <rect x="688" y="190" width="182" height="58" rx="14"></rect>
+          <text x="779" y="214" text-anchor="middle">Load user</text>
+          <text class="small" x="779" y="232" text-anchor="middle">status != BANNED</text>
+        </g>
+        <g class="node">
+          <rect x="896" y="190" width="160" height="58" rx="14"></rect>
+          <text x="976" y="214" text-anchor="middle">Attach context</text>
+          <text class="small" x="976" y="232" text-anchor="middle">req.user + accessToken</text>
+        </g>
+        <g class="node reject">
+          <rect x="872" y="252" width="205" height="44" rx="14"></rect>
+          <text x="974" y="279" text-anchor="middle">Unauthorized / Forbidden</text>
+        </g>
+
+        <!-- service nodes -->
+        <g class="node core">
+          <rect x="60" y="346" width="180" height="60" rx="14"></rect>
+          <text x="150" y="370" text-anchor="middle">Auth endpoints</text>
+          <text class="small" x="150" y="388" text-anchor="middle">register, login, verify</text>
+        </g>
+        <g class="node core">
+          <rect x="268" y="346" width="182" height="60" rx="14"></rect>
+          <text x="359" y="370" text-anchor="middle">Password + token</text>
+          <text class="small" x="359" y="388" text-anchor="middle">bcrypt, jwtService</text>
+        </g>
+        <g class="node core">
+          <rect x="478" y="346" width="182" height="60" rx="14"></rect>
+          <text x="569" y="370" text-anchor="middle">Refresh rotate</text>
+          <text class="small" x="569" y="388" text-anchor="middle">revoke old, create new</text>
+        </g>
+        <g class="node core">
+          <rect x="688" y="346" width="182" height="60" rx="14"></rect>
+          <text x="779" y="370" text-anchor="middle">Logout revoke</text>
+          <text class="small" x="779" y="388" text-anchor="middle">access blacklist + refresh</text>
+        </g>
+        <g class="node core">
+          <rect x="898" y="346" width="182" height="60" rx="14"></rect>
+          <text x="989" y="370" text-anchor="middle">Email token flow</text>
+          <text class="small" x="989" y="388" text-anchor="middle">resend, forgot, reset</text>
+        </g>
+
+        <!-- storage nodes -->
+        <g class="node storage">
+          <rect x="60" y="532" width="180" height="58" rx="14"></rect>
+          <text x="150" y="556" text-anchor="middle">users</text>
+          <text class="small" x="150" y="574" text-anchor="middle">email, username, status</text>
+        </g>
+        <g class="node storage">
+          <rect x="270" y="532" width="180" height="58" rx="14"></rect>
+          <text x="360" y="556" text-anchor="middle">refresh_tokens</text>
+          <text class="small" x="360" y="574" text-anchor="middle">sha256 token + session</text>
+        </g>
+        <g class="node storage">
+          <rect x="480" y="532" width="180" height="58" rx="14"></rect>
+          <text x="570" y="556" text-anchor="middle">verification_codes</text>
+          <text class="small" x="570" y="574" text-anchor="middle">VERIFY / FORGOT hash</text>
+        </g>
+        <g class="node storage">
+          <rect x="690" y="532" width="180" height="58" rx="14"></rect>
+          <text x="780" y="556" text-anchor="middle">Redis</text>
+          <text class="small" x="780" y="574" text-anchor="middle">blacklist + Bloom data</text>
+        </g>
+        <g class="node storage">
+          <rect x="900" y="532" width="180" height="58" rx="14"></rect>
+          <text x="990" y="556" text-anchor="middle">BullMQ queues</text>
+          <text class="small" x="990" y="574" text-anchor="middle">emailQueue, bloomQueue</text>
+        </g>
+
+        <!-- async nodes -->
+        <g class="node async">
+          <rect x="60" y="706" width="180" height="58" rx="14"></rect>
+          <text x="150" y="730" text-anchor="middle">Generate Bloom job</text>
+          <text class="small" x="150" y="748" text-anchor="middle">after register</text>
+        </g>
+        <g class="node async">
+          <rect x="268" y="706" width="182" height="58" rx="14"></rect>
+          <text x="359" y="730" text-anchor="middle">Bloom worker</text>
+          <text class="small" x="359" y="748" text-anchor="middle">BF.ADD username/email</text>
+        </g>
+        <g class="node async">
+          <rect x="478" y="706" width="182" height="58" rx="14"></rect>
+          <text x="569" y="730" text-anchor="middle">Redis Bloom</text>
+          <text class="small" x="569" y="748" text-anchor="middle">validate availability</text>
+        </g>
+        <g class="node async">
+          <rect x="688" y="706" width="182" height="58" rx="14"></rect>
+          <text x="779" y="730" text-anchor="middle">Email worker</text>
+          <text class="small" x="779" y="748" text-anchor="middle">EJS template render</text>
+        </g>
+        <g class="node async">
+          <rect x="898" y="706" width="182" height="58" rx="14"></rect>
+          <text x="989" y="730" text-anchor="middle">SMTP delivery</text>
+          <text class="small" x="989" y="748" text-anchor="middle">verify / reset link</text>
+        </g>
+      </svg>
+      <div class="chart-legend">
+        <span><i class="legend-swatch core"></i>AuthService / token logic</span>
+        <span><i class="legend-swatch storage"></i>MySQL, Redis, BullMQ state</span>
+        <span><i class="legend-swatch async"></i>Worker xử lý nền</span>
+        <span><i class="legend-line"></i>Đường nét đứt là async hoặc nhánh lỗi</span>
+      </div>
+    </div>
+  </section>
+
   <section id="session">
-    <div class="section-head"><span class="num">02</span><h2>Session Lifecycle</h2></div>
+    <div class="section-head"><span class="num">03</span><h2>Session Lifecycle</h2></div>
     <p class="section-intro">Đây là đường đi chính từ lúc tạo tài khoản tới khi refresh/logout. Tài liệu cố ý không ghi payload chi tiết vì Swagger đã cover phần đó.</p>
     <div class="flow">
       <div class="flow-row">
@@ -316,7 +611,7 @@
   </section>
 
   <section id="guard">
-    <div class="section-head"><span class="num">03</span><h2>Protected Request Guard</h2></div>
+    <div class="section-head"><span class="num">04</span><h2>Protected Request Guard</h2></div>
     <p class="section-intro">Mọi route dùng middleware <code>authorization</code> đi qua cùng một cửa kiểm tra.</p>
     <div class="sequence">
       <div class="seq-step"><div class="k">1 header</div><div class="t">Parse bearer</div><p>Đọc <code>Authorization</code>, lấy phần sau dấu cách. Thiếu token thì Unauthorized.</p></div>
@@ -328,7 +623,7 @@
   </section>
 
   <section id="email">
-    <div class="section-head"><span class="num">04</span><h2>Email Verification & Password Recovery</h2></div>
+    <div class="section-head"><span class="num">05</span><h2>Email Verification & Password Recovery</h2></div>
     <p class="section-intro">Hai luồng email dùng cùng pattern: sinh token random, hash token lưu DB, gửi token raw qua email worker.</p>
     <div class="two-col">
       <div class="panel">
@@ -353,7 +648,7 @@
   </section>
 
   <section id="availability">
-    <div class="section-head"><span class="num">05</span><h2>Email/Username Availability</h2></div>
+    <div class="section-head"><span class="num">06</span><h2>Email/Username Availability</h2></div>
     <p class="section-intro">Validate email/username hiện đọc Redis Bloom filter thay vì query trực tiếp database.</p>
     <div class="sequence">
       <div class="seq-step"><div class="k">register</div><div class="t">Create user</div><p>User được tạo trong DB trước.</p></div>
@@ -365,7 +660,7 @@
   </section>
 
   <section id="state">
-    <div class="section-head"><span class="num">06</span><h2>State, Storage & Observations</h2></div>
+    <div class="section-head"><span class="num">07</span><h2>State, Storage & Observations</h2></div>
     <p class="section-intro">Các điểm dưới đây là mô tả hiện trạng để team nắm rõ. Tài liệu không sửa behavior.</p>
     <div class="schema-strip">
       <div class="schema"><div class="name">users</div><pre>id, email, username, password
