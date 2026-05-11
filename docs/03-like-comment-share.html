@@ -98,7 +98,7 @@ footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--gray-300);fon
 
 <!-- ═══════════════ NGƯỜI DÙNG THẤY GÌ ═══════════════ -->
 <section>
-  <h2>Người dùng thấy gì?</h2>
+  <h2>User Perspective</h2>
   <hr class="rule">
   <div class="note-box">
     <div class="note-item">
@@ -122,7 +122,7 @@ footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--gray-300);fon
 
 <!-- ═══════════════ FLOW: LIKE ═══════════════ -->
 <section>
-  <h2>Luồng Like (Redis-based)</h2>
+  <h2>Like Flow (Redis-based)</h2>
   <hr class="rule">
   <div class="flow-panel">
     <svg viewBox="0 0 820 380" role="img" aria-label="Flowchart like bài viết">
@@ -175,7 +175,7 @@ footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--gray-300);fon
 
       <rect x="250" y="285" width="300" height="48" rx="8" fill="#FFFFFF" stroke="#D97757" stroke-width="1.5"/>
       <text x="400" y="305" text-anchor="middle" font-family="system-ui" font-size="12" fill="#141413" font-weight="500">Redis: SCARD → trả về likeCount</text>
-      <text x="400" y="322" text-anchor="middle" font-family="system-ui" font-size="11" fill="#87867F">Worker flush queue → sync PostgreSQL định kỳ</text>
+      <text x="400" y="322" text-anchor="middle" font-family="system-ui" font-size="11" fill="#87867F">Worker flush queue → sync MySQL định kỳ</text>
 
       <!-- Legend -->
       <rect x="20" y="10" width="12" height="12" rx="2" fill="#E6F1FB" stroke="#378ADD" stroke-width="1.5"/>
@@ -183,13 +183,13 @@ footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--gray-300);fon
       <rect x="160" y="10" width="12" height="12" rx="2" fill="#FAEEDA" stroke="#854F0B" stroke-width="1.5"/>
       <text x="178" y="21" font-family="system-ui" font-size="11" fill="#87867F">async queue</text>
     </svg>
-    <p class="flow-note">Like/Unlike dùng Redis SET để đảm bảo idempotent. Worker background sẽ flush queue về PostgreSQL định kỳ.</p>
+    <p class="flow-note">Like/Unlike dùng Redis SET để đảm bảo idempotent. Worker background sẽ flush queue về MySQL định kỳ.</p>
   </div>
 </section>
 
 <!-- ═══════════════ STEP TABLE ═══════════════ -->
 <section>
-  <h2>Chi tiết từng API</h2>
+  <h2>API Detail</h2>
   <hr class="rule">
   <table class="step-table">
     <thead>
@@ -240,7 +240,7 @@ footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--gray-300);fon
       <tr>
         <td><span class="step-num">07</span></td>
         <td><div class="step-name">Like count sync</div><div class="step-desc">Worker flush Redis → DB</div></td>
-        <td>Worker đọc LIKED_ADD_QUEUE / LIKED_REMOVE_QUEUE, batch update <code>likesCount</code> trong PostgreSQL. Đảm bảo dữ liệu nhất quán.</td>
+        <td>Worker đọc LIKED_ADD_QUEUE / LIKED_REMOVE_QUEUE, batch update <code>likesCount</code> trong MySQL. Đảm bảo dữ liệu nhất quán.</td>
         <td><span class="badge badge-done">done</span></td>
       </tr>
       <tr>
@@ -255,14 +255,14 @@ footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--gray-300);fon
 
 <!-- ═══════════════ TIẾN ĐỘ ═══════════════ -->
 <section>
-  <h2>Tiến độ hoàn thành</h2>
+  <h2>Implementation Progress</h2>
   <hr class="rule">
   <div class="diff-grid">
     <div class="diff-card">
       <div class="diff-card-head">✅ Đã xong</div>
       <div class="diff-row"><div class="diff-dot done"></div><div>Like/Unlike qua Redis SET (idempotent)</div></div>
       <div class="diff-row"><div class="diff-dot done"></div><div>Like counter qua Redis INCR/DECR</div></div>
-      <div class="diff-row"><div class="diff-dot done"></div><div>Queue sync like → PostgreSQL</div></div>
+      <div class="diff-row"><div class="diff-dot done"></div><div>Queue sync like → MySQL</div></div>
       <div class="diff-row"><div class="diff-dot done"></div><div>Reply (comment) đầy đủ tính năng</div></div>
       <div class="diff-row"><div class="diff-dot done"></div><div>Repost — chia sẻ nguyên bài</div></div>
       <div class="diff-row"><div class="diff-dot done"></div><div>Quote — trích dẫn + thêm lời</div></div>
@@ -281,12 +281,12 @@ footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--gray-300);fon
 
 <!-- ═══════════════ NOTES ═══════════════ -->
 <section>
-  <h2>Ghi chú thiết kế</h2>
+  <h2>Design Notes</h2>
   <hr class="rule">
   <div class="note-box">
     <div class="note-item">
       <span class="note-tag">Redis Like</span>
-      <div class="note-body">Like dùng Redis SET (<code>SADD/SREM</code>) vì cần idempotent + real-time. Worker background flush về DB theo batch, giảm tải write PostgreSQL.</div>
+      <div class="note-body">Like dùng Redis SET (<code>SADD/SREM</code>) vì cần idempotent + real-time. Worker background flush về DB theo batch, giảm tải write MySQL.</div>
     </div>
     <div class="note-item">
       <span class="note-tag">Comment = Reply</span>

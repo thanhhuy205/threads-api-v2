@@ -322,9 +322,14 @@
         <nav class="toc">
           <a href="#webhook-media">Webhook &amp; Media <span class="n">1</span></a>
           <a href="#post-social">Post &amp; Social <span class="n">6</span></a>
+          <a href="#relationship">Relationship <span class="n">2</span></a>
+          <a href="#realtime">Realtime <span class="n">2</span></a>
+          <a href="#search-ai">Search &amp; AI <span class="n">2</span></a>
+          <a href="#admin">Admin / CMS <span class="n">1</span></a>
           <a href="#auth-user">Auth &amp; User <span class="n">1</span></a>
           <a href="#data-database">Data &amp; Database <span class="n">1</span></a>
           <a href="#ops-runbook">Ops &amp; Runbook <span class="n">1</span></a>
+          <a href="#bonus">Bonus <span class="n">1</span></a>
         </nav>
       </div>
       <div class="hero-fig" aria-hidden="true">
@@ -413,8 +418,72 @@
     </div>
   </section>
 
+  <section id="relationship">
+    <div class="sec-head"><span class="idx">03</span><h2>Relationship &amp; Feed</h2><span class="count">2 tài liệu</span></div>
+    <p class="sec-intro">
+      Follow/Unfollow, lời mời kết bạn, và thuật toán Newsfeed. Quản lý mối quan hệ giữa users và cách hiển thị nội dung trên timeline.
+    </p>
+    <div class="grid">
+      <a class="card" href="06-follow-friend-request.html">
+        <div class="thumb"><div style="width:100%"><div class="line s1"></div><div class="line s2"></div><div class="line s4"></div><span class="badge">task spec</span></div></div>
+        <div class="body"><div class="title">Follow &amp; Friend Request</div><div class="desc">Follow toggle (done), danh sách followers/following, gửi/chấp nhận/từ chối lời mời kết bạn, mutual friend check. Flowchart đề xuất.</div><div class="file"><span>06-follow-friend-request.html</span><span class="arrow">→</span></div></div>
+      </a>
+      <a class="card" href="07-newsfeed.html">
+        <div class="thumb"><div style="width:100%"><div class="line s4"></div><div class="line s1"></div><span class="badge">task spec</span></div></div>
+        <div class="body"><div class="title">Newsfeed</div><div class="desc">Feed FOR_YOU + FOLLOWING, đề xuất ranking algorithm (engagement score + time decay + affinity), cache Redis, filter visibility.</div><div class="file"><span>07-newsfeed.html</span><span class="arrow">→</span></div></div>
+      </a>
+    </div>
+  </section>
+
+  <section id="realtime">
+    <div class="sec-head"><span class="idx">04</span><h2>Realtime</h2><span class="count">2 tài liệu</span></div>
+    <p class="sec-intro">
+      Chat nhắn tin 1-1 và thông báo realtime qua Pusher (Soketi). WebSocket, trạng thái đã xem, typing indicator.
+    </p>
+    <div class="grid">
+      <a class="card" href="08-chat-realtime.html">
+        <div class="thumb"><div style="width:100%"><div class="line s1"></div><div class="line s3"></div><div class="line s2"></div><span class="badge">task spec</span></div></div>
+        <div class="body"><div class="title">Chat 1-1 Realtime</div><div class="desc">Gửi tin nhắn, tạo conversation, đánh dấu đã xem (✓✓), typing indicator, online status. Flowchart đề xuất đầy đủ.</div><div class="file"><span>08-chat-realtime.html</span><span class="arrow">→</span></div></div>
+      </a>
+      <a class="card" href="09-notification-realtime.html">
+        <div class="thumb"><div style="width:100%"><div class="line s4"></div><div class="line s1"></div><span class="badge">task spec</span></div></div>
+        <div class="body"><div class="title">Thông báo Realtime</div><div class="desc">6 loại notification (like, comment, mention, follow, friend request, message). Trigger events → DB + Pusher → toast popup.</div><div class="file"><span>09-notification-realtime.html</span><span class="arrow">→</span></div></div>
+      </a>
+    </div>
+  </section>
+
+  <section id="search-ai">
+    <div class="sec-head"><span class="idx">05</span><h2>Search &amp; AI</h2><span class="count">2 tài liệu</span></div>
+    <p class="sec-intro">
+      Tìm kiếm (user, post, hashtag) và các tính năng AI: Content Moderation, Caption Generator, Smart Reply, Recommendation.
+    </p>
+    <div class="grid">
+      <a class="card" href="10-search.html">
+        <div class="thumb"><div style="width:100%"><div class="line s1"></div><div class="line s2"></div><span class="badge">task spec</span></div></div>
+        <div class="body"><div class="title">Tìm kiếm</div><div class="desc">Search user (ILIKE), post (Full-text / Pinecone AI), hashtag (Topic table). Flowchart multi-type search, autocomplete, GIN index.</div><div class="file"><span>10-search.html</span><span class="arrow">→</span></div></div>
+      </a>
+      <a class="card" href="12-ai-integration.html">
+        <div class="thumb"><div style="width:100%"><div class="line s3"></div><div class="line s4"></div><div class="line s1"></div><span class="badge">task spec</span></div></div>
+        <div class="body"><div class="title">AI Integration</div><div class="desc">4 features: Content Moderation (bắt buộc), Caption Generator, Smart Reply, Recommendation. Flowchart, chi phí, vấn đề phát sinh.</div><div class="file"><span>12-ai-integration.html</span><span class="arrow">→</span></div></div>
+      </a>
+    </div>
+  </section>
+
+  <section id="admin">
+    <div class="sec-head"><span class="idx">06</span><h2>Admin / CMS</h2><span class="count">1 tài liệu</span></div>
+    <p class="sec-intro">
+      Quản lý user (khóa/ban), duyệt báo cáo vi phạm, hashtag trending, thống kê hệ thống. Admin guard middleware.
+    </p>
+    <div class="grid">
+      <a class="card" href="11-admin-cms.html">
+        <div class="thumb"><div style="width:100%"><div class="line s1"></div><div class="line s4"></div><div class="line s2"></div><span class="badge">task spec</span></div></div>
+        <div class="body"><div class="title">Admin / CMS</div><div class="desc">4 chức năng: User moderation (lock/ban/unlock), Report review queue, Hashtag trending, Statistics dashboard. Flowchart duyệt báo cáo.</div><div class="file"><span>11-admin-cms.html</span><span class="arrow">→</span></div></div>
+      </a>
+    </div>
+  </section>
+
   <section id="auth-user">
-    <div class="sec-head"><span class="idx">03</span><h2>Auth &amp; User</h2><span class="count">1 tài liệu</span></div>
+    <div class="sec-head"><span class="idx">07</span><h2>Auth &amp; User</h2><span class="count">1 tài liệu</span></div>
     <p class="sec-intro">
       Tài liệu cho lifecycle token, xác thực phiên, blacklist, và các chính sách bảo vệ tài khoản.
     </p>
@@ -431,7 +500,7 @@
   </section>
 
   <section id="data-database">
-    <div class="sec-head"><span class="idx">04</span><h2>Data &amp; Database</h2><span class="count">1 tài liệu</span></div>
+    <div class="sec-head"><span class="idx">08</span><h2>Data &amp; Database</h2><span class="count">1 tài liệu</span></div>
     <p class="sec-intro">
       Tài liệu thiết kế database, domain aggregate, relation map, enum vocabulary và field-level schema theo Prisma hiện tại.
     </p>
@@ -444,7 +513,7 @@
   </section>
 
   <section id="ops-runbook">
-    <div class="sec-head"><span class="idx">05</span><h2>Ops &amp; Runbook</h2><span class="count">1 tài liệu</span></div>
+    <div class="sec-head"><span class="idx">09</span><h2>Ops &amp; Runbook</h2><span class="count">1 tài liệu</span></div>
     <p class="sec-intro">
       Nơi tập trung incident timeline, post-mortem template, alert threshold và checklist release tổng quát.
     </p>
@@ -457,6 +526,19 @@
         <div class="thumb"><div style="width:100%"><div class="line s4"></div><div class="line s3"></div><span class="badge">coming soon</span></div></div>
         <div class="body"><div class="title">Incident Playbook</div><div class="desc">Mẫu điều tra sự cố và bộ hành động chuẩn để rút ngắn thời gian xử lý.</div><div class="file"><span>draft</span><span>•</span></div></div>
       </div>
+    </div>
+  </section>
+
+  <section id="bonus">
+    <div class="sec-head"><span class="idx">10</span><h2>Bonus Features</h2><span class="count">1 tài liệu</span></div>
+    <p class="sec-intro">
+      Các tính năng bổ sung tùy chọn: Story 24h, Group/Community, Live Stream. Đề xuất kiến trúc và roadmap.
+    </p>
+    <div class="grid">
+      <a class="card" href="13-bonus-features.html">
+        <div class="thumb"><div style="width:100%"><div class="line s3"></div><div class="line s1"></div><div class="line s4"></div><span class="badge">task spec</span></div></div>
+        <div class="body"><div class="title">Story 24h · Group · Live Stream</div><div class="desc">3 bonus features: Story tạm thời (24h expire + cron cleanup), Group/Community (mở rộng Circle), Live Stream (Mux Live + Pusher chat).</div><div class="file"><span>13-bonus-features.html</span><span class="arrow">→</span></div></div>
+      </a>
     </div>
   </section>
 

@@ -21,10 +21,11 @@ Dự án này thể hiện năng lực backend ở các điểm mà nhà tuyển
 
 Ngoài Swagger API, repo có thêm docs nghiệp vụ để đọc nhanh theo ngữ cảnh vận hành:
 
-- [Docs Hub chính](docs/index.html)
+- [Docs Hub (Online)](https://thanhhuy205.github.io/threads-api-v2/)
+- [Docs Hub (Local)](docs/index.html)
 - [Mux Webhook Flow](docs/mux-webhook-flow.html)
 
-Gợi ý: mở `docs/index.html` trước, sau đó đi vào từng tài liệu con.
+Gợi ý: mở link online hoặc file `docs/index.html` trước, sau đó đi vào từng tài liệu con.
 
 ## Tech Stack
 
