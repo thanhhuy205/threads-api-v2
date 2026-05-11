@@ -103,30 +103,38 @@ class UserController {
     return res.success(200, USER_MESSAGE.GET_USER_SUCCESS, user);
   }
 
-  async getReceivedFriendRequests(req: Request, res: Response) {
+  async getReceivedFriendRequests(
+    req: Request<{}, {}, {}, FollowersQueryDto>,
+    res: Response,
+  ) {
     const userId = req.user?.sub;
     if (!userId) {
       return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
     }
-    const result = await userService.getReceivedFriendRequests(userId);
-    return res.success(
-      200,
-      USER_MESSAGE.GET_RECEIVED_FRIEND_REQUESTS_SUCCESS,
-      result,
-    );
+    const { after, take } = getPagination(req);
+    const { rows, pagination } = await userService.getReceivedFriendRequests({
+      take: take ?? undefined,
+      receiverId: userId,
+      senderId: after ?? undefined,
+    });
+    return res.paginate({ rows, pagination });
   }
 
-  async getSentFriendRequests(req: Request, res: Response) {
+  async getSentFriendRequests(
+    req: Request<{}, {}, {}, FollowersQueryDto>,
+    res: Response,
+  ) {
     const userId = req.user?.sub;
     if (!userId) {
       return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
     }
-    const result = await userService.getSentFriendRequests(userId);
-    return res.success(
-      200,
-      USER_MESSAGE.GET_SENT_FRIEND_REQUESTS_SUCCESS,
-      result,
-    );
+    const { after, take } = getPagination(req);
+    const { rows, pagination } = await userService.getSentFriendRequests({
+      take: take ?? undefined,
+      senderId: userId,
+      after: after ?? undefined,
+    });
+    return res.paginate({ rows, pagination });
   }
 }
 

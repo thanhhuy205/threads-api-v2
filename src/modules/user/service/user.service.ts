@@ -173,21 +173,46 @@ class UserService {
     }
   }
 
-  getReceivedFriendRequests(userId: string) {
-    return friendRequestRepository.findAll({
-      where: {
-        receiverId: userId,
-        status: FriendRequestStatus.PENDING,
-      },
+  async getReceivedFriendRequests({
+    senderId,
+    receiverId,
+    take,
+  }: {
+    senderId?: string;
+    receiverId: string;
+    take: number;
+  }) {
+    const friendRequests = await friendRequestRepository.findReceivedPending({
+      receiverId,
+      cursor: senderId ? { senderId } : undefined,
+      take,
+    });
+
+    return buildCursorPagination({
+      rows: friendRequests,
+      take,
+      getAfter: (fr) => fr.senderId,
     });
   }
+  async getSentFriendRequests({
+    senderId,
+    after,
+    take,
+  }: {
+    senderId: string;
+    after?: string;
+    take: number;
+  }) {
+    const friendRequests = await friendRequestRepository.findSentPending({
+      senderId,
+      cursor: after ? { receiverId: after } : undefined,
+      take,
+    });
 
-  getSentFriendRequests(userId: string) {
-    return friendRequestRepository.findAll({
-      where: {
-        senderId: userId,
-        status: FriendRequestStatus.PENDING,
-      },
+    return buildCursorPagination({
+      rows: friendRequests,
+      take,
+      getAfter: (fr) => fr.receiverId,
     });
   }
 
