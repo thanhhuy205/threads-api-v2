@@ -1,56 +1,67 @@
 import prisma from "@/config/prisma";
 import { CreateCircleInput } from "@/modules/circle/interfaces/circle-service.interface";
-import { buildPagination } from "@/shared/pagination/pagination";
+import { buildPagination } from "@/shared/pagination/cursor-pagination";
 import { $Enums, Circle, CircleInvitationStatus, Prisma, RoleMembership } from "@prisma/client";
 
-type CircleRaw = {
-    id: number;
-    name: string;
-    user_id: string;
-    created_at: string;
-    updated_at: string;
-    visibility: string;
-    create_by_id: string;
-    member_count: number;
-}
+class CircleRepository implements ICursorPagination<Prisma.CircleWhereInput, any> {
+    async findAll({
+        after,
+        take,
+        where,
+        cursor,
+        select,
+        orderBy,
+    }: {
+        after?: string;
+        take?: number;
+        where?: Prisma.CircleWhereInput;
+        cursor?: Prisma.CircleWhereUniqueInput;
+        select?: Prisma.CircleSelect;
+        orderBy?: Prisma.CircleOrderByWithRelationInput | Prisma.CircleOrderByWithRelationInput[];
+    }): Promise<any[]> {
+        const { currentAfter, currentLimit } = buildPagination({ after, take });
 
+        return prisma.circle.findMany({
+            where,
+            take: currentLimit + 1,
+            skip: currentAfter ? 1 : 0,
+            cursor: currentAfter ? cursor : undefined,
+            select,
+            orderBy: orderBy || { id: "desc" },
+        });
+    }
 
-type CircleFormat = {
-    id: number;
-    name: string;
-    userId: string;
-    createdAt: Date;
-    updatedAt: Date;
-    visibility: $Enums.Visibility;
-    createById: string;
-    memberCount: number;
-}
-class CircleRepository implements IPagination<Prisma.CircleWhereInput, CircleFormat> {
-    async findAll({ page, limit, where, orderBy }: { page: number; limit: number; where?: Prisma.CircleWhereInput | undefined; orderBy?: any; }): Promise<CircleFormat[]> {
-        const { currentLimit, offset } = buildPagination({ page, limit });
-        const circles: CircleRaw[] = await prisma.$queryRaw`
-            SELECT c.* , COUNT(cm.circle_id) as member_count FROM circles as c  
-            JOIN circle_members as cm ON c.id = cm.circle_id 
-            GROUP BY cm.circle_id  
-            ORDER BY COUNT(cm.circle_id) desc 
-            LIMIT ${currentLimit} OFFSET ${offset}
-            `;
+    async findCircles({ after, take, where }: { after?: string; take?: number; where?: Prisma.CircleWhereInput }) {
+        const circles = await this.findAll({
+            after,
+            take,
+            where,
+            cursor: after ? { publicId: after } : undefined,
+            select: {
+                id: true,
+                publicId: true,
+                name: true,
+                createById: true,
+                createdAt: true,
+                updatedAt: true,
+                visibility: true,
+                _count: {
+                    select: { circleMembers: true }
+                }
+            },
+        });
 
         return circles.map(c => ({
-            id: Number(c.id),
+            id: c.id,
+            publicId: c.publicId,
             name: c.name,
-            userId: c.user_id,
-            createdAt: new Date(c.created_at),
-            updatedAt: new Date(c.updated_at),
-            visibility: c.visibility as $Enums.Visibility,
-            createById: c.create_by_id,
-            memberCount: Number(c.member_count),
+            userId: c.createById, // Kept for compatibility if used
+            createdAt: c.createdAt,
+            updatedAt: c.updatedAt,
+            visibility: c.visibility,
+            createById: c.createById,
+            memberCount: c._count.circleMembers,
         }));
-    }
-    count(params: { where?: Prisma.CircleWhereInput | undefined; }): Promise<number> {
-        return prisma.circle.count({
-            where: params.where,
-        });
     }
 
     async create(data: CreateCircleInput): Promise<Circle> {
