@@ -1,7 +1,28 @@
 import prisma from "@/config/prisma";
-import type { FriendRequestStatus } from "@prisma/client";
+import type {
+  FriendRequest,
+  FriendRequestStatus,
+  Prisma,
+} from "@prisma/client";
 
-class FriendRequestRepository {
+class FriendRequestRepository implements ICursorPagination<
+  Prisma.FriendRequestWhereInput,
+  unknown
+> {
+  findAll({
+    after,
+    take,
+    where,
+    props: {},
+  }: {
+    after?: string;
+    take?: number;
+    where?: Prisma.FriendRequestWhereInput;
+    props?: any;
+  }): Promise<FriendRequest[]> {
+    return Promise.resolve([]);
+  }
+
   async create(senderId: string, receiverId: string) {
     return prisma.friendRequest.create({
       data: {

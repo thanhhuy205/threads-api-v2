@@ -102,6 +102,32 @@ class UserController {
     }
     return res.success(200, USER_MESSAGE.GET_USER_SUCCESS, user);
   }
+
+  async getReceivedFriendRequests(req: Request, res: Response) {
+    const userId = req.user?.sub;
+    if (!userId) {
+      return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
+    }
+    const result = await userService.getReceivedFriendRequests(userId);
+    return res.success(
+      200,
+      USER_MESSAGE.GET_RECEIVED_FRIEND_REQUESTS_SUCCESS,
+      result,
+    );
+  }
+
+  async getSentFriendRequests(req: Request, res: Response) {
+    const userId = req.user?.sub;
+    if (!userId) {
+      return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
+    }
+    const result = await userService.getSentFriendRequests(userId);
+    return res.success(
+      200,
+      USER_MESSAGE.GET_SENT_FRIEND_REQUESTS_SUCCESS,
+      result,
+    );
+  }
 }
 
 export const userController = new UserController();

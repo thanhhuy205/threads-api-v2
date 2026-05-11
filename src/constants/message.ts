@@ -59,6 +59,9 @@ export const USER_MESSAGE = {
   USER_NOT_FOUND: "User not found",
   GET_USER_SUCCESS: "User fetched successfully",
   FRIEND_REQUEST_NOT_FOUND: "Friend request not found",
+  GET_RECEIVED_FRIEND_REQUESTS_SUCCESS:
+    "Received friend requests fetched successfully",
+  GET_SENT_FRIEND_REQUESTS_SUCCESS: "Sent friend requests fetched successfully",
 } as const;
 
 export const POST_MESSAGE = {

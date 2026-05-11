@@ -173,6 +173,24 @@ class UserService {
     }
   }
 
+  getReceivedFriendRequests(userId: string) {
+    return friendRequestRepository.findAll({
+      where: {
+        receiverId: userId,
+        status: FriendRequestStatus.PENDING,
+      },
+    });
+  }
+
+  getSentFriendRequests(userId: string) {
+    return friendRequestRepository.findAll({
+      where: {
+        senderId: userId,
+        status: FriendRequestStatus.PENDING,
+      },
+    });
+  }
+
   async findByUserId(userId: string) {
     return userRepository.findById(userId);
   }

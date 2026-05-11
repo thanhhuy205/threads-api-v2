@@ -31,4 +31,10 @@ userRouter.patch(
   userController.handleFriendRequest,
 );
 
+userRouter.get(
+  "/friend-requests/received",
+  userController.getReceivedFriendRequests,
+);
+userRouter.get("/friend-requests/sent", userController.getSentFriendRequests);
+
 export default userRouter;
