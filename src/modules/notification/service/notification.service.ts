@@ -22,6 +22,11 @@ class NotificationService {
       payload,
     };
   }
+
+  async sendRealtimeNotification(userId: string, type: 'like' | 'comment' | 'mention' | 'invite' | 'message', data: any) {
+    // TODO: implement logic to send realtime notification (like, comment, mention, invite, new message)
+    return {};
+  }
 }
 
 export const notificationService = new NotificationService();

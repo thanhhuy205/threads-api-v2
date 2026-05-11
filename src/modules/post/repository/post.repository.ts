@@ -1,7 +1,15 @@
 import prisma from "@/config/prisma";
 import { baseLogger } from "@/middlewares/logger";
-import { postFeedSelect } from "@/modules/post/selector/post.selector";
-import { PostType, Prisma, ReplyPermission, VisibilityPost } from "@prisma/client";
+import {
+  postFeedSelect,
+  postSelectRepository,
+} from "@/modules/post/selector/post.selector";
+import {
+  PostType,
+  Prisma,
+  ReplyPermission,
+  VisibilityPost,
+} from "@prisma/client";
 import { CreatePostDto, UpdatePostDto } from "../dto/post.dto";
 import { UserSnapshot } from "../mapper/post.mapper";
 
@@ -54,35 +62,35 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
       skip: after ? 1 : 0,
       cursor: after
         ? {
-          publicId: after,
-        }
+            publicId: after,
+          }
         : undefined,
       select: {
         ...postFeedSelect,
         ...(userId
           ? {
-            likes: {
-              where: {
-                userId: userId,
-                isLike: true,
+              likes: {
+                where: {
+                  userId: userId,
+                  isLike: true,
+                },
+                select: {
+                  userId: true,
+                },
+                take: 1,
               },
-              select: {
-                userId: true,
+              derivatives: {
+                where: {
+                  isQuote: true,
+                  userId: userId,
+                },
+                select: {
+                  publicId: true,
+                  userId: true,
+                },
+                take: 1,
               },
-              take: 1,
-            },
-            derivatives: {
-              where: {
-                isQuote: true,
-                userId: userId,
-              },
-              select: {
-                publicId: true,
-                userId: true,
-              },
-              take: 1,
-            },
-          }
+            }
           : {}),
       },
     });
@@ -113,7 +121,22 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
       },
     });
   }
+  private connectMedia(media?: { id: number }[]) {
+    return media?.length
+      ? { connect: media.map((m) => ({ id: m.id })) }
+      : undefined;
+  }
 
+  private baseData(payload: CreatePostPayload, userSnapshot: UserSnapshot) {
+    return {
+      content: payload.content,
+      userId: payload.userId,
+      replyPermission: payload.replyPermission ?? ReplyPermission.EVERYONE,
+      visibility: payload.visibility ?? VisibilityPost.PUBLIC,
+      userSnapshot,
+      media: this.connectMedia(payload.media),
+    };
+  }
   async create(
     payload: CreatePostPayload,
     userSnapshot: UserSnapshot,
@@ -121,29 +144,10 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
   ): Promise<PostRecord> {
     const post = await tx.post.create({
       data: {
-        content: payload.content,
-        userId: payload.userId,
-        replyPermission: payload.replyPermission ?? ReplyPermission.EVERYONE,
-        visibility: payload.visibility ?? VisibilityPost.PUBLIC,
-        userSnapshot,
-        media: payload.media?.length
-          ? {
-            connect: payload.media.map((media) => ({
-              id: media.id,
-            })),
-          }
-          : undefined,
+        ...this.baseData(payload, userSnapshot),
       },
 
-      select: {
-        id: true,
-        publicId: true,
-        content: true,
-        userId: true,
-        visibility: true,
-        createdAt: true,
-        userSnapshot: true,
-      },
+      select: postSelectRepository,
     });
 
     return {
@@ -164,30 +168,11 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
   ) {
     const post = await tx.post.create({
       data: {
-        content: payload.content,
-        userId: payload.userId,
-        replyPermission: payload.replyPermission ?? ReplyPermission.EVERYONE,
-        visibility: payload.visibility ?? VisibilityPost.PUBLIC,
+        ...this.baseData(payload, userSnapshot),
         parentPublicId,
-        userSnapshot,
         type: PostType.REPLY,
-        media: payload.media?.length
-          ? {
-            connect: payload.media.map((media) => ({
-              id: media.id,
-            })),
-          }
-          : undefined,
       },
-      select: {
-        id: true,
-        publicId: true,
-        content: true,
-        userId: true,
-        visibility: true,
-        createdAt: true,
-        userSnapshot: true,
-      },
+      select: postSelectRepository,
     });
 
     return {
@@ -209,25 +194,13 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
   ) {
     const post = await tx.post.create({
       data: {
-        userId: payload.userId,
-        originPublicId,
-        content: "", // for repost, content is empty
-        replyPermission: payload.replyPermission ?? ReplyPermission.EVERYONE,
-        visibility: payload.visibility ?? VisibilityPost.PUBLIC,
-        userSnapshot,
+        ...this.baseData(payload, userSnapshot),
+        originPublicId: originPublicId,
         isQuote: true,
         type: PostType.REPOST,
         originPostId: originPostId,
       },
-      select: {
-        id: true,
-        publicId: true,
-        content: true,
-        userId: true,
-        visibility: true,
-        createdAt: true,
-        userSnapshot: true,
-      },
+      select: postSelectRepository,
     });
 
     return {
@@ -249,32 +222,13 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
   ) {
     const post = await tx.post.create({
       data: {
-        content: payload.content,
-        userId: payload.userId,
-        originPublicId,
-        replyPermission: payload.replyPermission ?? ReplyPermission.EVERYONE,
-        visibility: payload.visibility ?? VisibilityPost.PUBLIC,
-        userSnapshot,
+        ...this.baseData(payload, userSnapshot),
         isQuote: true,
         type: PostType.QUOTE,
         originPostId: postId,
-        media: payload.media?.length
-          ? {
-            connect: payload.media.map((media) => ({
-              id: media.id,
-            })),
-          }
-          : undefined,
+        originPublicId,
       },
-      select: {
-        id: true,
-        publicId: true,
-        content: true,
-        userId: true,
-        visibility: true,
-        createdAt: true,
-        userSnapshot: true,
-      },
+      select: postSelectRepository,
     });
 
     return {
@@ -318,7 +272,10 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
     });
   }
 
-  async updateByPublicId(publicId: string, payload: UpdatePostDto): Promise<PostRecord> {
+  async updateByPublicId(
+    publicId: string,
+    payload: UpdatePostDto,
+  ): Promise<PostRecord> {
     const post = await prisma.post.update({
       where: { publicId },
       data: {
@@ -359,8 +316,6 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
       data: { isGhost },
     });
   }
-
-
 
   async incrementLikedCount(publicId: string, count: number): Promise<void> {
     await prisma.$executeRaw`

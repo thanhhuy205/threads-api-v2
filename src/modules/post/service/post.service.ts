@@ -1,5 +1,9 @@
 import { QUEUE_NAME } from "@/constants/queue";
-import { BadRequestException, ForbiddenException, NotFoundException } from "@/errors/error";
+import {
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from "@/errors/error";
 import { baseLogger } from "@/middlewares/logger";
 import { pineProducer } from "@/modules/job/pine-vector/producer/pine.producer";
 import { mixedBreadService } from "@/modules/mixed-bread/service/mixed-bread.service";
@@ -18,18 +22,30 @@ import type { NewsFeedPayload } from "@/modules/post/interfaces/news-feed-payloa
 import { PostMapper } from "@/modules/post/mapper/post.mapper";
 import { userService } from "@/modules/user/service/user.service";
 import { redisService } from "@/providers/redis.provider";
-import { buildCursorPagination, buildPagination } from "@/shared/pagination/cursor-pagination";
+import {
+  buildCursorPagination,
+  buildPagination,
+} from "@/shared/pagination/cursor-pagination";
 import { transactionService } from "@/shared/transaction/transaction.service";
-import { PostType, Prisma, ReplyPermission, VisibilityPost } from "@prisma/client";
+import {
+  PostType,
+  Prisma,
+  ReplyPermission,
+  VisibilityPost,
+} from "@prisma/client";
 import { CreatePostDto, UpdatePostDto } from "../dto/post.dto";
-import { normalizeTopic } from '../helper/nomalize.hepler';
+import { normalizeTopic } from "../helper/nomalize.hepler";
 import { PostRecord, postRepository } from "../repository/post.repository";
 import { topicsPostRepository } from "../repository/topics-post.repository";
 
 class PostService {
   private resolveReplyPermission(replyPermission?: string): ReplyPermission {
-    const normalized = (replyPermission ?? ReplyPermission.EVERYONE).trim().toUpperCase();
-    if (!Object.values(ReplyPermission).includes(normalized as ReplyPermission)) {
+    const normalized = (replyPermission ?? ReplyPermission.EVERYONE)
+      .trim()
+      .toUpperCase();
+    if (
+      !Object.values(ReplyPermission).includes(normalized as ReplyPermission)
+    ) {
       throw new BadRequestException(
         `replyPermission must be one of: ${Object.values(ReplyPermission).join(", ")}`,
       );
@@ -39,7 +55,9 @@ class PostService {
   }
 
   private resolveVisibility(visibility?: string): VisibilityPost {
-    const normalized = (visibility ?? VisibilityPost.PUBLIC).trim().toUpperCase();
+    const normalized = (visibility ?? VisibilityPost.PUBLIC)
+      .trim()
+      .toUpperCase();
     if (!Object.values(VisibilityPost).includes(normalized as VisibilityPost)) {
       throw new BadRequestException(
         `visibility must be one of: ${Object.values(VisibilityPost).join(", ")}`,
@@ -47,6 +65,39 @@ class PostService {
     }
 
     return normalized as VisibilityPost;
+  }
+
+  private async resolveUser(userId: string) {
+    const userSnapshot = await userService.findByUserId(userId);
+    if (!userSnapshot) throw new NotFoundException("User not found");
+    return PostMapper.toUserSnapshot(userSnapshot);
+  }
+
+  private async resolveOriginPost(publicId: string) {
+    const post = await postRepository.findByPublicId(publicId);
+    if (!post) throw new NotFoundException("Origin post not found");
+    return post;
+  }
+
+  private resolvePostOptions(payload: CreatePostDto) {
+    return {
+      replyPermission: this.resolveReplyPermission(payload.replyPermission),
+      visibility: this.resolveVisibility(payload.visibility),
+    };
+  }
+
+  private async createInTransaction(
+    createFn: (tx: Prisma.TransactionClient) => Promise<PostRecord>,
+    meta: { topic?: string; mentionIds: string[] },
+  ): Promise<PostRecord> {
+    return transactionService.doInTransaction(async (tx) => {
+      const post = await createFn(tx);
+
+      if (!post.id) throw new BadRequestException("Failed to create post");
+
+      await this.attachPostMeta(tx, post.id, meta);
+      return post;
+    });
   }
 
   private async validateMentions(
@@ -64,7 +115,9 @@ class PostService {
     const uniqueMentionIds = [...new Set(mentionIds)];
 
     if (uniqueMentionIds.length !== mentionIds.length) {
-      throw new BadRequestException("Mentions must not contain duplicate users");
+      throw new BadRequestException(
+        "Mentions must not contain duplicate users",
+      );
     }
 
     const existingIds = await userService.findExistingIds(uniqueMentionIds);
@@ -177,7 +230,6 @@ class PostService {
     });
   }
 
-
   async getPostsByUser({ after, take, userId }: GetPostWithUser) {
     return this.paginatePosts({
       after,
@@ -225,30 +277,15 @@ class PostService {
   }
 
   async create(payload: CreatePostPayload) {
-    const userSnapshot = await userService.findByUserId(payload.userId);
-
-    if (!userSnapshot) {
-      throw new Error("User not found");
-    }
-    const mappedSnapshot = PostMapper.toUserSnapshot(userSnapshot);
-
-    //Validate mentions 
+    const snapshot = await this.resolveUser(payload.userId);
+    //Validate mentions
     const mentionIds = await this.validateMentions(payload.mentions);
 
     // Create post and attach meta in a transaction
-    const post = await transactionService.doInTransaction(async (tx) => {
-      const createdPost = await postRepository.create(payload, mappedSnapshot, tx);
-
-      if (!createdPost.id) {
-        throw new BadRequestException("Failed to create post");
-      }
-
-      await this.attachPostMeta(tx, createdPost.id, {
-        topic: payload.topic,
-        mentionIds,
-      });
-      return createdPost;
-    });
+    const post = await this.createInTransaction(
+      (tx) => postRepository.create(payload, snapshot, tx),
+      { topic: payload.topic, mentionIds },
+    );
 
     await pineProducer.addToPineconeQueue({
       content: payload.content,
@@ -257,6 +294,78 @@ class PostService {
       userId: payload.userId,
     });
     return post;
+  }
+
+  async reply(publicId: string, payload: CreatePostDto & { userId: string }) {
+    const snapshot = await this.resolveUser(payload.userId);
+    const mentionIds = await this.validateMentions(payload.mentions);
+    const options = this.resolvePostOptions(payload);
+
+    const post = await this.createInTransaction(
+      (tx) =>
+        postRepository.createReply(
+          { ...payload, ...options },
+          publicId,
+          snapshot,
+          tx,
+        ),
+      { topic: payload.topic, mentionIds },
+    );
+    return {
+      publicId: post.publicId,
+      content: post.content!,
+      userId: post.userId,
+      visibility: post.visibility,
+      createdAt: post.createdAt,
+    } as PostRecord;
+  }
+
+  async repost(payload: CreatePostDto & { publicId: string }, userId: string) {
+    const snapshot = await this.resolveUser(userId);
+    const originPost = await this.resolveOriginPost(payload.publicId);
+    const options = this.resolvePostOptions(payload);
+
+    const post = await postRepository.createRepost(
+      { userId, content: payload.content, ...options },
+      payload.publicId,
+      snapshot,
+      originPost.id,
+    );
+
+    return {
+      publicId: post.publicId,
+      content: post.content,
+      userId: post.userId,
+      visibility: post.visibility,
+      createdAt: post.createdAt,
+    } as PostRecord;
+  }
+
+  async quote(publicId: string, payload: CreatePostDto & { userId: string }) {
+    const snapshot = await this.resolveUser(payload.userId);
+    const originPost = await this.resolveOriginPost(publicId);
+    const mentionIds = await this.validateMentions(payload.mentions);
+    const options = this.resolvePostOptions(payload);
+
+    const post = await this.createInTransaction(
+      (tx) =>
+        postRepository.createQuote(
+          { ...payload, ...options },
+          publicId,
+          snapshot,
+          originPost.id,
+          tx,
+        ),
+      { topic: payload.topic, mentionIds },
+    );
+
+    return {
+      publicId: post.publicId,
+      content: post.content,
+      userId: payload.userId,
+      visibility: post.visibility,
+      createdAt: new Date().toISOString(),
+    } as PostRecord;
   }
 
   async list(): Promise<PostRecord[]> {
@@ -293,143 +402,6 @@ class PostService {
       ...post,
     };
   }
-
-  async reply(publicId: string, payload: CreatePostDto & { userId: string }) {
-    const userSnapshot = await userService.findByUserId(payload.userId);
-
-    if (!userSnapshot) {
-      throw new Error("User not found");
-    }
-
-    const mappedSnapshot = PostMapper.toUserSnapshot(userSnapshot);
-    const mentionIds = await this.validateMentions(payload.mentions);
-    const post = await transactionService.doInTransaction(async (tx) => {
-      const createdPost = await postRepository.createReply(
-        {
-          content: payload.content,
-          userId: payload.userId,
-          media: payload.media,
-          mentions: payload.mentions,
-          topic: payload.topic,
-          replyPermission: this.resolveReplyPermission(payload.replyPermission),
-          visibility: this.resolveVisibility(payload.visibility),
-        },
-        publicId,
-        mappedSnapshot,
-        tx,
-      );
-
-      if (!createdPost.id) {
-        throw new BadRequestException("Failed to create reply");
-      }
-
-      await this.attachPostMeta(tx, createdPost.id, {
-        topic: payload.topic,
-        mentionIds,
-      });
-      return createdPost;
-    });
-
-    return {
-      publicId: post.publicId,
-      content: post.content!,
-      userId: post.userId,
-      visibility: post.visibility,
-      createdAt: post.createdAt,
-    } as PostRecord;
-  }
-
-  async repost(payload: CreatePostDto & { publicId: string }, userId: string) {
-    const userSnapshot = await userService.findByUserId(userId);
-
-    if (!userSnapshot) {
-      throw new Error("User not found");
-    }
-
-    const originPost = await postRepository.findByPublicId(payload.publicId);
-
-    if (!originPost) {
-      throw new Error("Origin post not found");
-    }
-
-    const mappedSnapshot = PostMapper.toUserSnapshot(userSnapshot);
-    const post = await postRepository.createRepost(
-      {
-        userId,
-        content: payload.content,
-        replyPermission: this.resolveReplyPermission(payload.replyPermission),
-        visibility: this.resolveVisibility(payload.visibility),
-      },
-      payload.publicId,
-      mappedSnapshot,
-      originPost.id,
-    );
-
-    return {
-      publicId: post.publicId,
-      content: post.content,
-      userId: post.userId,
-      visibility: post.visibility,
-      createdAt: post.createdAt,
-    } as PostRecord;
-  }
-
-  async quote(publicId: string, payload: CreatePostDto & { userId: string }) {
-    const userSnapshot = await userService.findByUserId(payload.userId);
-
-    if (!userSnapshot) {
-      throw new Error("User not found");
-    }
-
-    const originPost = await postRepository.findByPublicId(publicId);
-
-    if (!originPost) {
-      throw new Error("Origin post not found");
-    }
-
-    const mappedSnapshot = PostMapper.toUserSnapshot(userSnapshot);
-    const mentionIds = await this.validateMentions(payload.mentions);
-
-
-    const post = await transactionService.doInTransaction(async (tx) => {
-      const createdPost = await postRepository.createQuote(
-        {
-          userId: payload.userId,
-          content: payload.content,
-          media: payload.media,
-          mentions: payload.mentions,
-          topic: payload.topic,
-          replyPermission: this.resolveReplyPermission(payload.replyPermission),
-          visibility: this.resolveVisibility(payload.visibility),
-        },
-        publicId,
-        mappedSnapshot,
-        originPost.id,
-        tx,
-      );
-
-      if (!createdPost.id) {
-        throw new BadRequestException("Failed to create quote");
-      }
-
-      await this.attachPostMeta(tx, createdPost.id, {
-        topic: payload.topic,
-        mentionIds,
-      });
-      return createdPost;
-    })
-
-
-
-    return {
-      publicId: post.publicId,
-      content: post.content,
-      userId: payload.userId,
-      visibility: post.visibility,
-      createdAt: new Date().toISOString(),
-    } as PostRecord;
-  }
-
   async hide(publicId: string, userId: string): Promise<void> {
     const post = await postRepository.findByPublicId(publicId);
     if (!post) {
@@ -464,7 +436,11 @@ class PostService {
         await redisService.incr(countKey);
         await redisService.lPush(
           QUEUE_NAME.LIKED_ADD_QUEUE,
-          JSON.stringify({ postPublicId: publicId, createdAt: new Date().toISOString(), userId }),
+          JSON.stringify({
+            postPublicId: publicId,
+            createdAt: new Date().toISOString(),
+            userId,
+          }),
         );
       }
     } else {
@@ -474,12 +450,16 @@ class PostService {
         await redisService.decr(countKey);
         await redisService.lPush(
           QUEUE_NAME.LIKED_REMOVE_QUEUE,
-          JSON.stringify({ postPublicId: publicId, createdAt: new Date().toISOString(), userId }),
+          JSON.stringify({
+            postPublicId: publicId,
+            createdAt: new Date().toISOString(),
+            userId,
+          }),
         );
       }
     }
     const likeCount = await redisService.sCard(likeKey);
-    return likeCount
+    return likeCount;
   }
 
   async delete(publicId: string, userId: string): Promise<void> {
@@ -496,7 +476,11 @@ class PostService {
     await postRepository.softDeleteByPublicId(publicId);
   }
 
-  async update(publicId: string, userId: string, payload: UpdatePostDto): Promise<PostRecord> {
+  async update(
+    publicId: string,
+    userId: string,
+    payload: UpdatePostDto,
+  ): Promise<PostRecord> {
     const post = await postRepository.findByPublicId(publicId);
 
     if (!post) {

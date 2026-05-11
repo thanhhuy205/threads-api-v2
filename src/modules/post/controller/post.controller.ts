@@ -1,321 +1,372 @@
-import { AUTH_MESSAGE, POST_MESSAGE } from '@/constants/message';
-import { jwtService } from '@/modules/jwt/service/jwt.service';
-import { userService } from '@/modules/user/service/user.service';
-import { getPagination } from '@/shared/pagination/cursor-pagination';
-import { Request, Response } from 'express';
-import { CreatePostDto, UpdatePostDto } from '../dto/post.dto';
-import type { LikeDto } from '../dto/request/like.request';
-import type { ReportDto } from '../dto/request/post.request';
+import { AUTH_MESSAGE, POST_MESSAGE } from "@/constants/message";
+import { jwtService } from "@/modules/jwt/service/jwt.service";
+import { userService } from "@/modules/user/service/user.service";
+import { getPagination } from "@/shared/pagination/cursor-pagination";
+import { Request, Response } from "express";
+import { CreatePostDto, UpdatePostDto } from "../dto/post.dto";
+import type { LikeDto } from "../dto/request/like.request";
+import type { ReportDto } from "../dto/request/post.request";
 import {
-    CursorPaginationQueryDto,
-    NewsFeedQueryDto,
-    PublicIdParamsDto,
-    UsernameParamsDto,
-} from '../dto/request/post.request';
-import { postService } from '../service/post.service';
+  CursorPaginationQueryDto,
+  NewsFeedQueryDto,
+  PublicIdParamsDto,
+  UsernameParamsDto,
+} from "../dto/request/post.request";
+import { postService } from "../service/post.service";
 
 type SearchQueryDto = {
-    q?: string;
-    topics?: string;
-    limit?: string;
-    page?: string;
+  q?: string;
+  topics?: string;
+  limit?: string;
+  page?: string;
 };
 
 class PostController {
-    async getNewsFeedController(req: Request<{}, {}, {}, NewsFeedQueryDto>, res: Response) {
-        const { after, take } = getPagination(req);
-        const userId = await jwtService.requestAuthToken(req);
+  async getNewsFeedController(
+    req: Request<{}, {}, {}, NewsFeedQueryDto>,
+    res: Response,
+  ) {
+    const { after, take } = getPagination(req);
+    const userId = await jwtService.requestAuthToken(req);
 
-        const { posts, pagination } = await postService.getNewsFeed({
-            after: after ?? undefined,
-            take,
-            userId,
-            feedType: req.query_parsed.type,
-        });
+    const { posts, pagination } = await postService.getNewsFeed({
+      after: after ?? undefined,
+      take,
+      userId,
+      feedType: req.query_parsed.type,
+    });
 
-        return res.paginate({ rows: posts, pagination });
+    return res.paginate({ rows: posts, pagination });
+  }
+
+  async getPostMe(
+    req: Request<{}, {}, {}, CursorPaginationQueryDto>,
+    res: Response,
+  ) {
+    const userId = req.user?.sub;
+
+    if (!userId) {
+      return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
     }
 
-    async getPostMe(req: Request<{}, {}, {}, CursorPaginationQueryDto>, res: Response) {
-        const userId = req.user?.sub;
+    const { after, take } = getPagination(req);
+    const { posts, pagination } = await postService.getPostMe({
+      after: after ?? undefined,
+      take,
+      userId,
+    });
 
-        if (!userId) {
-            return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
-        }
+    return res.paginate({ rows: posts, pagination });
+  }
 
-        const { after, take } = getPagination(req);
-        const { posts, pagination } = await postService.getPostMe({
-            after: after ?? undefined,
-            take,
-            userId,
-        });
+  async getPostsByUser(
+    req: Request<UsernameParamsDto, {}, {}, CursorPaginationQueryDto>,
+    res: Response,
+  ) {
+    const { after, take } = getPagination(req);
+    const user = await userService.findByUsername(req.params.username);
 
-        return res.paginate({ rows: posts, pagination });
+    if (!user) {
+      return res.error(404, "User not found");
     }
 
-    async getPostsByUser(req: Request<UsernameParamsDto, {}, {}, CursorPaginationQueryDto>, res: Response) {
-        const { after, take } = getPagination(req);
-        const user = await userService.findByUsername(req.params.username);
-        
+    const { posts, pagination } = await postService.getPostsByUser({
+      after: after ?? undefined,
+      take,
+      userId: user.id,
+    });
 
-        if (!user) {
-            return res.error(404, 'User not found');
-        }
+    return res.paginate({ rows: posts, pagination });
+  }
 
-        const { posts, pagination } = await postService.getPostsByUser({
-            after: after ?? undefined,
-            take,
-            userId: user.id,
-        });
+  async getReplies(
+    req: Request<PublicIdParamsDto, {}, {}, CursorPaginationQueryDto>,
+    res: Response,
+  ) {
+    const { after, take } = getPagination(req);
+    const { posts, pagination } = await postService.getReplies({
+      after: after ?? undefined,
+      take,
+      publicId: req.params.publicId,
+    });
 
-        return res.paginate({ rows: posts, pagination });
+    return res.paginate({ rows: posts, pagination });
+  }
+
+  async getRepliesMe(
+    req: Request<{}, {}, {}, CursorPaginationQueryDto>,
+    res: Response,
+  ) {
+    const userId = req.user?.sub;
+
+    if (!userId) {
+      return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
     }
 
-    async getReplies(req: Request<PublicIdParamsDto, {}, {}, CursorPaginationQueryDto>, res: Response) {
-        const { after, take } = getPagination(req);
-        const { posts, pagination } = await postService.getReplies({
-            after: after ?? undefined,
-            take,
-            publicId: req.params.publicId,
-        });
+    const { after, take } = getPagination(req);
+    const { posts, pagination } = await postService.getRepliesByUser({
+      after: after ?? undefined,
+      take,
+      userId,
+    });
 
-        return res.paginate({ rows: posts, pagination });
+    return res.paginate({ rows: posts, pagination });
+  }
+
+  async getRepliesByUser(
+    req: Request<UsernameParamsDto, {}, {}, CursorPaginationQueryDto>,
+    res: Response,
+  ) {
+    const { after, take } = getPagination(req);
+    const user = await userService.findByUsername(req.params.username);
+
+    if (!user) {
+      return res.error(404, "User not found");
     }
 
-    async getRepliesMe(req: Request<{}, {}, {}, CursorPaginationQueryDto>, res: Response) {
-        const userId = req.user?.sub;
+    const { posts, pagination } = await postService.getRepliesByUser({
+      after: after ?? undefined,
+      take,
+      userId: user.id,
+    });
 
-        if (!userId) {
-            return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
-        }
+    return res.paginate({ rows: posts, pagination });
+  }
 
-        const { after, take } = getPagination(req);
-        const { posts, pagination } = await postService.getRepliesByUser({
-            after: after ?? undefined,
-            take,
-            userId,
-        });
+  async getQuoteMe(
+    req: Request<{}, {}, {}, CursorPaginationQueryDto>,
+    res: Response,
+  ) {
+    const userId = req.user?.sub;
 
-        return res.paginate({ rows: posts, pagination });
+    if (!userId) {
+      return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
     }
 
-    async getRepliesByUser(req: Request<UsernameParamsDto, {}, {}, CursorPaginationQueryDto>, res: Response) {
-        const { after, take } = getPagination(req);
-        const user = await userService.findByUsername(req.params.username);
+    const { after, take } = getPagination(req);
+    const { posts, pagination } = await postService.getQuote({
+      after: after ?? undefined,
+      take,
+      userId,
+    });
 
-        if (!user) {
-            return res.error(404, 'User not found');
-        }
+    return res.paginate({ rows: posts, pagination });
+  }
 
-        const { posts, pagination } = await postService.getRepliesByUser({
-            after: after ?? undefined,
-            take,
-            userId: user.id,
-        });
+  async getQuote(
+    req: Request<UsernameParamsDto, {}, {}, CursorPaginationQueryDto>,
+    res: Response,
+  ) {
+    const { after, take } = getPagination(req);
+    const user = await userService.findByUsername(req.params.username);
 
-        return res.paginate({ rows: posts, pagination });
+    if (!user) {
+      return res.error(404, "User not found");
     }
 
-    async getQuoteMe(req: Request<{}, {}, {}, CursorPaginationQueryDto>, res: Response) {
-        const userId = req.user?.sub;
+    const { posts, pagination } = await postService.getQuote({
+      after: after ?? undefined,
+      take,
+      userId: user.id,
+    });
 
-        if (!userId) {
-            return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
-        }
+    return res.paginate({ rows: posts, pagination });
+  }
 
-        const { after, take } = getPagination(req);
-        const { posts, pagination } = await postService.getQuote({
-            after: after ?? undefined,
-            take,
-            userId,
-        });
+  async createPostController(
+    req: Request<{}, {}, CreatePostDto>,
+    res: Response,
+  ) {
+    const userId = req.user?.sub;
 
-        return res.paginate({ rows: posts, pagination });
+    if (!userId) {
+      return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
     }
 
-    async getQuote(req: Request<UsernameParamsDto, {}, {}, CursorPaginationQueryDto>, res: Response) {
-        const { after, take } = getPagination(req);
-        const user = await userService.findByUsername(req.params.username);
+    const post = await postService.create({
+      ...req.body,
+      userId,
+    });
 
-        if (!user) {
-            return res.error(404, 'User not found');
-        }
+    return res.success(201, POST_MESSAGE.CREATED, post);
+  }
 
-        const { posts, pagination } = await postService.getQuote({
-            after: after ?? undefined,
-            take,
-            userId: user.id,
-        });
+  async create(req: Request<{}, {}, CreatePostDto>, res: Response) {
+    return this.createPostController(req, res);
+  }
 
-        return res.paginate({ rows: posts, pagination });
+  async getThread(req: Request<PublicIdParamsDto>, res: Response) {
+    const post = await postService.getById(req.params.publicId);
+
+    if (!post) {
+      return res.error(404, "Post not found");
     }
 
-    async createPostController(req: Request<{}, {}, CreatePostDto>, res: Response) {
-        const userId = req.user?.sub;
+    return res.success(200, POST_MESSAGE.RETRIEVED, post);
+  }
 
-        if (!userId) {
-            return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
-        }
+  async getPost(req: Request<PublicIdParamsDto>, res: Response) {
+    const post = await postService.getById(req.params.publicId);
 
-        const post = await postService.create({
-            ...req.body,
-            userId,
-        });
-
-        return res.success(201, POST_MESSAGE.CREATED, post);
+    if (!post) {
+      return res.error(404, "Post not found");
     }
 
-    async list(req: Request, res: Response) {
-        const posts = await postService.list();
-        return res.success(200, POST_MESSAGE.RETRIEVED, posts);
+    return res.success(200, POST_MESSAGE.RETRIEVED, post);
+  }
+
+  async replyPost(
+    req: Request<PublicIdParamsDto, {}, CreatePostDto>,
+    res: Response,
+  ) {
+    const userId = req.user?.sub;
+
+    if (!userId) {
+      return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
     }
 
-    async create(req: Request<{}, {}, CreatePostDto>, res: Response) {
-        return this.createPostController(req, res);
+    const reply = await postService.reply(req.params.publicId, {
+      ...req.body,
+      userId,
+    });
+    return res.success(201, POST_MESSAGE.CREATED, reply);
+  }
+
+  async likePost(req: Request<PublicIdParamsDto, {}, LikeDto>, res: Response) {
+    const userId = req.user?.sub;
+
+    if (!userId) {
+      return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
     }
 
-    async getThread(req: Request<PublicIdParamsDto>, res: Response) {
-        const post = await postService.getById(req.params.publicId);
+    await postService.like(req.params.publicId, userId, req.body.isLiked);
+    return res.success(200, POST_MESSAGE.RETRIEVED, {
+      liked: req.body.isLiked,
+    });
+  }
 
-        if (!post) {
-            return res.error(404, 'Post not found');
-        }
+  async repostPost(
+    req: Request<PublicIdParamsDto, {}, CreatePostDto>,
+    res: Response,
+  ) {
+    const userId = req.user?.sub;
 
-        return res.success(200, POST_MESSAGE.RETRIEVED, post);
+    if (!userId) {
+      return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
     }
 
-    async getPost(req: Request<PublicIdParamsDto>, res: Response) {
-        const post = await postService.getById(req.params.publicId);
+    const originPost = await postService.getById(req.params.publicId);
 
-        if (!post) {
-            return res.error(404, 'Post not found');
-        }
+    if (!originPost) {
+      return res.error(404, "Origin post not found");
+    }
+    const repost = await postService.repost(
+      {
+        publicId: req.params.publicId,
+        content: req.body.content ?? "",
+        replyPermission: req.body.replyPermission,
+        visibility: req.body.visibility,
+      },
+      userId,
+    );
 
-        return res.success(200, POST_MESSAGE.RETRIEVED, post);
+    return res.success(201, POST_MESSAGE.CREATED, repost);
+  }
+
+  async quotePost(
+    req: Request<PublicIdParamsDto, {}, CreatePostDto>,
+    res: Response,
+  ) {
+    const userId = req.user?.sub;
+
+    if (!userId) {
+      return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
     }
 
-    async replyPost(req: Request<PublicIdParamsDto, {}, CreatePostDto>, res: Response) {
-        const userId = req.user?.sub;
+    const quote = await postService.quote(req.params.publicId, {
+      ...req.body,
+      userId,
+    });
+    return res.success(201, POST_MESSAGE.CREATED, quote);
+  }
 
-        if (!userId) {
-            return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
-        }
+  async savePost(req: Request<PublicIdParamsDto>, res: Response) {
+    const userId = req.user?.sub;
 
-        const reply = await postService.reply(req.params.publicId, { ...req.body, userId });
-        return res.success(201, POST_MESSAGE.CREATED, reply);
+    if (!userId) {
+      return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
     }
 
-    async likePost(req: Request<PublicIdParamsDto, {}, LikeDto>, res: Response) {
-        const userId = req.user?.sub;
+    await postService.save(req.params.publicId, userId);
+    return res.success(200, POST_MESSAGE.RETRIEVED, { saved: true });
+  }
 
-        if (!userId) {
-            return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
-        }
+  async hidePost(req: Request<PublicIdParamsDto>, res: Response) {
+    const userId = req.user?.sub;
 
-        await postService.like(req.params.publicId, userId, req.body.isLiked);
-        return res.success(200, POST_MESSAGE.RETRIEVED, { liked: req.body.isLiked });
+    if (!userId) {
+      return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
     }
 
-    async repostPost(req: Request<PublicIdParamsDto, {}, CreatePostDto>, res: Response) {
-        const userId = req.user?.sub;
+    await postService.hide(req.params.publicId, userId);
+    return res.success(200, POST_MESSAGE.RETRIEVED, { hidden: true });
+  }
 
-        if (!userId) {
-            return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
-        }
+  async reportPost(
+    req: Request<PublicIdParamsDto, {}, ReportDto>,
+    res: Response,
+  ) {
+    const userId = req.user?.sub;
 
-        const originPost = await postService.getById(req.params.publicId);
-
-        if (!originPost) {
-            return res.error(404, 'Origin post not found');
-        }
-        const repost = await postService.repost({
-            publicId: req.params.publicId,
-            content: req.body.content ?? '',
-            replyPermission: req.body.replyPermission,
-            visibility: req.body.visibility,
-        }, userId);
-
-        return res.success(201, POST_MESSAGE.CREATED, repost);
+    if (!userId) {
+      return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
     }
 
-    async quotePost(req: Request<PublicIdParamsDto, {}, CreatePostDto>, res: Response) {
-        const userId = req.user?.sub;
+    await postService.report(req.params.publicId, { ...req.body, userId });
+    return res.success(200, POST_MESSAGE.RETRIEVED, { reported: true });
+  }
 
-        if (!userId) {
-            return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
-        }
+  async deletePost(req: Request<PublicIdParamsDto>, res: Response) {
+    const userId = req.user?.sub;
 
-        const quote = await postService.quote(req.params.publicId, { ...req.body, userId });
-        return res.success(201, POST_MESSAGE.CREATED, quote);
+    if (!userId) {
+      return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
     }
 
-    async savePost(req: Request<PublicIdParamsDto>, res: Response) {
-        const userId = req.user?.sub;
+    await postService.delete(req.params.publicId, userId);
+    return res.success(200, POST_MESSAGE.RETRIEVED, { deleted: true });
+  }
 
-        if (!userId) {
-            return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
-        }
+  async updatePost(
+    req: Request<PublicIdParamsDto, {}, UpdatePostDto>,
+    res: Response,
+  ) {
+    const userId = req.user?.sub;
 
-        await postService.save(req.params.publicId, userId);
-        return res.success(200, POST_MESSAGE.RETRIEVED, { saved: true });
+    if (!userId) {
+      return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
     }
 
-    async hidePost(req: Request<PublicIdParamsDto>, res: Response) {
-        const userId = req.user?.sub;
+    const post = await postService.update(
+      req.params.publicId,
+      userId,
+      req.body,
+    );
+    return res.success(200, POST_MESSAGE.RETRIEVED, post);
+  }
 
-        if (!userId) {
-            return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
-        }
+  async search(req: Request<{}, {}, {}, SearchQueryDto>, res: Response) {
+    const query = {
+      q: req.query.q ?? "",
+      topics: req.query.topics ?? "",
+      limit: req.query.limit ?? "",
+      page: req.query.page ?? "",
+    };
 
-        await postService.hide(req.params.publicId, userId);
-        return res.success(200, POST_MESSAGE.RETRIEVED, { hidden: true });
-    }
+    const results = await postService.search(query);
 
-    async reportPost(req: Request<PublicIdParamsDto, {}, ReportDto>, res: Response) {
-        const userId = req.user?.sub;
-
-        if (!userId) {
-            return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
-        }
-
-        await postService.report(req.params.publicId, { ...req.body, userId });
-        return res.success(200, POST_MESSAGE.RETRIEVED, { reported: true });
-    }
-
-    async deletePost(req: Request<PublicIdParamsDto>, res: Response) {
-        const userId = req.user?.sub;
-
-        if (!userId) {
-            return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
-        }
-
-        await postService.delete(req.params.publicId, userId);
-        return res.success(200, POST_MESSAGE.RETRIEVED, { deleted: true });
-    }
-
-    async updatePost(req: Request<PublicIdParamsDto, {}, UpdatePostDto>, res: Response) {
-        const userId = req.user?.sub;
-
-        if (!userId) {
-            return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
-        }
-
-        const post = await postService.update(req.params.publicId, userId, req.body);
-        return res.success(200, POST_MESSAGE.RETRIEVED, post);
-    }
-
-    async search(req: Request<{}, {}, {}, SearchQueryDto>, res: Response) {
-        const query = {
-            q: req.query.q ?? '',
-            topics: req.query.topics ?? '',
-            limit: req.query.limit ?? '',
-            page: req.query.page ?? '',
-        };
-
-        const results = await postService.search(query);
-
-        return res.success(200, POST_MESSAGE.SEARCH_SUCCESS, results);
-    }
+    return res.success(200, POST_MESSAGE.SEARCH_SUCCESS, results);
+  }
 }
 
 export const postController = new PostController();

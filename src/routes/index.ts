@@ -10,6 +10,9 @@ import knowledgePostRouter from '@/modules/knowledge-post/knowledge-post.route';
 import knowledgeRankingRouter from '@/modules/knowledge-ranking/knowledge-ranking.route';
 import notificationRouter from '@/modules/notification/notification.route';
 import postRouter from '@/modules/post/post.routes';
+import searchRouter from '@/modules/search/search.routes';
+import chatRouter from '@/modules/chat/chat.routes';
+import aiRouter from '@/modules/ai/ai.routes';
 import topicRouter from '@/modules/topic/topic.route';
 import uploadRouter from '@/modules/upload/upload.routes';
 import userFollowRouter from '@/modules/user/user-follow.routes';
@@ -36,5 +39,8 @@ router.use('/knowledge-post-comments', knowledgePostCommentRouter);
 router.use('/knowledge-rankings', knowledgeRankingRouter);
 router.use('/notification', notificationRouter);
 router.use('/webhooks', webhooksRouter);
+router.use('/search', searchRouter);
+router.use('/chat', chatRouter);
+router.use('/ai', aiRouter);
 
 export default router;
