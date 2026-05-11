@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="vi">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -21,6 +21,8 @@
     --serif: ui-serif, Georgia, "Times New Roman", Times, serif;
     --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     --mono: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace;
+    --border: 1.5px solid var(--g300);
+    --radius: 14px;
   }
   * { box-sizing: border-box; }
   html { scroll-behavior: smooth; }
@@ -313,11 +315,11 @@
   <header class="masthead">
     <div class="hero-grid">
       <div>
-        <div class="eyebrow">Trung tâm tài liệu nội bộ</div>
-        <h1>Docs hub cho <em>Threads API v2</em></h1>
+        <div class="eyebrow">Internal Documentation Hub</div>
+        <h1>Docs Hub for <em>Threads API v2</em></h1>
         <p class="intro">
-          Trang chính để gom tài liệu nghiệp vụ và vận hành. Tài liệu đã có sẽ mở trực tiếp,
-          các mục còn lại là placeholder để team bổ sung dần theo sprint.
+          Main hub for business and operational documentation. Existing documents open directly, 
+          while others serve as placeholders for the team to complete across sprints.
         </p>
         <nav class="toc">
           <a href="#webhook-media">Webhook &amp; Media <span class="n">1</span></a>
@@ -350,9 +352,9 @@
   </header>
 
   <section id="webhook-media">
-    <div class="sec-head"><span class="idx">01</span><h2>Webhook &amp; Media</h2><span class="count">1 tài liệu</span></div>
+    <div class="sec-head"><span class="idx">01</span><h2>Webhook &amp; Media</h2><span class="count">1 document</span></div>
     <p class="sec-intro">
-      Nhóm tài liệu cho webhook, đồng bộ trạng thái media, và các quyết định liên quan tới ingest/video lifecycle.
+      Documentation group for webhooks, media state synchronization, and decisions related to ingest/video lifecycle.
     </p>
     <div class="grid">
       <a class="card" href="mux-webhook-flow.html">
@@ -364,7 +366,7 @@
         </div>
         <div class="body">
           <div class="title">Mux Webhook Flow</div>
-          <div class="desc">Luồng nghiệp vụ verify chữ ký, lọc event, cập nhật trạng thái media và phối hợp FE/BE/QA/Ops.</div>
+          <div class="desc">Business flow for signature verification, event filtering, media state updates, and FE/BE/QA/Ops coordination.</div>
           <div class="file"><span>mux-webhook-flow.html</span><span class="arrow">→</span></div>
         </div>
       </a>
@@ -378,7 +380,7 @@
         </div>
         <div class="body">
           <div class="title">Upload to Playback Journey</div>
-          <div class="desc">Luồng từ upload media tới lúc playable, gồm retry path và điểm cảnh báo.</div>
+          <div class="desc">Journey from media upload to playable state, including retry paths and alert points.</div>
           <div class="file"><span>draft</span><span>•</span></div>
         </div>
       </div>
@@ -386,165 +388,165 @@
   </section>
 
   <section id="post-social">
-    <div class="sec-head"><span class="idx">02</span><h2>Post &amp; Social</h2><span class="count">6 tài liệu</span></div>
+    <div class="sec-head"><span class="idx">02</span><h2>Post &amp; Social</h2><span class="count">6 documents</span></div>
     <p class="sec-intro">
-      Tài liệu nghiệp vụ chi tiết cho module Post: đăng bài, sửa/xóa, tương tác (like/comment/share), lưu bài, ẩn và báo cáo. Mỗi file giải thích luồng xử lý từ người dùng đến database, kèm flowchart và tiến độ hoàn thành.
+      Detailed business documentation for the Post module: creation, edit/delete, interactions (like/comment/share), saving posts, and reporting. Each file explains the flow from user to database, with SVG flowcharts and completion status.
     </p>
     <div class="grid">
       <a class="card" href="01-dang-bai.html">
         <div class="thumb"><div style="width:100%"><div class="line s1"></div><div class="line s4"></div><div class="line s2"></div><span class="badge">business flow</span></div></div>
-        <div class="body"><div class="title">Đăng bài</div><div class="desc">Luồng tạo bài viết: text + nhiều ảnh/video, hashtag, @mention user, chọn visibility và quyền trả lời. Kèm flowchart SVG và tiến độ hoàn thành.</div><div class="file"><span>01-dang-bai.html</span><span class="arrow">→</span></div></div>
+        <div class="body"><div class="title">Post Creation</div><div class="desc">Creation flow: text + multi-image/video, hashtags, @mentions, visibility selection, and reply permissions. Includes SVG flowchart.</div><div class="file"><span>01-dang-bai.html</span><span class="arrow">→</span></div></div>
       </a>
       <a class="card" href="02-sua-xoa-bai.html">
         <div class="thumb"><div style="width:100%"><div class="line s4"></div><div class="line s1"></div><span class="badge">business flow</span></div></div>
-        <div class="body"><div class="title">Sửa / Xóa bài &amp; Quyền riêng tư</div><div class="desc">PATCH sửa nội dung + visibility, soft delete, ownership check, enum chế độ riêng tư PUBLIC/FRIENDS_ONLY/PRIVATE.</div><div class="file"><span>02-sua-xoa-bai.html</span><span class="arrow">→</span></div></div>
+        <div class="body"><div class="title">Edit / Delete &amp; Privacy</div><div class="desc">PATCH for content & visibility, soft delete, ownership checks, and privacy enums (PUBLIC/FRIENDS_ONLY/PRIVATE).</div><div class="file"><span>02-sua-xoa-bai.html</span><span class="arrow">→</span></div></div>
       </a>
       <a class="card" href="03-like-comment-share.html">
         <div class="thumb"><div style="width:100%"><div class="line s1"></div><div class="line s2"></div><div class="line s3"></div><span class="badge">business flow</span></div></div>
-        <div class="body"><div class="title">Like, Comment &amp; Share</div><div class="desc">Like qua Redis SET (idempotent), comment = reply (nested 1 cấp), repost nguyên bài, quote thêm lời. Kèm flowchart Redis-based like.</div><div class="file"><span>03-like-comment-share.html</span><span class="arrow">→</span></div></div>
+        <div class="body"><div class="title">Like, Comment &amp; Share</div><div class="desc">Idempotent Likes via Redis SET, comments as nested replies, reposts, and quotes. Includes Redis-based like flowchart.</div><div class="file"><span>03-like-comment-share.html</span><span class="arrow">→</span></div></div>
       </a>
       <a class="card" href="04-luu-bai.html">
         <div class="thumb"><div style="width:100%"><div class="line s4"></div><div class="line s2"></div><span class="badge">task list</span></div></div>
-        <div class="body"><div class="title">Lưu bài (Save Post)</div><div class="desc">Feature bookmark bài viết. Hiện tại là stub (route có, logic chưa). Kèm checklist implement và flowchart dự kiến.</div><div class="file"><span>04-luu-bai.html</span><span class="arrow">→</span></div></div>
+        <div class="body"><div class="title">Save Post</div><div class="desc">Bookmark feature. Currently stubbed (routes exist, logic pending). Includes implementation checklist and planned flow.</div><div class="file"><span>04-luu-bai.html</span><span class="arrow">→</span></div></div>
       </a>
       <a class="card" href="05-an-bai-bao-cao.html">
         <div class="thumb"><div style="width:100%"><div class="line s1"></div><div class="line s3"></div><span class="badge">business flow</span></div></div>
-        <div class="body"><div class="title">Ẩn bài &amp; Báo cáo vi phạm</div><div class="desc">Hide bài bằng isGhost toggle, report stub. Kèm roadmap: ẩn per-user, bảng Report, admin review queue.</div><div class="file"><span>05-an-bai-bao-cao.html</span><span class="arrow">→</span></div></div>
+        <div class="body"><div class="title">Hide Post &amp; Report</div><div class="desc">Hide posts via isGhost toggle, report stubs. Includes roadmap: per-user hiding, Report table, and admin review queue.</div><div class="file"><span>05-an-bai-bao-cao.html</span><span class="arrow">→</span></div></div>
       </a>
       <a class="card" href="post-visibility-edit-delete.html">
         <div class="thumb"><div style="width:100%"><div class="line s1"></div><div class="line s4"></div><span class="badge">policy note</span></div></div>
-        <div class="body"><div class="title">Post Visibility, Edit &amp; Soft Delete</div><div class="desc">Quy ước VisibilityPost, PATCH bằng publicId, xóa mềm, và note FRIEND = mutual follow chưa enforce read-filter.</div><div class="file"><span>post-visibility-edit-delete.html</span><span class="arrow">→</span></div></div>
+        <div class="body"><div class="title">Visibility, Edit &amp; Delete</div><div class="desc">VisibilityPost conventions, PATCH via publicId, soft delete, and mutual follow (FRIEND) read-filter notes.</div><div class="file"><span>post-visibility-edit-delete.html</span><span class="arrow">→</span></div></div>
       </a>
     </div>
   </section>
 
   <section id="relationship">
-    <div class="sec-head"><span class="idx">03</span><h2>Relationship &amp; Feed</h2><span class="count">2 tài liệu</span></div>
+    <div class="sec-head"><span class="idx">03</span><h2>Relationship &amp; Feed</h2><span class="count">2 documents</span></div>
     <p class="sec-intro">
-      Follow/Unfollow, lời mời kết bạn, và thuật toán Newsfeed. Quản lý mối quan hệ giữa users và cách hiển thị nội dung trên timeline.
+      Follow/Unfollow, friend requests, and newsfeed algorithms. Managing user relationships and timeline content display.
     </p>
     <div class="grid">
       <a class="card" href="06-follow-friend-request.html">
         <div class="thumb"><div style="width:100%"><div class="line s1"></div><div class="line s2"></div><div class="line s4"></div><span class="badge">task spec</span></div></div>
-        <div class="body"><div class="title">Follow &amp; Friend Request</div><div class="desc">Follow toggle (done), danh sách followers/following, gửi/chấp nhận/từ chối lời mời kết bạn, mutual friend check. Flowchart đề xuất.</div><div class="file"><span>06-follow-friend-request.html</span><span class="arrow">→</span></div></div>
+        <div class="body"><div class="title">Follow &amp; Friend Request</div><div class="desc">Follow toggle, followers/following lists, send/accept/reject friend requests, and mutual friend checks. Includes flowcharts.</div><div class="file"><span>06-follow-friend-request.html</span><span class="arrow">→</span></div></div>
       </a>
       <a class="card" href="07-newsfeed.html">
         <div class="thumb"><div style="width:100%"><div class="line s4"></div><div class="line s1"></div><span class="badge">task spec</span></div></div>
-        <div class="body"><div class="title">Newsfeed</div><div class="desc">Feed FOR_YOU + FOLLOWING, đề xuất ranking algorithm (engagement score + time decay + affinity), cache Redis, filter visibility.</div><div class="file"><span>07-newsfeed.html</span><span class="arrow">→</span></div></div>
+        <div class="body"><div class="title">Newsfeed</div><div class="desc">FOR_YOU + FOLLOWING feeds, ranking algorithm (engagement + decay + affinity), Redis caching, and visibility filters.</div><div class="file"><span>07-newsfeed.html</span><span class="arrow">→</span></div></div>
       </a>
     </div>
   </section>
 
   <section id="realtime">
-    <div class="sec-head"><span class="idx">04</span><h2>Realtime</h2><span class="count">2 tài liệu</span></div>
+    <div class="sec-head"><span class="idx">04</span><h2>Realtime</h2><span class="count">2 documents</span></div>
     <p class="sec-intro">
-      Chat nhắn tin 1-1 và thông báo realtime qua Pusher (Soketi). WebSocket, trạng thái đã xem, typing indicator.
+      1-1 messaging and realtime notifications via Pusher (Soketi). WebSockets, read states, and typing indicators.
     </p>
     <div class="grid">
       <a class="card" href="08-chat-realtime.html">
         <div class="thumb"><div style="width:100%"><div class="line s1"></div><div class="line s3"></div><div class="line s2"></div><span class="badge">task spec</span></div></div>
-        <div class="body"><div class="title">Chat 1-1 Realtime</div><div class="desc">Gửi tin nhắn, tạo conversation, đánh dấu đã xem (✓✓), typing indicator, online status. Flowchart đề xuất đầy đủ.</div><div class="file"><span>08-chat-realtime.html</span><span class="arrow">→</span></div></div>
+        <div class="body"><div class="title">1-1 Realtime Chat</div><div class="desc">Messaging, conversation creation, read receipts (✓✓), typing indicators, and online status. Includes full flowcharts.</div><div class="file"><span>08-chat-realtime.html</span><span class="arrow">→</span></div></div>
       </a>
       <a class="card" href="09-notification-realtime.html">
         <div class="thumb"><div style="width:100%"><div class="line s4"></div><div class="line s1"></div><span class="badge">task spec</span></div></div>
-        <div class="body"><div class="title">Thông báo Realtime</div><div class="desc">6 loại notification (like, comment, mention, follow, friend request, message). Trigger events → DB + Pusher → toast popup.</div><div class="file"><span>09-notification-realtime.html</span><span class="arrow">→</span></div></div>
+        <div class="body"><div class="title">Realtime Notifications</div><div class="desc">6 notification types (like, comment, mention, follow, friend request, message). Events trigger DB + Pusher toast popups.</div><div class="file"><span>09-notification-realtime.html</span><span class="arrow">→</span></div></div>
       </a>
     </div>
   </section>
 
   <section id="search-ai">
-    <div class="sec-head"><span class="idx">05</span><h2>Search &amp; AI</h2><span class="count">2 tài liệu</span></div>
+    <div class="sec-head"><span class="idx">05</span><h2>Search &amp; AI</h2><span class="count">2 documents</span></div>
     <p class="sec-intro">
-      Tìm kiếm (user, post, hashtag) và các tính năng AI: Content Moderation, Caption Generator, Smart Reply, Recommendation.
+      User, post, and hashtag search alongside AI features: moderation, caption generation, smart reply, and recommendations.
     </p>
     <div class="grid">
       <a class="card" href="10-search.html">
         <div class="thumb"><div style="width:100%"><div class="line s1"></div><div class="line s2"></div><span class="badge">task spec</span></div></div>
-        <div class="body"><div class="title">Tìm kiếm</div><div class="desc">Search user (ILIKE), post (Full-text / Pinecone AI), hashtag (Topic table). Flowchart multi-type search, autocomplete, GIN index.</div><div class="file"><span>10-search.html</span><span class="arrow">→</span></div></div>
+        <div class="body"><div class="title">Search</div><div class="desc">User search (ILIKE), post search (Full-text / Pinecone AI), and hashtags. Includes multi-type search and autocomplete flowcharts.</div><div class="file"><span>10-search.html</span><span class="arrow">→</span></div></div>
       </a>
       <a class="card" href="12-ai-integration.html">
         <div class="thumb"><div style="width:100%"><div class="line s3"></div><div class="line s4"></div><div class="line s1"></div><span class="badge">task spec</span></div></div>
-        <div class="body"><div class="title">AI Integration</div><div class="desc">4 features: Content Moderation (bắt buộc), Caption Generator, Smart Reply, Recommendation. Flowchart, chi phí, vấn đề phát sinh.</div><div class="file"><span>12-ai-integration.html</span><span class="arrow">→</span></div></div>
+        <div class="body"><div class="title">AI Integration</div><div class="desc">4 features: Content Moderation, Caption Generator, Smart Reply, and Recommendation. Includes flowcharts and cost analysis.</div><div class="file"><span>12-ai-integration.html</span><span class="arrow">→</span></div></div>
       </a>
     </div>
   </section>
 
   <section id="admin">
-    <div class="sec-head"><span class="idx">06</span><h2>Admin / CMS</h2><span class="count">1 tài liệu</span></div>
+    <div class="sec-head"><span class="idx">06</span><h2>Admin / CMS</h2><span class="count">1 document</span></div>
     <p class="sec-intro">
-      Quản lý user (khóa/ban), duyệt báo cáo vi phạm, hashtag trending, thống kê hệ thống. Admin guard middleware.
+      User management (lock/ban), report moderation, trending hashtags, and system statistics. Includes Admin guard middleware.
     </p>
     <div class="grid">
       <a class="card" href="11-admin-cms.html">
         <div class="thumb"><div style="width:100%"><div class="line s1"></div><div class="line s4"></div><div class="line s2"></div><span class="badge">task spec</span></div></div>
-        <div class="body"><div class="title">Admin / CMS</div><div class="desc">4 chức năng: User moderation (lock/ban/unlock), Report review queue, Hashtag trending, Statistics dashboard. Flowchart duyệt báo cáo.</div><div class="file"><span>11-admin-cms.html</span><span class="arrow">→</span></div></div>
+        <div class="body"><div class="title">Admin / CMS</div><div class="desc">Moderation (lock/ban), report review queue, trending hashtags, and statistics dashboard. Includes review flowcharts.</div><div class="file"><span>11-admin-cms.html</span><span class="arrow">→</span></div></div>
       </a>
     </div>
   </section>
 
   <section id="auth-user">
-    <div class="sec-head"><span class="idx">07</span><h2>Auth &amp; User</h2><span class="count">1 tài liệu</span></div>
+    <div class="sec-head"><span class="idx">07</span><h2>Auth &amp; User</h2><span class="count">1 document</span></div>
     <p class="sec-intro">
-      Tài liệu cho lifecycle token, xác thực phiên, blacklist, và các chính sách bảo vệ tài khoản.
+      Documentation for token lifecycle, session validation, blacklisting, and account protection policies.
     </p>
     <div class="grid">
       <a class="card" href="auth-flow.html">
         <div class="thumb"><div style="width:100%"><div class="line s1"></div><div class="line s4"></div><span class="badge">flow map</span></div></div>
-        <div class="body"><div class="title">Auth Flow Map</div><div class="desc">Luồng register/login, refresh token rotation, middleware guard, logout blacklist, email verification, reset password và flow chart tổng quan.</div><div class="file"><span>auth-flow.html</span><span class="arrow">→</span></div></div>
+        <div class="body"><div class="title">Auth Flow Map</div><div class="desc">Register/login, refresh token rotation, middleware guards, logout blacklist, and verification flows with overview charts.</div><div class="file"><span>auth-flow.html</span><span class="arrow">→</span></div></div>
       </a>
       <div class="card disabled">
         <div class="thumb"><div style="width:100%"><div class="line s1"></div><div class="line s2"></div><span class="badge">coming soon</span></div></div>
-        <div class="body"><div class="title">Token Lifecycle Runbook</div><div class="desc">Định nghĩa chuẩn cho login/refresh/logout và xử lý token invalid trong vận hành.</div><div class="file"><span>draft</span><span>•</span></div></div>
+        <div class="body"><div class="title">Token Lifecycle Runbook</div><div class="desc">Standard definitions for login/refresh/logout and handling invalid tokens during operations.</div><div class="file"><span>draft</span><span>•</span></div></div>
       </div>
     </div>
   </section>
 
   <section id="data-database">
-    <div class="sec-head"><span class="idx">08</span><h2>Data &amp; Database</h2><span class="count">1 tài liệu</span></div>
+    <div class="sec-head"><span class="idx">08</span><h2>Data &amp; Database</h2><span class="count">1 document</span></div>
     <p class="sec-intro">
-      Tài liệu thiết kế database, domain aggregate, relation map, enum vocabulary và field-level schema theo Prisma hiện tại.
+      Database design, domain aggregates, relation maps, enum vocabularies, and field-level schemas based on current Prisma models.
     </p>
     <div class="grid">
       <a class="card" href="database-design.html">
         <div class="thumb"><div style="width:100%"><div class="line s1"></div><div class="line s2"></div><span class="badge">schema map</span></div></div>
-        <div class="body"><div class="title">Database Design Map</div><div class="desc">Tổng quan 27 model, 23 enum, relation graph, indexes/uniques và notes thiết kế từ prisma/schema.prisma.</div><div class="file"><span>database-design.html</span><span class="arrow">→</span></div></div>
+        <div class="body"><div class="title">Database Design Map</div><div class="desc">Overview of 27 models, 23 enums, relation graphs, and indexes/uniques from prisma/schema.prisma.</div><div class="file"><span>database-design.html</span><span class="arrow">→</span></div></div>
       </a>
     </div>
   </section>
 
   <section id="ops-runbook">
-    <div class="sec-head"><span class="idx">09</span><h2>Ops &amp; Runbook</h2><span class="count">1 tài liệu</span></div>
+    <div class="sec-head"><span class="idx">09</span><h2>Ops &amp; Runbook</h2><span class="count">1 document</span></div>
     <p class="sec-intro">
-      Nơi tập trung incident timeline, post-mortem template, alert threshold và checklist release tổng quát.
+      Centralized incident timelines, post-mortem templates, alert thresholds, and general release checklists.
     </p>
     <div class="grid">
       <a class="card" href="job-worker-flow.html">
         <div class="thumb"><div style="width:100%"><div class="line s4"></div><div class="line s1"></div><span class="badge">worker map</span></div></div>
-        <div class="body"><div class="title">Job &amp; Worker Operations Map</div><div class="desc">Tổng quan producer, BullMQ queues, workers, QueueEvents, Redis like buffers và service nào đang enqueue job.</div><div class="file"><span>job-worker-flow.html</span><span class="arrow">→</span></div></div>
+        <div class="body"><div class="title">Job &amp; Worker Operations Map</div><div class="desc">Overview of producers, BullMQ queues, workers, QueueEvents, and Redis buffers for job enqueueing.</div><div class="file"><span>job-worker-flow.html</span><span class="arrow">→</span></div></div>
       </a>
       <div class="card disabled">
         <div class="thumb"><div style="width:100%"><div class="line s4"></div><div class="line s3"></div><span class="badge">coming soon</span></div></div>
-        <div class="body"><div class="title">Incident Playbook</div><div class="desc">Mẫu điều tra sự cố và bộ hành động chuẩn để rút ngắn thời gian xử lý.</div><div class="file"><span>draft</span><span>•</span></div></div>
+        <div class="body"><div class="title">Incident Playbook</div><div class="desc">Investigation templates and standard action sets to minimize resolution time.</div><div class="file"><span>draft</span><span>•</span></div></div>
       </div>
     </div>
   </section>
 
   <section id="bonus">
-    <div class="sec-head"><span class="idx">10</span><h2>Bonus Features</h2><span class="count">1 tài liệu</span></div>
+    <div class="sec-head"><span class="idx">10</span><h2>Bonus Features</h2><span class="count">1 document</span></div>
     <p class="sec-intro">
-      Các tính năng bổ sung tùy chọn: Story 24h, Group/Community, Live Stream. Đề xuất kiến trúc và roadmap.
+      Optional features: 24h Stories, Groups/Communities, and Live Streaming. Includes architectural proposals and roadmaps.
     </p>
     <div class="grid">
       <a class="card" href="13-bonus-features.html">
         <div class="thumb"><div style="width:100%"><div class="line s3"></div><div class="line s1"></div><div class="line s4"></div><span class="badge">task spec</span></div></div>
-        <div class="body"><div class="title">Story 24h · Group · Live Stream</div><div class="desc">3 bonus features: Story tạm thời (24h expire + cron cleanup), Group/Community (mở rộng Circle), Live Stream (Mux Live + Pusher chat).</div><div class="file"><span>13-bonus-features.html</span><span class="arrow">→</span></div></div>
+        <div class="body"><div class="title">Stories, Groups &amp; Live Stream</div><div class="desc">Story lifecycle (24h expire + cleanup), Community extensions (Circle), and Mux Live + Pusher chat integration.</div><div class="file"><span>13-bonus-features.html</span><span class="arrow">→</span></div></div>
       </a>
     </div>
   </section>
 
   <footer>
     <span class="k">Docs should be readable, not just complete.</span>
-    <span>Threads API v2 · docs/index.html · Updated 2026-05-10</span>
+    <span>Threads API v2 · docs/index.html · Updated 2026-05-11</span>
   </footer>
 </div>
 </body>
