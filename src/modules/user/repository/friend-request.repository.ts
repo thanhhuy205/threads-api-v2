@@ -1,4 +1,5 @@
 import prisma from "@/config/prisma";
+import { buildPagination } from "@/shared/pagination/cursor-pagination";
 import { FriendRequest, FriendRequestStatus, Prisma } from "@prisma/client";
 
 class FriendRequestRepository implements ICursorPagination<
@@ -16,11 +17,13 @@ class FriendRequestRepository implements ICursorPagination<
     where: Prisma.FriendRequestWhereInput;
     cursor?: Prisma.FriendRequestWhereUniqueInput;
   }): Promise<FriendRequest[]> {
+    const { currentAfter, currentLimit } = buildPagination({ after, take });
+
     return prisma.friendRequest.findMany({
       where,
-      take: take ? take + 1 : 10,
-      skip: cursor ? 1 : 0,
-      cursor: cursor,
+      take: currentLimit + 1,
+      skip: currentAfter ? 1 : 0,
+      cursor: currentAfter ? cursor : undefined,
       orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     });
   }
@@ -39,6 +42,7 @@ class FriendRequestRepository implements ICursorPagination<
         receiverId,
         status: FriendRequestStatus.PENDING,
       },
+      after: senderId,
       cursor: senderId
         ? { senderId_receiverId: { senderId, receiverId } }
         : undefined,
@@ -60,6 +64,7 @@ class FriendRequestRepository implements ICursorPagination<
         senderId,
         status: FriendRequestStatus.PENDING,
       },
+      after: receiverId,
       cursor: receiverId
         ? {
             senderId_receiverId: {
