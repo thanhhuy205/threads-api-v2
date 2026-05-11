@@ -1,4 +1,4 @@
-import { rolePermissionRepository } from "./role-permission.repository";
+import { rolePermissionRepository } from "../repository/role-permission.repository";
 
 class RolePermissionService {
   async getRolePermissions(roleId: string) {

@@ -1,4 +1,4 @@
-import { roleRepository } from "./role.repository";
+import { roleRepository } from "../repository/role.repository";
 
 class RoleService {
   async getRoles() {

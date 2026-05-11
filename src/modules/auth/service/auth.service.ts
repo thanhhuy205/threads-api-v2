@@ -14,7 +14,7 @@ import { TokenPairResponse } from "@/modules/jwt/dto/response/token-pair.respons
 import { jwtService } from "@/modules/jwt/service/jwt.service";
 import { userRepository } from "@/modules/user/repository/user.repository";
 import { redisService } from "@/providers/redis.provider";
-import { VerificationCodeType } from "@prisma/client";
+import { UserRoleType, UserStatus, VerificationCodeType } from "@prisma/client";
 import crypto from "crypto";
 import ms, { StringValue } from "ms";
 import type { ForgotPasswordDto } from "../dto/request/forgot-password.request.dto";
@@ -36,6 +36,8 @@ import type { ForgotPasswordResponseDto } from "../dto/response/forgot-password.
 import type { UpdateProfileDataDto } from "../dto/response/update-profile.response.dto";
 import type { ValidateTokenResponseDto } from "../dto/response/validate-token.response.dto";
 import type { ValidateUserResponseDto } from "../dto/response/validate-user.response.dto";
+import { roleRepository } from "@/modules/access-control/role/repository/role.repository";
+import { userRoleRepository } from "@/modules/access-control/role/repository/user-role.repository";
 import { authRepository } from "../repository/auth.repository";
 
 class AuthService {
@@ -45,9 +47,16 @@ class AuthService {
   ): Promise<AuthSessionResponseDto> {
     const password = hashPassword(payload.password);
     const user = await authRepository.createUser({ ...payload, password });
+
+    const role = await roleRepository.findByName(UserRoleType.USER);
+    if (role) {
+      await userRoleRepository.assignRole(user.id, role.id);
+    }
+
     const tokenPair = await jwtService.generateTokenPair({
       userId: user.id,
       status: user.status,
+      roles: [UserRoleType.USER],
     });
 
     await Promise.all([
@@ -122,9 +131,13 @@ class AuthService {
       return null;
     }
 
+    const userRoles = await userRoleRepository.findByUserId(user.id);
+    const roles = userRoles.map((ur) => ur.role.name as UserRoleType);
+
     const tokenPair = await jwtService.generateTokenPair({
       userId: user.id,
       status: user.status,
+      roles: roles,
     });
 
     await this.createRefreshToken(
@@ -274,10 +287,14 @@ class AuthService {
 
     await authRepository.revokeRefreshTokenById(refreshToken.id, now);
 
+    const userRoles = await userRoleRepository.findByUserId(user.id);
+    const roles = userRoles.map((ur) => ur.role.name as UserRoleType);
+
     const tokenPair = await jwtService.generateTokenPair({
       userId: refreshToken.userId,
       sessionId: refreshToken.sessionId,
       status: user.status,
+      roles: roles,
     });
 
     await this.createRefreshToken(

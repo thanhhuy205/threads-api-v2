@@ -9,6 +9,7 @@ datasource db {
 enum UserRoleType {
     USER
     ADMIN
+    MODERATOR
 }
 
 enum PostType {
@@ -172,7 +173,7 @@ enum FriendRequestStatus {
 
 model Role {
     id              String           @id @default(cuid())
-    name            String           @unique @db.VarChar(50)
+    name            UserRoleType     @unique
     createdAt       DateTime         @default(now()) @map("created_at")
     updatedAt       DateTime         @updatedAt @map("updated_at")
     userRoles       UserRole[]

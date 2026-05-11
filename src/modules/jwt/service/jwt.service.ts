@@ -11,9 +11,9 @@ import { v4 as uuidv4 } from 'uuid';
 class JwtService {
     private readonly JWT_SECRET: string = configService.JWT_SECRET;
     private readonly ACCESS_EXPIRES: string = configService.ACCESS_EXPIRES;
-    async signAccessToken({ userId, status, sessionId }: PayloadSignTokenDto) {
+    async signAccessToken({ userId, status, sessionId, roles }: PayloadSignTokenDto) {
         return this.signToken({
-            payload: { sub: userId, status, sid: sessionId },
+            payload: { sub: userId, status, sid: sessionId, roles },
             options: { expiresIn: ms(this.ACCESS_EXPIRES as ms.StringValue) / 1000 }
         });
     }
@@ -22,9 +22,9 @@ class JwtService {
         return crypto.randomBytes(64).toString('hex');
     }
 
-    async generateTokenPair({ userId, status, sessionId = uuidv4() }: PayloadSignTokenDto): Promise<TokenPairResponse> {
+    async generateTokenPair({ userId, status, roles, sessionId = uuidv4() }: PayloadSignTokenDto): Promise<TokenPairResponse> {
         const [accessToken, refreshToken] = await Promise.all([
-            this.signAccessToken({ userId, status, sessionId }),
+            this.signAccessToken({ userId, status, sessionId, roles }),
             this.signRefreshToken()
         ]);
 

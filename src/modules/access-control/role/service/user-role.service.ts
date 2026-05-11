@@ -1,4 +1,4 @@
-import { userRoleRepository } from "./user-role.repository";
+import { userRoleRepository } from "../repository/user-role.repository";
 
 class UserRoleService {
   async getUserRoles(userId: string) {
@@ -7,6 +7,10 @@ class UserRoleService {
 
   async assignRoleToUser(userId: string, roleId: string) {
     return userRoleRepository.assignRole(userId, roleId);
+  }
+
+  async findByUserId(userId: string) {
+    return userRoleRepository.findByUserId(userId);
   }
 }
 

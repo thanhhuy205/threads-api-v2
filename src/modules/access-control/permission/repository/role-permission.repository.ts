@@ -18,6 +18,15 @@ class RolePermissionRepository {
     });
   }
 
+  async findRoleAndPermission(roleId: string, permissionId: string) {
+    return prisma.rolePermission.findFirst({
+      where: {
+        roleId,
+        permissionId,
+      },
+    });
+  }
+
   async removePermission(roleId: string, permissionId: string) {
     return prisma.rolePermission.deleteMany({
       where: {

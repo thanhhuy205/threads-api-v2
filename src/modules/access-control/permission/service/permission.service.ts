@@ -1,4 +1,4 @@
-import { permissionRepository } from "./permission.repository";
+import { permissionRepository } from "../repository/permission.repository";
 
 class PermissionService {
   async getPermissions() {
