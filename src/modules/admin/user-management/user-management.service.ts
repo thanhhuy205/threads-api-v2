@@ -1,14 +1,18 @@
+import { UserStatus } from "@prisma/client";
 import { userManagementRepository } from "./user-management.repository";
 
 class UserManagementService {
-  async moderateUser(userId: string, action: "lock" | "unlock" | "temporary_ban") {
-    await userManagementRepository.updateUserModeration(userId, action);
+  async getAllUsers() {
+    const users = await userManagementRepository.findAllUsers();
+    return users.map((user) => ({
+      ...user,
+      roles: user.userRoles.map((ur) => ur.role.name),
+      isVerified: !!user.verifiedAt,
+    }));
+  }
 
-    return {
-      userId,
-      action,
-      implemented: false,
-    };
+  async banUser(userId: string) {
+    return userManagementRepository.updateUserStatus(userId, UserStatus.BANNED);
   }
 }
 

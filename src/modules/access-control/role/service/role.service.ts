@@ -1,12 +1,12 @@
+import { ConflictException } from "@/errors/error";
 import { roleRepository } from "../repository/role.repository";
 
 class RoleService {
   async getRoles() {
     return roleRepository.findAll();
   }
-
-  async createRole(name: string) {
-    return roleRepository.create({ name });
+  async findByName(name: string) {
+    return roleRepository.findByName(name);
   }
 }
 

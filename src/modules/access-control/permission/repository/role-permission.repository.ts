@@ -1,5 +1,5 @@
 import prisma from "@/config/prisma";
-import type { Prisma } from "@prisma/client";
+import type { UserRoleType } from "@prisma/client";
 
 class RolePermissionRepository {
   async findByRoleId(roleId: string) {
@@ -18,11 +18,22 @@ class RolePermissionRepository {
     });
   }
 
-  async findRoleAndPermission(roleId: string, permissionId: string) {
-    return prisma.rolePermission.findFirst({
+  async findPermission(roles: UserRoleType[]) {
+    return prisma.rolePermission.findMany({
       where: {
-        roleId,
-        permissionId,
+        role: {
+          name: {
+            in: roles,
+          },
+        },
+      },
+      select: {
+        permission: {
+          select: {
+            code: true,
+            name: true,
+          },
+        },
       },
     });
   }

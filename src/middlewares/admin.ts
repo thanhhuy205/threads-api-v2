@@ -11,12 +11,7 @@ export const adminHandler = async (req: Request, _res: Response, next: NextFunct
     throw new UnauthorizedException(AUTH_MESSAGE.TOKEN_INVALID);
   }
 
-  const user = await userRepository.findById(userId);
-  if (!user) {
-    throw new UnauthorizedException(AUTH_MESSAGE.TOKEN_INVALID);
-  }
-
-  if (user.role !== UserRoleType.ADMIN) {
+  if (!req.user?.roles.includes(UserRoleType.ADMIN)) {
     throw new ForbiddenException(COMMON_MESSAGE.UNAUTHORIZED);
   }
 

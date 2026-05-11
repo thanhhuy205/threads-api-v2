@@ -173,7 +173,7 @@ enum FriendRequestStatus {
 
 model Role {
     id              String           @id @default(cuid())
-    name            UserRoleType     @unique
+    name            String           @unique @db.VarChar(20)
     createdAt       DateTime         @default(now()) @map("created_at")
     updatedAt       DateTime         @updatedAt @map("updated_at")
     userRoles       UserRole[]

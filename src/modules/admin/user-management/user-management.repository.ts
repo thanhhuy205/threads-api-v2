@@ -1,6 +1,35 @@
+import prisma from "@/config/prisma";
+import { UserStatus } from "@prisma/client";
+
 class UserManagementRepository {
-  async updateUserModeration(_userId: string, _action: "lock" | "unlock" | "temporary_ban") {
-    return;
+  async findAllUsers() {
+    return prisma.user.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        username: true,
+        status: true,
+        verifiedAt: true,
+        createdAt: true,
+        userRoles: {
+          select: {
+            role: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  async updateUserStatus(userId: string, status: UserStatus) {
+    return prisma.user.update({
+      where: { id: userId },
+      data: { status },
+    });
   }
 }
 
