@@ -321,7 +321,7 @@
         </p>
         <nav class="toc">
           <a href="#webhook-media">Webhook &amp; Media <span class="n">1</span></a>
-          <a href="#post-social">Post &amp; Social <span class="n">1</span></a>
+          <a href="#post-social">Post &amp; Social <span class="n">6</span></a>
           <a href="#auth-user">Auth &amp; User <span class="n">1</span></a>
           <a href="#data-database">Data &amp; Database <span class="n">1</span></a>
           <a href="#ops-runbook">Ops &amp; Runbook <span class="n">1</span></a>
@@ -381,23 +381,35 @@
   </section>
 
   <section id="post-social">
-    <div class="sec-head"><span class="idx">02</span><h2>Post &amp; Social</h2><span class="count">1 tài liệu</span></div>
+    <div class="sec-head"><span class="idx">02</span><h2>Post &amp; Social</h2><span class="count">6 tài liệu</span></div>
     <p class="sec-intro">
-      Tài liệu cho topic/mentions/reply/quote, policy feed, và các quy ước tương tác xã hội trong sản phẩm.
+      Tài liệu nghiệp vụ chi tiết cho module Post: đăng bài, sửa/xóa, tương tác (like/comment/share), lưu bài, ẩn và báo cáo. Mỗi file giải thích luồng xử lý từ người dùng đến database, kèm flowchart và tiến độ hoàn thành.
     </p>
     <div class="grid">
+      <a class="card" href="01-dang-bai.html">
+        <div class="thumb"><div style="width:100%"><div class="line s1"></div><div class="line s4"></div><div class="line s2"></div><span class="badge">business flow</span></div></div>
+        <div class="body"><div class="title">Đăng bài</div><div class="desc">Luồng tạo bài viết: text + nhiều ảnh/video, hashtag, @mention user, chọn visibility và quyền trả lời. Kèm flowchart SVG và tiến độ hoàn thành.</div><div class="file"><span>01-dang-bai.html</span><span class="arrow">→</span></div></div>
+      </a>
+      <a class="card" href="02-sua-xoa-bai.html">
+        <div class="thumb"><div style="width:100%"><div class="line s4"></div><div class="line s1"></div><span class="badge">business flow</span></div></div>
+        <div class="body"><div class="title">Sửa / Xóa bài &amp; Quyền riêng tư</div><div class="desc">PATCH sửa nội dung + visibility, soft delete, ownership check, enum chế độ riêng tư PUBLIC/FRIENDS_ONLY/PRIVATE.</div><div class="file"><span>02-sua-xoa-bai.html</span><span class="arrow">→</span></div></div>
+      </a>
+      <a class="card" href="03-like-comment-share.html">
+        <div class="thumb"><div style="width:100%"><div class="line s1"></div><div class="line s2"></div><div class="line s3"></div><span class="badge">business flow</span></div></div>
+        <div class="body"><div class="title">Like, Comment &amp; Share</div><div class="desc">Like qua Redis SET (idempotent), comment = reply (nested 1 cấp), repost nguyên bài, quote thêm lời. Kèm flowchart Redis-based like.</div><div class="file"><span>03-like-comment-share.html</span><span class="arrow">→</span></div></div>
+      </a>
+      <a class="card" href="04-luu-bai.html">
+        <div class="thumb"><div style="width:100%"><div class="line s4"></div><div class="line s2"></div><span class="badge">task list</span></div></div>
+        <div class="body"><div class="title">Lưu bài (Save Post)</div><div class="desc">Feature bookmark bài viết. Hiện tại là stub (route có, logic chưa). Kèm checklist implement và flowchart dự kiến.</div><div class="file"><span>04-luu-bai.html</span><span class="arrow">→</span></div></div>
+      </a>
+      <a class="card" href="05-an-bai-bao-cao.html">
+        <div class="thumb"><div style="width:100%"><div class="line s1"></div><div class="line s3"></div><span class="badge">business flow</span></div></div>
+        <div class="body"><div class="title">Ẩn bài &amp; Báo cáo vi phạm</div><div class="desc">Hide bài bằng isGhost toggle, report stub. Kèm roadmap: ẩn per-user, bảng Report, admin review queue.</div><div class="file"><span>05-an-bai-bao-cao.html</span><span class="arrow">→</span></div></div>
+      </a>
       <a class="card" href="post-visibility-edit-delete.html">
         <div class="thumb"><div style="width:100%"><div class="line s1"></div><div class="line s4"></div><span class="badge">policy note</span></div></div>
         <div class="body"><div class="title">Post Visibility, Edit &amp; Soft Delete</div><div class="desc">Quy ước VisibilityPost, PATCH bằng publicId, xóa mềm, và note FRIEND = mutual follow chưa enforce read-filter.</div><div class="file"><span>post-visibility-edit-delete.html</span><span class="arrow">→</span></div></div>
       </a>
-      <div class="card disabled">
-        <div class="thumb"><div style="width:100%"><div class="line s1"></div><div class="line s3"></div><span class="badge">coming soon</span></div></div>
-        <div class="body"><div class="title">Topic &amp; Mentions Rules</div><div class="desc">Ràng buộc nghiệp vụ cho topic mỗi post, mentions, và cách hiển thị nội dung liên quan.</div><div class="file"><span>draft</span><span>•</span></div></div>
-      </div>
-      <div class="card disabled">
-        <div class="thumb"><div style="width:100%"><div class="line s4"></div><div class="line s2"></div><span class="badge">coming soon</span></div></div>
-        <div class="body"><div class="title">Reply / Quote Semantics</div><div class="desc">Phân biệt ngữ nghĩa reply, quote, repost và ảnh hưởng lên timeline người dùng.</div><div class="file"><span>draft</span><span>•</span></div></div>
-      </div>
     </div>
   </section>
 

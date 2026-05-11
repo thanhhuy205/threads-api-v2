@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sửa / Xóa bài & Chế độ riêng tư — Business Flow</title>
+<style>
+:root {
+  --ivory:    #FAF9F5;
+  --slate:    #141413;
+  --clay:     #D97757;
+  --oat:      #E3DACC;
+  --olive:    #788C5D;
+  --rust:     #B04A3F;
+  --gray-100: #F0EEE6;
+  --gray-300: #D1CFC5;
+  --gray-500: #87867F;
+  --gray-700: #3D3D3A;
+  --white:    #FFFFFF;
+  --blue-50:  #E6F1FB;
+  --blue-400: #378ADD;
+  --blue-800: #0C447C;
+  --green-50: #EAF3DE;
+  --green-600:#3B6D11;
+  --purple-50:#EEEDFE;
+  --purple-600:#534AB7;
+  --amber-50: #FAEEDA;
+  --amber-600:#854F0B;
+  --serif: ui-serif, Georgia, serif;
+  --sans:  system-ui, -apple-system, sans-serif;
+  --mono:  ui-monospace, "SF Mono", Menlo, monospace;
+  --border: 1.5px solid var(--gray-300);
+  --radius: 12px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--ivory); color: var(--slate);
+  font-family: var(--sans); font-size: 15px; line-height: 1.6;
+  -webkit-font-smoothing: antialiased; padding: 56px 24px 120px;
+}
+.page { max-width: 880px; margin: 0 auto; }
+header { margin-bottom: 44px; }
+.header-top { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 8px; }
+h1 { font-family: var(--serif); font-weight: 500; font-size: 38px; letter-spacing: -0.01em; }
+.pill { font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--gray-500); background: var(--gray-100); border: var(--border); border-radius: 999px; padding: 5px 11px; }
+.meta { color: var(--gray-500); font-size: 14px; }
+.meta code { font-family: var(--mono); font-size: 13px; color: var(--gray-700); }
+section { margin-bottom: 52px; }
+h2 { font-family: var(--serif); font-weight: 500; font-size: 24px; letter-spacing: -0.01em; margin-bottom: 6px; }
+.rule { border: none; border-top: 1px solid var(--gray-300); margin-bottom: 24px; }
+.overview-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; }
+.ov-card { background: var(--white); border: var(--border); border-radius: var(--radius); padding: 18px 20px; }
+.ov-num { font-family: var(--serif); font-size: 40px; font-weight: 500; line-height: 1; margin-bottom: 6px; }
+.ov-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--gray-500); }
+.ov-note { font-family: var(--mono); font-size: 11px; margin-top: 6px; color: var(--gray-500); }
+.badge { display: inline-block; font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; padding: 3px 8px; border-radius: 5px; white-space: nowrap; }
+.badge-done { background: var(--green-50); color: var(--green-600); }
+.badge-wip  { background: var(--amber-50); color: var(--amber-600); }
+.badge-todo { background: #FDE8E8; color: #991B1B; }
+.flow-panel { background: var(--white); border: var(--border); border-radius: var(--radius); padding: 28px 24px 20px; overflow-x: auto; }
+.flow-panel svg { display: block; width: 100%; height: auto; }
+.flow-note { font-size: 12px; color: var(--gray-500); margin-top: 10px; }
+.step-table { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--white); border: var(--border); border-radius: var(--radius); overflow: hidden; }
+.step-table thead th { text-align: left; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--gray-500); background: var(--gray-100); padding: 12px 16px; border-bottom: 1px solid var(--gray-300); }
+.step-table tbody td { padding: 13px 16px; border-bottom: 1px solid var(--gray-100); font-size: 14px; vertical-align: top; }
+.step-table tbody tr:last-child td { border-bottom: none; }
+.step-table tbody tr:hover { background: var(--ivory); }
+.step-num { font-family: var(--mono); font-size: 12px; color: var(--gray-500); }
+.step-name { font-weight: 500; margin-bottom: 2px; }
+.step-desc { font-size: 13px; color: var(--gray-500); }
+code { font-family: var(--mono); font-size: 12px; background: var(--gray-100); padding: 1px 5px; border-radius: 4px; color: var(--gray-700); }
+.note-box { background: var(--oat); border-radius: var(--radius); padding: 20px 22px; }
+.note-item { display: flex; gap: 14px; align-items: baseline; padding: 8px 0; border-bottom: 1px solid rgba(20,20,19,.08); }
+.note-item:last-child { border-bottom: none; }
+.note-tag { font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--gray-700); background: var(--ivory); border-radius: 4px; padding: 3px 7px; flex-shrink: 0; }
+.note-body { font-size: 14px; color: var(--gray-700); }
+.diff-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 600px) { .diff-grid { grid-template-columns: 1fr; } }
+.diff-card { background: var(--white); border: var(--border); border-radius: var(--radius); overflow: hidden; }
+.diff-card-head { font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--gray-500); background: var(--gray-100); padding: 10px 14px; border-bottom: 1px solid var(--gray-300); }
+.diff-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--gray-100); font-size: 13px; }
+.diff-row:last-child { border-bottom: none; }
+.diff-dot { width: 7px; height: 7px; border-radius: 2px; flex-shrink: 0; margin-top: 5px; }
+.diff-dot.done { background: var(--olive); }
+.diff-dot.todo { background: var(--rust); }
+footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--gray-300); font-family: var(--mono); font-size: 12px; color: var(--gray-500); }
+</style>
+</head>
+<body>
+<div class="page">
+
+<header>
+  <div class="header-top">
+    <h1>Sửa / Xóa bài &amp; Quyền riêng tư</h1>
+    <span class="pill">post module</span>
+  </div>
+  <div class="meta">
+    Endpoints: <code>PATCH /posts/:publicId</code> · <code>DELETE /posts/:publicId</code> &nbsp;·&nbsp;
+    Visibility: <code>PUBLIC · FRIENDS_ONLY · PRIVATE</code>
+  </div>
+</header>
+
+<!-- ═══════════════ OVERVIEW ═══════════════ -->
+<section>
+  <div class="overview-strip">
+    <div class="ov-card">
+      <div class="ov-num">2</div>
+      <div class="ov-label">Hành động</div>
+      <div class="ov-note">sửa (PATCH) · xóa (DELETE)</div>
+    </div>
+    <div class="ov-card">
+      <div class="ov-num">3</div>
+      <div class="ov-label">Chế độ hiển thị</div>
+      <div class="ov-note">public · friends_only · private</div>
+    </div>
+    <div class="ov-card">
+      <div class="ov-num">3</div>
+      <div class="ov-label">Quyền trả lời</div>
+      <div class="ov-note">everyone · following · nobody</div>
+    </div>
+    <div class="ov-card">
+      <div class="ov-num">Soft</div>
+      <div class="ov-label">Kiểu xóa</div>
+      <div class="ov-note">isDeleted = true (không xóa thật)</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ NGƯỜI DÙNG THẤY GÌ ═══════════════ -->
+<section>
+  <h2>Người dùng thấy gì?</h2>
+  <hr class="rule">
+  <div class="note-box">
+    <div class="note-item">
+      <span class="note-tag">Sửa bài</span>
+      <div class="note-body">Người dùng mở bài viết của mình → nhấn "Sửa" → thay đổi nội dung hoặc chế độ hiển thị → nhấn "Lưu". Chỉ chủ bài mới được sửa.</div>
+    </div>
+    <div class="note-item">
+      <span class="note-tag">Xóa bài</span>
+      <div class="note-body">Người dùng mở bài viết → nhấn "Xóa" → xác nhận → bài biến mất khỏi feed. Thực tế bài vẫn còn trong DB nhưng bị đánh dấu <code>isDeleted = true</code> (soft delete).</div>
+    </div>
+    <div class="note-item">
+      <span class="note-tag">Riêng tư</span>
+      <div class="note-body">Khi đăng hoặc sửa bài, người dùng chọn chế độ: <strong>Public</strong> (mọi người thấy), <strong>Friends Only</strong> (chỉ bạn bè), hoặc <strong>Private</strong> (chỉ mình).</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ FLOW: SỬA BÀI ═══════════════ -->
+<section>
+  <h2>Luồng sửa bài</h2>
+  <hr class="rule">
+  <div class="flow-panel">
+    <svg viewBox="0 0 820 340" role="img" aria-label="Flowchart sửa bài viết">
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </marker>
+      </defs>
+
+      <rect x="290" y="20" width="240" height="40" rx="8" fill="#F0EEE6" stroke="#D1CFC5" stroke-width="1.5"/>
+      <text x="410" y="45" text-anchor="middle" font-family="system-ui" font-size="13" fill="#141413" font-weight="500">PATCH /posts/:publicId</text>
+
+      <line x1="410" y1="60" x2="410" y2="90" stroke="#87867F" stroke-width="1.5" marker-end="url(#arr)"/>
+
+      <rect x="270" y="90" width="280" height="44" rx="8" fill="#FFFFFF" stroke="#D1CFC5" stroke-width="1.5"/>
+      <text x="410" y="110" text-anchor="middle" font-family="system-ui" font-size="13" fill="#141413" font-weight="500">Validate (Zod updatePostSchema)</text>
+      <text x="410" y="125" text-anchor="middle" font-family="system-ui" font-size="11" fill="#87867F">content hoặc visibility (ít nhất 1)</text>
+
+      <line x1="410" y1="134" x2="410" y2="160" stroke="#87867F" stroke-width="1.5" marker-end="url(#arr)"/>
+
+      <rect x="270" y="160" width="280" height="44" rx="8" fill="#FFFFFF" stroke="#D97757" stroke-width="1.5"/>
+      <text x="410" y="180" text-anchor="middle" font-family="system-ui" font-size="13" fill="#141413" font-weight="500">findByPublicId(publicId)</text>
+      <text x="410" y="195" text-anchor="middle" font-family="system-ui" font-size="11" fill="#87867F">kiểm tra bài tồn tại → 404 nếu không</text>
+
+      <line x1="410" y1="204" x2="410" y2="230" stroke="#87867F" stroke-width="1.5" marker-end="url(#arr)"/>
+
+      <!-- Diamond: ownership check -->
+      <polygon points="410,230 480,255 410,280 340,255" fill="#F0EEE6" stroke="#D1CFC5" stroke-width="1.5"/>
+      <text x="410" y="259" text-anchor="middle" font-family="system-ui" font-size="12" fill="#3D3D3A" font-weight="500">Chủ bài?</text>
+
+      <!-- Yes -->
+      <line x1="410" y1="280" x2="410" y2="300" stroke="#87867F" stroke-width="1.5" marker-end="url(#arr)"/>
+      <text x="420" y="294" font-family="ui-monospace,monospace" font-size="11" fill="#3B6D11">✓ yes</text>
+      <rect x="310" y="300" width="200" height="36" rx="8" fill="#E6F1FB" stroke="#378ADD" stroke-width="1.5"/>
+      <text x="410" y="323" text-anchor="middle" font-family="system-ui" font-size="12" fill="#141413" font-weight="500">updateByPublicId(payload)</text>
+
+      <!-- No -->
+      <line x1="480" y1="255" x2="580" y2="255" stroke="#87867F" stroke-width="1.5" marker-end="url(#arr)"/>
+      <text x="520" y="248" font-family="ui-monospace,monospace" font-size="11" fill="#991B1B">✗ no</text>
+      <rect x="580" y="240" width="150" height="30" rx="8" fill="#FDE8E8" stroke="#991B1B" stroke-width="1.5"/>
+      <text x="655" y="260" text-anchor="middle" font-family="system-ui" font-size="12" fill="#991B1B" font-weight="500">403 Forbidden</text>
+    </svg>
+    <p class="flow-note">Chỉ chủ bài mới được sửa. Hệ thống so sánh userId từ JWT với userId của bài viết.</p>
+  </div>
+</section>
+
+<!-- ═══════════════ FLOW: XÓA BÀI ═══════════════ -->
+<section>
+  <h2>Luồng xóa bài (Soft Delete)</h2>
+  <hr class="rule">
+  <div class="flow-panel">
+    <svg viewBox="0 0 820 340" role="img" aria-label="Flowchart xóa bài viết">
+      <defs>
+        <marker id="arr2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </marker>
+      </defs>
+
+      <rect x="290" y="20" width="240" height="40" rx="8" fill="#F0EEE6" stroke="#D1CFC5" stroke-width="1.5"/>
+      <text x="410" y="45" text-anchor="middle" font-family="system-ui" font-size="13" fill="#141413" font-weight="500">DELETE /posts/:publicId</text>
+
+      <line x1="410" y1="60" x2="410" y2="90" stroke="#87867F" stroke-width="1.5" marker-end="url(#arr2)"/>
+
+      <rect x="270" y="90" width="280" height="44" rx="8" fill="#FFFFFF" stroke="#D97757" stroke-width="1.5"/>
+      <text x="410" y="110" text-anchor="middle" font-family="system-ui" font-size="13" fill="#141413" font-weight="500">findByPublicId(publicId)</text>
+      <text x="410" y="125" text-anchor="middle" font-family="system-ui" font-size="11" fill="#87867F">tìm bài → 404 nếu không tồn tại</text>
+
+      <line x1="410" y1="134" x2="410" y2="160" stroke="#87867F" stroke-width="1.5" marker-end="url(#arr2)"/>
+
+      <polygon points="410,160 480,185 410,210 340,185" fill="#F0EEE6" stroke="#D1CFC5" stroke-width="1.5"/>
+      <text x="410" y="189" text-anchor="middle" font-family="system-ui" font-size="12" fill="#3D3D3A" font-weight="500">Chủ bài?</text>
+
+      <line x1="410" y1="210" x2="410" y2="240" stroke="#87867F" stroke-width="1.5" marker-end="url(#arr2)"/>
+      <text x="420" y="228" font-family="ui-monospace,monospace" font-size="11" fill="#3B6D11">✓ yes</text>
+
+      <rect x="280" y="240" width="260" height="48" rx="8" fill="#E6F1FB" stroke="#378ADD" stroke-width="1.5"/>
+      <text x="410" y="260" text-anchor="middle" font-family="system-ui" font-size="13" fill="#141413" font-weight="500">softDeleteByPublicId</text>
+      <text x="410" y="277" text-anchor="middle" font-family="system-ui" font-size="11" fill="#0C447C">isDeleted = true, deletedAt = now()</text>
+
+      <line x1="480" y1="185" x2="580" y2="185" stroke="#87867F" stroke-width="1.5" marker-end="url(#arr2)"/>
+      <text x="520" y="178" font-family="ui-monospace,monospace" font-size="11" fill="#991B1B">✗ no</text>
+      <rect x="580" y="170" width="150" height="30" rx="8" fill="#FDE8E8" stroke="#991B1B" stroke-width="1.5"/>
+      <text x="655" y="190" text-anchor="middle" font-family="system-ui" font-size="12" fill="#991B1B" font-weight="500">403 Forbidden</text>
+    </svg>
+    <p class="flow-note">Soft delete: bài không bị xóa khỏi DB, chỉ đánh dấu <code>isDeleted = true</code>. Mọi truy vấn đều tự động lọc bỏ bài đã xóa.</p>
+  </div>
+</section>
+
+<!-- ═══════════════ STEP TABLE ═══════════════ -->
+<section>
+  <h2>Chi tiết từng API</h2>
+  <hr class="rule">
+  <table class="step-table">
+    <thead>
+      <tr>
+        <th style="width:48px">#</th>
+        <th style="width:220px">API / Hành động</th>
+        <th>Mô tả nghiệp vụ</th>
+        <th style="width:100px">Trạng thái</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="step-num">01</span></td>
+        <td><div class="step-name">PATCH /:publicId</div><div class="step-desc">Sửa bài</div></td>
+        <td>Cho phép chủ bài cập nhật <code>content</code> hoặc <code>visibility</code> (ít nhất 1 trường). Kiểm tra quyền sở hữu, nếu không phải chủ → 403.</td>
+        <td><span class="badge badge-done">done</span></td>
+      </tr>
+      <tr>
+        <td><span class="step-num">02</span></td>
+        <td><div class="step-name">DELETE /:publicId</div><div class="step-desc">Xóa bài</div></td>
+        <td>Soft delete — đánh dấu <code>isDeleted = true</code>, <code>deletedAt = now()</code>. Bài biến mất khỏi mọi feed nhưng vẫn còn trong DB để phân tích/khôi phục.</td>
+        <td><span class="badge badge-done">done</span></td>
+      </tr>
+      <tr>
+        <td><span class="step-num">03</span></td>
+        <td><div class="step-name">Visibility enum</div><div class="step-desc">Chế độ hiển thị</div></td>
+        <td><strong>PUBLIC</strong>: mọi người thấy. <strong>FRIENDS_ONLY</strong>: chỉ bạn bè. <strong>PRIVATE</strong>: chỉ mình. Được set khi tạo bài hoặc sửa lại sau.</td>
+        <td><span class="badge badge-done">done</span></td>
+      </tr>
+      <tr>
+        <td><span class="step-num">04</span></td>
+        <td><div class="step-name">ReplyPermission enum</div><div class="step-desc">Quyền trả lời</div></td>
+        <td><strong>EVERYONE</strong>: ai cũng reply được. <strong>FOLLOWING</strong>: chỉ người mình follow. <strong>NOBODY</strong>: không ai reply được.</td>
+        <td><span class="badge badge-done">done</span></td>
+      </tr>
+      <tr>
+        <td><span class="step-num">05</span></td>
+        <td><div class="step-name">Lọc feed theo visibility</div><div class="step-desc">News feed filter</div></td>
+        <td>Khi lấy news feed, cần kiểm tra visibility + mối quan hệ giữa người xem và chủ bài để chỉ hiện bài phù hợp.</td>
+        <td><span class="badge badge-todo">todo</span></td>
+      </tr>
+      <tr>
+        <td><span class="step-num">06</span></td>
+        <td><div class="step-name">Lịch sử chỉnh sửa</div><div class="step-desc">Edit history</div></td>
+        <td>Lưu lại lịch sử mỗi lần sửa bài (nội dung cũ, thời gian sửa) để người dùng xem lại. Hiện chưa implement.</td>
+        <td><span class="badge badge-todo">todo</span></td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ═══════════════ TIẾN ĐỘ ═══════════════ -->
+<section>
+  <h2>Tiến độ hoàn thành</h2>
+  <hr class="rule">
+  <div class="diff-grid">
+    <div class="diff-card">
+      <div class="diff-card-head">✅ Đã xong</div>
+      <div class="diff-row"><div class="diff-dot done"></div><div>PATCH — sửa content + visibility</div></div>
+      <div class="diff-row"><div class="diff-dot done"></div><div>DELETE — soft delete (isDeleted + deletedAt)</div></div>
+      <div class="diff-row"><div class="diff-dot done"></div><div>Kiểm tra quyền sở hữu (ownership check)</div></div>
+      <div class="diff-row"><div class="diff-dot done"></div><div>Visibility enum: PUBLIC / FRIENDS_ONLY / PRIVATE</div></div>
+      <div class="diff-row"><div class="diff-dot done"></div><div>ReplyPermission enum: EVERYONE / FOLLOWING / NOBODY</div></div>
+      <div class="diff-row"><div class="diff-dot done"></div><div>Validate DTO (ít nhất 1 trường phải có)</div></div>
+    </div>
+    <div class="diff-card">
+      <div class="diff-card-head">⏳ Cần bổ sung</div>
+      <div class="diff-row"><div class="diff-dot todo"></div><div>Lọc news feed theo visibility + relationship</div></div>
+      <div class="diff-row"><div class="diff-dot todo"></div><div>Lưu lịch sử chỉnh sửa bài viết</div></div>
+      <div class="diff-row"><div class="diff-dot todo"></div><div>Khôi phục bài đã xóa mềm (admin)</div></div>
+      <div class="diff-row"><div class="diff-dot todo"></div><div>Enforce replyPermission khi tạo reply</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════ NOTES ═══════════════ -->
+<section>
+  <h2>Ghi chú thiết kế</h2>
+  <hr class="rule">
+  <div class="note-box">
+    <div class="note-item">
+      <span class="note-tag">Soft Delete</span>
+      <div class="note-body">Bài không bị xóa thật. Dữ liệu vẫn còn trong DB, chỉ bị đánh dấu <code>isDeleted = true</code>. Tất cả truy vấn đều có filter <code>isDeleted: false</code>.</div>
+    </div>
+    <div class="note-item">
+      <span class="note-tag">Ownership</span>
+      <div class="note-body">So sánh <code>post.userId</code> với <code>req.user.sub</code> (JWT). Nếu khác → 403 Forbidden. Đơn giản, hiệu quả, không cần RBAC phức tạp.</div>
+    </div>
+    <div class="note-item">
+      <span class="note-tag">Enum</span>
+      <div class="note-body">Visibility và ReplyPermission đều là Prisma enum, được normalize (trim + uppercase) ở cả DTO layer và service layer để tránh lỗi.</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  Nguồn: PostService · PostRepository &nbsp;—&nbsp; Post Module — Threads API v2
+</footer>
+
+</div>
+</body>
+</html>
