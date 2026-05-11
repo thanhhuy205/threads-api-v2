@@ -55,6 +55,10 @@ export const USER_MESSAGE = {
   FOLLOW_SUCCESS: "Follow success",
   UNFOLLOW_SUCCESS: "Unfollow success",
   FRIEND_REQUEST_SENT: "Send request",
+  FRIEND_REQUEST_PROCESSED: "Friend request processed",
+  USER_NOT_FOUND: "User not found",
+  GET_USER_SUCCESS: "User fetched successfully",
+  FRIEND_REQUEST_NOT_FOUND: "Friend request not found",
 } as const;
 
 export const POST_MESSAGE = {

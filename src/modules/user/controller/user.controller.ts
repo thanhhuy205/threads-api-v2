@@ -5,7 +5,10 @@ import { NotFoundException } from "@/errors/error";
 import type { UsernameParamsDto } from "../dto/request/username.params.dto";
 import type { FollowersQueryDto } from "../dto/request/followers.query.dto";
 import { getPagination } from "@/shared/pagination/cursor-pagination";
-import { FriendRequestParamsDto } from "../dto/request/user-id.params.dto";
+import {
+  FriendRequestDto,
+  FriendRequestIdParamsDto,
+} from "../dto/request/friend-id.params.dto";
 
 class UserController {
   async getFollower(
@@ -62,28 +65,42 @@ class UserController {
     return res.success(200, USER_MESSAGE.FOLLOW_SUCCESS, result);
   }
 
-  async sendFriendRequest(req: Request<FriendRequestParamsDto>, res: Response) {
+  async sendFriendRequest(req: Request<UsernameParamsDto>, res: Response) {
     const userId = req.user?.sub;
 
     if (!userId) {
       return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
     }
 
-    const targetUser = await userService.findByUsername(req.params.username);
-    if (!targetUser) {
-      throw new NotFoundException("User not found");
-    }
-
-    const result = await userService.sendFriendRequest(userId, targetUser.id);
+    const { username } = req.params;
+    const result = await userService.sendFriendRequest(userId, username);
     return res.success(200, USER_MESSAGE.FRIEND_REQUEST_SENT, result);
+  }
+
+  async handleFriendRequest(
+    req: Request<FriendRequestIdParamsDto, {}, FriendRequestDto>,
+    res: Response,
+  ) {
+    const userId = req.user?.sub;
+    if (!userId) {
+      return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
+    }
+    const { id } = req.params;
+    const { isAccept } = req.body;
+    const result = await userService.handleFriendRequest(
+      userId,
+      Number(id),
+      isAccept,
+    );
+    return res.success(200, USER_MESSAGE.FRIEND_REQUEST_PROCESSED, result);
   }
 
   async getByUsername(req: Request<UsernameParamsDto>, res: Response) {
     const user = await userService.findByUsername(req.params.username);
     if (!user) {
-      return res.error(404, "User not found");
+      return res.error(404, USER_MESSAGE.USER_NOT_FOUND);
     }
-    return res.success(200, "User fetched successfully", user);
+    return res.success(200, USER_MESSAGE.GET_USER_SUCCESS, user);
   }
 }
 

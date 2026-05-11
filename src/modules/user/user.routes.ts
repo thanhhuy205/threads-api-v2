@@ -4,6 +4,10 @@ import { Router } from "express";
 import { userController } from "./controller/user.controller";
 import { followersQuerySchema } from "./dto/request/followers.query.dto";
 import { friendRequestParamsSchema } from "./dto/request/user-id.params.dto";
+import {
+  friendRequestIdParamsSchema,
+  friendRequestSchema,
+} from "./dto/request/friend-id.params.dto";
 
 const userRouter = Router();
 
@@ -18,6 +22,13 @@ userRouter.post(
   ":username/friend-requests",
   validate(friendRequestParamsSchema, "params"),
   userController.sendFriendRequest,
+);
+
+userRouter.patch(
+  "/friend-requests/:id",
+  validate(friendRequestIdParamsSchema, "params"),
+  validate(friendRequestSchema, "body"),
+  userController.handleFriendRequest,
 );
 
 export default userRouter;

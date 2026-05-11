@@ -10,6 +10,7 @@ const userFollowRouter = Router();
 
 userFollowRouter.get('/:username/followers', validate(usernameParamsSchema, 'params'), validate(followersQuerySchema, 'query'), userController.getFollower);
 userFollowRouter.get('/:username/following', validate(usernameParamsSchema, 'params'), validate(followersQuerySchema, 'query'), userController.getFollowing);
+userFollowRouter.post('/:username/friend-request', authorization, validate(usernameParamsSchema, 'params'), userController.sendFriendRequest);
 userFollowRouter.post('/:username/follower', authorization, validate(usernameParamsSchema, 'params'), userController.follower);
 
 export default userFollowRouter;
