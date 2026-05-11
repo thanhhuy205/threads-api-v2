@@ -132,7 +132,7 @@ class UserController {
     const { rows, pagination } = await userService.getSentFriendRequests({
       take: take ?? undefined,
       senderId: userId,
-      after: after ?? undefined,
+      receiverId: after ?? undefined,
     });
     return res.paginate({ rows, pagination });
   }

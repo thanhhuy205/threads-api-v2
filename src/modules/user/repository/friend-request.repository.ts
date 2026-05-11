@@ -18,7 +18,7 @@ class FriendRequestRepository implements ICursorPagination<
   }): Promise<FriendRequest[]> {
     return prisma.friendRequest.findMany({
       where,
-      take,
+      take: take ? take + 1 : 10,
       skip: cursor ? 1 : 0,
       cursor: cursor,
       orderBy: [{ createdAt: "desc" }, { id: "desc" }],
@@ -27,11 +27,11 @@ class FriendRequestRepository implements ICursorPagination<
 
   async findReceivedPending({
     receiverId,
-    cursor,
+    senderId,
     take,
   }: {
     receiverId: string;
-    cursor?: { senderId: string };
+    senderId: string | undefined;
     take: number;
   }) {
     return this.findAll({
@@ -39,8 +39,8 @@ class FriendRequestRepository implements ICursorPagination<
         receiverId,
         status: FriendRequestStatus.PENDING,
       },
-      cursor: cursor
-        ? { senderId_receiverId: { senderId: cursor.senderId, receiverId } }
+      cursor: senderId
+        ? { senderId_receiverId: { senderId, receiverId } }
         : undefined,
       take,
     });
@@ -48,11 +48,11 @@ class FriendRequestRepository implements ICursorPagination<
 
   async findSentPending({
     senderId,
-    cursor,
+    receiverId,
     take,
   }: {
     senderId: string;
-    cursor?: { receiverId: string };
+    receiverId: string | undefined;
     take: number;
   }) {
     return this.findAll({
@@ -60,10 +60,10 @@ class FriendRequestRepository implements ICursorPagination<
         senderId,
         status: FriendRequestStatus.PENDING,
       },
-      cursor: cursor
+      cursor: receiverId
         ? {
             senderId_receiverId: {
-              senderId: cursor.receiverId,
+              senderId: receiverId,
               receiverId: senderId,
             },
           }

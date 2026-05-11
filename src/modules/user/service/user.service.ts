@@ -184,7 +184,7 @@ class UserService {
   }) {
     const friendRequests = await friendRequestRepository.findReceivedPending({
       receiverId,
-      cursor: senderId ? { senderId } : undefined,
+      senderId: senderId ?? undefined,
       take,
     });
 
@@ -194,18 +194,19 @@ class UserService {
       getAfter: (fr) => fr.senderId,
     });
   }
+
   async getSentFriendRequests({
     senderId,
-    after,
+    receiverId,
     take,
   }: {
     senderId: string;
-    after?: string;
+    receiverId?: string;
     take: number;
   }) {
     const friendRequests = await friendRequestRepository.findSentPending({
       senderId,
-      cursor: after ? { receiverId: after } : undefined,
+      receiverId: receiverId ?? undefined,
       take,
     });
 
