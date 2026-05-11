@@ -4,7 +4,7 @@ class ChatService {
     return {};
   }
 
-  async markAsSeen(messageId: string, userId: string) {
+  async markAsSeen(messageId: string | string[], userId: string) {
     // TODO: implement logic to mark message as seen
     return {};
   }

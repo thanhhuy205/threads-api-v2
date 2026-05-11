@@ -11,9 +11,9 @@ class ChatController {
   }
 
   async markAsSeen(req: Request, res: Response) {
-    const { messageId } = req.params;
+    const messageIds = req.body.messageIds as string[];
     const userId = req.user?.id as string;
-    const result = await chatService.markAsSeen(messageId, userId);
+    const result = await chatService.markAsSeen(messageIds, userId);
     return res.success(200, "Message marked as seen", result);
   }
 }

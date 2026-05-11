@@ -170,6 +170,58 @@ enum FriendRequestStatus {
     REJECTED
 }
 
+model Role {
+    id              String           @id @default(cuid())
+    name            String           @unique @db.VarChar(50)
+    createdAt       DateTime         @default(now()) @map("created_at")
+    updatedAt       DateTime         @updatedAt @map("updated_at")
+    userRoles       UserRole[]
+    rolePermissions RolePermission[]
+
+    @@index([name], map: "idx_roles_name")
+    @@map("roles")
+}
+
+model UserRole {
+    id        String   @id @default(cuid())
+    roleId    String   @map("role_id")
+    role      Role     @relation(fields: [roleId], references: [id])
+    userId    String   @map("user_id")
+    user      User     @relation(fields: [userId], references: [id])
+    createdAt DateTime @default(now()) @map("created_at")
+    updatedAt DateTime @updatedAt @map("updated_at")
+
+    @@index([userId], map: "idx_user_roles_user_id")
+    @@index([roleId], map: "idx_user_roles_role_id")
+    @@map("user_roles")
+}
+
+model Permission {
+    id              String           @id @default(cuid())
+    name            String           @unique @db.VarChar(50)
+    code            String           @unique @db.VarChar(50)
+    createdAt       DateTime         @default(now()) @map("created_at")
+    updatedAt       DateTime         @updatedAt @map("updated_at")
+    rolePermissions RolePermission[]
+
+    @@index([code], map: "idx_permissions_code")
+    @@map("permissions")
+}
+
+model RolePermission {
+    id           String     @id @default(cuid())
+    role         Role       @relation(fields: [roleId], references: [id])
+    roleId       String     @map("role_id")
+    permission   Permission @relation(fields: [permissionId], references: [id])
+    permissionId String     @map("permission_id")
+    createdAt    DateTime   @default(now()) @map("created_at")
+    updatedAt    DateTime   @updatedAt @map("updated_at")
+
+    @@index([roleId], map: "idx_role_permissions_role_id")
+    @@index([permissionId], map: "idx_role_permissions_permission_id")
+    @@map("role_permissions")
+}
+
 model User {
     id       String @id @default(cuid())
     email    String @unique @db.VarChar(255)
@@ -178,12 +230,10 @@ model User {
 
     name String? @map("name") @db.VarChar(100)
 
-    bio             String?         @db.Text
-    avatar          String?         @db.VarChar(255)
-    role            UserRoleType?   @default(USER)
-    verifiedAt      DateTime?       @map("verified_at")
-    status          UserStatus      @default(ACTIVE)
-    replyPermission ReplyPermission @default(EVERYONE) @map("reply_permission")
+    bio        String?    @db.Text
+    avatar     String?    @db.VarChar(255)
+    verifiedAt DateTime?  @map("verified_at")
+    status     UserStatus @default(ACTIVE)
 
     followersCount Int @default(0) @map("followers_count")
     followingCount Int @default(0) @map("following_count")
@@ -220,6 +270,7 @@ model User {
     memberMessageGroups   MemberMessageGroup[]
     friendRequests        FriendRequest[]        @relation("FriendRequestSender")
     receivedRequests      FriendRequest[]        @relation("FriendRequestReceiver")
+    userRoles             UserRole[]
 
     @@index([deletedAt], map: "idx_users_deleted_at")
     @@map("users")
@@ -287,8 +338,8 @@ model Post {
     originPublicId String? @map("origin_public_id")
     rootPublicId   String? @map("root_public_id")
 
-    userSnapshot    Json?  @map("user_snapshot")
-    replyPermission String @default("everyone") @map("reply_permission") @db.VarChar(50)
+    userSnapshot    Json?           @map("user_snapshot")
+    replyPermission ReplyPermission @default(EVERYONE) @map("reply_permission")
 
     likesCount                Int @default(0) @map("likes_count")
     repliesCount              Int @default(0) @map("replies_count")

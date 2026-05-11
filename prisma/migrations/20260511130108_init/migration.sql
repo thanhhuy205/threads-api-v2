@@ -1,4 +1,56 @@
 -- CreateTable
+CREATE TABLE `roles` (
+    `id` VARCHAR(191) NOT NULL,
+    `name` VARCHAR(50) NOT NULL,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at` DATETIME(3) NOT NULL,
+
+    UNIQUE INDEX `roles_name_key`(`name`),
+    INDEX `idx_roles_name`(`name`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `user_roles` (
+    `id` VARCHAR(191) NOT NULL,
+    `role_id` VARCHAR(191) NOT NULL,
+    `user_id` VARCHAR(191) NOT NULL,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at` DATETIME(3) NOT NULL,
+
+    INDEX `idx_user_roles_user_id`(`user_id`),
+    INDEX `idx_user_roles_role_id`(`role_id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `permissions` (
+    `id` VARCHAR(191) NOT NULL,
+    `name` VARCHAR(50) NOT NULL,
+    `code` VARCHAR(50) NOT NULL,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at` DATETIME(3) NOT NULL,
+
+    UNIQUE INDEX `permissions_name_key`(`name`),
+    UNIQUE INDEX `permissions_code_key`(`code`),
+    INDEX `idx_permissions_code`(`code`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `role_permissions` (
+    `id` VARCHAR(191) NOT NULL,
+    `role_id` VARCHAR(191) NOT NULL,
+    `permission_id` VARCHAR(191) NOT NULL,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at` DATETIME(3) NOT NULL,
+
+    INDEX `idx_role_permissions_role_id`(`role_id`),
+    INDEX `idx_role_permissions_permission_id`(`permission_id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
 CREATE TABLE `users` (
     `id` VARCHAR(191) NOT NULL,
     `email` VARCHAR(255) NOT NULL,
@@ -7,7 +59,6 @@ CREATE TABLE `users` (
     `name` VARCHAR(100) NULL,
     `bio` TEXT NULL,
     `avatar` VARCHAR(255) NULL,
-    `role` ENUM('USER', 'ADMIN') NOT NULL DEFAULT 'USER',
     `verified_at` DATETIME(3) NULL,
     `status` ENUM('ACTIVE', 'SUSPENDED', 'BANNED', 'DEACTIVATED') NOT NULL DEFAULT 'ACTIVE',
     `followers_count` INTEGER NOT NULL DEFAULT 0,
@@ -44,12 +95,38 @@ CREATE TABLE `verification_codes` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
+CREATE TABLE `message_groups` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(255) NOT NULL,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at` DATETIME(3) NOT NULL,
+    `created_by_id` VARCHAR(191) NOT NULL,
+
+    UNIQUE INDEX `message_groups_name_key`(`name`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `messages` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `userId` VARCHAR(191) NOT NULL,
+    `content` TEXT NOT NULL,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at` DATETIME(3) NOT NULL,
+    `messageGroupId` INTEGER NULL,
+
+    INDEX `idx_messages_sender_id`(`userId`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
 CREATE TABLE `posts` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `public_id` VARCHAR(191) NOT NULL,
     `user_id` VARCHAR(191) NOT NULL,
     `content` TEXT NOT NULL,
     `type` ENUM('POST', 'REPLY', 'REPOST', 'QUOTE') NOT NULL DEFAULT 'POST',
+    `visibility` ENUM('PUBLIC', 'FRIEND', 'PRIVATE') NOT NULL DEFAULT 'PUBLIC',
     `parent_id` INTEGER NULL,
     `origin_post_id` INTEGER NULL,
     `root_post_id` INTEGER NULL,
@@ -57,7 +134,7 @@ CREATE TABLE `posts` (
     `origin_public_id` VARCHAR(191) NULL,
     `root_public_id` VARCHAR(191) NULL,
     `user_snapshot` JSON NULL,
-    `reply_permission` VARCHAR(50) NOT NULL DEFAULT 'everyone',
+    `reply_permission` ENUM('EVERYONE', 'FOLLOWERS', 'FOLLOWING', 'MENTIONED') NOT NULL DEFAULT 'EVERYONE',
     `likes_count` INTEGER NOT NULL DEFAULT 0,
     `replies_count` INTEGER NOT NULL DEFAULT 0,
     `reposts_and_quotes_count` INTEGER NOT NULL DEFAULT 0,
@@ -211,9 +288,10 @@ CREATE TABLE `post_media` (
     `width` INTEGER NULL,
     `height` INTEGER NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-    `key` VARCHAR(255) NULL,
+    `key` VARCHAR(255) NOT NULL,
     `status_enum` ENUM('TEMPORARY', 'UPLOADING', 'UPLOADED', 'FAILED') NULL DEFAULT 'TEMPORARY',
 
+    UNIQUE INDEX `post_media_key_key`(`key`),
     INDEX `idx_post_media_post_id`(`post_id`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -236,6 +314,7 @@ CREATE TABLE `follows` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `user_id` VARCHAR(191) NOT NULL,
     `following_id` VARCHAR(191) NOT NULL,
+    `is_following` BOOLEAN NOT NULL DEFAULT true,
     `status` ENUM('PENDING', 'ACCEPTED', 'REJECTED') NOT NULL DEFAULT 'PENDING',
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NOT NULL,
@@ -244,6 +323,21 @@ CREATE TABLE `follows` (
     INDEX `follows_following_id_idx`(`following_id`),
     INDEX `follows_following_id_status_idx`(`following_id`, `status`),
     UNIQUE INDEX `follows_user_id_following_id_key`(`user_id`, `following_id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `friend_requests` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `sender_id` VARCHAR(191) NOT NULL,
+    `receiver_id` VARCHAR(191) NOT NULL,
+    `status` ENUM('PENDING', 'ACCEPTED', 'REJECTED') NOT NULL DEFAULT 'PENDING',
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at` DATETIME(3) NOT NULL,
+
+    INDEX `friend_requests_sender_id_idx`(`sender_id`),
+    INDEX `friend_requests_receiver_id_idx`(`receiver_id`),
+    UNIQUE INDEX `friend_requests_sender_id_receiver_id_key`(`sender_id`, `receiver_id`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -289,6 +383,7 @@ CREATE TABLE `topics_posts` (
     INDEX `idx_topics_posts_private_topic_id`(`private_topic_id`),
     INDEX `idx_topics_posts_post_topic`(`post_id`, `topic_id`),
     INDEX `idx_topics_posts_post_private_topic`(`post_id`, `private_topic_id`),
+    UNIQUE INDEX `uq_topics_posts_post_id`(`post_id`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -332,13 +427,12 @@ CREATE TABLE `email_logs` (
 CREATE TABLE `circles` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `name` VARCHAR(255) NOT NULL,
-    `user_id` VARCHAR(191) NOT NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NOT NULL,
     `visibility` ENUM('PUBLIC', 'PRIVATE', 'CIRCLE') NOT NULL DEFAULT 'PRIVATE',
     `create_by_id` VARCHAR(191) NOT NULL,
 
-    INDEX `idx_circles_user_id`(`user_id`),
+    INDEX `idx_circles_created_by`(`create_by_id`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -415,7 +509,28 @@ CREATE TABLE `notifications` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- AddForeignKey
+ALTER TABLE `user_roles` ADD CONSTRAINT `user_roles_role_id_fkey` FOREIGN KEY (`role_id`) REFERENCES `roles`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `user_roles` ADD CONSTRAINT `user_roles_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `role_permissions` ADD CONSTRAINT `role_permissions_role_id_fkey` FOREIGN KEY (`role_id`) REFERENCES `roles`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `role_permissions` ADD CONSTRAINT `role_permissions_permission_id_fkey` FOREIGN KEY (`permission_id`) REFERENCES `permissions`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE `verification_codes` ADD CONSTRAINT `verification_codes_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `message_groups` ADD CONSTRAINT `message_groups_created_by_id_fkey` FOREIGN KEY (`created_by_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `messages` ADD CONSTRAINT `messages_messageGroupId_fkey` FOREIGN KEY (`messageGroupId`) REFERENCES `message_groups`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `messages` ADD CONSTRAINT `messages_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `posts` ADD CONSTRAINT `posts_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -476,6 +591,12 @@ ALTER TABLE `follows` ADD CONSTRAINT `follows_user_id_fkey` FOREIGN KEY (`user_i
 
 -- AddForeignKey
 ALTER TABLE `follows` ADD CONSTRAINT `follows_following_id_fkey` FOREIGN KEY (`following_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `friend_requests` ADD CONSTRAINT `friend_requests_sender_id_fkey` FOREIGN KEY (`sender_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `friend_requests` ADD CONSTRAINT `friend_requests_receiver_id_fkey` FOREIGN KEY (`receiver_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `likes` ADD CONSTRAINT `likes_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
