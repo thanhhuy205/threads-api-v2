@@ -17,6 +17,7 @@
         "db:studio": "prisma studio",
         "db:seed": "tsx prisma/seed.ts",
         "db:format": "prisma format",
+        "worker": "tsx workers/index.ts",
         "queue": "tsx queues/index.ts",
         "start:prod": "node dist/src/server.js",
         "start:worker": "node dist/workers/index.js",

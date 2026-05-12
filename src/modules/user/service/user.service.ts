@@ -11,6 +11,7 @@ import type { FollowerUserDto } from "../mapper/follower.mapper";
 import { FriendRequestStatus } from "@prisma/client";
 import { USER_MESSAGE } from "@/constants/message";
 import { transactionService } from "@/shared/transaction/transaction.service";
+import { baseLogger } from "@/middlewares/logger";
 
 type GetFollowersInput = {
   userId: string;
@@ -148,23 +149,57 @@ class UserService {
     return { sendFriends: true };
   }
 
-  async handleFriendRequest(
-    userId: string,
-    senderUsername: string,
-    isAccept: boolean,
-  ) {
+  async handleFriendRequestCancel(userId: string, receiverUsername: string) {
+    baseLogger.info(
+      `handleFriendRequest receiverUsername: ${receiverUsername}`,
+    );
     return transactionService.doInTransaction(async (tx) => {
-      const sender = await userRepository.findByUsername(senderUsername, tx);
-      if (!sender) {
+      const receiver = await userRepository.findByUsername(
+        receiverUsername,
+        tx,
+      );
+      if (!receiver) {
+        baseLogger.info(USER_MESSAGE.USER_NOT_FOUND);
         throw new NotFoundException(USER_MESSAGE.USER_NOT_FOUND);
       }
 
       const friendRequest =
-        await friendRequestRepository.findBySenderAndReceiver(
-          sender.id,
-          userId,
-          tx,
-        );
+        await friendRequestRepository.findBySenderAndReceiver({
+          senderId: userId,
+          receiverId: receiver.id,
+        });
+
+      if (!friendRequest) {
+        throw new NotFoundException(USER_MESSAGE.FRIEND_REQUEST_NOT_FOUND);
+      }
+
+      await friendRequestRepository.updateStatusById(
+        friendRequest.id,
+        FriendRequestStatus.CANCELLED,
+        tx,
+      );
+    });
+  }
+
+  // Xử lí chấp nhận lời mời kb hoặc từ chối
+  async handleFriendRequestAccept(
+    userId: string,
+    senderUsername: string,
+    isAccept: boolean,
+  ) {
+    baseLogger.info(`handleFriendRequest senderUsername: ${senderUsername}`);
+    return transactionService.doInTransaction(async (tx) => {
+      const sender = await userRepository.findByUsername(senderUsername, tx);
+      if (!sender) {
+        baseLogger.info(USER_MESSAGE.USER_NOT_FOUND);
+        throw new NotFoundException(USER_MESSAGE.USER_NOT_FOUND);
+      }
+
+      const friendRequest =
+        await friendRequestRepository.findBySenderAndReceiver({
+          senderId: sender.id,
+          receiverId: userId,
+        });
 
       if (!friendRequest) {
         throw new NotFoundException(USER_MESSAGE.FRIEND_REQUEST_NOT_FOUND);

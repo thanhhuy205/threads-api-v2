@@ -37,6 +37,7 @@ class UserRepository {
     username: string,
     tx: Prisma.TransactionClient = prisma,
   ) {
+    console.log(username);
     return tx.user.findUnique({
       where: {
         username,

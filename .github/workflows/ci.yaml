@@ -66,24 +66,6 @@ jobs:
       - name: Echo image URI
         run: echo "Built and pushed ${{ steps.set-image.outputs.uri }}"
 
-      - name: Create production release
-        if: github.ref == 'refs/heads/production'
-        uses: ncipollo/release-action@v1
-        with:
-          tag: production
-          name: Production Release
-          body: "Release for commit ${{ github.sha }}"
-          allowUpdates: true
-
-      - name: Create dev release
-        if: github.ref == 'refs/heads/dev'
-        uses: ncipollo/release-action@v1
-        with:
-          tag: dev
-          name: Dev Release
-          body: "Release for commit ${{ github.sha }}"
-          allowUpdates: true
-
   deploy:
     needs: build
     runs-on: self-hosted

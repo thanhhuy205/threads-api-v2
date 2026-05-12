@@ -1,4 +1,5 @@
 import prisma from "@/config/prisma";
+import { baseLogger } from "@/middlewares/logger";
 import { buildPagination } from "@/shared/pagination/cursor-pagination";
 import { FriendRequest, FriendRequestStatus, Prisma } from "@prisma/client";
 
@@ -123,10 +124,11 @@ class FriendRequestRepository implements ICursorPagination<
   }
 
   async findBySenderAndReceiver(
-    senderId: string,
-    receiverId: string,
+    { senderId, receiverId }: { senderId: string; receiverId: string },
     tx: Prisma.TransactionClient = prisma,
   ) {
+    baseLogger.info(`UserId ${receiverId}`);
+    baseLogger.info(`SenderId ${senderId}`);
     return tx.friendRequest.findUnique({
       where: {
         senderId_receiverId: {

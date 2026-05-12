@@ -175,6 +175,16 @@ enum FriendRequestStatus {
     PENDING
     ACCEPTED
     REJECTED
+    CANCELLED
+}
+
+enum NotificationType {
+    LIKE
+    FOLLOW
+    QUOTE
+    SHARE
+    MESSAGE
+    REPLY
 }
 
 model Role {
@@ -354,7 +364,6 @@ model Post {
 
     isQuote  Boolean @default(false) @map("is_quote")
     isPinned Boolean @default(false) @map("is_pinned")
-    isGhost  Boolean @default(false) @map("is_ghost")
 
     isDeleted Boolean   @default(false) @map("is_deleted")
     deletedAt DateTime? @map("deleted_at")
@@ -760,12 +769,12 @@ model AntiSpam {
 }
 
 model Notification {
-    id        Int      @id @default(autoincrement())
-    userId    String   @map("user_id")
-    type      String   @db.VarChar(50)
-    content   String   @db.VarChar(255)
-    isRead    Boolean  @default(false) @map("is_read")
-    createdAt DateTime @default(now()) @map("created_at")
+    id        Int              @id @default(autoincrement())
+    userId    String           @map("user_id")
+    type      NotificationType
+    content   String           @db.VarChar(255)
+    isRead    Boolean          @default(false) @map("is_read")
+    createdAt DateTime         @default(now()) @map("created_at")
 
     user User @relation(fields: [userId], references: [id])
 

@@ -1,7 +1,7 @@
 import { baseLogger } from "@/middlewares/logger";
 import { Post, Prisma, UserStatus } from "@prisma/client";
 import { postFeedSelect } from "../selector/post.selector";
-import { toRecord } from "../../knowledge-post-comment/mapper/knowledge-post-comment.mapper";
+
 import { PostRecord } from "../repository/post.repository";
 
 type PostOriginItem = {

@@ -9,6 +9,7 @@ import {
   FriendRequestDto,
   FriendRequestIdParamsDto,
 } from "../dto/request/friend-id.params.dto";
+import { baseLogger } from "@/middlewares/logger";
 
 class UserController {
   async getFollower(
@@ -77,7 +78,7 @@ class UserController {
     return res.success(200, USER_MESSAGE.FRIEND_REQUEST_SENT, result);
   }
 
-  async handleFriendRequest(
+  async handleFriendRequestCancel(
     req: Request<UsernameParamsDto, {}, FriendRequestDto>,
     res: Response,
   ) {
@@ -85,11 +86,27 @@ class UserController {
     if (!userId) {
       return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
     }
-    const { username } = req.params;
-    const { isAccept } = req.body;
-    const result = await userService.handleFriendRequest(
+    const { username: receiverUsername } = req.params;
+    const result = await userService.handleFriendRequestCancel(
       userId,
-      username,
+      receiverUsername,
+    );
+    return res.success(200, USER_MESSAGE.FRIEND_REQUEST_PROCESSED, result);
+  }
+
+  async handleFriendRequestAccept(
+    req: Request<UsernameParamsDto, {}, FriendRequestDto>,
+    res: Response,
+  ) {
+    const userId = req.user?.sub;
+    if (!userId) {
+      return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
+    }
+    const { username: senderUsername } = req.params;
+    const { isAccept } = req.body;
+    const result = await userService.handleFriendRequestAccept(
+      userId,
+      senderUsername,
       isAccept,
     );
     return res.success(200, USER_MESSAGE.FRIEND_REQUEST_PROCESSED, result);
