@@ -26,7 +26,6 @@ userRouter.post(
 userRouter.patch(
   "/friend-requests/:username/cancel",
   validate(usernameParamsSchema, "params"),
-  validate(friendRequestSchema, "body"),
   userController.handleFriendRequestCancel,
 );
 

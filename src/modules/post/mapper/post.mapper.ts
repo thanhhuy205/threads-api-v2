@@ -73,7 +73,6 @@ export class PostMapper {
       repostsCountAndQuoteCount: post.repostsCountAndQuoteCount,
       origin: post.origin,
       viewsCount: post.viewsCount,
-      isGhost: post.isGhost,
       parent: post.parent,
       media: post.media,
       mentions: post.mentions,
