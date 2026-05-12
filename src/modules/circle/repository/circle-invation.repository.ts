@@ -41,15 +41,30 @@ class CircleInvitationRepository implements ICursorPagination<
     });
   }
 
-  async create(
+  async upsert(
     data: SendInvitationInput,
     tx: Prisma.TransactionClient = prisma,
   ) {
-    return tx.circleInvitation.create({
-      data: {
+    return tx.circleInvitation.upsert({
+      where: {
+        circleId_userId: {
+          circleId: data.circleId,
+          userId: data.userId,
+        },
+        status: CircleInvitationStatus.REJECTED,
+      },
+      update: {
+        resentCount: {
+          increment: 1,
+        },
+        inviterId: data.inviterId,
+        status: CircleInvitationStatus.PENDING,
+      },
+      create: {
         circleId: data.circleId,
         userId: data.userId,
         inviterId: data.inviterId,
+        status: CircleInvitationStatus.PENDING,
       },
     });
   }
@@ -66,6 +81,7 @@ class CircleInvitationRepository implements ICursorPagination<
         circleId: true,
         userId: true,
         status: true,
+        resentCount: true,
       },
     });
   }
@@ -93,6 +109,45 @@ class CircleInvitationRepository implements ICursorPagination<
     });
 
     return invitation;
+  }
+
+  async rejectInvitation(
+    circleId: number,
+    userId: string,
+    tx: Prisma.TransactionClient,
+  ) {
+    return tx.circleInvitation.update({
+      where: {
+        circleId_userId: {
+          circleId,
+          userId,
+        },
+        status: CircleInvitationStatus.PENDING,
+      },
+      data: {
+        status: CircleInvitationStatus.REJECTED,
+      },
+    });
+  }
+
+  async acceptInvitation(
+    circleId: number,
+    userId: string,
+    tx: Prisma.TransactionClient,
+  ) {
+    return tx.circleInvitation.update({
+      where: {
+        circleId_userId: {
+          circleId,
+          userId,
+        },
+        status: CircleInvitationStatus.PENDING,
+      },
+      data: {
+        status: CircleInvitationStatus.ACCEPTED,
+        resentCount: 0,
+      },
+    });
   }
 }
 export const circleInvitationRepository = new CircleInvitationRepository();

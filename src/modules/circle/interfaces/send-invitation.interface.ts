@@ -1,5 +1,5 @@
 export interface SendInvitationInput {
-    circleId: number;
-    userId: string;
-    inviterId: string;
+  circleId: number;
+  userId: string;
+  inviterId: string;
 }

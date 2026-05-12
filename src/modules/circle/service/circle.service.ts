@@ -3,7 +3,11 @@ import { ResponseInvitationInput } from "@/modules/circle/interfaces/response-in
 import { SendInvitationInput } from "@/modules/circle/interfaces/send-invitation.interface";
 import { circleInvitationRepository } from "@/modules/circle/repository/circle-invation.repository";
 import { buildCursorPagination } from "@/shared/pagination/cursor-pagination";
-import { RoleMembership, Visibility } from "@prisma/client";
+import {
+  CircleInvitationStatus,
+  RoleMembership,
+  Visibility,
+} from "@prisma/client";
 import { circleMemberRepository } from "../repository/circle-member.repository";
 import { circleRepository } from "../repository/circle.repository";
 import { transactionService } from "@/shared/transaction/transaction.service";
@@ -70,14 +74,24 @@ class CircleService {
         data.circleId,
         data.userId,
       );
+
+    const invitationResendLimit = 5;
+    // Vẫn cho mời lại người đã từ chối, tối đa 5 lần resentCount nếu quá 5 lần thì không mời được nữa
     if (existingInvitation) {
-      throw new Error(
-        `User ${data.userId} has already been invited to join circle ${data.circleId}`,
-      );
+      if (existingInvitation.resentCount >= invitationResendLimit) {
+        throw new Error(
+          `User ${data.userId} has already been invited to join circle ${data.circleId}`,
+        );
+      }
+      if (existingInvitation.status === CircleInvitationStatus.ACCEPTED) {
+        throw new Error(
+          `User ${data.userId} has already accepted the invitation`,
+        );
+      }
     }
 
-    return transactionService.doInTransaction(async (tx) => {
-      await circleInvitationRepository.create(
+    return await transactionService.doInTransaction(async (tx) => {
+      return await circleInvitationRepository.upsert(
         {
           circleId: data.circleId,
           userId: data.userId,
@@ -98,17 +112,33 @@ class CircleService {
         `User ${data.userId} is already a member of circle ${data.circleId}`,
       );
     }
-    const invitation = await circleRepository.findInvitation(
+    const invitation = await circleInvitationRepository.findInvitationById(
       data.circleId,
       data.userId,
     );
+
     if (!invitation) {
       throw new Error(
         `No invitation found for user ${data.userId} to join circle ${data.circleId}`,
       );
     }
+
+    if (data.status === CircleInvitationStatus.REJECTED) {
+      return await transactionService.doInTransaction(async (tx) => {
+        await circleInvitationRepository.rejectInvitation(
+          data.circleId,
+          data.userId,
+          tx,
+        );
+      });
+    }
+
     return await transactionService.doInTransaction(async (tx) => {
-      await circleRepository.acceptInvitation(data.circleId, data.userId, tx);
+      await circleInvitationRepository.acceptInvitation(
+        data.circleId,
+        data.userId,
+        tx,
+      );
       return await circleMemberRepository.create(
         {
           circleId: data.circleId,

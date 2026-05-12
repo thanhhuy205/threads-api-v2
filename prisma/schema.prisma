@@ -726,13 +726,14 @@ model CircleMember {
 }
 
 model CircleInvitation {
-    id        Int                    @id @default(autoincrement())
-    circleId  Int                    @map("circle_id")
-    userId    String                 @map("user_id")
-    inviterId String                 @map("inviter_id")
-    status    CircleInvitationStatus @default(PENDING)
-    createdAt DateTime               @default(now()) @map("created_at")
-    updatedAt DateTime               @updatedAt @map("updated_at")
+    id          Int                    @id @default(autoincrement())
+    circleId    Int                    @map("circle_id")
+    userId      String                 @map("user_id")
+    inviterId   String                 @map("inviter_id")
+    resentCount Int                    @default(0) @map("resent_count")
+    status      CircleInvitationStatus @default(PENDING)
+    createdAt   DateTime               @default(now()) @map("created_at")
+    updatedAt   DateTime               @updatedAt @map("updated_at")
 
     circle  Circle @relation(fields: [circleId], references: [id])
     user    User   @relation("CircleInvitationUser", fields: [userId], references: [id])
