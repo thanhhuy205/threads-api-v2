@@ -310,6 +310,13 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
     });
   }
 
+  async updateIsGhost(publicId: string, isGhost: boolean): Promise<void> {
+    await prisma.post.update({
+      where: { publicId },
+      data: { isGhost },
+    });
+  }
+
   async incrementLikedCount(publicId: string, count: number): Promise<void> {
     await prisma.$executeRaw`
     UPDATE posts p

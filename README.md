@@ -43,7 +43,7 @@ Gợi ý: mở link online hoặc file `docs/index.html` trước, sau đó đi 
 
 ## Kiến Trúc Modular (Tóm Tắt)
 
-Mỗi domain được tổ chức thành module độc lập (Auth, Post, Upload, Knowledge, Circle, Notification...), bám pattern nhất quán:
+Mỗi domain được tổ chức thành module độc lập (Auth, Post, Upload, Circle, Notification...), bám pattern nhất quán:
 
 - `controller`: nhận request/response
 - `dto`: validate schema (Zod) + type
@@ -56,17 +56,16 @@ Mỗi domain được tổ chức thành module độc lập (Auth, Post, Upload
 Ví dụ cấu trúc module:
 
 ```text
-src/modules/knowledge-post-comment/
+src/modules/post/
   controller/
   docs/
   dto/
     request/
-    response/
   interfaces/
   mapper/
   repository/
   service/
-  knowledge-post-comment.route.ts
+  post.routes.ts
 ```
 
 Luồng xử lý request đồng bộ:
@@ -120,13 +119,7 @@ Service -> Producer -> BullMQ Queue (Redis) -> Worker -> External Service/DB
 - Resize ảnh bằng `sharp` trước khi put object
 - Lưu object lên Cloudflare R2 bằng S3-compatible SDK
 
-### 6) Knowledge Modules
-
-- `knowledge-post`: tạo/xóa bài viết kiến thức
-- `knowledge-ranking`: chấm tiêu chí bài kiến thức
-- `knowledge-post-comment`: reply và lấy reply theo cursor pagination (`after`, `take`) bằng `publicId`
-
-### 7) Swagger Documentation
+### 6) Swagger Documentation
 
 - Tài liệu API sẵn tại `/api/v1/docs`
 - Dễ demo cho QA, frontend, và reviewer kỹ thuật
@@ -174,9 +167,6 @@ Base path: `http://localhost:<PORT>/api/v1`
 - `/upload`
 - `/users`, `/user`, `/me`
 - `/circle`
-- `/knowledge-posts`
-- `/knowledge-post-comments`
-- `/knowledge-rankings`
 - `/notification`
 - `/health`
 

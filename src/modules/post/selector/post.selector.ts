@@ -16,6 +16,7 @@ export const postFeedSelect = Prisma.validator<Prisma.PostSelect>()({
   repliesCount: true,
   repostsCountAndQuoteCount: true,
   viewsCount: true,
+  isGhost: true,
   createdAt: true,
   media: true,
   mentions: true,

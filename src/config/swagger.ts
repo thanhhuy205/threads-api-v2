@@ -31,18 +31,6 @@ import {
     jwtSwaggerSchemas,
 } from '../modules/jwt/docs/jwt.swagger';
 import {
-    knowledgePostCommentSwaggerPaths,
-    knowledgePostCommentSwaggerSchemas,
-} from '../modules/knowledge-post-comment/docs/knowledge-post-comment.swagger';
-import {
-    knowledgePostSwaggerPaths,
-    knowledgePostSwaggerSchemas,
-} from '../modules/knowledge-post/docs/knowledge-post.swagger';
-import {
-    knowledgeRankingSwaggerPaths,
-    knowledgeRankingSwaggerSchemas,
-} from '../modules/knowledge-ranking/docs/knowledge-ranking.swagger';
-import {
     notificationSwaggerPaths,
     notificationSwaggerSchemas,
 } from '../modules/notification/docs/notification.swagger';
@@ -93,18 +81,6 @@ export const swaggerDocument = {
             description: 'Circle / community APIs',
         },
         {
-            name: 'KnowledgePostComment',
-            description: 'Knowledge post comment APIs',
-        },
-        {
-            name: 'KnowledgePost',
-            description: 'Knowledge post APIs',
-        },
-        {
-            name: 'KnowledgeRanking',
-            description: 'Knowledge ranking APIs',
-        },
-        {
             name: 'Notification',
             description: 'Notification APIs',
         },
@@ -121,9 +97,6 @@ export const swaggerDocument = {
         ...userSwaggerPaths,
         ...uploadSwaggerPaths,
         ...circleSwaggerPaths,
-        ...knowledgePostCommentSwaggerPaths,
-        ...knowledgePostSwaggerPaths,
-        ...knowledgeRankingSwaggerPaths,
         ...notificationSwaggerPaths,
         ...adminSwaggerPaths,
     },
@@ -136,9 +109,6 @@ export const swaggerDocument = {
             ...userSwaggerSchemas,
             ...uploadSwaggerSchemas,
             ...circleSwaggerSchemas,
-            ...knowledgePostCommentSwaggerSchemas,
-            ...knowledgePostSwaggerSchemas,
-            ...knowledgeRankingSwaggerSchemas,
             ...notificationSwaggerSchemas,
             ...jwtSwaggerSchemas,
             ...adminSwaggerSchemas,

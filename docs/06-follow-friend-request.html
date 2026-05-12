@@ -21,10 +21,10 @@ footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--gray-300);fon
 <header>
   <div class="header-top">
     <h1>Follow &amp; Friend Request</h1>
-    <span class="pill">user · relationship</span>
+    <span class="pill">user · follow / friend</span>
   </div>
   <div class="meta">
-    Module: <code>UserService</code> · <code>RelationshipModule (cần tạo)</code> &nbsp;·&nbsp;
+    Module: <code>UserService</code> · <code>FollowRepository</code> · <code>FriendRequestRepository</code> &nbsp;·&nbsp;
     DB: <code>Follow</code> · <code>InvitationRequest (có sẵn)</code>
   </div>
 </header>
@@ -47,7 +47,7 @@ footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--gray-300);fon
     <div class="note-item"><span class="note-tag">Có</span><div class="note-body">Bảng <code>Follow</code> trong Prisma: <code>followerId</code>, <code>followingId</code>, <code>isFollowing</code>. Bảng <code>InvitationRequest</code> cũng tồn tại (cho Circle).</div></div>
     <div class="note-item"><span class="note-tag">Thiếu</span><div class="note-body">Không có API lấy danh sách following (người mình follow). Chỉ có <code>getFollower</code> (người follow mình).</div></div>
     <div class="note-item"><span class="note-tag">Thiếu</span><div class="note-body">Không có friend request (gửi/chấp nhận/từ chối). Hệ thống hiện là follow 1 chiều như Twitter, chưa có mutual friend.</div></div>
-    <div class="note-item"><span class="note-tag">Thiếu</span><div class="note-body">Module <code>relationship</code> có thư mục nhưng rỗng — repository trống, không có service/controller/route.</div></div>
+    <div class="note-item"><span class="note-tag">Ghi chú</span><div class="note-body">Follow và friend request đang đi qua User module; chưa tách module riêng cho phần quan hệ xã hội.</div></div>
   </div>
 </section>
 
@@ -284,7 +284,7 @@ footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--gray-300);fon
     <div class="note-item"><span class="note-tag">Count drift</span><div class="note-body"><code>followersCount</code> trên User có thể sai nếu increment/decrement fail sau khi update Follow. Giải pháp: wrap trong <strong>transaction</strong> hoặc dùng <strong>background job recount</strong> định kỳ.</div></div>
     <div class="note-item"><span class="note-tag">Friend vs Follow</span><div class="note-body">Hệ thống hiện là follow 1 chiều. Thêm friend request tạo 2 model quan hệ. Cần quyết định: <strong>friend = mutual follow</strong> hay <strong>friend = accepted request</strong>? Khuyến nghị: friend = accepted request, auto follow khi accept.</div></div>
     <div class="note-item"><span class="note-tag">Spam</span><div class="note-body">User có thể spam follow/unfollow liên tục. Cần <strong>rate limit</strong> (ví dụ max 30 follow/phút) dùng Redis sliding window hoặc bảng <code>AntiSpam</code> có sẵn.</div></div>
-    <div class="note-item"><span class="note-tag">Feed impact</span><div class="note-body">Khi accept friend → feed <code>FRIENDS_ONLY</code> cần hiện bài user mới. Nếu dùng fan-out-on-write, cần enqueue bài cũ vào feed mới. Nếu fan-out-on-read thì chỉ cần update relationship cache.</div></div>
+    <div class="note-item"><span class="note-tag">Feed impact</span><div class="note-body">Khi accept friend → feed <code>FRIENDS_ONLY</code> cần hiện bài user mới. Nếu dùng fan-out-on-write, cần enqueue bài cũ vào feed mới. Nếu fan-out-on-read thì chỉ cần update social graph cache.</div></div>
     <div class="note-item"><span class="note-tag">Transaction</span><div class="note-body"><strong>Chấp nhận / Hủy lời mời (PATCH):</strong> Tách làm 2 hàm riêng <code>handleFriendRequestAccept</code> và <code>handleFriendRequestCancel</code>, nhưng cả 2 đều sử dụng <strong>Prisma Transaction</strong> (<code>transactionService.doInTransaction</code>). Chuỗi hành động: Tìm ID đối tượng từ username → Kiểm tra lời mời có tồn tại không qua cặp <code>(senderId, receiverId)</code> tương ứng → Cập nhật trạng thái thành <code>ACCEPTED</code> hoặc <code>CANCELLED</code>. Việc tách 2 route giúp làm rõ logic module route. Toàn bộ được bọc trong transaction để dễ rollback khi lỗi.</div></div>
     <div class="note-item"><span class="note-tag">Pagination</span><div class="note-body">
       <strong>Lưu ý CỰC KỲ QUAN TRỌNG về biến <code>after</code> (Cursor Pagination) cho Friend Requests:</strong><br>
@@ -313,7 +313,7 @@ footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--gray-300);fon
   </table>
 </section>
 
-<footer>Module: user · relationship &nbsp;—&nbsp; Threads API v2</footer>
+<footer>Module: user · follow/friend &nbsp;—&nbsp; Threads API v2</footer>
 </div>
 </body>
 </html>
