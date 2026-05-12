@@ -294,10 +294,23 @@ export const userSwaggerPaths = {
             },
         },
     },
-    '/me/friend-requests/{username}': {
+    '/me/friend-requests/{username}/cancel': {
         patch: {
             tags: ['User'],
-            summary: 'Accept or Reject friend request',
+            summary: 'Cancel or reject friend request',
+            security: bearerAuthSecurity,
+            parameters: usernamePathParameter,
+            responses: {
+                200: {
+                    description: USER_MESSAGE.FRIEND_REQUEST_PROCESSED,
+                },
+            },
+        },
+    },
+    '/me/friend-requests/{username}/accept': {
+        patch: {
+            tags: ['User'],
+            summary: 'Accept friend request',
             security: bearerAuthSecurity,
             parameters: usernamePathParameter,
             requestBody: {

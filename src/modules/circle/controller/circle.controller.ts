@@ -27,7 +27,7 @@ class CircleController {
       invitationId ?? undefined,
       take,
     );
-    return res.paginate(circle);
+    return res.paginate({ rows: circle.rows, pagination: circle.pagination });
   }
 
   async sendInvitation(

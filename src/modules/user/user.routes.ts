@@ -38,9 +38,14 @@ userRouter.patch(
 
 userRouter.get(
   "/friend-requests/received",
+  validate(followersQuerySchema, "query"),
   userController.getReceivedFriendRequests,
 );
 
-userRouter.get("/friend-requests/sent", userController.getSentFriendRequests);
+userRouter.get(
+  "/friend-requests/sent",
+  validate(followersQuerySchema, "query"),
+  userController.getSentFriendRequests,
+);
 
 export default userRouter;

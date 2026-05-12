@@ -81,6 +81,10 @@ export const adminSwaggerPaths = {
             tags: ['Admin'],
             summary: 'List all users for admin',
             security: bearerAuthSecurity,
+            parameters: [
+                { name: 'after', in: 'query', schema: { type: 'string' } },
+                { name: 'take', in: 'query', schema: { type: 'number', example: 10 } },
+            ],
             responses: {
                 200: {
                     description: 'Users retrieved successfully',
