@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - production
+      - dev
 
 concurrency:
   group: production-deploy
@@ -13,9 +14,12 @@ concurrency:
 permissions:
   contents: read
   packages: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      image: ${{ steps.set-image.outputs.uri }}
 
     steps:
       - uses: actions/checkout@v4
@@ -24,9 +28,6 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 20.x
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -51,6 +52,7 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
+          platforms: linux/amd64
           tags: |
             ghcr.io/${{ github.repository }}:${{ github.sha }}
             ghcr.io/${{ github.repository }}:production
@@ -60,3 +62,43 @@ jobs:
       - name: Inspect pushed image
         run: |
           docker buildx imagetools inspect ghcr.io/${{ github.repository }}:${{ github.sha }}
+
+      - name: Echo image URI
+        run: echo "Built and pushed ${{ steps.set-image.outputs.uri }}"
+
+      - name: Create production release
+        if: github.ref == 'refs/heads/production'
+        uses: ncipollo/release-action@v1
+        with:
+          tag: production
+          name: Production Release
+          body: "Release for commit ${{ github.sha }}"
+          allowUpdates: true
+
+      - name: Create dev release
+        if: github.ref == 'refs/heads/dev'
+        uses: ncipollo/release-action@v1
+        with:
+          tag: dev
+          name: Dev Release
+          body: "Release for commit ${{ github.sha }}"
+          allowUpdates: true
+
+  deploy:
+    needs: build
+    runs-on: self-hosted
+    environment: production
+    if: github.ref == 'refs/heads/production'
+
+    steps:
+      - name: Login to GHCR
+        run: |
+          echo ${{ github.token }} | docker login ghcr.io \
+            -u ${{ github.actor }} --password-stdin
+
+      - name: Create .env
+        run: |
+          echo "${{ secrets.ENV_FILE }}" > /home/ubuntu/.env
+
+      - name: Pull image
+        run: docker pull ${{ needs.build.outputs.image }}

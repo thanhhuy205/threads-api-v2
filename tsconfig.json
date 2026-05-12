@@ -2,6 +2,7 @@
   "compilerOptions": {
     "target": "ES2022",
     "module": "CommonJS",
+    "lib": ["ES2024"],
     "moduleResolution": "Node",
     "rootDir": ".",
     "outDir": "dist",
@@ -17,6 +18,6 @@
       "@config/*": ["src/config/*"]
     }
   },
-  "include": ["src/**/*.ts", "src/config/**/*.ts", "prisma/**/*.ts", "workers/pine.worker.ts"],
+  "include": ["src/**/*.ts", "workers/**/*.ts", "prisma/**/*.ts"],
   "exclude": ["node_modules", "dist"]
 }

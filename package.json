@@ -18,7 +18,8 @@
         "db:seed": "tsx prisma/seed.ts",
         "db:format": "prisma format",
         "queue": "tsx queues/index.ts",
-        "worker": "tsx workers/index.ts",
+        "start:prod": "node dist/src/server.js",
+        "start:worker": "node dist/workers/index.js",
         "all:workers:queues": "npm run worker && npm run queue"
     },
     "prisma": {

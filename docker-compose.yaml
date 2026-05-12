@@ -1,0 +1,36 @@
+services:
+  api:
+    build: .
+    container_name: threads-api
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "3302:3302"
+    networks:
+      - threads-network
+  worker:
+    build: .
+    container_name: threads-worker
+    restart: unless-stopped
+    command: npm run worker
+    env_file:
+      - .env
+    networks:
+      - threads-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: threads-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+    restart: unless-stopped
+    depends_on:
+      - api
+    networks:
+      - threads-network
+
+networks:
+  threads-network:

@@ -1,5 +1,6 @@
 import { redisQueue, redisWorker } from "@/providers/redis.provider";
 import { JobsOptions, Queue, Worker } from "bullmq";
+import { WorkerOptions } from "worker_threads";
 
 export const defaultJobOptions: JobsOptions = {
     attempts: 3,

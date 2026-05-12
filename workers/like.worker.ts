@@ -5,6 +5,12 @@ import { postRepository } from '../src/modules/post/repository/post.repository';
 import { createWorker } from "../src/providers/bullmq.provider";
 import { redisService } from "../src/providers/redis.provider";
 
+type LikeResult = {
+  postPublicId: string,
+  createdAt: Date,
+  userId: string,
+}
+
 class LikeWorker {
   private readonly worker = createWorker(QUEUE_NAME.LIKE_QUEUE, async (job) => {
     switch (job.name) {
@@ -62,7 +68,7 @@ class LikeWorker {
 
   async processAddLike() {
     const results = await this.rPopCustomBatch(QUEUE_NAME.LIKED_ADD_QUEUE, 500);
-    const grouped = Map.groupBy(results, (item) => item.postPublicId as string);
+    const grouped = Map.groupBy(results, (item: LikeResult) => item.postPublicId as string);
     if (results.length === 0) return;
     await Promise.all([
       likeRepository.createMany(results.map((item) => ({
@@ -80,7 +86,7 @@ class LikeWorker {
 
     if (results.length === 0) return;
     // gom nhóm theo postPublicId để giảm số lần gọi postRepository.decrementLikedCount
-    const grouped = Map.groupBy(results, (item) => item.postPublicId as string);
+    const grouped = Map.groupBy(results, (item: LikeResult) => item.postPublicId as string);
     await Promise.all([
       likeRepository.createMany(results.map((item) => ({
         userId: item.userId as string,
@@ -96,12 +102,14 @@ class LikeWorker {
 
 
 
-  private async rPopCustomBatch(key: string, count: number): Promise<Record<string, unknown>[]> {
-    const results: Record<string, unknown>[] = [];
-    // lấy batch từ Redis cho đến khi không còn dữ liệu nào hoặc đã lấy đủ batch
+  private async rPopCustomBatch(key: string, count: number): Promise<LikeResult[]> {
     const result = await redisService.lMPop([key], "RIGHT", { count });
-    if (!result) return [];
-    return results;
+
+    if (!result || typeof result !== 'object' || !('elements' in result)) return [];
+
+    const { elements } = result as { key: string; elements: string[] };
+
+    return elements.map((item) => JSON.parse(item) as LikeResult);
   }
 
 }
