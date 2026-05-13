@@ -20,19 +20,16 @@ class CircleController {
     return res.success(200, "Circle detail retrieved successfully", circle);
   }
 
-  async getMembers(req: Request<{ publicId: string }, {} , {} , {after?: string , take: number }>, res: Response) {
+  async getMembers(req: Request<{ publicId: string }>, res: Response) {
     const { publicId } = req.params;
-    const userId = req.user?.sub;
-    if (!userId) {
-      return res.error(401, "Unauthorized");
-    }
+
     const { after: memberId, take } = getPagination(req);
     const members = await circleService.getMembers({
       circlePublicId: publicId,
       memberId: memberId ?? undefined,
       take,
     });
-    return res.success(200, "Circle members retrieved successfully", members);
+    return res.paginate(members);
   }
 
 

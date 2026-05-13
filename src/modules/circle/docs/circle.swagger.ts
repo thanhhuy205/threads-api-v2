@@ -49,6 +49,28 @@ export const circleSwaggerSchemas = {
         },
         required: ['id', 'publicId', 'name', 'description', 'visibility', 'memberCount', 'energy', 'createdAt', 'updatedAt'],
     },
+    CircleMemberUserItem: {
+        type: 'object',
+        properties: {
+            name: { type: 'string', example: 'Jane Doe', nullable: true },
+            username: { type: 'string', example: 'jane_doe' },
+            avatar: { type: 'string', example: 'https://cdn.example.com/avatar.png', nullable: true },
+            bio: { type: 'string', example: 'Full-stack developer', nullable: true },
+        },
+        required: ['username'],
+    },
+    CircleMemberItem: {
+        type: 'object',
+        properties: {
+            id: { type: 'number', example: 10 },
+            circleId: { type: 'number', example: 1 },
+            userId: { type: 'string', example: 'user_123' },
+            role: { type: 'string', example: 'MEMBER' },
+            createdAt: { type: 'string', format: 'date-time' },
+            user: { $ref: '#/components/schemas/CircleMemberUserItem' },
+        },
+        required: ['id', 'circleId', 'userId', 'role', 'createdAt', 'user'],
+    },
     CircleInvitationItem: {
         type: 'object',
         properties: {
@@ -88,6 +110,15 @@ export const circleSwaggerSchemas = {
             data: { $ref: '#/components/schemas/CircleDetailItem' },
         },
         required: ['success', 'message', 'data'],
+    },
+    CircleMembersResponse: {
+        type: 'object',
+        properties: {
+            success: { type: 'boolean', example: true },
+            data: { type: 'array', items: { $ref: '#/components/schemas/CircleMemberItem' } },
+            pagination: { $ref: '#/components/schemas/CursorPagination' },
+        },
+        required: ['success', 'data', 'pagination'],
     },
     CircleListResponse: {
         type: 'object',
@@ -195,6 +226,26 @@ export const circleSwaggerPaths = {
                     description: 'Circle detail retrieved',
                     content: { 'application/json': { schema: { $ref: '#/components/schemas/CircleDetailResponse' } } },
                 },
+                404: { description: COMMON_MESSAGE.NOT_FOUND },
+            },
+        },
+    },
+    '/circle/{publicId}/members': {
+        get: {
+            tags: ['Circle'],
+            summary: 'Get circle members by publicId',
+            security: bearerAuthSecurity,
+            parameters: [
+                { name: 'publicId', in: 'path', required: true, schema: { type: 'string' } },
+                { name: 'after', in: 'query', schema: { type: 'string', example: 'user_123' } },
+                { name: 'take', in: 'query', schema: { type: 'number', example: 10 } },
+            ],
+            responses: {
+                200: {
+                    description: 'Circle members retrieved',
+                    content: { 'application/json': { schema: { $ref: '#/components/schemas/CircleMembersResponse' } } },
+                },
+                401: { description: COMMON_MESSAGE.UNAUTHORIZED },
                 404: { description: COMMON_MESSAGE.NOT_FOUND },
             },
         },

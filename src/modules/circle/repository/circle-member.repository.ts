@@ -37,10 +37,7 @@ class CircleMemberRepository implements ICursorPagination<Prisma.CircleMemberWhe
             after: userId ? userId : undefined,
             take,
             where: {
-                circle: {
-                    id: circleId,
-                },
-                userId,
+                circleId,
             },
             cursor: userId ? { circleId_userId: { circleId, userId } } : undefined,
         });

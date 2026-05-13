@@ -52,7 +52,11 @@ class CircleService {
       memberId,
       take // or whatever default take value you want
     );
-    return members;
+    return buildCursorPagination({
+      rows: members,
+      take,
+      getAfter: (item) => item.userId,
+    });
   }
 
   async getCircleDetail(publicId: string) {
