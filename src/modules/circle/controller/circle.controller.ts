@@ -11,6 +11,31 @@ class CircleController {
     return res.paginate(circle);
   }
 
+  async getCircleDetail(
+    req: Request<{ publicId: string }>,
+    res: Response,
+  ) {
+    const { publicId } = req.params;
+    const circle = await circleService.getCircleDetail(publicId);
+    return res.success(200, "Circle detail retrieved successfully", circle);
+  }
+
+  async getMembers(req: Request<{ publicId: string }, {} , {} , {after?: string , take: number }>, res: Response) {
+    const { publicId } = req.params;
+    const userId = req.user?.sub;
+    if (!userId) {
+      return res.error(401, "Unauthorized");
+    }
+    const { after: memberId, take } = getPagination(req);
+    const members = await circleService.getMembers({
+      circlePublicId: publicId,
+      memberId: memberId ?? undefined,
+      take,
+    });
+    return res.success(200, "Circle members retrieved successfully", members);
+  }
+
+
   async createCircle(req: Request, res: Response) {
     const circle = await circleService.createCircle(req.body);
     return res.success(201, "Circle created successfully", circle);

@@ -13,5 +13,6 @@ circleRouter.get('/request-invitation', authorization, circleController.getReque
 circleRouter.post('/', authorization, validate(createCircleSchema), circleController.createCircle);
 circleRouter.post('/send-invitation', authorization, validate(sendInvitationSchema), circleController.sendInvitation);
 circleRouter.post('/response-invitation', authorization, validate(responseInvitationSchema), circleController.acceptInvitation);
+circleRouter.get('/:publicId', circleController.getCircleDetail);
 
 export default circleRouter;

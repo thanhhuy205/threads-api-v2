@@ -2,11 +2,8 @@ import prisma from "@/config/prisma";
 import { CreateCircleInput } from "@/modules/circle/interfaces/circle-service.interface";
 import { buildPagination } from "@/shared/pagination/cursor-pagination";
 import {
-  $Enums,
-  Circle,
-  CircleInvitationStatus,
   Prisma,
-  RoleMembership,
+  RoleMembership
 } from "@prisma/client";
 
 class CircleRepository implements ICursorPagination<
@@ -27,8 +24,8 @@ class CircleRepository implements ICursorPagination<
     cursor?: Prisma.CircleWhereUniqueInput;
     select?: Prisma.CircleSelect;
     orderBy?:
-      | Prisma.CircleOrderByWithRelationInput
-      | Prisma.CircleOrderByWithRelationInput[];
+    | Prisma.CircleOrderByWithRelationInput
+    | Prisma.CircleOrderByWithRelationInput[];
   }): Promise<any[]> {
     const { currentAfter, currentLimit } = buildPagination({ after, take });
 
@@ -37,7 +34,25 @@ class CircleRepository implements ICursorPagination<
       take: currentLimit + 1,
       skip: currentAfter ? 1 : 0,
       cursor: currentAfter ? cursor : undefined,
-      select,
+      select: {
+        id: true,
+        publicId: true,
+        description: true,
+        name: true,
+        createById: true,
+        createdAt: true,
+        visibility: true,
+        _count: {
+          select: { circleMembers: true },
+        },
+        createdBy: {
+          select: {
+            name: true,
+            username: true,
+            avatar: true,
+          },
+        }
+      },
       orderBy: orderBy || { id: "desc" },
     });
   }
@@ -56,37 +71,16 @@ class CircleRepository implements ICursorPagination<
       take,
       where,
       cursor: after ? { publicId: after } : undefined,
-      select: {
-        id: true,
-        publicId: true,
-        name: true,
-        createById: true,
-        createdAt: true,
-        updatedAt: true,
-        visibility: true,
-        _count: {
-          select: { circleMembers: true },
-        },
-      },
     });
 
-    return circles.map((c) => ({
-      id: c.id,
-      publicId: c.publicId,
-      name: c.name,
-      userId: c.createById, // Kept for compatibility if used
-      createdAt: c.createdAt,
-      updatedAt: c.updatedAt,
-      visibility: c.visibility,
-      createById: c.createById,
-      memberCount: c._count.circleMembers,
-    }));
+    return circles;
   }
 
-  async create(data: CreateCircleInput): Promise<Circle> {
+  async create(data: CreateCircleInput) {
     const result = await prisma.circle.create({
       data: {
         name: data.name,
+        description: data.description,
         visibility: data.visibility,
         createById: data.createById,
         circleMembers: {
@@ -95,10 +89,74 @@ class CircleRepository implements ICursorPagination<
             role: RoleMembership.ADMIN,
           },
         },
+        circleEnergies: {
+          create: {
+            current: 500,
+            max: 1000,
+            peak: 500,
+          },
+        },
+      },
+      select: {
+        id: true,
+        publicId: true,
+        name: true,
+        description: true,
+        visibility: true,
+        createdAt: true,
+        updatedAt: true,
+        statusPeak: true,
+        _count: {
+          select: {
+            circleMembers: true,
+
+          },
+        },
+        createdBy: {
+          select: {
+            name: true,
+            username: true,
+            avatar: true,
+          },
+        },
       },
     });
 
     return result;
+  }
+
+  async findByPublicId(publicId: string) {
+    return prisma.circle.findUnique({
+      where: {
+        publicId,
+      },
+      select: {
+        id: true,
+        publicId: true,
+        name: true,
+        description: true,
+        visibility: true,
+        createdAt: true,
+        updatedAt: true,
+        _count: {
+          select: {
+            circleMembers: true,
+          },
+        },
+        circleEnergies: {
+          orderBy: {
+            createdAt: "desc",
+          },
+          take: 1,
+          select: {
+            current: true,
+            max: true,
+            peak: true,
+            createdAt: true,
+          },
+        },
+      },
+    });
   }
 }
 

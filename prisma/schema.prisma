@@ -623,6 +623,8 @@ model CprSession {
   createdAt   DateTime @default(now())
 
   circle Circle @relation(fields: [circleId], references: [publicId])
+
+  @@map("cpr_sessions")
 }
 
 model CircleSoulStone {
@@ -637,6 +639,7 @@ model CircleSoulStone {
   circle Circle @relation(fields: [circleId], references: [publicId])
 
   @@index([createdAt])
+  @@map("circle_soul_stones")
 }
 
 model CircleInvitation {

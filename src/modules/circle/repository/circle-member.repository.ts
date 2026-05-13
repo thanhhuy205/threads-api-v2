@@ -1,12 +1,50 @@
 import prisma from "@/config/prisma";
-import { CircleMember, Prisma } from "@prisma/client";
+import { buildPagination } from "@/shared/pagination/cursor-pagination";
+import { $Enums, CircleMember, Prisma } from "@prisma/client";
 
-class CircleMemberRepository implements IPagination<Prisma.CircleMemberWhereInput, CircleMember> {
-    count(params: { where?: any; }): Promise<number> {
-        throw new Error("Method not implemented.");
+class CircleMemberRepository implements ICursorPagination<Prisma.CircleMemberWhereInput, CircleMember> {
+    findAll({ after, take, where, cursor }: {
+        after?: string; take?: number; where?: Prisma.CircleMemberWhereInput | undefined; cursor?: Prisma.CircleMemberWhereUniqueInput | undefined;
+    }): Promise<{ id: number; circleId: number; userId: string; createdAt: Date; role: $Enums.RoleMembership; }[]> {
+        const { currentAfter, currentLimit } = buildPagination({ after, take });
+
+        return prisma.circleMember.findMany({
+            where,
+            take: currentLimit ? currentLimit + 1 : undefined,
+            skip: currentAfter ? 1 : 0,
+            select: {
+                id: true,
+                circleId: true,
+                userId: true,
+                createdAt: true,
+                role: true,
+                user: {
+                    select: {
+                        name: true,
+                        username: true,
+                        avatar: true,
+                        bio: true,
+                    },
+                },
+            },
+            cursor: currentAfter ? cursor : undefined,
+        });
     }
-    async findAll({ page, limit, where, orderBy }: { page: number; limit: number; where?: Prisma.CircleMemberWhereInput | undefined; orderBy?: any; }) {
-        return [];
+
+
+    findMembersByCircleIdAndUserId(circleId: number, userId: string | undefined, take: number): Promise<CircleMember[]> {
+        return this.findAll({
+            after: userId ? userId : undefined,
+            take,
+            where: {
+                circle: {
+                    id: circleId,
+                },
+                userId,
+            },
+            cursor: userId ? { circleId_userId: { circleId, userId } } : undefined,
+        });
+
     }
 
     async create(data: { circleId: number; userId: string; }, tx: Prisma.TransactionClient): Promise<CircleMember> {

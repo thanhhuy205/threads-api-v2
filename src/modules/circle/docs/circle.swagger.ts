@@ -24,6 +24,31 @@ export const circleSwaggerSchemas = {
         },
         required: ['id', 'name', 'userId', 'visibility', 'createById', 'createdAt', 'updatedAt'],
     },
+    CircleEnergyItem: {
+        type: 'object',
+        properties: {
+            current: { type: 'number', example: 500 },
+            max: { type: 'number', example: 1000 },
+            peak: { type: 'number', example: 500 },
+            createdAt: { type: 'string', format: 'date-time' },
+        },
+        required: ['current', 'max', 'peak', 'createdAt'],
+    },
+    CircleDetailItem: {
+        type: 'object',
+        properties: {
+            id: { type: 'number', example: 1 },
+            publicId: { type: 'string', example: 'clr_123' },
+            name: { type: 'string', example: 'Vòng tròn' },
+            description: { type: 'string', example: 'Một circle mẫu để xem chi tiết' },
+            visibility: { type: 'string', example: 'PUBLIC' },
+            memberCount: { type: 'number', example: 0 },
+            energy: { $ref: '#/components/schemas/CircleEnergyItem' },
+            createdAt: { type: 'string', format: 'date-time' },
+            updatedAt: { type: 'string', format: 'date-time' },
+        },
+        required: ['id', 'publicId', 'name', 'description', 'visibility', 'memberCount', 'energy', 'createdAt', 'updatedAt'],
+    },
     CircleInvitationItem: {
         type: 'object',
         properties: {
@@ -52,6 +77,15 @@ export const circleSwaggerSchemas = {
             success: { type: 'boolean', example: true },
             message: { type: 'string', example: 'Circle created successfully' },
             data: { $ref: '#/components/schemas/CircleItem' },
+        },
+        required: ['success', 'message', 'data'],
+    },
+    CircleDetailResponse: {
+        type: 'object',
+        properties: {
+            success: { type: 'boolean', example: true },
+            message: { type: 'string', example: 'Circle detail retrieved successfully' },
+            data: { $ref: '#/components/schemas/CircleDetailItem' },
         },
         required: ['success', 'message', 'data'],
     },
@@ -146,6 +180,22 @@ export const circleSwaggerPaths = {
                 },
                 400: { description: COMMON_MESSAGE.BAD_REQUEST },
                 401: { description: COMMON_MESSAGE.UNAUTHORIZED },
+            },
+        },
+    },
+    '/circle/{publicId}': {
+        get: {
+            tags: ['Circle'],
+            summary: 'Get circle detail by publicId',
+            parameters: [
+                { name: 'publicId', in: 'path', required: true, schema: { type: 'string' } },
+            ],
+            responses: {
+                200: {
+                    description: 'Circle detail retrieved',
+                    content: { 'application/json': { schema: { $ref: '#/components/schemas/CircleDetailResponse' } } },
+                },
+                404: { description: COMMON_MESSAGE.NOT_FOUND },
             },
         },
     },

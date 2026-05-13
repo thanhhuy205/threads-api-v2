@@ -1133,3 +1133,122 @@
 //   .finally(async () => {
 //     await prisma.$disconnect();
 //   });
+
+
+
+
+
+// prisma/seed_posts_media.ts
+import { circleRepository } from "@/modules/circle/repository/circle.repository";
+import { PrismaMariaDb } from "@prisma/adapter-mariadb";
+import {
+    PrismaClient,
+    Visibility
+} from "@prisma/client";
+import dotenv from "dotenv";
+dotenv.config();
+
+const adapter = new PrismaMariaDb({
+    port: Number(process.env.DB_PORT) || 3306,
+    host: process.env.DB_HOST || "localhost",
+    user: process.env.DB_USER || "root",
+    password: process.env.DB_PASSWORD || "password",
+    database: process.env.DB_NAME || "threads_api",
+});
+
+const prisma = new PrismaClient({ adapter } as any);
+
+async function main() {
+    const users = await prisma.user.findMany({
+        where: { deletedAt: null },
+        select: { id: true, username: true },
+    });
+
+    if (users.length === 0) {
+        throw new Error('Không tìm thấy user nào trong database!');
+    }
+
+    const pick = (i: number) => users[i % users.length];
+
+    const circlesData = [
+        // 🧑‍💻 Tech & Dev
+        { name: 'Dev Vietnam 🇻🇳', description: 'Cộng đồng lập trình viên Việt Nam. Chia sẻ kiến thức, kinh nghiệm và cơ hội nghề nghiệp trong ngành công nghệ.', visibility: Visibility.PUBLIC, statusPeak: true },
+        { name: 'AI & Machine Learning', description: 'Thảo luận về trí tuệ nhân tạo, machine learning và các xu hướng AI mới nhất trên thế giới.', visibility: Visibility.PUBLIC, statusPeak: true },
+        { name: 'Backend Engineers', description: 'Nhóm kín dành cho backend engineers. Thảo luận về architecture, system design, database và DevOps chuyên sâu.', visibility: Visibility.PRIVATE, statusPeak: false },
+        { name: 'Frontend Wizards', description: 'React, Vue, Svelte hay Vanilla JS? Không quan trọng — miễn là UI đẹp và UX mượt mà.', visibility: Visibility.PUBLIC, statusPeak: false },
+        { name: 'Cloud & DevOps Hub', description: 'Chia sẻ kiến thức về AWS, GCP, Azure, Kubernetes, CI/CD và các thực hành DevOps hiện đại.', visibility: Visibility.PUBLIC, statusPeak: true },
+        { name: 'Mobile Dev Club', description: 'iOS, Android, Flutter, React Native — tất cả về phát triển ứng dụng di động đều có ở đây.', visibility: Visibility.PUBLIC, statusPeak: false },
+        { name: 'Open Source VN', description: 'Kết nối các contributor và maintainer open source Việt Nam. Cùng nhau build những thứ cool.', visibility: Visibility.PUBLIC, statusPeak: true },
+        { name: 'Security & Pentest', description: 'Nhóm kín về an ninh mạng, penetration testing, CTF và bug bounty dành cho các hacker mũ trắng.', visibility: Visibility.PRIVATE, statusPeak: false },
+        { name: 'Database Architects', description: 'PostgreSQL, MySQL, MongoDB, Redis — thảo luận về thiết kế database, query optimization và data modeling.', visibility: Visibility.PUBLIC, statusPeak: false },
+        { name: 'GameDev Việt', description: 'Cộng đồng phát triển game Việt Nam. Từ indie game đến AAA, Unity đến Unreal Engine đều welcome.', visibility: Visibility.PUBLIC, statusPeak: false },
+
+        // 🎨 Design & Creative
+        { name: 'Design & UX Community', description: 'Không gian dành cho các designer, UX researcher và những ai yêu thích thiết kế sản phẩm số.', visibility: Visibility.PUBLIC, statusPeak: false },
+        { name: 'Motion & Animation', description: 'After Effects, Lottie, CSS animation — chia sẻ tác phẩm và kỹ thuật làm motion design đỉnh cao.', visibility: Visibility.PUBLIC, statusPeak: true },
+        { name: 'Brand Identity Lab', description: 'Nơi các brand designer chia sẻ case study, logo design, brand guidelines và câu chuyện thương hiệu.', visibility: Visibility.PRIVATE, statusPeak: false },
+        { name: 'Figma Masters VN', description: 'Tips, tricks, plugins và resources Figma. Auto layout đến variables — master hết tất cả.', visibility: Visibility.PUBLIC, statusPeak: false },
+        { name: 'Photography Circle', description: 'Chia sẻ ảnh chụp, kỹ thuật nhiếp ảnh, gear review và hành trình khám phá ánh sáng & khoảnh khắc.', visibility: Visibility.CIRCLE, statusPeak: false },
+
+        // 🚀 Business & Career
+        { name: 'Startup Founders Circle', description: 'Dành cho những người sáng lập startup. Chia sẻ hành trình, thách thức và bài học kinh nghiệm khởi nghiệp.', visibility: Visibility.PUBLIC, statusPeak: true },
+        { name: 'Product Managers VN', description: 'Cộng đồng PM Việt Nam. Roadmap, prioritization, stakeholder management và tất cả về làm product.', visibility: Visibility.PUBLIC, statusPeak: false },
+        { name: 'Freelancers Vietnam', description: 'Cộng đồng freelancer Việt Nam. Kết nối, chia sẻ dự án, rate card và kinh nghiệm làm việc tự do.', visibility: Visibility.CIRCLE, statusPeak: false },
+        { name: 'Growth Hackers', description: 'Chiến lược tăng trưởng, A/B testing, funnel optimization và các growth experiment thực chiến.', visibility: Visibility.PRIVATE, statusPeak: true },
+        { name: 'Tech Recruiters Network', description: 'Mạng lưới recruiter ngành công nghệ. Chia sẻ JD hay, sourcing tips và insight về thị trường nhân sự IT.', visibility: Visibility.PUBLIC, statusPeak: false },
+
+        // 🌐 Web3 & Finance
+        { name: 'Web3 & Blockchain VN', description: 'Khám phá thế giới Web3, DeFi, NFT và công nghệ blockchain cùng cộng đồng crypto Việt Nam.', visibility: Visibility.PUBLIC, statusPeak: true },
+        { name: 'DeFi Research Lab', description: 'Phân tích protocol, tokenomics, yield farming strategy và các cơ hội DeFi cho người nghiêm túc.', visibility: Visibility.PRIVATE, statusPeak: true },
+        { name: 'Stock & Investment Club', description: 'Phân tích cổ phiếu, ETF, crypto và các kênh đầu tư tài chính. Knowledge sharing, không phải pump & dump.', visibility: Visibility.CIRCLE, statusPeak: false },
+        { name: 'Fintech Builders', description: 'Xây dựng tương lai tài chính số. Payment, lending, insurtech và mọi thứ về fintech đều ở đây.', visibility: Visibility.PUBLIC, statusPeak: false },
+
+        // 📚 Learning & Knowledge
+        { name: 'Book Club Tech', description: 'Câu lạc bộ đọc sách về công nghệ, kinh doanh và phát triển bản thân. Mỗi tháng một cuốn sách mới.', visibility: Visibility.PRIVATE, statusPeak: false },
+        { name: 'English for Techies', description: 'Luyện tiếng Anh chuyên ngành công nghệ. Từ technical writing đến presentation skills và interview prep.', visibility: Visibility.PUBLIC, statusPeak: false },
+        { name: 'Research Paper Club', description: 'Đọc và thảo luận các paper về AI, CS và công nghệ. Từ arxiv đến NeurIPS — cùng nhau hiểu sâu hơn.', visibility: Visibility.PRIVATE, statusPeak: true },
+        { name: 'Junior Dev Support', description: 'Nơi an toàn để junior developer hỏi bất cứ điều gì. Không có câu hỏi nào là ngu ngốc ở đây.', visibility: Visibility.PUBLIC, statusPeak: false },
+        { name: 'CS Fundamentals', description: 'Algorithms, data structures, system design và những kiến thức nền tảng mà mọi developer cần nắm vững.', visibility: Visibility.PUBLIC, statusPeak: false },
+
+        // 🎮 Lifestyle & Community
+        { name: 'Tech & Coffee ☕', description: 'Chill, networking và nói chuyện random về tech. Không cần agenda — chỉ cần cà phê và đam mê.', visibility: Visibility.PUBLIC, statusPeak: false },
+        { name: 'Remote Work Life', description: 'Chia sẻ kinh nghiệm làm việc remote — từ setup workspace, quản lý thời gian đến tìm client quốc tế.', visibility: Visibility.PUBLIC, statusPeak: false },
+        { name: 'Vietnam Expat Tech', description: 'Dành cho tech người Việt đang làm việc ở nước ngoài. Networking, cơ hội việc làm và chia sẻ cuộc sống abroad.', visibility: Visibility.CIRCLE, statusPeak: false },
+        { name: 'Women in Tech VN', description: 'Cộng đồng phụ nữ trong ngành công nghệ Việt Nam. Mentorship, networking và cùng nhau phá vỡ rào cản.', visibility: Visibility.PUBLIC, statusPeak: true },
+        { name: 'Tech Memes & Fun', description: 'Meme, joke và tất cả những thứ buồn cười về cuộc đời developer. Vì không phải lúc nào cũng phải serious.', visibility: Visibility.PUBLIC, statusPeak: false },
+
+        // 🏙️ Local Communities
+        { name: 'HCM Tech Community', description: 'Cộng đồng công nghệ Thành phố Hồ Chí Minh. Events, meetup, hackathon và kết nối người làm tech tại HCM.', visibility: Visibility.PUBLIC, statusPeak: true },
+        { name: 'Hanoi Dev Guild', description: 'Hội lập trình viên Hà Nội. Meetup định kỳ, chia sẻ kinh nghiệm và kết nối cộng đồng tech thủ đô.', visibility: Visibility.PUBLIC, statusPeak: false },
+        { name: 'Da Nang Tech Scene', description: 'Cộng đồng công nghệ Đà Nẵng. Thành phố đáng sống — và ngành tech đang bùng nổ tại đây.', visibility: Visibility.PUBLIC, statusPeak: false },
+
+        // 🔬 Specialized
+        { name: 'IoT & Embedded Systems', description: 'Arduino, Raspberry Pi, ESP32 và tất cả về Internet of Things. Hardware meets software.', visibility: Visibility.PUBLIC, statusPeak: false },
+        { name: 'Data Engineers VN', description: 'Data pipeline, ETL, Spark, Kafka và mọi thứ về data engineering cho người xây dựng hạ tầng dữ liệu.', visibility: Visibility.PRIVATE, statusPeak: false },
+        { name: 'No-Code & Low-Code', description: 'Bubble, Webflow, Zapier, n8n — xây dựng sản phẩm nhanh hơn mà không cần (nhiều) code.', visibility: Visibility.PUBLIC, statusPeak: false },
+        { name: 'Tech for Social Good', description: 'Dùng công nghệ để giải quyết vấn đề xã hội. Giáo dục, môi trường, y tế — tech có thể tạo ra sự khác biệt.', visibility: Visibility.PUBLIC, statusPeak: true },
+    ];
+
+    console.log('🌱 Bắt đầu seed 40 circles...\n');
+
+    let count = 0;
+    for (const [i, data] of circlesData.entries()) {
+        const circle = await circleRepository.create({
+            ...data, createById: pick(i).id
+        });
+
+        count++;
+        const peakIcon = circle.statusPeak ? '🔥' : '  ';
+        const visIcon = circle.visibility === 'PUBLIC' ? '🌐' : circle.visibility === 'PRIVATE' ? '🔒' : '⭕';
+        console.log(`${String(count).padStart(2, '0')}. ${peakIcon} ${visIcon} ${circle.name} — @${circle.createdBy.username}`);
+    }
+
+    console.log(`\n✅ Đã tạo ${count} circles thành công!`);
+}
+
+main()
+    .catch((e) => {
+        console.error('❌ Seed thất bại:', e);
+        process.exit(1);
+    })
+    .finally(() => prisma.$disconnect());

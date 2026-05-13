@@ -1,8 +1,10 @@
+import { NotFoundException } from "@/errors/error";
 import { CreateCircleInput } from "@/modules/circle/interfaces/circle-service.interface";
 import { ResponseInvitationInput } from "@/modules/circle/interfaces/response-invitation.dto";
 import { SendInvitationInput } from "@/modules/circle/interfaces/send-invitation.interface";
 import { circleInvitationRepository } from "@/modules/circle/repository/circle-invation.repository";
 import { buildCursorPagination } from "@/shared/pagination/cursor-pagination";
+import { transactionService } from "@/shared/transaction/transaction.service";
 import {
   CircleInvitationStatus,
   RoleMembership,
@@ -10,7 +12,6 @@ import {
 } from "@prisma/client";
 import { circleMemberRepository } from "../repository/circle-member.repository";
 import { circleRepository } from "../repository/circle.repository";
-import { transactionService } from "@/shared/transaction/transaction.service";
 
 class CircleService {
   async getCircle(publicId?: string, take: number = 10) {
@@ -31,11 +32,62 @@ class CircleService {
     });
   }
 
+  async getMembers({
+    circlePublicId,
+    memberId,
+    take,
+  }: {
+    circlePublicId: string;
+    memberId?: string;
+    take: number;
+  }) {
+    const circle = await circleRepository.findByPublicId(circlePublicId);
+
+    if (!circle) {
+      throw new NotFoundException(`Circle ${circlePublicId} not found`);
+    }
+
+    const members = await circleMemberRepository.findMembersByCircleIdAndUserId(
+      circle.id,
+      memberId,
+      take // or whatever default take value you want
+    );
+    return members;
+  }
+
+  async getCircleDetail(publicId: string) {
+    const circle = await circleRepository.findByPublicId(publicId);
+
+    if (!circle) {
+      throw new NotFoundException(`Circle ${publicId} not found`);
+    }
+
+    const energy = circle.circleEnergies[0] ?? {
+      current: 500,
+      max: 1000,
+      peak: 500,
+      createdAt: circle.createdAt,
+    };
+
+    return {
+      id: circle.id,
+      publicId: circle.publicId,
+      name: circle.name,
+      description: circle.description,
+      visibility: circle.visibility,
+      memberCount: circle._count.circleMembers,
+      energy,
+      createdAt: circle.createdAt,
+      updatedAt: circle.updatedAt,
+    };
+  }
+
   async createCircle(data: CreateCircleInput) {
     const newCircle = await circleRepository.create({
       name: data.name,
       visibility: data.visibility,
       createById: data.createById,
+      description: data.description,
     });
 
     return newCircle;
