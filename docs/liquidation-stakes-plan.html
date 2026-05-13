@@ -1,0 +1,1422 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Implementation Plan — The Liquidation Stakes</title>
+  <style>
+    :root {
+      --ivory:    #FAF9F5;
+      --slate:    #141413;
+      --clay:     #D97757;
+      --oat:      #E3DACC;
+      --olive:    #788C5D;
+      --violet:   #7C3AED;
+      --violet-lt:#EDE9FE;
+      --gray-150: #F0EEE6;
+      --gray-300: #D1CFC5;
+      --gray-500: #87867F;
+      --gray-700: #3D3D3A;
+      --white:    #FFFFFF;
+      --danger:   #C0392B;
+      --danger-lt:#FDECEA;
+
+      --serif: ui-serif, Georgia, 'Times New Roman', serif;
+      --sans:  system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      --mono:  ui-monospace, 'SF Mono', Menlo, Monaco, monospace;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--sans);
+      background: var(--ivory);
+      color: var(--gray-700);
+      line-height: 1.55;
+      padding: 56px 32px 120px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .page { max-width: 1120px; margin: 0 auto; }
+
+    header.page-head { margin-bottom: 48px; max-width: 820px; }
+    .eyebrow {
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--gray-500);
+      margin-bottom: 12px;
+    }
+    h1 {
+      font-family: var(--serif);
+      font-weight: 500;
+      font-size: 38px;
+      line-height: 1.15;
+      color: var(--slate);
+      margin-bottom: 18px;
+      letter-spacing: -0.01em;
+    }
+    .prompt-box {
+      background: var(--gray-150);
+      border: 1.5px solid var(--gray-300);
+      border-radius: 12px;
+      padding: 16px 20px;
+      font-size: 14.5px;
+      color: var(--gray-700);
+    }
+    .prompt-box .label {
+      font-family: var(--mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--gray-500);
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    section { margin-bottom: 64px; }
+    .sec-head {
+      display: flex;
+      align-items: baseline;
+      gap: 14px;
+      margin-bottom: 8px;
+    }
+    .sec-head .num {
+      font-family: var(--mono);
+      font-size: 12px;
+      background: var(--oat);
+      color: var(--slate);
+      padding: 3px 9px;
+      border-radius: 8px;
+    }
+    .sec-head h2 {
+      font-family: var(--serif);
+      font-weight: 500;
+      font-size: 26px;
+      color: var(--slate);
+      letter-spacing: -0.01em;
+    }
+    .sec-intro {
+      font-size: 14.5px;
+      color: var(--gray-500);
+      max-width: 720px;
+      margin-bottom: 28px;
+    }
+
+    /* summary strip */
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 64px;
+    }
+    @media (max-width: 900px) { .summary { grid-template-columns: repeat(2, 1fr); } }
+    .summary .cell {
+      background: var(--white);
+      border: 1.5px solid var(--gray-300);
+      border-radius: 12px;
+      padding: 18px 20px;
+    }
+    .summary .k {
+      font-family: var(--mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--gray-500);
+      margin-bottom: 6px;
+    }
+    .summary .v {
+      font-size: 17px;
+      color: var(--slate);
+      font-weight: 600;
+    }
+    .summary .v.accent { color: var(--clay); }
+    .summary .v.violet { color: var(--violet); }
+
+    /* milestones */
+    .milestones { display: flex; flex-direction: column; gap: 0; }
+    .milestone {
+      display: grid;
+      grid-template-columns: 120px 28px 1fr;
+      gap: 0 18px;
+    }
+    .milestone .when {
+      text-align: right;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--gray-500);
+      padding-top: 4px;
+    }
+    .milestone .dot-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .milestone .dot {
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: var(--white);
+      border: 3px solid var(--clay);
+      margin-top: 4px;
+      flex-shrink: 0;
+    }
+    .milestone .dot.done { background: var(--olive); border-color: var(--olive); }
+    .milestone .line {
+      width: 2px;
+      flex: 1;
+      background: var(--gray-300);
+      margin: 4px 0;
+    }
+    .milestone:last-child .line { display: none; }
+    .milestone .body { padding-bottom: 36px; }
+    .milestone .body h3 {
+      font-family: var(--serif);
+      font-weight: 500;
+      font-size: 19px;
+      color: var(--slate);
+      margin-bottom: 4px;
+    }
+    .milestone .body p { font-size: 14px; color: var(--gray-500); margin-bottom: 10px; max-width: 620px; }
+    .milestone .tags { display: flex; gap: 8px; flex-wrap: wrap; }
+    .milestone .tag {
+      font-family: var(--mono);
+      font-size: 11.5px;
+      background: var(--gray-150);
+      border: 1px solid var(--gray-300);
+      border-radius: 6px;
+      padding: 3px 8px;
+      color: var(--gray-700);
+    }
+
+    /* diagram */
+    .diagram {
+      background: var(--white);
+      border: 1.5px solid var(--gray-300);
+      border-radius: 12px;
+      padding: 28px;
+      overflow-x: auto;
+    }
+    .diagram svg { display: block; min-width: 760px; }
+    .diagram text { font-family: var(--mono); }
+    .caption { font-size: 13px; color: var(--gray-500); margin-top: 12px; }
+
+    /* energy bar mock */
+    .mocks {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+    }
+    @media (max-width: 900px) { .mocks { grid-template-columns: 1fr; } }
+    .mock {
+      background: var(--white);
+      border: 1.5px solid var(--gray-300);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .mock .mock-label {
+      padding: 12px 18px;
+      border-bottom: 1.5px solid var(--gray-300);
+      font-family: var(--mono);
+      font-size: 11.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--gray-500);
+      background: var(--gray-150);
+    }
+    .mock .mock-body { padding: 22px; }
+
+    /* Group Health Mock */
+    .group-mock {
+      border: 1.5px solid var(--gray-300);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .group-mock .top-bar {
+      background: var(--slate);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .group-mock .top-bar .dot-r { width:9px; height:9px; border-radius:50%; background:#FF5F57; }
+    .group-mock .top-bar .dot-y { width:9px; height:9px; border-radius:50%; background:#FFBD2E; }
+    .group-mock .top-bar .dot-g { width:9px; height:9px; border-radius:50%; background:#28C840; }
+    .group-mock .top-bar .url {
+      flex: 1;
+      text-align: center;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: #87867F;
+    }
+    .group-mock .content { padding: 18px; background: var(--white); }
+    .group-mock .route-badge {
+      font-family: var(--mono);
+      font-size: 11px;
+      background: var(--violet-lt);
+      color: var(--violet);
+      padding: 3px 9px;
+      border-radius: 6px;
+      display: inline-block;
+      margin-bottom: 12px;
+    }
+    .group-name {
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--slate);
+      margin-bottom: 4px;
+    }
+    .group-meta {
+      font-size: 12px;
+      color: var(--gray-500);
+      margin-bottom: 14px;
+      font-family: var(--mono);
+    }
+    .energy-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .energy-label .el-name {
+      font-family: var(--mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--gray-500);
+    }
+    .energy-label .el-val {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--olive);
+    }
+    .energy-label .el-val.med { color: #D97757; }
+    .energy-label .el-val.low { color: #C0392B; }
+    .energy-bar-wrap {
+      background: var(--gray-150);
+      border-radius: 8px;
+      height: 10px;
+      overflow: hidden;
+      margin-bottom: 14px;
+    }
+    .energy-bar-fill {
+      height: 100%;
+      border-radius: 8px;
+      transition: width 0.3s;
+    }
+    .energy-bar-fill.healthy { background: var(--olive); width: 72%; }
+    .energy-bar-fill.med { background: var(--clay); width: 28%; }
+    .energy-bar-fill.dying {
+      background: var(--danger);
+      width: 8%;
+      box-shadow: 0 0 8px rgba(192,57,43,0.5);
+    }
+    .group-tags-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .stage-badge {
+      font-family: var(--mono);
+      font-size: 10.5px;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+    .stage-badge.healthy { background: #E4E9DC; color: #4B5C39; }
+    .stage-badge.sick { background: var(--oat); color: var(--slate); }
+    .stage-badge.dying { background: var(--danger-lt); color: var(--danger); }
+
+    /* Dying group mock (glitch visual) */
+    .dying-mock .content {
+      background: #1a1a1a;
+      filter: saturate(0.1);
+      position: relative;
+    }
+    .dying-mock .content::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(255,255,255,0.02) 2px,
+        rgba(255,255,255,0.02) 4px
+      );
+      pointer-events: none;
+      z-index: 1;
+    }
+    .dying-mock .group-name { color: #ccc; }
+    .dying-mock .post-blur {
+      filter: blur(3px);
+      background: rgba(255,255,255,0.05);
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 12px;
+      color: #aaa;
+      margin-top: 10px;
+      position: relative;
+    }
+    .dying-mock .post-blur-hint {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--mono);
+      font-size: 10px;
+      color: rgba(255,255,255,0.6);
+      background: rgba(0,0,0,0.3);
+      border-radius: 6px;
+      letter-spacing: 0.05em;
+    }
+    .glitch-text {
+      position: relative;
+      display: inline-block;
+    }
+    .glitch-text::after {
+      content: attr(data-text);
+      position: absolute;
+      left: 2px;
+      top: 0;
+      color: #ff0040;
+      opacity: 0.4;
+      clip: rect(0, 900px, 0, 0);
+    }
+
+    /* sacrifice mock */
+    .sacrifice-mock .content { background: var(--white); }
+    .sacrifice-card {
+      border: 1.5px solid var(--danger);
+      background: var(--danger-lt);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-top: 8px;
+    }
+    .sacrifice-card .sc-title {
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--danger);
+      margin-bottom: 4px;
+    }
+    .sacrifice-card .sc-desc {
+      font-size: 12.5px;
+      color: var(--gray-700);
+      margin-bottom: 12px;
+    }
+    .sacrifice-btn {
+      display: inline-block;
+      background: var(--danger);
+      color: var(--white);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-family: var(--mono);
+      letter-spacing: 0.03em;
+      margin-right: 8px;
+    }
+    .cancel-btn {
+      display: inline-block;
+      background: transparent;
+      color: var(--gray-500);
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-family: var(--mono);
+      border: 1px solid var(--gray-300);
+    }
+    .karma-before-after {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .karma-chip {
+      font-family: var(--mono);
+      font-size: 11px;
+      padding: 3px 9px;
+      border-radius: 6px;
+      font-weight: 700;
+    }
+    .karma-chip.before { background: var(--violet-lt); color: var(--violet); }
+    .karma-chip.after  { background: var(--danger-lt); color: var(--danger); }
+    .karma-arrow { color: var(--gray-500); font-size: 13px; }
+
+    /* code */
+    .code-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+    @media (max-width: 980px) { .code-grid { grid-template-columns: 1fr; } }
+    .code-block { display: flex; flex-direction: column; gap: 10px; }
+    .code-block .file-label {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--gray-500);
+    }
+    .code {
+      background: var(--slate);
+      border-radius: 12px;
+      padding: 18px 20px;
+      overflow-x: auto;
+      flex: 1;
+    }
+    .code pre {
+      font-family: var(--mono);
+      font-size: 12.5px;
+      line-height: 1.65;
+      color: #E8E6DE;
+      white-space: pre;
+    }
+    .code .kw  { color: var(--clay); }
+    .code .str { color: var(--olive); }
+    .code .cm  { color: var(--gray-500); }
+    .code .fn  { color: #C9B98A; }
+    .code .pu  { color: #c084fc; }
+    .code .num { color: #fb923c; }
+
+    /* risks */
+    .risks {
+      border: 1.5px solid var(--gray-300);
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--white);
+    }
+    .risks .row {
+      display: grid;
+      grid-template-columns: 1.6fr 90px 1.6fr;
+    }
+    @media (max-width: 780px) { .risks .row { grid-template-columns: 1fr; } }
+    .risks .row + .row { border-top: 1.5px solid var(--gray-300); }
+    .risks .cell { padding: 14px 18px; font-size: 13.5px; }
+    .risks .cell + .cell { border-left: 1.5px solid var(--gray-300); }
+    @media (max-width: 780px) { .risks .cell + .cell { border-left: none; border-top: 1px dashed var(--gray-300); } }
+    .risks .head { background: var(--gray-150); font-weight: 600; color: var(--slate); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .sev {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-weight: 600;
+    }
+    .sev.high { background: #F3D9CC; color: #8A3B1E; }
+    .sev.med  { background: var(--oat); color: var(--slate); }
+    .sev.low  { background: #E4E9DC; color: #4B5C39; }
+
+    /* open questions */
+    .open-q { display: flex; flex-direction: column; gap: 14px; max-width: 820px; }
+    .q {
+      background: var(--white);
+      border: 1.5px solid var(--gray-300);
+      border-left: 4px solid var(--clay);
+      border-radius: 10px;
+      padding: 16px 20px;
+    }
+    .q .qt { font-weight: 600; font-size: 15px; color: var(--slate); margin-bottom: 4px; }
+    .q .qd { font-size: 13.5px; color: var(--gray-500); }
+    .q .owner {
+      font-family: var(--mono);
+      font-size: 11.5px;
+      color: var(--gray-500);
+      margin-top: 8px;
+    }
+
+    /* out-of-scope box */
+    .oos {
+      background: var(--white);
+      border: 1.5px solid var(--gray-300);
+      border-left: 4px solid var(--violet);
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin-bottom: 40px;
+      max-width: 820px;
+    }
+    .oos .oos-title {
+      font-family: var(--mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--violet);
+      margin-bottom: 8px;
+    }
+    .oos ul { padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
+    .oos ul li { font-size: 13.5px; color: var(--gray-500); }
+
+    /* feature cards grid */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+      margin-bottom: 32px;
+    }
+    @media (max-width: 860px) { .feature-grid { grid-template-columns: 1fr; } }
+    .feature-card {
+      background: var(--white);
+      border: 1.5px solid var(--gray-300);
+      border-radius: 12px;
+      padding: 20px 22px;
+    }
+    .feature-card .fc-icon {
+      font-size: 22px;
+      margin-bottom: 8px;
+    }
+    .feature-card .fc-title {
+      font-family: var(--serif);
+      font-size: 17px;
+      font-weight: 500;
+      color: var(--slate);
+      margin-bottom: 6px;
+    }
+    .feature-card .fc-desc {
+      font-size: 13.5px;
+      color: var(--gray-500);
+      line-height: 1.6;
+    }
+    .feature-card .fc-chips {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+    .fc-chip {
+      font-family: var(--mono);
+      font-size: 10.5px;
+      background: var(--gray-150);
+      border: 1px solid var(--gray-300);
+      border-radius: 5px;
+      padding: 2px 7px;
+      color: var(--gray-700);
+    }
+    .fc-chip.clay { background: #F9EDEA; border-color: #E8B9AA; color: #7A3020; }
+    .fc-chip.violet { background: var(--violet-lt); border-color: #C4B5FD; color: var(--violet); }
+
+    /* museum card */
+    .museum-card {
+      background: var(--slate);
+      border-radius: 12px;
+      padding: 22px 24px;
+      margin-top: 16px;
+      max-width: 680px;
+    }
+    .museum-card .mc-eyebrow {
+      font-family: var(--mono);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #C9B98A;
+      margin-bottom: 10px;
+    }
+    .museum-card .mc-title {
+      font-family: var(--serif);
+      font-size: 18px;
+      color: var(--ivory);
+      margin-bottom: 6px;
+      opacity: 0.8;
+    }
+    .museum-card .mc-stats {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .museum-card .mc-stat {
+      display: flex;
+      flex-direction: column;
+    }
+    .museum-card .mc-stat .sk {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--gray-500);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .museum-card .mc-stat .sv {
+      font-size: 14px;
+      color: #E8E6DE;
+      font-weight: 600;
+    }
+    .museum-card .mc-lifeline {
+      height: 4px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+    .museum-card .mc-lifeline-fill {
+      height: 100%;
+      background: linear-gradient(to right, var(--olive) 0%, var(--clay) 70%, var(--danger) 100%);
+      border-radius: 4px;
+      width: 100%;
+    }
+    .museum-card .mc-footer {
+      font-size: 12px;
+      color: var(--gray-500);
+      font-family: var(--mono);
+    }
+    .ashes-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-family: var(--mono);
+      font-size: 10.5px;
+      background: rgba(201,185,138,0.15);
+      color: #C9B98A;
+      border: 1px solid rgba(201,185,138,0.3);
+      border-radius: 20px;
+      padding: 3px 10px;
+      margin-left: 6px;
+    }
+
+    code {
+      font-family: var(--mono);
+      font-size: 12.5px;
+      background: var(--gray-150);
+      border: 1px solid var(--gray-300);
+      border-radius: 4px;
+      padding: 1px 5px;
+      color: var(--gray-700);
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <header class="page-head">
+    <div class="eyebrow">Implementation Plan · The Liquidation Stakes · Next.js + Prisma + MySQL + Express.js</div>
+    <h1>The Liquidation Stakes — Hội nhóm có thời hạn và sự đánh đổi</h1>
+    <div class="prompt-box">
+      <span class="label">Feature brief</span>
+      Phá vỡ tư duy "nhóm là vĩnh viễn". Mỗi nhóm được sinh ra với một lượng Năng lượng (Energy HP).
+      Tương tác chất lượng nạp HP, sự im lặng rút cạn nó. Khi HP về 0, nhóm tự hủy vĩnh viễn.
+      AI phân tích ngữ nghĩa để phân biệt "Deep Talk" vs rác. Giao diện lão hóa theo thời gian thực.
+      Trước khi chết, nhóm để lại "Soul Stone" trong Viện bảo tàng Threads.
+    </div>
+  </header>
+
+  <!-- summary -->
+  <div class="summary">
+    <div class="cell"><div class="k">DB Tables mới</div><div class="v accent">6 tables</div></div>
+    <div class="cell"><div class="k">API Routes</div><div class="v">12 endpoints</div></div>
+    <div class="cell"><div class="k">Stack chính</div><div class="v">Next.js · Prisma · MySQL</div></div>
+    <div class="cell"><div class="k">AI Layer</div><div class="v violet">Claude / LLM · Cron Job</div></div>
+  </div>
+
+  <!-- out-of-scope -->
+  <div class="oos">
+    <div class="oos-title">⚠ Không cam kết trong MVP</div>
+    <ul>
+      <li>Real-time animation glitch trên server — chỉ tính toán HP server-side, client tự render hiệu ứng dựa vào % HP trả về</li>
+      <li>Xóa vật lý data ngay khi HP = 0 — dùng soft-delete (<code>deletedAt</code>) + cronjob dọn sau 24h để tránh race condition</li>
+      <li>Lyria nhạc tang — thay bằng CSS animation + front-end sound effect nhẹ khi HP thấp</li>
+      <li>Voting peer-to-peer chất lượng bài — MVP dùng LLM scoring, peer vote là v2</li>
+    </ul>
+  </div>
+
+  <!-- feature overview -->
+  <section>
+    <div class="sec-head"><span class="num">01</span><h2>Tổng quan tính năng</h2></div>
+    <p class="sec-intro">4 cơ chế cốt lõi, mỗi cơ chế độc lập nhưng ăn khớp nhau thành một vòng lặp gameplay.</p>
+
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="fc-icon">⚡</div>
+        <div class="fc-title">Energy System — Hệ thống Năng lượng</div>
+        <div class="fc-desc">Mỗi nhóm có HP (0–1000). Deep Talk +5 HP, spam/im lặng rút HP theo cron job mỗi giờ. Giao diện render trạng thái Healthy → Sick → Dying → Dead dựa vào % HP.</div>
+        <div class="fc-chips">
+          <span class="fc-chip">GroupEnergy table</span>
+          <span class="fc-chip clay">cron: drain-energy</span>
+          <span class="fc-chip">POST /api/groups/:id/post</span>
+        </div>
+      </div>
+
+      <div class="feature-card">
+        <div class="fc-icon">🧠</div>
+        <div class="fc-title">Quality Filter — Bộ lọc chất lượng AI</div>
+        <div class="fc-desc">Mỗi bài đăng / comment được gửi qua LLM để chấm điểm ngữ nghĩa (0–10). Score ≥ 6 = Deep Talk (+5 HP), score ≤ 2 = Parasite (−1 HP). Kết quả cache theo hash nội dung.</div>
+        <div class="fc-chips">
+          <span class="fc-chip violet">LLM Scoring</span>
+          <span class="fc-chip">PostQualityLog table</span>
+          <span class="fc-chip clay">server/ai-judge.ts</span>
+        </div>
+      </div>
+
+      <div class="feature-card">
+        <div class="fc-icon">🚑</div>
+        <div class="fc-title">CPR Post — Hồi sức cấp cứu</div>
+        <div class="fc-desc">Khi HP &lt; 10%, admin kích hoạt CPR Post. Bài đăng mở trong 24h. Nếu tổng số deep-talk comments trong cửa sổ 24h đủ ngưỡng, nhóm được hồi phục 50% HP.</div>
+        <div class="fc-chips">
+          <span class="fc-chip">CprSession table</span>
+          <span class="fc-chip clay">POST /api/groups/:id/cpr</span>
+          <span class="fc-chip">cron: check-cpr-result</span>
+        </div>
+      </div>
+
+      <div class="feature-card">
+        <div class="fc-icon">🔥</div>
+        <div class="fc-title">Burning Karma — Hiến tế cá nhân</div>
+        <div class="fc-desc">Thành viên đốt Karma cá nhân để cứu nhóm. Tỷ lệ 1 Karma → 10 HP. Sau khi hiến tế, tài khoản bị hạn chế đăng bài 48h. Tạo ra "người hùng" có huy hiệu đặc biệt.</div>
+        <div class="fc-chips">
+          <span class="fc-chip">UserKarmaLog table</span>
+          <span class="fc-chip clay">POST /api/groups/:id/sacrifice</span>
+          <span class="fc-chip violet">UserRestriction table</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- milestones -->
+  <section>
+    <div class="sec-head"><span class="num">02</span><h2>Milestones</h2></div>
+    <p class="sec-intro">5 slice theo thứ tự phụ thuộc. Slice 1–2 là nền tảng bắt buộc. Slice 3–5 có thể song song sau khi schema xong.</p>
+
+    <div class="milestones">
+      <div class="milestone">
+        <div class="when">Slice 1</div>
+        <div class="dot-col"><span class="dot"></span><span class="line"></span></div>
+        <div class="body">
+          <h3>Schema + Prisma + API Skeleton</h3>
+          <p>Tạo toàn bộ 6 table, Prisma client, migration MySQL. Seed dữ liệu test. Viết 12 API route handler với Express.js — chưa có logic, chỉ trả <code>501 Not Implemented</code>. Contract phải xong trước mọi thứ khác.</p>
+          <div class="tags">
+            <span class="tag">prisma/schema.prisma</span>
+            <span class="tag">server/routes/groups.ts</span>
+            <span class="tag">server/routes/posts.ts</span>
+            <span class="tag">prisma/seed.ts</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="milestone">
+        <div class="when">Slice 2</div>
+        <div class="dot-col"><span class="dot"></span><span class="line"></span></div>
+        <div class="body">
+          <h3>Energy System + AI Judge</h3>
+          <p>Implement logic cộng/trừ HP khi post bài. Kết nối LLM để score bài đăng. Viết <code>drain-energy.cron.ts</code> chạy mỗi giờ trừ HP cho nhóm im lặng. Soft-delete khi HP = 0.</p>
+          <div class="tags">
+            <span class="tag">server/services/energy.service.ts</span>
+            <span class="tag">server/services/ai-judge.service.ts</span>
+            <span class="tag">server/cron/drain-energy.cron.ts</span>
+            <span class="tag">server/cron/kill-group.cron.ts</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="milestone">
+        <div class="when">Slice 3</div>
+        <div class="dot-col"><span class="dot"></span><span class="line"></span></div>
+        <div class="body">
+          <h3>Glitchy UI — Aging Interface (Next.js)</h3>
+          <p>Frontend đọc <code>energyPercent</code> từ API và render hiệu ứng lão hóa. &gt;30% = normal, 10–30% = grayscale + font glitch CSS, &lt;10% = blur bài đăng + slow-load simulation. Không cần WebSocket, polling 30s là đủ.</p>
+          <div class="tags">
+            <span class="tag">components/GroupHeader.tsx</span>
+            <span class="tag">components/PostCard.tsx</span>
+            <span class="tag">hooks/useGroupEnergy.ts</span>
+            <span class="tag">styles/aging.module.css</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="milestone">
+        <div class="when">Slice 4</div>
+        <div class="dot-col"><span class="dot"></span><span class="line"></span></div>
+        <div class="body">
+          <h3>CPR Post + Burning Karma</h3>
+          <p>Admin UI kích hoạt CPR session. Cron check 24h sau để tính kết quả hồi sinh. Logic Burning Karma: validate karma &gt;= minRequire, trừ karma, cộng HP, ghi restriction 48h. Hiển thị huy hiệu Ashes Badge.</p>
+          <div class="tags">
+            <span class="tag">server/cron/check-cpr.cron.ts</span>
+            <span class="tag">server/services/karma.service.ts</span>
+            <span class="tag">components/SacrificeModal.tsx</span>
+            <span class="tag">components/AshesBadge.tsx</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="milestone">
+        <div class="when">Slice 5</div>
+        <div class="dot-col"><span class="dot"></span><span class="line"></span></div>
+        <div class="body">
+          <h3>Museum of Echoes — Viện bảo tàng Soul Stone</h3>
+          <p>Khi nhóm chết: gọi LLM tóm tắt "cuộc đời" nhóm thành Soul Stone JSON, lưu vào <code>GroupSoulStone</code> table. Trang <code>/museum</code> liệt kê các Soul Stone có thể xem lại. Chạy delete vật lý sau 24h từ lúc soft-delete.</p>
+          <div class="tags">
+            <span class="tag">server/services/soul-stone.service.ts</span>
+            <span class="tag">app/museum/page.tsx</span>
+            <span class="tag">app/museum/[id]/page.tsx</span>
+            <span class="tag">server/cron/purge-dead-groups.cron.ts</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- data flow diagram -->
+  <section>
+    <div class="sec-head"><span class="num">03</span><h2>Data flow</h2></div>
+    <p class="sec-intro">Luồng chính: POST bài → AI Judge → Cập nhật HP → Cron drain → Kill hoặc hồi sinh. Museum là luồng phụ triggered khi HP = 0.</p>
+
+    <div class="diagram">
+      <svg viewBox="0 0 940 420" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="#87867F"/>
+          </marker>
+          <marker id="arrClay" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="#D97757"/>
+          </marker>
+          <marker id="arrDanger" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="#C0392B"/>
+          </marker>
+          <marker id="arrOlive" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="#788C5D"/>
+          </marker>
+        </defs>
+
+        <g font-size="11.5" fill="#141413" font-family="ui-monospace, monospace">
+          <!-- Row 1: Post path -->
+          <rect x="10"  y="20" width="130" height="52" rx="9" fill="#FFFFFF" stroke="#D1CFC5" stroke-width="1.5"/>
+          <text x="75"  y="42" text-anchor="middle" font-weight="600">User Posts</text>
+          <text x="75"  y="58" text-anchor="middle" fill="#87867F" font-size="10">Next.js form</text>
+
+          <line x1="140" y1="46" x2="178" y2="46" stroke="#87867F" stroke-width="1.5" marker-end="url(#arr)"/>
+
+          <rect x="180" y="20" width="140" height="52" rx="9" fill="#FFFFFF" stroke="#D1CFC5" stroke-width="1.5"/>
+          <text x="250" y="40" text-anchor="middle" font-weight="600">Express API</text>
+          <text x="250" y="55" text-anchor="middle" fill="#87867F" font-size="10">POST /api/groups</text>
+          <text x="250" y="67" text-anchor="middle" fill="#87867F" font-size="10">/:id/posts</text>
+
+          <line x1="320" y1="46" x2="358" y2="46" stroke="#87867F" stroke-width="1.5" marker-end="url(#arr)"/>
+
+          <rect x="360" y="20" width="140" height="52" rx="9" fill="#EDE9FE" stroke="#C4B5FD" stroke-width="1.5"/>
+          <text x="430" y="40" text-anchor="middle" font-weight="600" fill="#7C3AED">AI Judge</text>
+          <text x="430" y="55" text-anchor="middle" fill="#7C3AED" font-size="10">LLM semantic</text>
+          <text x="430" y="67" text-anchor="middle" fill="#7C3AED" font-size="10">score 0–10</text>
+
+          <line x1="500" y1="46" x2="538" y2="46" stroke="#87867F" stroke-width="1.5" marker-end="url(#arr)"/>
+
+          <rect x="540" y="20" width="140" height="52" rx="9" fill="#FFFFFF" stroke="#D1CFC5" stroke-width="1.5"/>
+          <text x="610" y="40" text-anchor="middle" font-weight="600">Energy Update</text>
+          <text x="610" y="55" text-anchor="middle" fill="#788C5D" font-size="10">Deep Talk: +5 HP</text>
+          <text x="610" y="67" text-anchor="middle" fill="#D97757" font-size="10">Parasite: −1 HP</text>
+
+          <line x1="680" y1="46" x2="718" y2="46" stroke="#87867F" stroke-width="1.5" marker-end="url(#arr)"/>
+
+          <rect x="720" y="20" width="130" height="52" rx="9" fill="#141413" stroke="#141413"/>
+          <text x="785" y="40" text-anchor="middle" font-weight="600" fill="#FAF9F5">MySQL DB</text>
+          <text x="785" y="55" text-anchor="middle" fill="#C9B98A" font-size="10">GroupEnergy</text>
+          <text x="785" y="67" text-anchor="middle" fill="#C9B98A" font-size="10">PostQualityLog</text>
+
+          <!-- Row 2: Cron drain path -->
+          <rect x="180" y="120" width="140" height="52" rx="9" fill="#F9EDEA" stroke="#E8B9AA" stroke-width="1.5"/>
+          <text x="250" y="140" text-anchor="middle" font-weight="600" fill="#7A3020">Cron: hourly</text>
+          <text x="250" y="155" text-anchor="middle" fill="#7A3020" font-size="10">drain-energy</text>
+          <text x="250" y="167" text-anchor="middle" fill="#7A3020" font-size="10">−5 HP / giờ (im lặng)</text>
+
+          <line x1="320" y1="146" x2="538" y2="68" stroke="#D97757" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrClay)"/>
+
+          <!-- Row 3: Kill path -->
+          <rect x="540" y="120" width="140" height="52" rx="9" fill="#FDECEA" stroke="#F5B7B1" stroke-width="1.5"/>
+          <text x="610" y="140" text-anchor="middle" font-weight="600" fill="#C0392B">HP = 0</text>
+          <text x="610" y="155" text-anchor="middle" fill="#C0392B" font-size="10">soft-delete group</text>
+          <text x="610" y="167" text-anchor="middle" fill="#C0392B" font-size="10">trigger soul-stone</text>
+
+          <line x1="680" y1="146" x2="718" y2="58" stroke="#C0392B" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrDanger)"/>
+
+          <line x1="610" y1="72" x2="610" y2="118" stroke="#D1CFC5" stroke-width="1.5" marker-end="url(#arr)"/>
+
+          <!-- Row 4: Museum path -->
+          <rect x="360" y="230" width="160" height="52" rx="9" fill="#141413" stroke="#141413"/>
+          <text x="440" y="252" text-anchor="middle" font-weight="600" fill="#FAF9F5">Soul Stone</text>
+          <text x="440" y="267" text-anchor="middle" fill="#C9B98A" font-size="10">LLM tóm tắt "cuộc đời"</text>
+          <text x="440" y="279" text-anchor="middle" fill="#C9B98A" font-size="10">GroupSoulStone table</text>
+
+          <line x1="540" y1="172" x2="500" y2="230" stroke="#C0392B" stroke-width="1.5" marker-end="url(#arrDanger)"/>
+
+          <rect x="560" y="230" width="140" height="52" rx="9" fill="#FFFFFF" stroke="#D1CFC5" stroke-width="1.5"/>
+          <text x="630" y="252" text-anchor="middle" font-weight="600">Museum Page</text>
+          <text x="630" y="267" text-anchor="middle" fill="#87867F" font-size="10">/museum</text>
+          <text x="630" y="279" text-anchor="middle" fill="#87867F" font-size="10">Public archive</text>
+
+          <line x1="520" y1="256" x2="558" y2="256" stroke="#87867F" stroke-width="1.5" marker-end="url(#arr)"/>
+
+          <!-- Row 5: CPR / Karma path -->
+          <rect x="10"  y="340" width="140" height="52" rx="9" fill="#FDECEA" stroke="#F5B7B1" stroke-width="1.5"/>
+          <text x="80"  y="360" text-anchor="middle" font-weight="600" fill="#C0392B">CPR / Sacrifice</text>
+          <text x="80"  y="375" text-anchor="middle" fill="#C0392B" font-size="10">Admin CPR post hoặc</text>
+          <text x="80"  y="387" text-anchor="middle" fill="#C0392B" font-size="10">Burning Karma</text>
+
+          <rect x="200" y="340" width="140" height="52" rx="9" fill="#E4E9DC" stroke="#B8C9A0" stroke-width="1.5"/>
+          <text x="270" y="360" text-anchor="middle" font-weight="600" fill="#4B5C39">Heal +50% HP</text>
+          <text x="270" y="375" text-anchor="middle" fill="#4B5C39" font-size="10">CPR success hoặc</text>
+          <text x="270" y="387" text-anchor="middle" fill="#4B5C39" font-size="10">karma trade</text>
+
+          <line x1="150" y1="366" x2="198" y2="366" stroke="#788C5D" stroke-width="1.5" marker-end="url(#arrOlive)"/>
+
+          <line x1="340" y1="366" x2="538" y2="175" stroke="#788C5D" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrOlive)"/>
+        </g>
+      </svg>
+      <p class="caption">Luồng xanh lá = hồi sinh · Luồng đỏ = giết nhóm / soft-delete · Đường nét đứt = async / cron trigger</p>
+    </div>
+  </section>
+
+  <!-- UI Mockups -->
+  <section>
+    <div class="sec-head"><span class="num">04</span><h2>UI Mockups</h2></div>
+    <p class="sec-intro">3 trạng thái UI chính: Healthy, Dying (glitch), và Sacrifice modal. Client chỉ nhận <code>energyPercent</code> và tự áp dụng class.</p>
+
+    <div class="mocks">
+      <!-- Healthy group -->
+      <div class="mock">
+        <div class="mock-label">Trạng thái: Healthy (HP &gt; 30%)</div>
+        <div class="mock-body">
+          <div class="group-mock">
+            <div class="top-bar">
+              <span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span>
+              <span class="url">threads.net/groups/dev-vietnam</span>
+            </div>
+            <div class="content">
+              <div class="route-badge">/groups/dev-vietnam</div>
+              <div class="group-name">Dev Vietnam 🇻🇳</div>
+              <div class="group-meta">842 thành viên · Khởi tạo 14 ngày trước</div>
+              <div class="energy-label">
+                <span class="el-name">⚡ Năng lượng nhóm</span>
+                <span class="el-val">720 / 1000 HP</span>
+              </div>
+              <div class="energy-bar-wrap"><div class="energy-bar-fill healthy"></div></div>
+              <div class="group-tags-row">
+                <span class="stage-badge healthy">● Healthy</span>
+                <span class="fc-chip">+5 HP / deep post</span>
+                <span class="fc-chip">−5 HP / giờ im lặng</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dying group glitch -->
+      <div class="mock">
+        <div class="mock-label">Trạng thái: Dying (HP &lt; 10%) — Glitch UI</div>
+        <div class="mock-body">
+          <div class="group-mock dying-mock">
+            <div class="top-bar">
+              <span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span>
+              <span class="url">threads.net/groups/startup-saigon</span>
+            </div>
+            <div class="content">
+              <div class="route-badge">/groups/startup-saigon</div>
+              <div class="group-name glitch-text" data-text="Startup Saigon">St̷a̷r̷tup̶ Saigon</div>
+              <div class="group-meta" style="color:#666">247 thành viên · Khởi tạo 30 ngày trước</div>
+              <div class="energy-label">
+                <span class="el-name" style="color:#666">⚡ Năng lượng nhóm</span>
+                <span class="el-val low">72 / 1000 HP</span>
+              </div>
+              <div class="energy-bar-wrap"><div class="energy-bar-fill dying"></div></div>
+              <div class="group-tags-row">
+                <span class="stage-badge dying">⚠ Hấp hối</span>
+                <span class="fc-chip" style="border-color:#555;color:#888;background:#222">Nhóm sắp bị xóa</span>
+              </div>
+              <div class="post-blur" style="margin-top:10px">
+                "Mình đang build một SaaS về HR, ai có kinh nghiệm về hiring trong startup giai đoạn early..."
+                <div class="post-blur-hint">NHẤN GIỮ ĐỂ ĐỌC</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CPR medium -->
+      <div class="mock">
+        <div class="mock-label">Trạng thái: Sick (HP 10–30%) — Energy Bar Medium</div>
+        <div class="mock-body">
+          <div class="group-mock">
+            <div class="top-bar">
+              <span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span>
+              <span class="url">threads.net/groups/design-hcm</span>
+            </div>
+            <div class="content">
+              <div class="route-badge">/groups/design-hcm</div>
+              <div class="group-name">Design HCM</div>
+              <div class="group-meta">391 thành viên · Khởi tạo 21 ngày trước</div>
+              <div class="energy-label">
+                <span class="el-name">⚡ Năng lượng nhóm</span>
+                <span class="el-val med">280 / 1000 HP</span>
+              </div>
+              <div class="energy-bar-wrap"><div class="energy-bar-fill med"></div></div>
+              <div class="group-tags-row">
+                <span class="stage-badge sick">◐ Bệnh</span>
+                <span class="fc-chip clay">Font đang bị lệch</span>
+                <span class="fc-chip clay">Màu → grayscale</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Burning Karma sacrifice modal -->
+      <div class="mock sacrifice-mock">
+        <div class="mock-label">Burning Karma — Sacrifice Modal</div>
+        <div class="mock-body">
+          <div class="group-mock">
+            <div class="top-bar">
+              <span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span>
+              <span class="url">threads.net/groups/startup-saigon — sacrifice</span>
+            </div>
+            <div class="content">
+              <div class="route-badge">/groups/startup-saigon/sacrifice</div>
+              <div class="sacrifice-card">
+                <div class="sc-title">🔥 Burning Karma — Hiến tế cá nhân</div>
+                <div class="sc-desc">Đốt Karma của bạn để cứu nhóm. Sau khi hiến tế, tài khoản sẽ bị hạn chế đăng bài trong 48 giờ.</div>
+                <div class="karma-before-after">
+                  <span class="karma-chip before">480 Karma</span>
+                  <span class="karma-arrow">→</span>
+                  <span class="karma-chip after">230 Karma</span>
+                  <span style="font-size:11px;color:var(--gray-500);margin-left:4px">= +2500 HP cho nhóm</span>
+                </div>
+                <div>
+                  <span class="sacrifice-btn">Xác nhận Hiến tế 250 Karma</span>
+                  <span class="cancel-btn">Hủy</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Museum of Echoes -->
+  <section>
+    <div class="sec-head"><span class="num">05</span><h2>Museum of Echoes — Soul Stone</h2></div>
+    <p class="sec-intro">Khi nhóm chết, LLM tóm tắt toàn bộ cuộc đời nhóm thành một Soul Stone. Viện bảo tàng là nơi lưu giữ và cho phép mọi người chiêm ngưỡng.</p>
+
+    <div class="museum-card">
+      <div class="mc-eyebrow">🪨 Soul Stone · Museum of Echoes</div>
+      <div class="mc-title">Startup Saigon — Đã tan rã</div>
+      <div class="mc-stats">
+        <div class="mc-stat"><div class="sk">Thời gian sống</div><div class="sv">47 ngày</div></div>
+        <div class="mc-stat"><div class="sk">Thành viên tham gia</div><div class="sv">1,240 người</div></div>
+        <div class="mc-stat"><div class="sk">Đỉnh cao HP</div><div class="sv">924 / 1000</div></div>
+        <div class="mc-stat"><div class="sk">Lý do tử vong</div><div class="sv" style="color:#f87171">Bỏ bê 72h liên tiếp</div></div>
+        <div class="mc-stat"><div class="sk">Bài đăng hay nhất</div><div class="sv">312 deep posts</div></div>
+      </div>
+      <div class="mc-lifeline"><div class="mc-lifeline-fill"></div></div>
+      <div class="mc-footer">Tóm tắt AI · Lưu trữ vĩnh viễn · 3 thành viên ưu tú <span class="ashes-badge">🪦 Ashes Badge</span></div>
+    </div>
+  </section>
+
+  <!-- key code -->
+  <section>
+    <div class="sec-head"><span class="num">06</span><h2>Key Code</h2></div>
+    <p class="sec-intro">4 đoạn quan trọng nhất: AI Judge service, Energy drain cron, Burning Karma endpoint, và Soul Stone generator.</p>
+
+    <div class="code-grid">
+      <div class="code-block">
+        <div class="file-label">server/services/ai-judge.service.ts</div>
+        <div class="code"><pre><span class="kw">const</span> JUDGE_PROMPT = <span class="str">`
+Bạn là bộ lọc chất lượng nội dung.
+Chấm điểm đoạn text sau từ 0–10:
+- 8-10: Tranh luận sâu, chia sẻ kiến thức,
+  trải nghiệm cá nhân có giá trị
+- 4-7: Góp ý bình thường, có nội dung
+- 0-3: Spam, emoji đơn lẻ, "Chấm", "Hóng"
+Chỉ trả về JSON: {"score": number, 
+"reason": string}
+`</span>;
+
+<span class="kw">export async function</span> <span class="fn">judgePost</span>(
+  content: <span class="pu">string</span>
+): Promise&lt;{ score: <span class="pu">number</span>; hp: <span class="pu">number</span> }&gt; {
+  <span class="cm">// Check content hash cache first</span>
+  <span class="kw">const</span> hash = <span class="fn">sha256</span>(content);
+  <span class="kw">const</span> cached = <span class="kw">await</span> redis.<span class="fn">get</span>(
+    <span class="str">`judge:</span>${hash}<span class="str">`</span>);
+  <span class="kw">if</span> (cached) <span class="kw">return</span> JSON.<span class="fn">parse</span>(cached);
+
+  <span class="kw">const</span> res = <span class="kw">await</span> llm.<span class="fn">complete</span>(
+    JUDGE_PROMPT, content);
+  <span class="kw">const</span> { score } = JSON.<span class="fn">parse</span>(res);
+
+  <span class="cm">// HP delta: Deep Talk +5, Parasite -1</span>
+  <span class="kw">const</span> hp = score >= <span class="num">6</span> ? <span class="num">5</span>
+           : score <= <span class="num">2</span> ? -<span class="num">1</span> : <span class="num">0</span>;
+
+  <span class="kw">await</span> redis.<span class="fn">setEx</span>(
+    <span class="str">`judge:</span>${hash}<span class="str">`</span>, <span class="num">3600</span>,
+    JSON.<span class="fn">stringify</span>({ score, hp }));
+  <span class="kw">return</span> { score, hp };
+}</pre></div>
+      </div>
+
+      <div class="code-block">
+        <div class="file-label">server/cron/drain-energy.cron.ts</div>
+        <div class="code"><pre><span class="cm">// Chạy mỗi giờ — node-cron "0 * * * *"</span>
+<span class="kw">export async function</span> <span class="fn">drainEnergy</span>() {
+  <span class="cm">// Lấy nhóm chưa có post trong 1 giờ qua</span>
+  <span class="kw">const</span> silentGroups = <span class="kw">await</span> prisma.group.<span class="fn">findMany</span>({
+    where: {
+      deletedAt: <span class="kw">null</span>,
+      lastPostAt: {
+        lt: <span class="kw">new</span> <span class="fn">Date</span>(Date.<span class="fn">now</span>() - <span class="num">3_600_000</span>)
+      }
+    },
+    include: { energy: <span class="kw">true</span> }
+  });
+
+  <span class="kw">for</span> (<span class="kw">const</span> group <span class="kw">of</span> silentGroups) {
+    <span class="kw">const</span> newHp = Math.<span class="fn">max</span>(
+      <span class="num">0</span>, group.energy.current - <span class="num">5</span>);
+
+    <span class="kw">await</span> prisma.groupEnergy.<span class="fn">update</span>({
+      where: { groupId: group.id },
+      data: { current: newHp }
+    });
+
+    <span class="cm">// Trigger kill nếu HP về 0</span>
+    <span class="kw">if</span> (newHp === <span class="num">0</span>) {
+      <span class="kw">await</span> <span class="fn">triggerGroupDeath</span>(group.id);
+    }
+  }
+}</pre></div>
+      </div>
+
+      <div class="code-block">
+        <div class="file-label">server/routes/groups.ts — POST /:id/sacrifice</div>
+        <div class="code"><pre>router.<span class="fn">post</span>(<span class="str">"/:id/sacrifice"</span>, <span class="fn">auth</span>, <span class="kw">async</span> (req, res) => {
+  <span class="kw">const</span> { karmaAmount } = req.body;
+  <span class="kw">const</span> userId = req.user.id;
+
+  <span class="cm">// Validate user karma balance</span>
+  <span class="kw">const</span> user = <span class="kw">await</span> prisma.user.<span class="fn">findUnique</span>(
+    { where: { id: userId } });
+  <span class="kw">if</span> (user.karma &lt; karmaAmount)
+    <span class="kw">return</span> res.<span class="fn">status</span>(<span class="num">400</span>).<span class="fn">json</span>(
+      { error: <span class="str">"Không đủ Karma"</span> });
+
+  <span class="cm">// 1 Karma = 10 HP, max 50% HP hồi/lần</span>
+  <span class="kw">const</span> hpGain = Math.<span class="fn">min</span>(
+    karmaAmount * <span class="num">10</span>, <span class="num">500</span>);
+
+  <span class="kw">await</span> prisma.<span class="fn">$transaction</span>([
+    prisma.user.<span class="fn">update</span>({
+      where: { id: userId },
+      data: { karma: { decrement: karmaAmount } }
+    }),
+    prisma.groupEnergy.<span class="fn">update</span>({
+      where: { groupId: req.params.id },
+      data: { current: { increment: hpGain } }
+    }),
+    <span class="cm">// Hạn chế đăng bài 48h</span>
+    prisma.userRestriction.<span class="fn">create</span>({
+      data: { userId, type: <span class="str">"POST_LIMIT"</span>,
+              expiresAt: <span class="kw">new</span> <span class="fn">Date</span>(
+                Date.<span class="fn">now</span>() + <span class="num">172_800_000</span>) }
+    })
+  ]);
+  res.<span class="fn">json</span>({ hpGain, newKarma:
+    user.karma - karmaAmount });
+});</pre></div>
+      </div>
+
+      <div class="code-block">
+        <div class="file-label">server/services/soul-stone.service.ts</div>
+        <div class="code"><pre><span class="kw">export async function</span> <span class="fn">generateSoulStone</span>(
+  groupId: <span class="pu">string</span>
+) {
+  <span class="kw">const</span> group = <span class="kw">await</span> prisma.group.<span class="fn">findUnique</span>({
+    where: { id: groupId },
+    include: {
+      posts: { orderBy:
+        { qualityScore: <span class="str">"desc"</span> }, take: <span class="num">10</span> },
+      members: { where: { isSacrificer: <span class="kw">true</span> } },
+      energy: <span class="kw">true</span>
+    }
+  });
+
+  <span class="kw">const</span> summary = <span class="kw">await</span> llm.<span class="fn">complete</span>(<span class="str">`
+    Tóm tắt lịch sử nhóm này thành một đoạn
+    văn bia ~100 chữ. Tập trung: đỉnh cao,
+    lý do tử vong, di sản để lại.
+    Data: </span>${JSON.<span class="fn">stringify</span>(group)}<span class="str">
+  `</span>);
+
+  <span class="cm">// Lưu Soul Stone, xóa mềm group</span>
+  <span class="kw">await</span> prisma.<span class="fn">$transaction</span>([
+    prisma.groupSoulStone.<span class="fn">create</span>({
+      data: { groupId, summary,
+        peakHp: group.energy.peak,
+        livedDays: <span class="fn">calcDays</span>(group),
+        topPostIds: group.posts
+          .<span class="fn">map</span>(p => p.id) }
+    }),
+    prisma.group.<span class="fn">update</span>({
+      where: { id: groupId },
+      data: { deletedAt: <span class="kw">new</span> <span class="fn">Date</span>() }
+    })
+  ]);
+  <span class="kw">await</span> <span class="fn">grantAshesBadge</span>(
+    group.members.<span class="fn">map</span>(m => m.userId));
+}</pre></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- db schema -->
+  <section>
+    <div class="sec-head"><span class="num">07</span><h2>DB Schema — Prisma + MySQL</h2></div>
+    <p class="sec-intro">6 table chính. <code>GroupEnergy</code> là trung tâm. Tất cả foreign key đều có index. Không normalize <code>soulStoneSummary</code> — lưu thẳng text.</p>
+
+    <div class="code-grid">
+      <div class="code-block">
+        <div class="file-label">prisma/schema.prisma — Group + GroupEnergy</div>
+        <div class="code"><pre><span class="kw">model</span> <span class="fn">Group</span> {
+  id            String    <span class="kw">@id @default</span>(cuid())
+  name          String
+  description   String?
+  adminId       String
+  createdAt     DateTime  <span class="kw">@default</span>(now())
+  lastPostAt    DateTime  <span class="kw">@default</span>(now())
+  deletedAt     DateTime? <span class="cm">// soft-delete</span>
+
+  energy        GroupEnergy?
+  posts         Post[]
+  members       GroupMember[]
+  soulStone     GroupSoulStone?
+  cprSessions   CprSession[]
+  <span class="kw">@@index</span>([deletedAt, lastPostAt])
+}
+
+<span class="kw">model</span> <span class="fn">GroupEnergy</span> {
+  id       String  <span class="kw">@id @default</span>(cuid())
+  groupId  String  <span class="kw">@unique</span>
+  current  Int     <span class="kw">@default</span>(<span class="num">1000</span>)
+  max      Int     <span class="kw">@default</span>(<span class="num">1000</span>)
+  peak     Int     <span class="kw">@default</span>(<span class="num">1000</span>)
+  <span class="cm">// percent: computed on read</span>
+
+  group    Group   <span class="kw">@relation</span>(
+    fields: [groupId], references: [id])
+}
+
+<span class="kw">model</span> <span class="fn">PostQualityLog</span> {
+  id         String   <span class="kw">@id @default</span>(cuid())
+  postId     String   <span class="kw">@unique</span>
+  score      Float    <span class="cm">// 0–10 from LLM</span>
+  hpDelta    Int      <span class="cm">// +5, 0, -1</span>
+  createdAt  DateTime <span class="kw">@default</span>(now())
+  <span class="kw">@@index</span>([postId])
+}</pre></div>
+      </div>
+
+      <div class="code-block">
+        <div class="file-label">prisma/schema.prisma — Sacrifice + SoulStone</div>
+        <div class="code"><pre><span class="kw">model</span> <span class="fn">UserKarmaLog</span> {
+  id         String   <span class="kw">@id @default</span>(cuid())
+  userId     String
+  groupId    String
+  karmaSpent Int
+  hpGained   Int
+  createdAt  DateTime <span class="kw">@default</span>(now())
+  <span class="kw">@@index</span>([userId])
+}
+
+<span class="kw">model</span> <span class="fn">UserRestriction</span> {
+  id        String   <span class="kw">@id @default</span>(cuid())
+  userId    String
+  type      String   <span class="cm">// "POST_LIMIT"</span>
+  expiresAt DateTime
+  <span class="kw">@@index</span>([userId, expiresAt])
+}
+
+<span class="kw">model</span> <span class="fn">CprSession</span> {
+  id           String    <span class="kw">@id @default</span>(cuid())
+  groupId      String
+  activatedBy  String
+  expiresAt    DateTime
+  resolved     Boolean   <span class="kw">@default</span>(<span class="kw">false</span>)
+  success      Boolean?
+  createdAt    DateTime  <span class="kw">@default</span>(now())
+}
+
+<span class="kw">model</span> <span class="fn">GroupSoulStone</span> {
+  id          String   <span class="kw">@id @default</span>(cuid())
+  groupId     String   <span class="kw">@unique</span>
+  summary     String   <span class="kw">@db.Text</span>
+  peakHp      Int
+  livedDays   Int
+  topPostIds  Json     <span class="cm">// String[]</span>
+  createdAt   DateTime <span class="kw">@default</span>(now())
+  <span class="kw">@@index</span>([createdAt])
+}</pre></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- risks -->
+  <section>
+    <div class="sec-head"><span class="num">08</span><h2>Risks &amp; Mitigations</h2></div>
+    <div class="risks">
+      <div class="row">
+        <div class="cell head">Risk</div>
+        <div class="cell head">Sev</div>
+        <div class="cell head">Mitigation</div>
+      </div>
+      <div class="row">
+        <div class="cell">LLM chậm làm post bị delay — UX tệ khi user đợi score xong mới thấy bài.</div>
+        <div class="cell"><span class="sev high">HIGH</span></div>
+        <div class="cell">POST bài ngay, trả <code>202 Accepted</code>. AI judge chạy async via queue (Bull/BullMQ). HP update sau khi judge xong. UI hiển thị "đang đánh giá" badge trong meantime.</div>
+      </div>
+      <div class="row">
+        <div class="cell">Spam cùng nội dung để bypass AI judge — clone content để farm HP.</div>
+        <div class="cell"><span class="sev high">HIGH</span></div>
+        <div class="cell">Cache kết quả judge theo <code>sha256(content)</code> trong Redis 1h. Duplicate content nhận score = 0 → không cộng HP. Rate limit 3 posts/phút/user.</div>
+      </div>
+      <div class="row">
+        <div class="cell">Race condition: 2 request sacrifice cùng lúc → karma trừ 2 lần hoặc HP cộng sai.</div>
+        <div class="cell"><span class="sev high">HIGH</span></div>
+        <div class="cell">Dùng <code>prisma.$transaction</code> với <code>SELECT FOR UPDATE</code> trên row karma của user. Chỉ 1 transaction thành công, cái còn lại rollback và trả <code>409 Conflict</code>.</div>
+      </div>
+      <div class="row">
+        <div class="cell">Cron drain chạy khi server restart → bỏ qua chu kỳ, nhóm không bị trừ HP đúng hẹn.</div>
+        <div class="cell"><span class="sev med">MED</span></div>
+        <div class="cell">Lưu <code>lastDrainAt</code> vào <code>GroupEnergy</code>. Khi cron chạy, tính số giờ bị bỏ qua và trừ bù. Dùng persistent cron (bull-board) thay vì in-memory cron nếu production.</div>
+      </div>
+      <div class="row">
+        <div class="cell">Soul Stone generation gọi LLM mất 5–10s — user thấy nhóm "đã chết" nhưng museum chưa có.</div>
+        <div class="cell"><span class="sev med">MED</span></div>
+        <div class="cell">Soft-delete group ngay (nhóm biến mất). Tạo Soul Stone async trong background job. Museum page filter <code>WHERE soulStone IS NOT NULL</code>. Không ảnh hưởng trải nghiệm.</div>
+      </div>
+      <div class="row">
+        <div class="cell">Glitch UI quá nặng trên mobile — filter + blur CSS làm chậm máy yếu.</div>
+        <div class="cell"><span class="sev low">LOW</span></div>
+        <div class="cell">Detect <code>prefers-reduced-motion</code>. Glitch chỉ áp dụng trên desktop. Mobile chỉ đổi màu thanh HP sang đỏ + thêm warning text, không dùng CSS filter.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- open questions -->
+  <section>
+    <div class="sec-head"><span class="num">09</span><h2>Open Questions</h2></div>
+    <div class="open-q">
+      <div class="q">
+        <div class="qt">Mức drain mặc định −5 HP/giờ có hợp lý không?</div>
+        <div class="qd">Với max 1000 HP: nhóm im lặng hoàn toàn sẽ chết sau 200 giờ (~8 ngày). Nếu quá nhanh → nhóm thật chết oan. Nếu quá chậm → mất cảm giác urgency. Đề xuất: A/B test với −3 HP/giờ vs −5 HP/giờ trong 2 tuần đầu, theo dõi tỷ lệ nhóm chết và engagement rate.</div>
+        <div class="owner">Quyết định trước Slice 2 · ảnh hưởng toàn bộ cron logic</div>
+      </div>
+      <div class="q">
+        <div class="qt">Tỷ lệ quy đổi Karma → HP nên là bao nhiêu?</div>
+        <div class="qd">Hiện tại 1 Karma = 10 HP, max 500 HP/lần sacrifice. Nếu Karma quá dễ kiếm thì Burning Karma mất ý nghĩa. Cần define rõ: Karma kiếm như thế nào (likes nhận được? deep post score?) trước khi set tỷ lệ sacrifice.</div>
+        <div class="owner">Phụ thuộc vào Karma system chung của platform · Confirm trước Slice 4</div>
+      </div>
+      <div class="q">
+        <div class="qt">Museum nên public hay private theo từng nhóm?</div>
+        <div class="qd">Public museum tạo ra tính minh bạch và drama tốt — người ngoài vào xem "nhóm này chết vì ai". Private thì bảo vệ thành viên tránh bị chỉ trích. Đề xuất: admin chọn visibility khi tạo nhóm, default là public sau 30 ngày từ lúc chết.</div>
+        <div class="owner">Confirm với product trước Slice 5</div>
+      </div>
+      <div class="q">
+        <div class="qt">CPR Post ngưỡng thành công tính như thế nào?</div>
+        <div class="qd">Hiện tại để ngỏ. Đề xuất: tổng HP delta của tất cả comments trong 24h ≥ 50 → CPR thành công, nhóm được hồi 50% HP. Cần test với dữ liệu thật để tránh quá dễ (mất drama) hoặc quá khó (không ai cứu được).</div>
+        <div class="owner">Quyết định cuối Slice 3 · không block Slice 4</div>
+      </div>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>

@@ -143,6 +143,10 @@ enum NotificationType {
   REPLY
 }
 
+enum UserRestrictionType {
+  POSTING
+}
+
 model Role {
   id              String           @id @default(cuid())
   name            String           @unique @db.VarChar(20)
@@ -238,6 +242,8 @@ model User {
   friendRequests      FriendRequest[]      @relation("FriendRequestSender")
   receivedRequests    FriendRequest[]      @relation("FriendRequestReceiver")
   userRoles           UserRole[]
+  userKarmas          UserKarma[]
+  userRestrictions    UserRestriction[]
 
   @@index([deletedAt], map: "idx_users_deleted_at")
   @@map("users")
@@ -334,10 +340,11 @@ model Post {
   root   Post?  @relation("PostRoot", fields: [rootPostId], references: [id])
   thread Post[] @relation("PostRoot")
 
-  media       PostMedia[]
-  mentions    PostMention[]
-  topicsPosts TopicsPost[]
-  likes       Like[]
+  media                 PostMedia[]
+  mentions              PostMention[]
+  topicsPosts           TopicsPost[]
+  likes                 Like[]
+  circlePostQualityLogs CirclePostQualityLog[]
 
   @@index([userId, createdAt])
   @@index([parentId])
@@ -507,16 +514,23 @@ model EmailLog {
 }
 
 model Circle {
-  id                Int                @id @default(autoincrement())
-  publicId          String             @unique @default(cuid()) @db.VarChar(255)
-  name              String             @db.VarChar(255)
-  createdAt         DateTime           @default(now()) @map("created_at")
-  updatedAt         DateTime           @updatedAt @map("updated_at")
-  visibility        Visibility         @default(PRIVATE)
-  createdBy         User               @relation("CircleCreated", fields: [createById], references: [id])
-  createById        String             @map("create_by_id")
-  circleMembers     CircleMember[]
-  circleInvitations CircleInvitation[]
+  id          Int        @id @default(autoincrement())
+  publicId    String     @unique @default(cuid()) @db.VarChar(255)
+  name        String     @db.VarChar(255)
+  description String     @db.Text
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+  visibility  Visibility @default(PRIVATE)
+  statusPeak  Boolean    @default(false) @map("status_peak") // statusPeak có ánh lửa hiện lên cho ngầu 
+
+  createdBy             User                   @relation("CircleCreated", fields: [createById], references: [id])
+  createById            String                 @map("create_by_id")
+  circleMembers         CircleMember[]
+  circleInvitations     CircleInvitation[]
+  circleEnergies        CircleEnergy[]
+  circlePostQualityLogs CirclePostQualityLog[]
+  circleSoulStone       CircleSoulStone?
+  cprSessions           CprSession[]
 
   @@index([createById], map: "idx_circles_created_by")
   @@map("circles")
@@ -536,6 +550,93 @@ model CircleMember {
   @@index([circleId], map: "idx_circle_members_circle_id")
   @@index([userId], map: "idx_circle_members_user_id")
   @@map("circle_members")
+}
+
+model CircleEnergy {
+  id        Int      @id @default(autoincrement())
+  circleId  Int      @map("circle_id")
+  current   Int      @default(500)
+  max       Int      @default(1000)
+  peak      Int      @default(500)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  circle Circle @relation(fields: [circleId], references: [id])
+
+  @@index([circleId], map: "idx_circle_energy_circle_id")
+  @@map("circle_energy")
+}
+
+model CirclePostQualityLog {
+  id        Int      @id @default(autoincrement())
+  circleId  Int      @map("circle_id")
+  postId    Int      @map("post_id")
+  score     Int      @default(0) // 0 - 10 
+  hpDelta   Int      @default(0) @map("hp_delta") // // +5, 0, -1
+  createdAt DateTime @default(now()) @map("created_at")
+
+  circle Circle @relation(fields: [circleId], references: [id])
+  post   Post   @relation(fields: [postId], references: [id])
+
+  @@index([circleId], map: "idx_circle_post_quality_log_circle_id")
+  @@index([postId], map: "idx_circle_post_quality_log_post_id")
+  @@map("circle_post_quality_logs")
+}
+
+model UserKarma {
+  id        Int      @id @default(autoincrement())
+  userId    String   @map("user_id")
+  karma     Int      @default(1) @map("karma") // default 1 , 1 karma = 5hp cho bất kì nhóm nào 
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId], map: "idx_user_karma_user_id")
+  @@map("user_karma")
+}
+
+model UserRestriction {
+  id        Int                 @id @default(autoincrement())
+  userId    String              @map("user_id")
+  type      UserRestrictionType @map("type_enum")
+  reason    String?             @db.VarChar(255)
+  expiresAt DateTime            @map("expires_at")
+  createdAt DateTime            @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId], map: "idx_user_restrictions_user_id")
+  @@index([type], map: "idx_user_restrictions_type")
+  @@index([expiresAt], map: "idx_user_restrictions_expires_at")
+  @@map("user_restrictions")
+}
+
+// Hồi sức cho nhóm only admin 
+model CprSession {
+  id          String   @id @default(cuid())
+  circleId    String
+  activatedBy String
+  expiresAt   DateTime
+  resolved    Boolean  @default(false)
+  success     Boolean?
+  createdAt   DateTime @default(now())
+
+  circle Circle @relation(fields: [circleId], references: [publicId])
+}
+
+model CircleSoulStone {
+  id         String   @id @default(cuid())
+  circleId   String   @unique
+  summary    String   @db.Text
+  peakHp     Int
+  livedDays  Int
+  topPostIds Json // String[]
+  createdAt  DateTime @default(now())
+
+  circle Circle @relation(fields: [circleId], references: [publicId])
+
+  @@index([createdAt])
 }
 
 model CircleInvitation {
