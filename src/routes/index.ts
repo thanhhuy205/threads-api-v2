@@ -7,7 +7,7 @@ import healthRouter from "@/modules/health/health.routes";
 import notificationRouter from "@/modules/notification/notification.route";
 import postRouter from "@/modules/post/post.routes";
 import searchRouter from "@/modules/search/search.routes";
-import chatRouter from "@/modules/chat/chat.routes";
+import messageGroupRouter from "@/modules/message-group/routes/message-group.routes";
 import aiRouter from "@/modules/ai/ai.routes";
 import topicRouter from "@/modules/topic/topic.route";
 import uploadRouter from "@/modules/upload/upload.routes";
@@ -33,7 +33,7 @@ router.use("/topic", topicRouter);
 router.use("/notification", notificationRouter);
 router.use("/webhooks", webhooksRouter);
 router.use("/search", searchRouter);
-router.use("/chat", chatRouter);
+router.use("/message-group", messageGroupRouter);
 router.use("/ai", aiRouter);
 
 export default router;

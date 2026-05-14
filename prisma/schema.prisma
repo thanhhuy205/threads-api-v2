@@ -147,6 +147,11 @@ enum UserRestrictionType {
   POSTING
 }
 
+enum GroupType {
+  PRIVATE
+  CROWD
+}
+
 model Role {
   id              String           @id @default(cuid())
   name            String           @unique @db.VarChar(20)
@@ -244,6 +249,7 @@ model User {
   userRoles           UserRole[]
   userKarmas          UserKarma[]
   userRestrictions    UserRestriction[]
+  messages            Message[]
 
   @@index([deletedAt], map: "idx_users_deleted_at")
   @@map("users")
@@ -267,30 +273,50 @@ model VerificationCode {
 }
 
 model MessageGroup {
-  id        Int      @id @default(autoincrement())
-  name      String   @unique @db.VarChar(255)
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id        String    @id @default(cuid())
+  publicId  String    @unique @default(cuid()) @map("public_id")
+  name      String    @default("") @db.VarChar(255)
+  groupType GroupType @default(PRIVATE)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
 
-  createdBy   User                 @relation("MessageGroupCreator", fields: [createdById], references: [id])
-  createdById String               @map("created_by_id")
-  messages    MemberMessageGroup[]
+  createdBy     User                 @relation("MessageGroupCreator", fields: [createdById], references: [id])
+  createdById   String               @map("created_by_id")
+  members       MemberMessageGroup[]
+  messages      Message[]            @relation("MessageGroupMessages")
+  lastMessageAt DateTime             @map("last_message_at")
 
   @@map("message_groups")
 }
 
 model MemberMessageGroup {
-  id        Int      @id @default(autoincrement())
-  userId    String
-  content   String   @db.Text
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   messageGroup   MessageGroup? @relation(fields: [messageGroupId], references: [id])
-  messageGroupId Int?
+  messageGroupId String?
   user           User          @relation(fields: [userId], references: [id])
 
+  @@unique([messageGroupId, userId], map: "uq_member_message_groups_group_user")
   @@index([userId], map: "idx_messages_sender_id")
+  @@map("member_message_groups")
+}
+
+model Message {
+  id             Int      @id @default(autoincrement())
+  publicId       String   @unique @default(cuid()) @map("public_id")
+  messageGroupId String   @map("message_group_id")
+  senderId       String   @map("sender_id")
+  content        String   @db.Text
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  sender       User         @relation(fields: [senderId], references: [id])
+  messageGroup MessageGroup @relation("MessageGroupMessages", fields: [messageGroupId], references: [id])
+
+  @@index([senderId], map: "idx_messages_sender_id")
   @@map("messages")
 }
 

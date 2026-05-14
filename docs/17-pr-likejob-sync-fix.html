@@ -331,6 +331,102 @@
     }
     .rollout .step .d { font-size: 13px; color: var(--gray-500); }
     .rollout .step .when { font-family: var(--mono); font-size: 11px; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+
+    .route-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 300px;
+      gap: 24px;
+      align-items: start;
+    }
+    @media (max-width: 920px) { .route-layout { grid-template-columns: 1fr; } }
+
+    .route-canvas {
+      border: 1.5px solid var(--gray-300);
+      border-radius: 14px;
+      background: #fff;
+      padding: 22px;
+      overflow-x: auto;
+    }
+    .route-svg { display: block; width: 100%; height: auto; }
+    .route-svg text {
+      font-family: var(--mono);
+      font-size: 12px;
+      fill: var(--slate);
+      pointer-events: none;
+    }
+    .route-svg .sub { font-size: 10px; fill: var(--gray-500); }
+    .route-svg .lbl { font-size: 10px; fill: var(--gray-500); }
+
+    .route-node rect       { fill: #fff; stroke: var(--gray-300); stroke-width: 1.5; rx: 8; }
+    .route-node.term rect  { fill: var(--gray-150); rx: 18; }
+    .route-node.gate path  { fill: #fff; stroke: var(--gray-300); stroke-width: 1.5; }
+    .route-node.ok rect    { fill: rgba(120,140,93,0.12); stroke: var(--olive); }
+
+    .route-node { cursor: pointer; transition: transform 120ms ease; }
+    .route-node:hover { transform: translateY(-1px); }
+    .route-node.active rect,
+    .route-node.active path { stroke: var(--clay); stroke-width: 2; }
+
+    .route-edge { stroke: var(--gray-500); stroke-width: 1.5; fill: none; marker-end: url(#route-arrow); }
+    .route-edge.yes { stroke: var(--olive); marker-end: url(#route-arrow-olive); }
+    .route-edge.no  { stroke: var(--clay); marker-end: url(#route-arrow-clay); stroke-dasharray: 4 4; }
+
+    .route-panel {
+      position: sticky;
+      top: 22px;
+      border: 1.5px solid var(--gray-300);
+      border-radius: 14px;
+      background: #fff;
+      padding: 18px 18px 20px;
+    }
+    .route-panel .hint {
+      font-size: 12px;
+      color: var(--gray-500);
+      margin-bottom: 12px;
+    }
+    .route-panel h3 {
+      font-family: var(--serif);
+      font-weight: 500;
+      font-size: 19px;
+      margin-bottom: 6px;
+      color: var(--slate);
+    }
+    .route-panel .meta {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--gray-500);
+      margin-bottom: 12px;
+    }
+    .route-panel p {
+      font-size: 13.5px;
+      line-height: 1.6;
+      color: var(--gray-700);
+      margin-bottom: 12px;
+    }
+    .route-panel pre {
+      font-family: var(--mono);
+      font-size: 11.5px;
+      line-height: 1.55;
+      background: var(--gray-150);
+      border: 1px solid var(--gray-300);
+      border-radius: 8px;
+      padding: 10px 12px;
+      white-space: pre-wrap;
+      color: var(--slate);
+    }
+
+    .route-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-top: 14px;
+      font-size: 12px;
+      color: var(--gray-700);
+    }
+    .route-legend span { display: inline-flex; align-items: center; gap: 8px; }
+    .route-chip { width: 20px; height: 12px; border: 1.5px solid var(--gray-300); border-radius: 4px; background: #fff; }
+    .route-chip.gate { transform: rotate(45deg); width: 12px; height: 12px; border-radius: 2px; }
+    .route-chip.ok { background: rgba(120,140,93,0.12); border-color: var(--olive); }
   </style>
 </head>
 <body>
@@ -340,9 +436,10 @@
       <div class="eyebrow">PR + Incident Write-up · Threads API v2</div>
       <h1>LikeJob Sync: Full Debug Trail, Kỹ Thuật Khóa Trùng, và Cách Ghi Issue</h1>
       <div class="pr-meta">
-        <span class="stat"><strong>4</strong> files code chính</span>
-        <span class="stat"><span class="add">+194</span> / <span class="del">−123</span></span>
+        <span class="stat"><strong>9</strong> files touched</span>
+        <span class="stat"><span class="add">+821</span> / <span class="del">−99</span></span>
         <span class="stat">incident date <strong>2026-05-14</strong></span>
+        <span class="stat">commit <strong>d5371a5</strong></span>
         <span class="stat">scope <strong>like queue / worker / redis client</strong></span>
       </div>
       <div class="prompt-box">
@@ -536,11 +633,166 @@ exists in command module, but runtime method mapping may differ</pre></div>
                 <p class="why"><strong>Sửa đúng nghiệp vụ unlike batch.</strong> Đổi điều kiện xóa sang pair-wise <code>OR</code> theo từng <code>userId + postId</code>, tránh xóa chéo ngoài ý muốn.</p>
               </div>
             </details>
+
+            <details class="file" open>
+              <summary>
+                <span class="chev"></span>
+                <span class="path">src/modules/post/repository/post.repository.ts</span>
+                <span class="badge mod">mod</span>
+                <span class="stat"><span class="add">+30</span> <span class="del">−35</span></span>
+              </summary>
+              <div class="file-body">
+                <p class="why"><strong>Điểm chốt \"quá chuẩn\" của commit mới nhất.</strong> Hai query tăng/giảm like count đã được đơn giản hóa: bỏ <code>JOIN likes</code>, cập nhật trực tiếp trên bảng <code>posts</code> theo <code>public_id</code>. Cách này giảm coupling vào trạng thái bảng likes tại thời điểm đồng bộ và ổn định hơn khi xử lý batch.</p>
+                <div class="code"><pre><span class="del">UPDATE posts p JOIN likes l ON l.post_id = p.id</span>
+<span class="del">SET p.likes_count = GREATEST(p.likes_count ± ${count}, 0)</span>
+<span class="add">UPDATE posts</span>
+<span class="add">SET likes_count = GREATEST(likes_count ± ${count}, 0)</span>
+<span class="add">WHERE public_id = ${publicId}</span></pre></div>
+              </div>
+            </details>
+          </div>
+        </section>
+
+        <section id="routeflow">
+          <h2>5) Luồng Module Route (Flowchart)</h2>
+          <p class="lede">
+            Section này mô tả luồng đầy đủ từ API route đến worker và repository write path, theo phong cách
+            flowchart tương tác giống tài liệu <code>13-flowchart-diagram</code>.
+          </p>
+
+          <div class="route-layout">
+            <div>
+              <div class="route-canvas">
+                <svg class="route-svg" viewBox="0 0 680 1020">
+                  <defs>
+                    <marker id="route-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                      <path d="M0,0 L10,5 L0,10 z" fill="#87867F"></path>
+                    </marker>
+                    <marker id="route-arrow-olive" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                      <path d="M0,0 L10,5 L0,10 z" fill="#788C5D"></path>
+                    </marker>
+                    <marker id="route-arrow-clay" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                      <path d="M0,0 L10,5 L0,10 z" fill="#D97757"></path>
+                    </marker>
+                  </defs>
+
+                  <path class="route-edge" d="M340,58 L340,94"></path>
+                  <path class="route-edge" d="M340,142 L340,178"></path>
+                  <path class="route-edge" d="M340,226 L340,262"></path>
+                  <path class="route-edge" d="M340,310 L340,350"></path>
+                  <path class="route-edge yes" d="M340,414 C290,430 230,438 170,450"></path>
+                  <text class="lbl" x="266" y="434">isLiked=true</text>
+                  <path class="route-edge no" d="M340,414 C390,430 450,438 510,450"></path>
+                  <text class="lbl" x="398" y="434">isLiked=false</text>
+                  <path class="route-edge" d="M170,498 L290,546"></path>
+                  <path class="route-edge" d="M510,498 L390,546"></path>
+                  <path class="route-edge" d="M340,594 L340,632"></path>
+                  <path class="route-edge" d="M340,680 L340,718"></path>
+                  <path class="route-edge" d="M340,766 L340,804"></path>
+                  <path class="route-edge" d="M340,852 L340,890"></path>
+                  <path class="route-edge" d="M340,938 L340,976"></path>
+
+                  <g class="route-node term" data-r="req">
+                    <rect x="240" y="14" width="200" height="44"></rect>
+                    <text x="340" y="40" text-anchor="middle">POST /api/v1/posts/:id/like</text>
+                  </g>
+
+                  <g class="route-node" data-r="route">
+                    <rect x="230" y="94" width="220" height="48"></rect>
+                    <text x="340" y="114" text-anchor="middle">post.routes.ts</text>
+                    <text class="sub" x="340" y="130" text-anchor="middle">router → middleware chain</text>
+                  </g>
+
+                  <g class="route-node" data-r="validate">
+                    <rect x="230" y="178" width="220" height="48"></rect>
+                    <text x="340" y="198" text-anchor="middle">validate + auth middleware</text>
+                    <text class="sub" x="340" y="214" text-anchor="middle">DTO + user context</text>
+                  </g>
+
+                  <g class="route-node" data-r="controller">
+                    <rect x="230" y="262" width="220" height="48"></rect>
+                    <text x="340" y="282" text-anchor="middle">PostController.like()</text>
+                    <text class="sub" x="340" y="298" text-anchor="middle">delegate to service</text>
+                  </g>
+
+                  <g class="route-node gate" data-r="service">
+                    <path d="M340,350 L390,382 L340,414 L290,382 Z"></path>
+                    <text x="340" y="386" text-anchor="middle">isLiked?</text>
+                  </g>
+
+                  <g class="route-node" data-r="like-branch">
+                    <rect x="60" y="450" width="220" height="48"></rect>
+                    <text x="170" y="470" text-anchor="middle">Service: like branch</text>
+                    <text class="sub" x="170" y="486" text-anchor="middle">SADD + LPUSH likes_add</text>
+                  </g>
+
+                  <g class="route-node" data-r="unlike-branch">
+                    <rect x="400" y="450" width="220" height="48"></rect>
+                    <text x="510" y="470" text-anchor="middle">Service: unlike branch</text>
+                    <text class="sub" x="510" y="486" text-anchor="middle">SREM + LPUSH likes_remove</text>
+                  </g>
+
+                  <g class="route-node" data-r="response">
+                    <rect x="230" y="546" width="220" height="48"></rect>
+                    <text x="340" y="566" text-anchor="middle">HTTP response</text>
+                    <text class="sub" x="340" y="582" text-anchor="middle">return likeCount fast path</text>
+                  </g>
+
+                  <g class="route-node" data-r="scheduler">
+                    <rect x="230" y="632" width="220" height="48"></rect>
+                    <text x="340" y="652" text-anchor="middle">like_queue repeat scheduler</text>
+                    <text class="sub" x="340" y="668" text-anchor="middle">INIT_SYNC_JOB every 5s</text>
+                  </g>
+
+                  <g class="route-node" data-r="lock">
+                    <rect x="230" y="718" width="220" height="48"></rect>
+                    <text x="340" y="738" text-anchor="middle">LikeWorker lock</text>
+                    <text class="sub" x="340" y="754" text-anchor="middle">SET NX EX token</text>
+                  </g>
+
+                  <g class="route-node" data-r="batch-pop">
+                    <rect x="230" y="804" width="220" height="48"></rect>
+                    <text x="340" y="824" text-anchor="middle">Pop Redis batch</text>
+                    <text class="sub" x="340" y="840" text-anchor="middle">rPop loop + JSON parse</text>
+                  </g>
+
+                  <g class="route-node" data-r="db-sync">
+                    <rect x="230" y="890" width="220" height="48"></rect>
+                    <text x="340" y="910" text-anchor="middle">Repository writes</text>
+                    <text class="sub" x="340" y="926" text-anchor="middle">likeRepository + postRepository</text>
+                  </g>
+
+                  <g class="route-node ok term" data-r="done">
+                    <rect x="250" y="976" width="180" height="44"></rect>
+                    <text x="340" y="1002" text-anchor="middle">Sync done</text>
+                  </g>
+                </svg>
+              </div>
+
+              <div class="route-legend">
+                <span><i class="route-chip"></i> process step</span>
+                <span><i class="route-chip gate"></i> decision</span>
+                <span><i class="route-chip ok"></i> terminal success</span>
+              </div>
+            </div>
+
+            <aside class="route-panel" id="route-panel">
+              <div class="hint">Click 1 node trong flowchart →</div>
+              <h3 id="route-title">POST /api/v1/posts/:id/like</h3>
+              <div class="meta" id="route-meta">entrypoint</div>
+              <p id="route-body">
+                Request đi qua route + middleware, tách sync path để trả response nhanh,
+                còn ghi bền DB được đồng bộ theo batch bởi worker.
+              </p>
+              <pre id="route-code">Route -> Middleware -> Controller -> Service
+Service -> Redis state + queue list
+Worker -> batch sync -> repositories</pre>
+            </aside>
           </div>
         </section>
 
         <section id="logging">
-          <h2>5) Chiến Lược Logging Đã Dùng</h2>
+          <h2>6) Chiến Lược Logging Đã Dùng</h2>
           <p class="lede">Phần này quan trọng vì chính logging strategy quyết định tốc độ tìm root cause.</p>
 
           <div class="focus">
@@ -569,7 +821,7 @@ exists in command module, but runtime method mapping may differ</pre></div>
         </section>
 
         <section id="issue">
-          <h2>6) Note Công Dụng Tạo Issue (Copy-Paste)</h2>
+          <h2>7) Note Công Dụng Tạo Issue (Copy-Paste)</h2>
           <p class="lede">
             Issue kiểu này rất hữu dụng để team sau không debug lại từ đầu. Nên dùng issue như một
             hồ sơ kỹ thuật: mô tả triệu chứng, bằng chứng, giả thuyết, thử nghiệm, và quyết định cuối cùng.
@@ -613,7 +865,7 @@ exists in command module, but runtime method mapping may differ</pre></div>
         </section>
 
         <section id="tests">
-          <h2>7) Test Plan / Verification Matrix</h2>
+          <h2>8) Test Plan / Verification Matrix</h2>
           <div class="tests">
             <div class="test done"><span class="check"></span><div><div class="label">Scheduler cleanup works</div><div class="note">Restart app nhiều lần vẫn chỉ còn một scheduler active theo name.</div></div></div>
             <div class="test done"><span class="check"></span><div><div class="label">Lock prevents overlap</div><div class="note">Khi 2 trigger gần nhau, chỉ 1 lần có quyền chạy đồng bộ.</div></div></div>
@@ -624,7 +876,7 @@ exists in command module, but runtime method mapping may differ</pre></div>
         </section>
 
         <section id="rollout">
-          <h2>8) Rollout & Vận Hành</h2>
+          <h2>9) Rollout & Vận Hành</h2>
           <p class="lede">Với bài toán worker queue, rollout theo thứ tự tiến trình quan trọng hơn rollout theo endpoint API.</p>
           <div class="rollout">
             <div class="step"><div class="when">Step 1</div><div class="pct">Server</div><div class="d">Deploy server để refresh scheduler logic và cleanup repeatable jobs cũ.</div></div>
@@ -643,14 +895,122 @@ exists in command module, but runtime method mapping may differ</pre></div>
         <a href="#changes">4) Thay đổi code</a>
         <a href="#changes" class="sub">like.worker.ts</a>
         <a href="#changes" class="sub">like.producer.ts</a>
-        <a href="#changes" class="sub">server.ts / repository</a>
-        <a href="#logging">5) Logging strategy</a>
-        <a href="#issue">6) Issue template</a>
-        <a href="#tests">7) Test plan</a>
-        <a href="#rollout">8) Rollout</a>
+        <a href="#changes" class="sub">server.ts / repositories</a>
+        <a href="#routeflow">5) Module route flow</a>
+        <a href="#logging">6) Logging strategy</a>
+        <a href="#issue">7) Issue template</a>
+        <a href="#tests">8) Test plan</a>
+        <a href="#rollout">9) Rollout</a>
       </nav>
     </div>
 
   </div>
+
+  <script>
+    const ROUTE_DETAIL = {
+      req: {
+        title: "POST /api/v1/posts/:id/like",
+        meta: "HTTP entrypoint",
+        body: "Điểm bắt đầu của luồng. Payload gồm <code>publicId</code>, user context từ auth middleware, và <code>isLiked</code> từ request body.",
+        code: "POST /api/v1/posts/:publicId/like\\nbody: { isLiked: boolean }"
+      },
+      route: {
+        title: "post.routes.ts",
+        meta: "routing layer",
+        body: "Route map chịu trách nhiệm gắn middleware đúng thứ tự: auth, validate DTO, response shape.",
+        code: "router.post('/:publicId/like', auth, validateLikeDto, controller.like)"
+      },
+      validate: {
+        title: "validate + auth middleware",
+        meta: "guard + contract",
+        body: "Đảm bảo request hợp lệ trước khi vào service: user đã xác thực, body đúng schema, params hợp lệ.",
+        code: "auth -> validate(likeDto) -> controller"
+      },
+      controller: {
+        title: "PostController.like()",
+        meta: "adapter layer",
+        body: "Controller chỉ map request thành input service, không chứa business logic nặng.",
+        code: "postService.like(publicId, userId, isLiked)"
+      },
+      service: {
+        title: "Service decision",
+        meta: "branch by isLiked",
+        body: "Service rẽ nhánh theo trạng thái like/unlike để cập nhật Redis set/list tương ứng.",
+        code: "if (isLiked) -> add\\nelse -> remove"
+      },
+      "like-branch": {
+        title: "Like branch",
+        meta: "sync path on request",
+        body: "SADD user vào set trạng thái like, tăng count tạm, rồi LPUSH payload vào list <code>likes_add</code> cho worker đồng bộ DB.",
+        code: "SADD post:{id}:likes userId\\nLPUSH likes_add JSON(payload)"
+      },
+      "unlike-branch": {
+        title: "Unlike branch",
+        meta: "sync path on request",
+        body: "SREM user khỏi set, giảm count tạm, LPUSH payload vào list <code>likes_remove</code> để worker xử lý batch.",
+        code: "SREM post:{id}:likes userId\\nLPUSH likes_remove JSON(payload)"
+      },
+      response: {
+        title: "HTTP response",
+        meta: "fast return",
+        body: "API trả kết quả nhanh từ Redis path, không chờ ghi DB. Đây là điểm giữ latency ổn định khi traffic cao.",
+        code: "return { likeCount }"
+      },
+      scheduler: {
+        title: "INIT_SYNC_JOB scheduler",
+        meta: "repeat every 5s",
+        body: "Producer tạo repeat job định kỳ. Trước khi tạo, cleanup job cũ cùng name để tránh scheduler bị chồng.",
+        code: "getRepeatableJobs -> removeRepeatableByKey\\nadd(INIT_SYNC_JOB, { repeat: { every: 5000 } })"
+      },
+      lock: {
+        title: "LikeWorker lock",
+        meta: "NX/EX token",
+        body: "Worker dùng lock token để đảm bảo chỉ một nhịp sync được quyền chạy tại cùng thời điểm.",
+        code: "SET like:sync:init:lock token NX EX 30"
+      },
+      "batch-pop": {
+        title: "Pop Redis batch",
+        meta: "compatibility-first",
+        body: "Sau khi xác minh mismatch API Redis client/runtime, flow được chốt bằng vòng lặp <code>rPop</code> để tương thích chắc chắn.",
+        code: "for (i < count) { item = rPop(key); if (!item) break; }"
+      },
+      "db-sync": {
+        title: "Repository writes",
+        meta: "final persistence",
+        body: "Batch được group theo postPublicId rồi ghi DB: create/delete likes và cộng/trừ likes_count trực tiếp trên bảng posts.",
+        code: "likeRepository.createMany/deleteMany\\npostRepository.incrementLikedCount/decrementLikedCount"
+      },
+      done: {
+        title: "Sync done",
+        meta: "end state",
+        body: "Sau khi hoàn tất, lock được release theo token ownership để tránh unlock nhầm phiên chạy khác.",
+        code: "if currentToken === token -> DEL lockKey"
+      }
+    };
+
+    const routeNodes = document.querySelectorAll(".route-node");
+    const routeTitle = document.getElementById("route-title");
+    const routeMeta = document.getElementById("route-meta");
+    const routeBody = document.getElementById("route-body");
+    const routeCode = document.getElementById("route-code");
+
+    routeNodes.forEach((node) => {
+      node.addEventListener("click", () => {
+        routeNodes.forEach((n) => n.classList.remove("active"));
+        node.classList.add("active");
+        const detail = ROUTE_DETAIL[node.dataset.r];
+        if (!detail) return;
+        routeTitle.textContent = detail.title;
+        routeMeta.textContent = detail.meta;
+        routeBody.innerHTML = detail.body;
+        routeCode.textContent = detail.code;
+      });
+    });
+
+    const firstRouteNode = document.querySelector('.route-node[data-r="req"]');
+    if (firstRouteNode) {
+      firstRouteNode.classList.add("active");
+    }
+  </script>
 </body>
 </html>
