@@ -1,5 +1,5 @@
+import { baseLogger } from "@/middlewares/logger";
 import { LIKE_JOB_NAME, QUEUE_NAME } from "../src/constants/queue";
-import type { CreateJobLikeProducer } from "../src/modules/job/like-job/dto/create-job-like-producer";
 import { likeRepository } from '../src/modules/post/repository/like.repository';
 import { postRepository } from '../src/modules/post/repository/post.repository';
 import { createWorker } from "../src/providers/bullmq.provider";
@@ -11,11 +11,17 @@ type LikeResult = {
   userId: string,
 }
 
+const redisReady = redisService.isOpen
+  ? Promise.resolve()
+  : redisService.connect();
+
+
 class LikeWorker {
+  private readonly syncLockKey = "like:sync:init:lock";
+  private readonly syncLockTtlSeconds = 30;
+
   private readonly worker = createWorker(QUEUE_NAME.LIKE_QUEUE, async (job) => {
     switch (job.name) {
-      case LIKE_JOB_NAME.SYNC_POST_LIKE:
-        return this.syncPostLike(job.data);
       case LIKE_JOB_NAME.INIT_SYNC_JOB:
         return this.initSyncJob();
       default:
@@ -23,57 +29,39 @@ class LikeWorker {
     }
   });
 
-  async syncPostLike(data: CreateJobLikeProducer) {
-    const likeKey = `post:${data.publicId}:likes`;
-    const batch = await redisService.rpop(likeKey, 500);
-    console.log(batch);
-    // if (batch.length === 0) {
-    //   baseLogger.info(
-    //     `Skip like sync for ${likeKey} because no Redis state was found`,
-    //   );
-    //   return;
-    // }
-    // const old = await likeRepository.findByUserIdAndPublicId(data.publicId);
-    // baseLogger.info(`old: ${JSON.stringify(old)}`);
-    // baseLogger.info(`likeState: ${likeState}`);
-    // const isLiked = likeState === "1";
-
-    // await likeRepository.upsert({
-    //   publicId: data.publicId,
-    //   userId: data.userId,
-    //   isLiked,
-    // });
-
-    // if (isLiked) {
-    //   if (old?.isLike) {
-    //     return;
-    //   } else {
-    //     await postRepository.incrementLikedCount(data.publicId, data.userId);
-    //   }
-    // } else {
-    //   if (old?.isLike) {
-    //     await postRepository.decrementLikedCount(data.publicId, data.userId);
-    //   } else {
-    //     return;
-    //   }
-    // }
-  }
 
   async initSyncJob() {
-    await Promise.all([
-      this.processAddLike(),
-      this.processRemoveLike(),
-    ]);
+    const lockToken = `${process.pid}:${Date.now()}:${Math.random().toString(36).slice(2)}`;
+    const isLocked = await this.acquireSyncLock(lockToken);
+    baseLogger.info(`Attempting to acquire lock for like sync job with token ${lockToken}: ${isLocked ? 'acquired' : 'not acquired'}`);
+    if (!isLocked) {
+      return;
+    }
+    baseLogger.info(`Starting like sync job...`);
+
+    try {
+      await Promise.all([
+        this.processAddLike(),
+        this.processRemoveLike(),
+      ]);
+    } finally {
+      await this.releaseSyncLock(lockToken);
+    }
   }
 
   async processAddLike() {
     const results = await this.rPopCustomBatch(QUEUE_NAME.LIKED_ADD_QUEUE, 500);
-    const grouped = Map.groupBy(results, (item: LikeResult) => item.postPublicId as string);
     if (results.length === 0) return;
+    baseLogger.info(`Processing add like jobs...`);
+    const grouped = this.groupByPostPublicId(results);
+
+    baseLogger.info(`Group item ${JSON.stringify(results)} ${results.length} like jobs into ${grouped.size} groups by postPublicId`);
+    baseLogger.info(`Grouped like jobs: ${JSON.stringify(Array.from(grouped.entries()))}`);
     await Promise.all([
       likeRepository.createMany(results.map((item) => ({
         userId: item.userId as string,
         postId: item.postPublicId as string,
+        isLike: true,
       }))),
       ...Array.from(grouped.entries()).map(([postPublicId, items]) =>
         postRepository.incrementLikedCount(postPublicId, items.length)
@@ -86,9 +74,11 @@ class LikeWorker {
 
     if (results.length === 0) return;
     // gom nhóm theo postPublicId để giảm số lần gọi postRepository.decrementLikedCount
-    const grouped = Map.groupBy(results, (item: LikeResult) => item.postPublicId as string);
+    const grouped = this.groupByPostPublicId(results);
+    baseLogger.info(`Grouped remove like jobs: ${JSON.stringify(Array.from(grouped.entries()))}`);
+
     await Promise.all([
-      likeRepository.createMany(results.map((item) => ({
+      likeRepository.deleteMany(results.map((item) => ({
         userId: item.userId as string,
         postId: item.postPublicId as string,
       }))),
@@ -103,13 +93,53 @@ class LikeWorker {
 
 
   private async rPopCustomBatch(key: string, count: number): Promise<LikeResult[]> {
-    const result = await redisService.lMPop([key], "RIGHT", { count });
+    await redisReady;
+    const elements = await redisService.rPopCount(key, count);
+    if (!elements) throw new Error(`Failed to RPop batch from ${key}`);
+    baseLogger.info(`RPop batch from ${key}, got ${JSON.stringify(elements)} items`);
 
-    if (!result || typeof result !== 'object' || !('elements' in result)) return [];
+    return elements
+      .map((item) => this.safeParseLikeItem(item))
+      .filter((item): item is LikeResult => item !== null);
+  }
 
-    const { elements } = result as { key: string; elements: string[] };
 
-    return elements.map((item) => JSON.parse(item) as LikeResult);
+  private safeParseLikeItem(item: string): LikeResult | null {
+    try {
+      return JSON.parse(item) as LikeResult;
+    } catch {
+      return null;
+    }
+  }
+
+  private async acquireSyncLock(token: string): Promise<boolean> {
+    await redisReady;
+    const result = await redisService.set(this.syncLockKey, token, {
+      NX: true,
+      EX: this.syncLockTtlSeconds,
+    });
+    return result === "OK";
+  }
+
+  private async releaseSyncLock(token: string): Promise<void> {
+    await redisReady;
+    const currentToken = await redisService.get(this.syncLockKey);
+
+    if (currentToken === token) {
+      await redisService.del(this.syncLockKey);
+    }
+  }
+
+  private groupByPostPublicId(items: LikeResult[]): Map<string, LikeResult[]> {
+    return items.reduce((acc, item) => {
+      const bucket = acc.get(item.postPublicId);
+      if (bucket) {
+        bucket.push(item);
+      } else {
+        acc.set(item.postPublicId, [item]);
+      }
+      return acc;
+    }, new Map<string, LikeResult[]>());
   }
 
 }

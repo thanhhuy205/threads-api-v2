@@ -429,10 +429,15 @@ class PostService {
     const likeKey = `post:${publicId}:likes`;
     const countKey = `post:${publicId}:likeCount`;
 
+    baseLogger.info(`User ${userId} is ${isLiked ? "liking" : "unliking"} post ${publicId}`);
+    baseLogger.info(`Like key: ${likeKey}, Count key: ${countKey}`);
+
     if (isLiked) {
       const added = await redisService.sAdd(likeKey, userId);
+      baseLogger.info(`Added ${added}`);
       baseLogger.info(`Added like for post ${publicId} by user ${userId}`);
       if (added === 1) {
+        baseLogger.info(`Incrementing like count for post ${publicId}`);
         await redisService.incr(countKey);
         await redisService.lPush(
           QUEUE_NAME.LIKED_ADD_QUEUE,
@@ -448,6 +453,7 @@ class PostService {
       baseLogger.info(`Removed like for post ${publicId} by user ${userId}`);
       if (removed === 1) {
         await redisService.decr(countKey);
+        baseLogger.info(`Decrementing like count for post ${publicId}`);
         await redisService.lPush(
           QUEUE_NAME.LIKED_REMOVE_QUEUE,
           JSON.stringify({

@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PR / Incident Write-up — likeJob sync pipeline</title>
+  <style>
+    :root {
+      --ivory:    #FAF9F5;
+      --slate:    #141413;
+      --clay:     #D97757;
+      --oat:      #E3DACC;
+      --olive:    #788C5D;
+      --gray-150: #F0EEE6;
+      --gray-300: #D1CFC5;
+      --gray-500: #87867F;
+      --gray-700: #3D3D3A;
+      --white:    #FFFFFF;
+
+      --serif: ui-serif, Georgia, 'Times New Roman', serif;
+      --sans:  system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      --mono:  ui-monospace, 'SF Mono', Menlo, Monaco, monospace;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--sans);
+      background: var(--ivory);
+      color: var(--gray-700);
+      line-height: 1.55;
+      padding: 56px 32px 120px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .page { max-width: 1040px; margin: 0 auto; }
+
+    header.page-head { margin-bottom: 44px; max-width: 860px; }
+    .eyebrow {
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--gray-500);
+      margin-bottom: 12px;
+    }
+    h1 {
+      font-family: var(--serif);
+      font-weight: 500;
+      font-size: 36px;
+      line-height: 1.15;
+      color: var(--slate);
+      margin-bottom: 10px;
+      letter-spacing: -0.01em;
+    }
+    .pr-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+      font-family: var(--mono);
+      font-size: 12.5px;
+      color: var(--gray-500);
+      margin-bottom: 18px;
+    }
+    .pr-meta .stat strong { color: var(--slate); font-weight: 600; }
+    .pr-meta .add { color: var(--olive); }
+    .pr-meta .del { color: var(--clay); }
+
+    .prompt-box {
+      background: var(--gray-150);
+      border: 1.5px solid var(--gray-300);
+      border-radius: 12px;
+      padding: 16px 20px;
+      font-size: 14.5px;
+      color: var(--gray-700);
+    }
+    .prompt-box .label {
+      font-family: var(--mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--gray-500);
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 250px;
+      gap: 48px;
+      align-items: start;
+    }
+    @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } .toc { display: none; } }
+
+    section { margin-bottom: 56px; scroll-margin-top: 24px; }
+    h2 {
+      font-family: var(--serif);
+      font-weight: 500;
+      font-size: 25px;
+      color: var(--slate);
+      margin-bottom: 14px;
+      letter-spacing: -0.01em;
+    }
+    p.lede { font-size: 15.5px; max-width: 760px; margin-bottom: 12px; }
+    p + p.lede { margin-top: 12px; }
+
+    .toc {
+      position: sticky;
+      top: 32px;
+      border-left: 1.5px solid var(--gray-300);
+      padding-left: 18px;
+      font-size: 13px;
+    }
+    .toc .t-head {
+      font-family: var(--mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--gray-500);
+      margin-bottom: 10px;
+    }
+    .toc a { display: block; color: var(--gray-700); text-decoration: none; padding: 4px 0; }
+    .toc a:hover { color: var(--clay); }
+    .toc .sub { padding-left: 12px; color: var(--gray-500); font-size: 12.5px; }
+
+    .tldr {
+      background: var(--white);
+      border: 1.5px solid var(--gray-300);
+      border-left: 4px solid var(--clay);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 48px;
+      max-width: 820px;
+    }
+    .tldr .k {
+      font-family: var(--mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--gray-500);
+      margin-bottom: 8px;
+    }
+    .tldr p { font-size: 15px; color: var(--slate); }
+
+    .ba {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin: 22px 0 4px;
+    }
+    @media (max-width: 720px) { .ba { grid-template-columns: 1fr; } }
+    .ba .panel {
+      background: var(--white);
+      border: 1.5px solid var(--gray-300);
+      border-radius: 12px;
+      padding: 18px 20px;
+    }
+    .ba .panel.after { border-color: var(--olive); }
+    .ba .k {
+      font-family: var(--mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--gray-500);
+      margin-bottom: 10px;
+    }
+    .ba .after .k { color: var(--olive); }
+    .ba ul { list-style: none; display: flex; flex-direction: column; gap: 8px; font-size: 13.5px; }
+    .ba li::before { content: '·'; color: var(--gray-500); margin-right: 8px; }
+    .ba .after li::before { color: var(--olive); }
+
+    .file-tour { display: flex; flex-direction: column; gap: 22px; }
+    .file {
+      background: var(--white);
+      border: 1.5px solid var(--gray-300);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .file summary {
+      padding: 14px 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      list-style: none;
+      background: var(--gray-150);
+      border-bottom: 1.5px solid var(--gray-300);
+    }
+    .file[open] summary { border-bottom-color: var(--gray-300); }
+    .file:not([open]) summary { border-bottom: none; }
+    .file summary::-webkit-details-marker { display: none; }
+    .file summary .chev {
+      width: 8px; height: 8px;
+      border-right: 2px solid var(--gray-500);
+      border-bottom: 2px solid var(--gray-500);
+      transform: rotate(-45deg);
+      transition: transform .15s ease;
+      flex-shrink: 0;
+    }
+    .file[open] summary .chev { transform: rotate(45deg); }
+    .file summary .path {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--slate);
+      flex: 1;
+    }
+    .file summary .badge {
+      font-family: var(--mono);
+      font-size: 10.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-weight: 600;
+    }
+    .badge.new { background: #E4E9DC; color: #4B5C39; }
+    .badge.mod { background: var(--oat); color: var(--slate); }
+    .badge.del { background: #F3D9CC; color: #8A3B1E; }
+    .file summary .stat { font-family: var(--mono); font-size: 12px; }
+    .file summary .stat .add { color: var(--olive); }
+    .file summary .stat .del { color: var(--clay); }
+    .file .file-body { padding: 18px 20px 22px; }
+    .file .why {
+      font-size: 14.5px;
+      margin-bottom: 14px;
+      max-width: 760px;
+    }
+    .file .why strong { color: var(--slate); }
+
+    .code {
+      background: var(--slate);
+      border-radius: 10px;
+      padding: 16px 18px;
+      overflow-x: auto;
+    }
+    .code pre {
+      font-family: var(--mono);
+      font-size: 12.5px;
+      line-height: 1.65;
+      color: #E8E6DE;
+      white-space: pre;
+    }
+    .code .kw  { color: var(--clay); }
+    .code .str { color: var(--olive); }
+    .code .cm  { color: var(--gray-500); }
+    .code .fn  { color: #C9B98A; }
+    .code .add { background: rgba(120,140,93,.22); display: inline-block; width: 100%; }
+    .code .del { background: rgba(217,119,87,.18); display: inline-block; width: 100%; text-decoration: line-through; text-decoration-color: rgba(217,119,87,.6); }
+
+    .focus { display: flex; flex-direction: column; gap: 14px; max-width: 840px; }
+    .focus .item {
+      background: var(--white);
+      border: 1.5px solid var(--gray-300);
+      border-radius: 10px;
+      padding: 16px 20px;
+      display: flex;
+      gap: 16px;
+    }
+    .focus .n {
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--white);
+      background: var(--clay);
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .focus .t { font-weight: 600; color: var(--slate); font-size: 15px; margin-bottom: 2px; }
+    .focus .d { font-size: 13.5px; color: var(--gray-500); }
+    .focus .d code { font-size: 12.5px; }
+
+    .tests { display: flex; flex-direction: column; gap: 10px; max-width: 840px; }
+    .test {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      background: var(--white);
+      border: 1.5px solid var(--gray-300);
+      border-radius: 10px;
+      padding: 13px 18px;
+      font-size: 14px;
+    }
+    .test .check {
+      width: 18px; height: 18px;
+      border-radius: 5px;
+      flex-shrink: 0;
+      margin-top: 2px;
+      border: 1.5px solid var(--gray-300);
+    }
+    .test.done .check {
+      background: var(--olive);
+      border-color: var(--olive);
+      position: relative;
+    }
+    .test.done .check::after {
+      content: '';
+      position: absolute;
+      left: 5px; top: 2px;
+      width: 5px; height: 9px;
+      border-right: 2px solid var(--white);
+      border-bottom: 2px solid var(--white);
+      transform: rotate(40deg);
+    }
+    .test .label { color: var(--slate); }
+    .test .note { color: var(--gray-500); font-size: 13px; margin-top: 2px; }
+
+    .rollout { display: flex; gap: 0; max-width: 840px; }
+    @media (max-width: 720px) { .rollout { flex-direction: column; } }
+    .rollout .step {
+      flex: 1;
+      background: var(--white);
+      border: 1.5px solid var(--gray-300);
+      padding: 16px 18px;
+      position: relative;
+    }
+    .rollout .step:first-child { border-radius: 12px 0 0 12px; }
+    .rollout .step:last-child { border-radius: 0 12px 12px 0; }
+    .rollout .step + .step { border-left: none; }
+    @media (max-width: 720px) {
+      .rollout .step, .rollout .step:first-child, .rollout .step:last-child { border-radius: 12px; }
+      .rollout .step + .step { border-left: 1.5px solid var(--gray-300); margin-top: 10px; }
+    }
+    .rollout .step .pct {
+      font-family: var(--mono);
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--clay);
+      margin-bottom: 6px;
+    }
+    .rollout .step .d { font-size: 13px; color: var(--gray-500); }
+    .rollout .step .when { font-family: var(--mono); font-size: 11px; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <header class="page-head">
+      <div class="eyebrow">PR + Incident Write-up · Threads API v2</div>
+      <h1>LikeJob Sync: Full Debug Trail, Kỹ Thuật Khóa Trùng, và Cách Ghi Issue</h1>
+      <div class="pr-meta">
+        <span class="stat"><strong>4</strong> files code chính</span>
+        <span class="stat"><span class="add">+194</span> / <span class="del">−123</span></span>
+        <span class="stat">incident date <strong>2026-05-14</strong></span>
+        <span class="stat">scope <strong>like queue / worker / redis client</strong></span>
+      </div>
+      <div class="prompt-box">
+        <span class="label">Mục tiêu tài liệu</span>
+        Ghi lại đầy đủ kỹ thuật đã dùng để xử lý lỗi <code>likeJob</code> chạy dày,
+        lock bị đè, lỗi runtime Redis command, và chốt phương án ổn định cuối cùng.
+        Tài liệu này phục vụ review PR, onboarding backend, và tái sử dụng khi mở issue sau này.
+      </div>
+    </header>
+
+    <div class="layout">
+      <main>
+
+        <div class="tldr">
+          <div class="k">TL;DR</div>
+          <p>
+            Vấn đề không phải một bug đơn lẻ, mà là chuỗi lệch pha giữa scheduler, worker concurrency,
+            API Redis runtime, và chiến lược logging. Cách giải quyết hiệu quả là: cô lập triệu chứng theo
+            từng lớp (scheduler → lock → pop batch → parse payload), chứng minh bằng dữ liệu runtime,
+            rồi chốt lại bằng implementation tương thích client hiện tại + issue note để team không lặp lại.
+          </p>
+        </div>
+
+        <section id="why">
+          <h2>1) Bối Cảnh & Triệu Chứng</h2>
+          <p class="lede">
+            Triệu chứng đầu tiên: worker log <code>Processing add like jobs...</code> liên tục, tần suất không đều,
+            nhiều timestamp trùng nhau theo cặp. Cảm giác ban đầu giống "job chạy đúng nhưng không ăn dữ liệu".
+          </p>
+          <p class="lede">
+            Sau khi thêm lock log, tiếp tục thấy nhiều lần trigger và xuất hiện lỗi rỗng <code>error: {}</code>,
+            khiến việc tìm nguyên nhân thật bị mù thông tin.
+          </p>
+
+          <div class="ba">
+            <div class="panel">
+              <div class="k">Before</div>
+              <ul>
+                <li>Queue repeat có dấu hiệu chồng scheduler cũ</li>
+                <li>Job có lúc chạy dày hơn 5s (không đều)</li>
+                <li>Log lỗi thiếu <code>message/stack</code> nên khó truy nguyên</li>
+                <li>Dùng API Redis không tương thích runtime hiện tại</li>
+              </ul>
+            </div>
+            <div class="panel after">
+              <div class="k">After</div>
+              <ul>
+                <li>Scheduler được cleanup trước khi tạo lại</li>
+                <li>Có lock token theo tiến trình để tránh chạy chồng</li>
+                <li>Luồng pop batch dùng API tương thích chắc chắn</li>
+                <li>Tài liệu hóa đủ để tái hiện và mở issue chuẩn</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section id="timeline">
+          <h2>2) Timeline Debug (Theo Thứ Tự Thật)</h2>
+          <div class="tests">
+            <div class="test done"><span class="check"></span><div><div class="label">B1: Xác nhận worker thực sự chạy</div><div class="note">Log xuất hiện đều, chứng tỏ consumer vẫn active.</div></div></div>
+            <div class="test done"><span class="check"></span><div><div class="label">B2: Nghi ngờ scheduler bị trùng</div><div class="note">Do nhịp trigger không giống cố định 5 giây và có cặp log sát nhau.</div></div></div>
+            <div class="test done"><span class="check"></span><div><div class="label">B3: Thêm distributed lock</div><div class="note">Dùng <code>SET key value NX EX</code> + token ownership khi release.</div></div></div>
+            <div class="test done"><span class="check"></span><div><div class="label">B4: Cải thiện log lock để thấy acquired/not acquired</div><div class="note">Tách rõ "trigger" và "được quyền chạy".</div></div></div>
+            <div class="test done"><span class="check"></span><div><div class="label">B5: Lộ lỗi thật</div><div class="note"><code>TypeError: redisService.lMPop is not a function</code>.</div></div></div>
+            <div class="test done"><span class="check"></span><div><div class="label">B6: Tra cứu package + typings cục bộ</div><div class="note">Chốt được API <code>redis@5.12.1</code> không dùng signature như giả định ban đầu.</div></div></div>
+            <div class="test done"><span class="check"></span><div><div class="label">B7: Chuyển sang pop batch tương thích chắc chắn</div><div class="note">Dùng vòng <code>rPop</code> thay vì phụ thuộc method không ổn định.</div></div></div>
+            <div class="test done"><span class="check"></span><div><div class="label">B8: Giảm noise log theo yêu cầu</div><div class="note">Bỏ helper log lỗi rườm rà, giữ luồng xử lý gọn.</div></div></div>
+          </div>
+        </section>
+
+        <section id="investigation">
+          <h2>3) Kỹ Thuật Tra Cứu: Vì Sao Kết Luận Như Vậy</h2>
+          <p class="lede">
+            Điểm quan trọng là phân biệt rõ 3 lớp: docs bên ngoài, type definitions trong local,
+            và behavior runtime thực tế. Kết luận chỉ chốt khi cả 3 cùng khớp.
+          </p>
+
+          <div class="file-tour">
+            <details class="file" open>
+              <summary>
+                <span class="chev"></span>
+                <span class="path">Dữ liệu runtime (log thật)</span>
+                <span class="badge mod">evidence</span>
+              </summary>
+              <div class="file-body">
+                <p class="why"><strong>Bằng chứng quyết định:</strong> lỗi runtime báo trực tiếp <code>lMPop is not a function</code>. Nghĩa là object client hiện tại không expose method đó theo cách đang gọi.</p>
+                <div class="code"><pre>[2026-05-14 13:31:00 +0700] ERROR Like sync job failed
+TypeError: import_redis.redisService.lMPop is not a function
+  at LikeWorker.popElements (.../workers/like.worker.ts:129:41)</pre></div>
+              </div>
+            </details>
+
+            <details class="file" open>
+              <summary>
+                <span class="chev"></span>
+                <span class="path">Tra cứu package cài thật trong project</span>
+                <span class="badge mod">evidence</span>
+              </summary>
+              <div class="file-body">
+                <p class="why">Đã kiểm tra dependency thực tế: <code>redis@5.12.1</code> và <code>@redis/client@5.12.1</code>. Đây là nguồn sự thật của API đang chạy.</p>
+                <div class="code"><pre>npm ls redis @redis/client --depth=1
+threads-api-v2
++-- redis@5.12.1
+`-- @redis/client@5.12.1</pre></div>
+              </div>
+            </details>
+
+            <details class="file" open>
+              <summary>
+                <span class="chev"></span>
+                <span class="path">Tra cứu d.ts để đối chiếu signature</span>
+                <span class="badge mod">evidence</span>
+              </summary>
+              <div class="file-body">
+                <p class="why">Trong declaration cục bộ, có module <code>LMPOP</code>, <code>RPOP</code>, <code>RPOP_COUNT</code>. Nhưng call-site thực tế của client không match assumption trước đó. Kết luận: phải gọi theo API đã kiểm chứng hoặc dùng phương án tương thích tối đa.</p>
+                <div class="code"><pre>node_modules/@redis/client/dist/lib/commands/RPOP.d.ts
+parseCommand(parser, key)  // 1 arg
+
+node_modules/@redis/client/dist/lib/commands/RPOP_COUNT.d.ts
+parseCommand(parser, key, count)
+
+node_modules/@redis/client/dist/lib/commands/LMPOP.d.ts
+exists in command module, but runtime method mapping may differ</pre></div>
+              </div>
+            </details>
+          </div>
+        </section>
+
+        <section id="changes">
+          <h2>4) Thay Đổi Kỹ Thuật Đã Áp Dụng</h2>
+          <p class="lede">Phần này gom cả thay đổi cuối cùng và lý do kiến trúc đằng sau từng thay đổi.</p>
+
+          <div class="file-tour">
+            <details class="file" open>
+              <summary>
+                <span class="chev"></span>
+                <span class="path">workers/like.worker.ts</span>
+                <span class="badge mod">mod</span>
+                <span class="stat"><span class="add">+84</span> <span class="del">−49</span></span>
+              </summary>
+              <div class="file-body">
+                <p class="why"><strong>Distributed lock + pop strategy tương thích.</strong> Bổ sung lock chống chạy chồng, nhóm theo post để giảm write, parse an toàn từng item, và pop tuần tự bằng <code>rPop</code> để không phụ thuộc API không ổn định trong runtime.</p>
+                <div class="code"><pre><span class="add"><span class="kw">const</span> lockToken = `${process.pid}:...`;</span>
+<span class="add"><span class="kw">const</span> isLocked = <span class="kw">await</span> acquireSyncLock(lockToken);</span>
+<span class="add"><span class="kw">if</span> (!isLocked) <span class="kw">return</span>;</span>
+
+<span class="add"><span class="kw">for</span> (<span class="kw">let</span> i = 0; i &lt; count; i++) {</span>
+<span class="add">  <span class="kw">const</span> item = <span class="kw">await</span> redisService.<span class="fn">rPop</span>(key);</span>
+<span class="add">  <span class="kw">if</span> (!item) <span class="kw">break</span>;</span>
+<span class="add">  result.<span class="fn">push</span>(item);</span>
+<span class="add">}</span></pre></div>
+              </div>
+            </details>
+
+            <details class="file" open>
+              <summary>
+                <span class="chev"></span>
+                <span class="path">src/modules/job/like-job/producer/like.producer.ts</span>
+                <span class="badge mod">mod</span>
+                <span class="stat"><span class="add">+43</span> <span class="del">−21</span></span>
+              </summary>
+              <div class="file-body">
+                <p class="why"><strong>Scheduler hygiene.</strong> Trước khi add repeat job mới, cleanup các repeatable meta-job cũ cùng name để tránh tích lũy lịch chạy dư thừa qua nhiều lần restart/deploy.</p>
+                <div class="code"><pre><span class="add"><span class="kw">const</span> jobs = <span class="kw">await</span> likeQueue.<span class="fn">getRepeatableJobs</span>();</span>
+<span class="add"><span class="kw">const</span> duplicates = jobs.<span class="fn">filter</span>(j =&gt; j.name === INIT_SYNC_JOB);</span>
+<span class="add"><span class="kw">await</span> Promise.<span class="fn">all</span>(duplicates.map(j =&gt; likeQueue.<span class="fn">removeRepeatableByKey</span>(j.key)));</span>
+<span class="add"><span class="kw">await</span> likeQueue.<span class="fn">add</span>(INIT_SYNC_JOB, {}, { repeat: { every: 5000 }, attempts: 1 });</span></pre></div>
+              </div>
+            </details>
+
+            <details class="file">
+              <summary>
+                <span class="chev"></span>
+                <span class="path">src/server.ts</span>
+                <span class="badge mod">mod</span>
+                <span class="stat"><span class="add">+45</span> <span class="del">−37</span></span>
+              </summary>
+              <div class="file-body">
+                <p class="why"><strong>Boot sequence an toàn hơn.</strong> Dừng hành vi xóa queue khi start app; chuyển sang init scheduler có bắt lỗi riêng để không làm startup fail âm thầm.</p>
+              </div>
+            </details>
+
+            <details class="file">
+              <summary>
+                <span class="chev"></span>
+                <span class="path">src/modules/post/repository/like.repository.ts</span>
+                <span class="badge mod">mod</span>
+                <span class="stat"><span class="add">+22</span> <span class="del">−16</span></span>
+              </summary>
+              <div class="file-body">
+                <p class="why"><strong>Sửa đúng nghiệp vụ unlike batch.</strong> Đổi điều kiện xóa sang pair-wise <code>OR</code> theo từng <code>userId + postId</code>, tránh xóa chéo ngoài ý muốn.</p>
+              </div>
+            </details>
+          </div>
+        </section>
+
+        <section id="logging">
+          <h2>5) Chiến Lược Logging Đã Dùng</h2>
+          <p class="lede">Phần này quan trọng vì chính logging strategy quyết định tốc độ tìm root cause.</p>
+
+          <div class="focus">
+            <div class="item">
+              <div class="n">1</div>
+              <div>
+                <div class="t">Log theo pha xử lý, không log theo cảm giác</div>
+                <div class="d">Pha lock, pha start, pha pop batch, pha group, pha write DB. Mỗi log tương ứng một "checkpoint" kỹ thuật.</div>
+              </div>
+            </div>
+            <div class="item">
+              <div class="n">2</div>
+              <div>
+                <div class="t">Đầu tiên log để tìm nguyên nhân, sau đó giảm noise</div>
+                <div class="d">Giai đoạn debug cần log chi tiết để mở khóa thông tin. Khi đã xác định root cause thì có thể dọn log cho clean runtime.</div>
+              </div>
+            </div>
+            <div class="item">
+              <div class="n">3</div>
+              <div>
+                <div class="t">Nếu thấy <code>error: {}</code>, ưu tiên sửa cấu trúc log trước</div>
+                <div class="d">Không có stack thì mọi giả thuyết đều yếu. Mục tiêu là luôn nhìn được vị trí fail cụ thể theo file/line.</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="issue">
+          <h2>6) Note Công Dụng Tạo Issue (Copy-Paste)</h2>
+          <p class="lede">
+            Issue kiểu này rất hữu dụng để team sau không debug lại từ đầu. Nên dùng issue như một
+            hồ sơ kỹ thuật: mô tả triệu chứng, bằng chứng, giả thuyết, thử nghiệm, và quyết định cuối cùng.
+          </p>
+
+          <div class="code"><pre>## [Like Queue] Repeating sync job runs irregularly + Redis command mismatch
+
+### 1) Symptoms
+- Worker logs trigger irregularly (not strictly every 5s)
+- Duplicate-like behavior suspected under repeat scheduling
+- Runtime error observed: `redisService.lMPop is not a function`
+
+### 2) Impact
+- Like sync flow unstable
+- Hard to trust batch processing correctness without root-cause fix
+
+### 3) Root Causes
+- Scheduler duplication risk from repeated bootstrap
+- Runtime API mismatch between assumed Redis command method and installed client
+- Limited observability in early logging phase
+
+### 4) Evidence
+- Runtime stacktrace from worker
+- Local package version: redis@5.12.1
+- Local d.ts verification under node_modules/@redis/client/dist/lib/commands
+
+### 5) Fix Implemented
+- Cleanup repeatable jobs before re-initialization
+- Add lock token with NX/EX strategy
+- Switch pop batch to compatible rPop loop
+- Correct unlike delete condition to pair-wise OR
+
+### 6) Verification
+- Worker acquires lock as expected
+- No `lMPop` TypeError after fix
+- Batch logs show parsed item counts and grouped writes
+
+### 7) Follow-up
+- Add integration test for repeat scheduler duplication
+- Add runbook note in docs/job-worker-flow.html</pre></div>
+        </section>
+
+        <section id="tests">
+          <h2>7) Test Plan / Verification Matrix</h2>
+          <div class="tests">
+            <div class="test done"><span class="check"></span><div><div class="label">Scheduler cleanup works</div><div class="note">Restart app nhiều lần vẫn chỉ còn một scheduler active theo name.</div></div></div>
+            <div class="test done"><span class="check"></span><div><div class="label">Lock prevents overlap</div><div class="note">Khi 2 trigger gần nhau, chỉ 1 lần có quyền chạy đồng bộ.</div></div></div>
+            <div class="test done"><span class="check"></span><div><div class="label">Redis pop path stable</div><div class="note">Không còn lỗi runtime về method không tồn tại.</div></div></div>
+            <div class="test done"><span class="check"></span><div><div class="label">Unlike batch correctness</div><div class="note">Delete theo cặp user/post, tránh xóa chéo.</div></div></div>
+            <div class="test"><span class="check"></span><div><div class="label">E2E regression cho like/unlike burst</div><div class="note">Nên thêm test tạo burst 500 event để đo drain time và count consistency.</div></div></div>
+          </div>
+        </section>
+
+        <section id="rollout">
+          <h2>8) Rollout & Vận Hành</h2>
+          <p class="lede">Với bài toán worker queue, rollout theo thứ tự tiến trình quan trọng hơn rollout theo endpoint API.</p>
+          <div class="rollout">
+            <div class="step"><div class="when">Step 1</div><div class="pct">Server</div><div class="d">Deploy server để refresh scheduler logic và cleanup repeatable jobs cũ.</div></div>
+            <div class="step"><div class="when">Step 2</div><div class="pct">Worker</div><div class="d">Deploy worker logic lock + pop strategy mới.</div></div>
+            <div class="step"><div class="when">Step 3</div><div class="pct">Observe</div><div class="d">Quan sát lock-acquire pattern, batch size, và độ khớp dữ liệu DB.</div></div>
+          </div>
+        </section>
+
+      </main>
+
+      <nav class="toc">
+        <div class="t-head">In this doc</div>
+        <a href="#why">1) Bối cảnh</a>
+        <a href="#timeline">2) Timeline debug</a>
+        <a href="#investigation">3) Tra cứu kỹ thuật</a>
+        <a href="#changes">4) Thay đổi code</a>
+        <a href="#changes" class="sub">like.worker.ts</a>
+        <a href="#changes" class="sub">like.producer.ts</a>
+        <a href="#changes" class="sub">server.ts / repository</a>
+        <a href="#logging">5) Logging strategy</a>
+        <a href="#issue">6) Issue template</a>
+        <a href="#tests">7) Test plan</a>
+        <a href="#rollout">8) Rollout</a>
+      </nav>
+    </div>
+
+  </div>
+</body>
+</html>

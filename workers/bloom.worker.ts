@@ -4,12 +4,6 @@ import { CreateBloomUserProducer } from '../src/modules/job/bloom/dto/create-blo
 import { createWorker } from "../src/providers/bullmq.provider";
 import { redisService } from '../src/providers/redis.provider';
 
-const redisReady = redisService.isOpen
-    ? Promise.resolve()
-    : redisService.connect().catch((error) => {
-        console.error('Failed to connect Redis for bloom worker:', error);
-        throw error;
-    });
 
 
 class BloomWorker {
@@ -25,7 +19,6 @@ class BloomWorker {
 
 
     async addUserNameAndEmailToBloom(data: CreateBloomUserProducer) {
-        await redisReady;
         await redisService.bf.add('filter:usernames', data.userName);
         await redisService.bf.add('filter:emails', data.email);
         baseLogger.info(`Added userName: ${data.userName} and email: ${data.email} to Bloom filter`);

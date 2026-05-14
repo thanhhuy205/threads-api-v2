@@ -1,7 +1,7 @@
 import prisma from "@/config/prisma";
 
 class LikeRepository {
-  async createMany(payloads: { userId: string; postId: string }[]) {
+  async createMany(payloads: { userId: string; postId: string, isLike: boolean }[]) {
     return prisma.like.createMany({
       data: payloads,
       skipDuplicates: true,
@@ -9,10 +9,16 @@ class LikeRepository {
   }
 
   async deleteMany(payloads: { userId: string; postId: string; }[]) {
+    if (payloads.length === 0) {
+      return { count: 0 };
+    }
+
     return prisma.like.deleteMany({
       where: {
-        userId: { in: payloads.map((item) => item.userId) },
-        postId: { in: payloads.map((item) => item.postId) },
+        OR: payloads.map((item) => ({
+          userId: item.userId,
+          postId: item.postId,
+        })),
       }
     });
   }

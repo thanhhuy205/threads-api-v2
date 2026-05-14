@@ -1,4 +1,5 @@
 import app from '@/app';
+import { likeProducer } from '@/modules/job/like-job/producer/like.producer';
 import configService from './config/config';
 import prisma from './config/prisma';
 import { redisService } from './providers/redis.provider';
@@ -32,6 +33,13 @@ const bootstrap = async () => {
             });
         });
     };
+
+    try {
+        await likeProducer.initSyncJob();
+        console.log('Initialized like sync repeat job');
+    } catch (error) {
+        console.error('Failed to initialize like sync repeat job:', error);
+    }
 
     process.on('SIGINT', () => {
         shutdown('SIGINT');

@@ -62,35 +62,35 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
       skip: after ? 1 : 0,
       cursor: after
         ? {
-            publicId: after,
-          }
+          publicId: after,
+        }
         : undefined,
       select: {
         ...postFeedSelect,
         ...(userId
           ? {
-              likes: {
-                where: {
-                  userId: userId,
-                  isLike: true,
-                },
-                select: {
-                  userId: true,
-                },
-                take: 1,
+            likes: {
+              where: {
+                userId: userId,
+                isLike: true,
               },
-              derivatives: {
-                where: {
-                  isQuote: true,
-                  userId: userId,
-                },
-                select: {
-                  publicId: true,
-                  userId: true,
-                },
-                take: 1,
+              select: {
+                userId: true,
               },
-            }
+              take: 1,
+            },
+            derivatives: {
+              where: {
+                isQuote: true,
+                userId: userId,
+              },
+              select: {
+                publicId: true,
+                userId: true,
+              },
+              take: 1,
+            },
+          }
           : {}),
       },
     });
@@ -317,25 +317,20 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
     });
   }
 
+  // Tăng count ở bảng post
   async incrementLikedCount(publicId: string, count: number): Promise<void> {
     await prisma.$executeRaw`
-    UPDATE posts p
-    JOIN likes l ON l.post_id = p.id
-    SET 
-      p.likes_count = GREATEST(p.likes_count + ${count}, 0)
-    WHERE 
-      p.public_id = ${publicId}
+    UPDATE posts
+    SET likes_count = GREATEST(likes_count + ${count}, 0)
+    WHERE public_id = ${publicId}
   `;
   }
-
+  // Tăng count ở bảng post
   async decrementLikedCount(publicId: string, count: number): Promise<void> {
     await prisma.$executeRaw`
-    UPDATE posts p
-    JOIN likes l ON l.post_id = p.id
-    SET 
-      p.likes_count = GREATEST(p.likes_count - ${count}, 0)
-    WHERE 
-      p.public_id = ${publicId}
+    UPDATE posts
+    SET likes_count = GREATEST(likes_count - ${count}, 0)
+    WHERE public_id = ${publicId}
   `;
   }
 }
