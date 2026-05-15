@@ -168,9 +168,20 @@ export const userSwaggerSchemas = {
             isPrivate: { type: 'boolean' },
             location: { type: 'string', nullable: true },
             website: { type: 'string', nullable: true },
+            hasReceivedFriendRequest: { type: 'boolean' },
+            hasSentFriendRequest: { type: 'boolean' },
+            isFollowing: { type: 'boolean' },
         },
         required: [
-            'id', 'username', 'followersCount', 'followingCount', 'postsCount', 'isPrivate'
+            'id',
+            'username',
+            'followersCount',
+            'followingCount',
+            'postsCount',
+            'isPrivate',
+            'hasReceivedFriendRequest',
+            'hasSentFriendRequest',
+            'isFollowing',
         ],
     },
     UserProfileSuccessResponse: {

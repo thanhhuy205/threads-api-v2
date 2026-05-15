@@ -1,15 +1,14 @@
 import { AUTH_MESSAGE, USER_MESSAGE } from "@/constants/message";
-import { userService } from "@/modules/user/service/user.service";
-import { Request, Response } from "express";
 import { NotFoundException } from "@/errors/error";
-import type { UsernameParamsDto } from "../dto/request/username.params.dto";
-import type { FollowersQueryDto } from "../dto/request/followers.query.dto";
+import { jwtService } from "@/modules/jwt/service/jwt.service";
+import { userService } from "@/modules/user/service/user.service";
 import { getPagination } from "@/shared/pagination/cursor-pagination";
+import { Request, Response } from "express";
+import type { FollowersQueryDto } from "../dto/request/followers.query.dto";
 import {
-  FriendRequestDto,
-  FriendRequestIdParamsDto,
+  FriendRequestDto
 } from "../dto/request/friend-id.params.dto";
-import { baseLogger } from "@/middlewares/logger";
+import type { UsernameParamsDto } from "../dto/request/username.params.dto";
 
 class UserController {
   async getFollower(
@@ -113,7 +112,9 @@ class UserController {
   }
 
   async getByUsername(req: Request<UsernameParamsDto>, res: Response) {
-    const user = await userService.findByUsername(req.params.username);
+    const userId = await jwtService.requestAuthToken(req);
+    console.log("userId", userId);
+    const user = await userService.findByUsername(req.params.username, userId ?? undefined);
     if (!user) {
       return res.error(404, USER_MESSAGE.USER_NOT_FOUND);
     }

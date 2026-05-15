@@ -1,5 +1,5 @@
 import prisma from "@/config/prisma";
-import type { Prisma } from "@prisma/client";
+import { FriendRequestStatus, type Prisma } from "@prisma/client";
 
 const userProfileSelect = {
   id: true,
@@ -17,6 +17,21 @@ const userProfileSelect = {
   location: true,
   website: true,
   createdAt: true,
+} as const;
+
+const userByUsernameSelect = {
+  id: true,
+  username: true,
+  name: true,
+  bio: true,
+  avatar: true,
+  verifiedAt: true,
+  followersCount: true,
+  followingCount: true,
+  postsCount: true,
+  isPrivate: true,
+  location: true,
+  website: true,
 } as const;
 
 export type UserProfile = Prisma.UserGetPayload<{
@@ -37,26 +52,60 @@ class UserRepository {
     username: string,
     tx: Prisma.TransactionClient = prisma,
   ) {
-    console.log(username);
     return tx.user.findUnique({
       where: {
         username,
       },
+      select: userByUsernameSelect,
+    });
+  }
+
+  async findUserRequestFriend(currentUserId: string, targetUserId: string) {
+    const [receivedFriendRequest, sentFriendRequest] = await Promise.all([
+      prisma.friendRequest.findFirst({
+        where: {
+          senderId: targetUserId,
+          receiverId: currentUserId,
+          status: FriendRequestStatus.PENDING,
+        },
+        select: {
+          id: true,
+        },
+      }),
+      prisma.friendRequest.findFirst({
+        where: {
+          senderId: currentUserId,
+          receiverId: targetUserId,
+          status: FriendRequestStatus.PENDING,
+        },
+        select: {
+          id: true,
+        },
+      }),
+    ]);
+
+    return {
+      hasReceivedFriendRequest: Boolean(receivedFriendRequest),
+      hasSentFriendRequest: Boolean(sentFriendRequest),
+    };
+  }
+
+  async findUserFollowing(currentUserId: string, targetUserId: string) {
+    const follow = await prisma.follow.findUnique({
+      where: {
+        userId_followingId: {
+          userId: currentUserId,
+          followingId: targetUserId,
+        },
+      },
       select: {
-        id: true,
-        username: true,
-        name: true,
-        bio: true,
-        avatar: true,
-        verifiedAt: true,
-        followersCount: true,
-        followingCount: true,
-        postsCount: true,
-        isPrivate: true,
-        location: true,
-        website: true,
+        isFollowing: true,
       },
     });
+
+    return {
+      isFollowing: Boolean(follow?.isFollowing),
+    };
   }
 
   async findExistingIds(userIds: string[]) {

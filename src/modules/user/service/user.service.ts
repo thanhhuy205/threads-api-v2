@@ -1,17 +1,18 @@
+import { USER_MESSAGE } from "@/constants/message";
 import { NotFoundException } from "@/errors/error";
+import { baseLogger } from "@/middlewares/logger";
 import { followRepository } from "@/modules/user/repository/follow.repository";
 import { userRepository } from "@/modules/user/repository/user.repository";
-import { friendRequestRepository } from "../repository/friend-request.repository";
 import {
   buildCursorPagination,
   type PaginationResponse,
 } from "@/shared/pagination/cursor-pagination";
+import { transactionService } from "@/shared/transaction/transaction.service";
+import { FriendRequestStatus } from "@prisma/client";
 import type { FollowActionDataDto } from "../dto/response/follow-action.response.dto";
 import type { FollowerUserDto } from "../mapper/follower.mapper";
-import { FriendRequestStatus } from "@prisma/client";
-import { USER_MESSAGE } from "@/constants/message";
-import { transactionService } from "@/shared/transaction/transaction.service";
-import { baseLogger } from "@/middlewares/logger";
+import { mapUserProfileForFE } from "../mapper/user.mapper";
+import { friendRequestRepository } from "../repository/friend-request.repository";
 
 type GetFollowersInput = {
   userId: string;
@@ -269,8 +270,26 @@ class UserService {
     return userRepository.findById(userId);
   }
 
-  async findByUsername(username: string) {
-    return userRepository.findByUsername(username);
+  async findByUsername(username: string, userId?: string) {
+    const user = await userRepository.findByUsername(username);
+    if (!user) {
+      return null;
+    }
+
+    if (!userId) {
+      return mapUserProfileForFE(user);
+    }
+
+    const [requestUser, follower] = await Promise.all([
+      userRepository.findUserRequestFriend(userId, user.id),
+      userRepository.findUserFollowing(userId, user.id),
+    ]);
+
+    return mapUserProfileForFE({
+      ...user,
+      ...requestUser,
+      ...follower,
+    });
   }
 
   async findExistingIds(userIds: string[]) {
