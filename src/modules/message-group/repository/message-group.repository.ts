@@ -139,6 +139,22 @@ class MessageGroupRepository {
       select: messageGroupSelect,
     });
   }
+
+
+  findUserExistingPrivateGroup(userId: string, groupPublicId: string, tx: Prisma.TransactionClient = prisma) {
+    return tx.messageGroup.findFirst({
+      where: {
+        publicId: groupPublicId,
+        groupType: GroupType.PRIVATE,
+        members: {
+          some: {
+            userId
+          },
+        }
+      },
+      select: messageGroupSelect,
+    });
+  }
 }
 
 export const messageGroupRepository = new MessageGroupRepository();

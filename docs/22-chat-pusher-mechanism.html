@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pusher chat realtime trong threads-api-v2</title>
+<style>
+  :root {
+    --ivory: #FAF9F5;
+    --slate: #141413;
+    --clay: #D97757;
+    --oat: #E3DACC;
+    --olive: #788C5D;
+    --gray-150: #F0EEE6;
+    --gray-300: #D1CFC5;
+    --gray-500: #87867F;
+    --gray-700: #3D3D3A;
+    --serif: ui-serif, Georgia, "Times New Roman", serif;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--ivory);
+    color: var(--gray-700);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    padding: 56px 24px 120px;
+  }
+  .page {
+    max-width: 1120px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: 48px;
+  }
+  @media (max-width: 920px) {
+    .page { grid-template-columns: 1fr; }
+    nav { display: none; }
+  }
+
+  nav {
+    position: sticky;
+    top: 32px;
+    align-self: start;
+    font-size: 13px;
+  }
+  nav .label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gray-500);
+    margin-bottom: 12px;
+  }
+  nav a {
+    display: block;
+    padding: 5px 0 5px 12px;
+    border-left: 2px solid var(--gray-300);
+    color: var(--gray-700);
+    text-decoration: none;
+  }
+  nav a:hover { color: var(--slate); border-color: var(--slate); }
+  nav a.l2 { padding-left: 24px; font-size: 12.5px; color: var(--gray-500); }
+  nav .files {
+    margin-top: 28px;
+    border-top: 1px solid var(--gray-300);
+    padding-top: 16px;
+  }
+  nav .files code {
+    display: block;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--gray-500);
+    padding: 3px 0;
+  }
+
+  header { margin-bottom: 12px; }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--gray-500);
+    margin-bottom: 10px;
+  }
+  h1 {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 32px;
+    color: var(--slate);
+    letter-spacing: -0.01em;
+    margin-bottom: 14px;
+  }
+  .tldr {
+    border: 1.5px solid var(--gray-300);
+    border-left: 3px solid var(--clay);
+    border-radius: 10px;
+    background: #fff;
+    padding: 16px 18px;
+    margin-bottom: 8px;
+  }
+  .tldr b { color: var(--slate); }
+
+  h2 {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 22px;
+    color: var(--slate);
+    margin: 40px 0 14px;
+    scroll-margin-top: 24px;
+  }
+  p { margin-bottom: 12px; max-width: 760px; }
+  code { font-family: var(--mono); font-size: 13px; }
+
+  details {
+    border: 1.5px solid var(--gray-300);
+    border-radius: 10px;
+    background: #fff;
+    margin: 14px 0;
+    overflow: hidden;
+  }
+  summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 14px 16px;
+    font-family: var(--serif);
+    font-size: 16px;
+    color: var(--slate);
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+  summary::-webkit-details-marker { display: none; }
+  summary::before {
+    content: "▸";
+    color: var(--clay);
+    font-family: var(--sans);
+    font-size: 12px;
+    transition: transform 120ms;
+  }
+  details[open] summary::before { transform: rotate(90deg); }
+  summary .where {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--gray-500);
+    margin-left: auto;
+  }
+  details .body { padding: 0 16px 16px; }
+  details .body p { font-size: 14px; }
+
+  .tabs {
+    border: 1.5px solid var(--gray-300);
+    border-radius: 10px;
+    background: #fff;
+    margin: 16px 0 8px;
+    overflow: hidden;
+  }
+  .tabbar {
+    display: flex;
+    border-bottom: 1px solid var(--gray-300);
+    background: var(--gray-150);
+    flex-wrap: wrap;
+  }
+  .tabbar button {
+    appearance: none;
+    border: none;
+    background: none;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--gray-500);
+    padding: 10px 16px;
+    cursor: pointer;
+    border-right: 1px solid var(--gray-300);
+  }
+  .tabbar button.on {
+    background: #fff;
+    color: var(--slate);
+    border-bottom: 2px solid var(--clay);
+    margin-bottom: -1px;
+  }
+  .tabs pre {
+    display: none;
+    margin: 0;
+    padding: 16px 18px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: var(--slate);
+    overflow-x: auto;
+  }
+  .tabs pre.on { display: block; }
+  .hl { color: var(--clay); }
+  .cm { color: var(--gray-500); }
+
+  .callout {
+    display: flex;
+    gap: 12px;
+    border: 1.5px solid var(--oat);
+    background: rgba(227, 218, 204, 0.35);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin: 18px 0;
+    font-size: 14px;
+  }
+  .callout .ico { color: var(--clay); font-weight: 600; }
+
+  ul { padding-left: 20px; max-width: 760px; }
+  li { margin-bottom: 8px; }
+
+  dl.faq { margin-top: 8px; }
+  dl.faq dt {
+    font-family: var(--serif);
+    font-size: 16px;
+    color: var(--slate);
+    margin-top: 18px;
+  }
+  dl.faq dd { font-size: 14px; margin: 4px 0 0; max-width: 760px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <nav>
+    <div class="label">On this page</div>
+    <a href="#tldr">TL;DR</a>
+    <a href="#flow">Flow gửi message</a>
+    <a href="#flow" class="l2">1. REST nhận request</a>
+    <a href="#flow" class="l2">2. Lưu DB transaction</a>
+    <a href="#flow" class="l2">3. Trigger Pusher</a>
+    <a href="#flow" class="l2">4. FE nhận event</a>
+    <a href="#channels">Channel naming</a>
+    <a href="#impl">Snippet triển khai</a>
+    <a href="#checklist">Checklist test nhanh</a>
+    <a href="#faq">FAQ</a>
+    <div class="files">
+      <div class="label">Repo files</div>
+      <code>src/providers/pusher.provider.ts</code>
+      <code>src/modules/pusher/service/pusher.service.ts</code>
+      <code>src/modules/message-group/service/message-group-facade.service.ts</code>
+      <code>src/modules/message-group/controller/message-group.controller.ts</code>
+      <code>src/config/pusher.ts</code>
+    </div>
+  </nav>
+
+  <main>
+    <header>
+      <div class="eyebrow">Research &amp; Learning · feature explainer</div>
+      <h1>Cơ chế Pusher cho chat realtime trong <code>threads-api-v2</code></h1>
+      <div class="tldr" id="tldr">
+        <b>TL;DR</b> — Luồng đúng là: <code>POST /message-groups/:publicId/messages</code> lưu message vào DB trước,
+        sau đó trigger Pusher event <code>message:new</code> lên channel <code>private-chat-{groupPublicId}</code>.
+        FE subscribe channel này để nhận message realtime, còn lịch sử vẫn lấy từ API để chống miss event.
+      </div>
+    </header>
+
+    <h2 id="flow">Flow gửi message end-to-end</h2>
+    <p>Bạn đã có bước tạo tin nhắn rồi, nên phần cần thêm chỉ là đoạn phát event sau khi transaction commit thành công.</p>
+
+    <details open>
+      <summary>1 · REST nhận request gửi tin <span class="where">message-group.controller.ts</span></summary>
+      <div class="body">
+        <p>Client gọi <code>POST /message-groups/:publicId/messages</code> với body <code>{ content }</code>. API đã xác thực JWT
+          và lấy <code>senderId</code> từ <code>req.user.sub</code>.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>2 · Lưu DB bằng transaction <span class="where">message-group-facade.service.ts</span></summary>
+      <div class="body">
+        <p>Service validate member của group, insert bản ghi <code>Message</code>, update <code>lastMessageAt</code>, rồi trả về payload message.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>3 · Trigger Pusher event <span class="where">message-group-facade.service.ts</span></summary>
+      <div class="body">
+        <p>Sau khi transaction thành công, trigger event lên channel của cuộc trò chuyện. Nếu Pusher lỗi thì chỉ log,
+          không nên rollback request đã gửi tin thành công trong DB.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>4 · FE nhận event và cập nhật UI <span class="where">web/mobile client</span></summary>
+      <div class="body">
+        <p>FE subscribe đúng channel của group, bind event <code>message:new</code>, append message vào state nếu chưa tồn tại.
+          Khi mở lại phòng chat vẫn gọi API <code>GET /message-groups/:publicId/messages</code> để đồng bộ.</p>
+      </div>
+    </details>
+
+    <h2 id="channels">Channel naming khuyến nghị</h2>
+    <ul>
+      <li><b>Chat group:</b> <code>private-chat-{groupPublicId}</code> — chỉ member group được subscribe.</li>
+      <li><b>User riêng:</b> <code>private-user-{userId}</code> — dùng cho notification cá nhân.</li>
+      <li><b>Event chat mới:</b> <code>message:new</code>.</li>
+      <li><b>Event đã xem (phase sau):</b> <code>message:seen</code>.</li>
+    </ul>
+
+    <div class="callout">
+      <span class="ico">★</span>
+      <div>Không dùng public channel cho chat production vì ai biết channel name cũng subscribe được.
+        Dùng private channel + endpoint auth để kiểm tra member.</div>
+    </div>
+
+    <h2 id="impl">Snippet triển khai nhanh (BE + FE)</h2>
+    <p>Bộ snippet dưới đây bám theo cấu trúc module hiện tại trong repo của bạn.</p>
+
+    <div class="tabs" data-tabs>
+      <div class="tabbar">
+        <button class="on" data-t="0">Service: trigger event</button>
+        <button data-t="1">Pusher auth endpoint</button>
+        <button data-t="2">FE subscribe channel</button>
+      </div>
+<pre class="on"><span class="cm">// src/modules/message-group/service/message-group-facade.service.ts</span>
+import { pusherService } from "@/modules/pusher/service/pusher.service";
+
+async sendMessage(groupPublicId: string, senderId: string, content: string) {
+  const messageGroup = await this.findMessageGroupOrThrow(groupPublicId);
+  await messageMemberService.assertMemberOrThrow(messageGroup.id, senderId);
+
+  const messagePayload = await transactionService.doInTransaction(async (tx) =&gt; {
+    const message = await messageService.createMessage(
+      { messageGroupId: messageGroup.id, senderId, content },
+      tx,
+    );
+
+    await messageGroupService.updateLastMessageAt(messageGroup.id, new Date(), tx);
+    return mapMessageResponse(message);
+  });
+
+  try {
+    await pusherService.trigger(
+      <span class="hl">`private-chat-${messageGroup.publicId}`</span>,
+      <span class="hl">"message:new"</span>,
+      {
+        groupPublicId: messageGroup.publicId,
+        message: messagePayload,
+      },
+    );
+  } catch (error) {
+    baseLogger.error("Failed to trigger chat realtime event: %o", error);
+  }
+
+  return messagePayload;
+}</pre>
+<pre><span class="cm">// route: POST /pusher/auth (authorization middleware bắt buộc)</span>
+<span class="cm">// body: { socket_id, channel_name }</span>
+
+if (channel_name.startsWith("private-chat-")) {
+  const groupPublicId = channel_name.replace("private-chat-", "");
+  const group = await messageGroupService.findByPublicId(groupPublicId);
+  if (!group) throw new ForbiddenException("Channel is not accessible");
+
+  await messageMemberService.assertMemberOrThrow(group.id, userId);
+  return res.json(await pusherService.authorizeChannel(socket_id, channel_name));
+}
+
+if (channel_name === `private-user-${userId}`) {
+  return res.json(await pusherService.authorizeChannel(socket_id, channel_name));
+}
+
+throw new ForbiddenException("Unsupported private channel");</pre>
+<pre><span class="cm">// FE (pusher-js)</span>
+import Pusher from "pusher-js";
+
+const pusher = new Pusher(import.meta.env.VITE_PUSHER_KEY, {
+  wsHost: import.meta.env.VITE_PUSHER_HOST,
+  wsPort: Number(import.meta.env.VITE_PUSHER_PORT),
+  forceTLS: false,
+  enabledTransports: ["ws", "wss"],
+  channelAuthorization: {
+    endpoint: `${import.meta.env.VITE_API_URL}/pusher/auth`,
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  },
+});
+
+const channel = pusher.subscribe(`private-chat-${groupPublicId}`);
+channel.bind("message:new", ({ message }) =&gt; {
+  upsertMessage(message);
+});</pre>
+    </div>
+
+    <h2 id="checklist">Checklist test nhanh</h2>
+    <ul>
+      <li>Mở 2 tab với 2 user khác nhau, cùng vào 1 message group.</li>
+      <li>Tab A gửi message qua API hiện tại.</li>
+      <li>Tab B phải nhận <code>message:new</code> gần như ngay lập tức.</li>
+      <li>Tắt mạng tab B, gửi tin từ tab A, bật lại mạng và load lại history từ API để đảm bảo không mất message.</li>
+      <li>Thử user không thuộc group subscribe <code>private-chat-{groupPublicId}</code> phải bị từ chối ở endpoint auth.</li>
+    </ul>
+
+    <h2 id="faq">FAQ</h2>
+    <dl class="faq">
+      <dt>Nếu Pusher lỗi thì có nên fail API gửi tin nhắn không?</dt>
+      <dd>Không nên. Message đã lưu DB là nguồn sự thật. Realtime chỉ là kênh phát nhanh cho UX.</dd>
+
+      <dt>Vì sao vẫn cần API get messages nếu đã có realtime?</dt>
+      <dd>Realtime có thể miss event khi user offline/reconnect. API history giúp đồng bộ trạng thái chuẩn.</dd>
+
+      <dt>Nên đặt event tên <code>new-message</code> hay <code>message:new</code>?</dt>
+      <dd>Chọn một convention và giữ nhất quán toàn hệ thống. Với repo này, pattern <code>resource:action</code> khá dễ mở rộng.</dd>
+    </dl>
+  </main>
+
+</div>
+
+<script>
+document.querySelectorAll("[data-tabs]").forEach((box) => {
+  const btns = box.querySelectorAll("button");
+  const panes = box.querySelectorAll("pre");
+  btns.forEach((button) => {
+    button.addEventListener("click", () => {
+      btns.forEach((b) => b.classList.remove("on"));
+      panes.forEach((p) => p.classList.remove("on"));
+      button.classList.add("on");
+      panes[Number(button.dataset.t)].classList.add("on");
+    });
+  });
+});
+</script>
+</body>
+</html>

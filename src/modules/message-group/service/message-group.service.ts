@@ -62,6 +62,10 @@ class MessageGroupService {
       getAfter: (group) => group.publicId,
     });
   }
+
+  async findExistingPrivateGroup(groupPublicId: string, userId: string, tx?: Prisma.TransactionClient) {
+    return messageGroupRepository.findUserExistingPrivateGroup(userId, groupPublicId, tx);
+  }
 }
 
 export const messageGroupService = new MessageGroupService();

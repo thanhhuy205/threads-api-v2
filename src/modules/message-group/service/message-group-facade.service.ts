@@ -1,11 +1,12 @@
 import { BadRequestException, NotFoundException } from "@/errors/error";
 import { baseLogger } from "@/middlewares/logger";
+import { CreateMessageGroupInput } from "@/modules/message-group/interfaces/create-message-group-input";
 import {
-  mapMessageGroupResponse,
   mapMessageGroupMemberResponse,
+  mapMessageGroupResponse,
   mapMessageResponse,
 } from "@/modules/message-group/mapper/message-group.mapper";
-import { CreateMessageGroupInput } from "@/modules/message-group/interfaces/create-message-group-input";
+import { pusherService } from "@/modules/pusher/service/pusher.service";
 import { userService } from "@/modules/user/service/user.service";
 import { transactionService } from "@/shared/transaction/transaction.service";
 import { GroupType, Prisma } from "@prisma/client";
@@ -86,7 +87,7 @@ class MessageGroupFacadeService {
     const messageGroup = await this.findMessageGroupOrThrow(groupPublicId);
     await messageMemberService.assertMemberOrThrow(messageGroup.id, senderId);
 
-    return transactionService.doInTransaction(async (tx) => {
+    const messagePayload = await transactionService.doInTransaction(async (tx) => {
       const message = await messageService.createMessage(
         {
           messageGroupId: messageGroup.id,
@@ -100,6 +101,26 @@ class MessageGroupFacadeService {
 
       return mapMessageResponse(message);
     });
+
+
+    try {
+      await pusherService.trigger(
+        `private-chat-${messageGroup.publicId}`,
+        "message:new",
+        {
+          groupPublicId: messageGroup.publicId,
+          message: {
+            ...messagePayload,
+            createdAt: messagePayload.createdAt.toISOString(),
+          },
+        },
+      );
+    } catch (error) {
+      baseLogger.error("Failed to trigger chat realtime event: %o", error);
+    }
+
+
+    return messagePayload;
   }
 
   async getMessages({
