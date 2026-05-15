@@ -237,10 +237,10 @@ model User {
 
   name String? @map("name") @db.VarChar(100)
 
-  bio        String?    @db.Text
-  avatar     String?    @db.VarChar(255)
-  verifiedAt DateTime?  @map("verified_at")
-  status     UserStatus @default(ACTIVE)
+  bio         String?    @db.Text
+  avatar      String?    @db.VarChar(255)
+  verifiedAt  DateTime?  @map("verified_at")
+  status      UserStatus @default(ACTIVE)
   bannedUntil DateTime?  @map("banned_until")
 
   followersCount Int @default(0) @map("followers_count")
@@ -280,7 +280,7 @@ model User {
   heroBadges          HeroBadge[]
   karmaTransactions   KarmaTransaction[]
   userQuestLogs       UserQuestLog[]
-  reports             Report[]            @relation("UserReports")
+  reports             Report[]             @relation("UserReports")
 
   @@index([deletedAt], map: "idx_users_deleted_at")
   @@index([bannedUntil], map: "idx_users_banned_until")
@@ -650,7 +650,7 @@ model UserQuestLog {
   progress  Int       @default(0)
   completed Boolean   @default(false)
   claimedAt DateTime? @map("claimed_at")
-  date      DateTime  @default(now()) @db.Date // reset mỗi ngày
+  date      DateTime  @db.Date // reset mỗi ngày
 
   user  User       @relation(fields: [userId], references: [id])
   quest DailyQuest @relation(fields: [questId], references: [id]) // cơ chế nhiệm vụ hàng ngày, 

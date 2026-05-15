@@ -1,14 +1,14 @@
 import { swaggerDocument } from "@/config/swagger";
 import { authorization } from "@/middlewares/auth";
 import adminRouter from "@/modules/admin/admin.routes";
+import aiRouter from "@/modules/ai/ai.routes";
 import authRouter from "@/modules/auth/auth.routes";
 import circleRouter from "@/modules/circle/circle.routes";
 import healthRouter from "@/modules/health/health.routes";
+import messageGroupRouter from "@/modules/message-group/routes/message-group.routes";
 import notificationRouter from "@/modules/notification/notification.route";
 import postRouter from "@/modules/post/post.routes";
 import searchRouter from "@/modules/search/search.routes";
-import messageGroupRouter from "@/modules/message-group/routes/message-group.routes";
-import aiRouter from "@/modules/ai/ai.routes";
 import topicRouter from "@/modules/topic/topic.route";
 import uploadRouter from "@/modules/upload/upload.routes";
 import userFollowRouter from "@/modules/user/user-follow.routes";
@@ -33,7 +33,7 @@ router.use("/topic", topicRouter);
 router.use("/notification", notificationRouter);
 router.use("/webhooks", webhooksRouter);
 router.use("/search", searchRouter);
-router.use("/message-group", messageGroupRouter);
+router.use("/message-groups", messageGroupRouter);
 router.use("/ai", aiRouter);
 
 export default router;
