@@ -1,7 +1,7 @@
 import { UnauthorizedException } from "@/errors/error";
-import { CreateMessageDto } from "@/modules/message-group/dto/create-message.dto";
 import { CreateMessageGroupDto } from "@/modules/message-group/dto/create-message-group.dto";
-import { messageGroupService } from "@/modules/message-group/service/message-group.service";
+import { CreateMessageDto } from "@/modules/message-group/dto/create-message.dto";
+import { messageGroupFacadeService } from "@/modules/message-group/service/message-group-facade.service";
 import { getPagination } from "@/shared/pagination/cursor-pagination";
 import type { Request, Response } from "express";
 
@@ -16,7 +16,7 @@ class MessageGroupController {
       throw new UnauthorizedException();
     }
 
-    const messageGroup = await messageGroupService.createMessageGroup(
+    const messageGroup = await messageGroupFacadeService.createMessageGroup(
       req.body,
       userId,
     );
@@ -34,7 +34,7 @@ class MessageGroupController {
       throw new UnauthorizedException();
     }
 
-    const message = await messageGroupService.sendMessage(
+    const message = await messageGroupFacadeService.sendMessage(
       req.params.publicId,
       userId,
       req.body.content,
@@ -51,7 +51,7 @@ class MessageGroupController {
     }
 
     const { after: messagePublicId, take } = getPagination(req);
-    const messages = await messageGroupService.getMessages({
+    const messages = await messageGroupFacadeService.getMessages({
       groupPublicId: req.params.publicId,
       messagePublicId: messagePublicId ?? undefined,
       userId,
@@ -59,6 +59,41 @@ class MessageGroupController {
     });
 
     return res.paginate(messages);
+  }
+
+  async getMessageGroups(req: Request, res: Response) {
+    const userId = req.user?.sub;
+
+    if (!userId) {
+      throw new UnauthorizedException();
+    }
+
+    const { after, take } = getPagination(req);
+    const groups = await messageGroupFacadeService.getMessageGroups({
+      userId,
+      after: after ?? undefined,
+      take,
+    });
+
+    return res.paginate(groups);
+  }
+
+  async getGroupMembers(req: Request<{ publicId: string }>, res: Response) {
+    const userId = req.user?.sub;
+
+    if (!userId) {
+      throw new UnauthorizedException();
+    }
+
+    const { after, take } = getPagination(req);
+    const members = await messageGroupFacadeService.getGroupMembers({
+      groupPublicId: req.params.publicId,
+      userId,
+      after: after ?? undefined,
+      take,
+    });
+
+    return res.paginate(members);
   }
 }
 

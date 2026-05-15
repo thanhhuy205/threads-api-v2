@@ -1,4 +1,5 @@
 import prisma from "@/config/prisma";
+import { buildPagination } from "@/shared/pagination/cursor-pagination";
 import { GroupType, Prisma } from "@prisma/client";
 
 const messageGroupSelect = {
@@ -103,6 +104,41 @@ class MessageGroupRepository {
           },
         },
       },
+      select: messageGroupSelect,
+    });
+  }
+
+  findByUserId(
+    {
+      userId,
+      after,
+      take,
+      groupTypes = [GroupType.PRIVATE, GroupType.CROWD],
+    }: {
+      userId: string;
+      after?: string;
+      take: number;
+      groupTypes?: GroupType[];
+    },
+    tx: Prisma.TransactionClient = prisma,
+  ) {
+    const { currentAfter, currentLimit } = buildPagination({ after, take });
+
+    return tx.messageGroup.findMany({
+      where: {
+        groupType: {
+          in: groupTypes,
+        },
+        members: {
+          some: {
+            userId,
+          },
+        },
+      },
+      orderBy: [{ lastMessageAt: "desc" }, { publicId: "desc" }],
+      take: currentLimit + 1,
+      skip: currentAfter ? 1 : 0,
+      cursor: currentAfter ? { publicId: currentAfter } : undefined,
       select: messageGroupSelect,
     });
   }

@@ -1,7 +1,7 @@
 import { USER_MESSAGE } from "@/constants/message";
 import { NotFoundException } from "@/errors/error";
 import { baseLogger } from "@/middlewares/logger";
-import { messageGroupService } from "@/modules/message-group/service/message-group.service";
+import { messageGroupFacadeService } from "@/modules/message-group/service/message-group-facade.service";
 import { userRepository } from "@/modules/user/repository/user.repository";
 import {
   buildCursorPagination,
@@ -95,7 +95,11 @@ class FriendService {
       }
 
       if (isAccept) {
-        await messageGroupService.createPrivateMessageGroup(sender.id, userId, tx);
+        await messageGroupFacadeService.createPrivateMessageGroup(
+          sender.id,
+          userId,
+          tx,
+        );
         await friendRequestRepository.updateStatusById(
           friendRequest.id,
           FriendRequestStatus.ACCEPTED,
@@ -157,4 +161,3 @@ class FriendService {
 }
 
 export const friendService = new FriendService();
-

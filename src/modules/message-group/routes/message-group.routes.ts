@@ -13,6 +13,11 @@ messageGroupRouter.post(
   validate(createMessageGroupSchema),
   messageGroupController.createMessageGroup,
 );
+messageGroupRouter.get(
+  "/",
+  authorization,
+  messageGroupController.getMessageGroups,
+);
 messageGroupRouter.post(
   "/:publicId/messages",
   authorization,
@@ -23,6 +28,11 @@ messageGroupRouter.get(
   "/:publicId/messages",
   authorization,
   messageGroupController.getMessages,
+);
+messageGroupRouter.get(
+  "/:publicId/members",
+  authorization,
+  messageGroupController.getGroupMembers,
 );
 
 export default messageGroupRouter;

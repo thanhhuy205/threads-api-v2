@@ -38,6 +38,10 @@ import {
     adminSwaggerPaths,
     adminSwaggerSchemas,
 } from '../modules/admin/docs/admin.swagger';
+import {
+    messageGroupSwaggerPaths,
+    messageGroupSwaggerSchemas,
+} from '../modules/message-group/docs/message-group.swagger';
 
 export const swaggerDocument = {
     openapi: '3.0.0',
@@ -88,6 +92,10 @@ export const swaggerDocument = {
             name: 'Admin',
             description: 'Admin APIs',
         },
+        {
+            name: 'MessageGroup',
+            description: 'Message group and message APIs',
+        },
     ],
 
     paths: {
@@ -99,6 +107,7 @@ export const swaggerDocument = {
         ...circleSwaggerPaths,
         ...notificationSwaggerPaths,
         ...adminSwaggerPaths,
+        ...messageGroupSwaggerPaths,
     },
 
     components: {
@@ -112,6 +121,7 @@ export const swaggerDocument = {
             ...notificationSwaggerSchemas,
             ...jwtSwaggerSchemas,
             ...adminSwaggerSchemas,
+            ...messageGroupSwaggerSchemas,
         },
 
         securitySchemes: {
