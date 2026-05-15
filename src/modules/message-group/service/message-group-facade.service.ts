@@ -1,11 +1,13 @@
 import { BadRequestException, NotFoundException } from "@/errors/error";
 import { baseLogger } from "@/middlewares/logger";
+import { PUSHER_EVENT } from "@/constants/pusher";
 import { CreateMessageGroupInput } from "@/modules/message-group/interfaces/create-message-group-input";
 import {
   mapMessageGroupMemberResponse,
   mapMessageGroupResponse,
   mapMessageResponse,
 } from "@/modules/message-group/mapper/message-group.mapper";
+import { pusherChannel } from "@/modules/pusher/pusher-channel";
 import { pusherService } from "@/modules/pusher/service/pusher.service";
 import { userService } from "@/modules/user/service/user.service";
 import { transactionService } from "@/shared/transaction/transaction.service";
@@ -105,8 +107,8 @@ class MessageGroupFacadeService {
 
     try {
       await pusherService.trigger(
-        `private-chat-${messageGroup.publicId}`,
-        "message:new",
+        pusherChannel.privateChat(messageGroup.publicId),
+        PUSHER_EVENT.MESSAGE_NEW,
         {
           groupPublicId: messageGroup.publicId,
           message: {

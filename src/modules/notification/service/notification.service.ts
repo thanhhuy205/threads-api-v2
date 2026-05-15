@@ -1,4 +1,6 @@
+import { PUSHER_EVENT } from "@/constants/pusher";
 import type { WelcomeNotificationPayload } from "@/modules/notification/interface/notification.types";
+import { pusherChannel } from "@/modules/pusher/pusher-channel";
 import { pusherService } from "@/modules/pusher/service/pusher.service";
 
 class NotificationService {
@@ -9,8 +11,8 @@ class NotificationService {
       type: "success",
       createdAt: new Date().toISOString(),
     };
-    const channel = `user`;
-    const event = "notification:new";
+    const channel = pusherChannel.user();
+    const event = PUSHER_EVENT.NOTIFICATION_NEW;
 
     try {
       await pusherService.trigger(channel, event, payload);
