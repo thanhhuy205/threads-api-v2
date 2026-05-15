@@ -1,6 +1,8 @@
 import { AUTH_MESSAGE, USER_MESSAGE } from "@/constants/message";
 import { NotFoundException } from "@/errors/error";
 import { jwtService } from "@/modules/jwt/service/jwt.service";
+import { followerService } from "@/modules/user/service/follower.service";
+import { friendService } from "@/modules/user/service/friend.service";
 import { userService } from "@/modules/user/service/user.service";
 import { getPagination } from "@/shared/pagination/cursor-pagination";
 import { Request, Response } from "express";
@@ -22,7 +24,7 @@ class UserController {
     }
 
     const { after, take } = getPagination(req);
-    const { users, pagination } = await userService.getFollower({
+    const { users, pagination } = await followerService.getFollower({
       userId: user.id,
       after: after ?? undefined,
       take,
@@ -41,7 +43,7 @@ class UserController {
     }
 
     const { after, take } = getPagination(req);
-    const { users, pagination } = await userService.getFollowing({
+    const { users, pagination } = await followerService.getFollowing({
       userId: user.id,
       after: after ?? undefined,
       take,
@@ -61,7 +63,7 @@ class UserController {
       throw new NotFoundException("User not found");
     }
 
-    const result = await userService.follower(userId, targetUser.id);
+    const result = await followerService.follower(userId, targetUser.id);
     return res.success(200, USER_MESSAGE.FOLLOW_SUCCESS, result);
   }
 
@@ -73,7 +75,7 @@ class UserController {
     }
 
     const { username } = req.params;
-    const result = await userService.sendFriendRequest(userId, username);
+    const result = await friendService.sendFriendRequest(userId, username);
     return res.success(200, USER_MESSAGE.FRIEND_REQUEST_SENT, result);
   }
 
@@ -86,7 +88,7 @@ class UserController {
       return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
     }
     const { username: receiverUsername } = req.params;
-    const result = await userService.handleFriendRequestCancel(
+    const result = await friendService.handleFriendRequestCancel(
       userId,
       receiverUsername,
     );
@@ -103,7 +105,7 @@ class UserController {
     }
     const { username: senderUsername } = req.params;
     const { isAccept } = req.body;
-    const result = await userService.handleFriendRequestAccept(
+    const result = await friendService.handleFriendRequestAccept(
       userId,
       senderUsername,
       isAccept,
@@ -130,7 +132,7 @@ class UserController {
       return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
     }
     const { after, take } = getPagination(req);
-    const { rows, pagination } = await userService.getReceivedFriendRequests({
+    const { rows, pagination } = await friendService.getReceivedFriendRequests({
       take: take ?? undefined,
       receiverId: userId,
       senderId: after ?? undefined,
@@ -147,7 +149,7 @@ class UserController {
       return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
     }
     const { after, take } = getPagination(req);
-    const { rows, pagination } = await userService.getSentFriendRequests({
+    const { rows, pagination } = await friendService.getSentFriendRequests({
       take: take ?? undefined,
       senderId: userId,
       receiverId: after ?? undefined,

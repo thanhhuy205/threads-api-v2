@@ -1,4 +1,3 @@
-import prisma from "@/config/prisma";
 import {
   BadRequestException,
   ForbiddenException,
@@ -8,6 +7,7 @@ import { CreateMessageGroupInput } from "@/modules/message-group/interfaces/crea
 import { memberMessageGroupRepository } from "@/modules/message-group/repository/member-message-group.repository";
 import { messageGroupRepository } from "@/modules/message-group/repository/message-group.repository";
 import { messageRepository } from "@/modules/message-group/repository/message.repository";
+import { userService } from "@/modules/user/service/user.service";
 import { buildCursorPagination } from "@/shared/pagination/cursor-pagination";
 import { transactionService } from "@/shared/transaction/transaction.service";
 import { GroupType } from "@prisma/client";
@@ -15,17 +15,7 @@ import { GroupType } from "@prisma/client";
 class MessageGroupService {
   async createMessageGroup(data: CreateMessageGroupInput, creatorId: string) {
     const usernames = [...new Set(data.members.map((username) => username.trim()))];
-    const users = await prisma.user.findMany({
-      where: {
-        username: {
-          in: usernames,
-        },
-      },
-      select: {
-        id: true,
-        username: true,
-      },
-    });
+    const users = await userService.findUsersByUsernames(usernames);
 
     const memberIds = [...new Set([creatorId, ...users.map((user) => user.id)])];
 
@@ -54,6 +44,7 @@ class MessageGroupService {
 
     return messageGroupRepository.findByPublicId(messageGroup.publicId);
   }
+
 
   async sendMessage(
     groupPublicId: string,

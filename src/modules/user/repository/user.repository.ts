@@ -34,8 +34,16 @@ const userByUsernameSelect = {
   website: true,
 } as const;
 
+const userBasicIdentitySelect = {
+  id: true,
+  username: true,
+} as const;
+
 export type UserProfile = Prisma.UserGetPayload<{
   select: typeof userProfileSelect;
+}>;
+export type UserBasicIdentity = Prisma.UserGetPayload<{
+  select: typeof userBasicIdentitySelect;
 }>;
 
 class UserRepository {
@@ -57,6 +65,24 @@ class UserRepository {
         username,
       },
       select: userByUsernameSelect,
+    });
+  }
+
+  async findByUsernames(
+    usernames: string[],
+    tx: Prisma.TransactionClient = prisma,
+  ): Promise<UserBasicIdentity[]> {
+    if (!usernames.length) {
+      return [];
+    }
+
+    return tx.user.findMany({
+      where: {
+        username: {
+          in: usernames,
+        },
+      },
+      select: userBasicIdentitySelect,
     });
   }
 
