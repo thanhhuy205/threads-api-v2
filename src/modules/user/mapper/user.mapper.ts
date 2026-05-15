@@ -14,6 +14,7 @@ export const mapUserProfileForFE = <
     hasReceivedFriendRequest,
     hasSentFriendRequest,
     isFollowing,
+    isFriend,
     ...rest
   } = user;
 
@@ -22,5 +23,6 @@ export const mapUserProfileForFE = <
     hasReceivedFriendRequest: Boolean(hasReceivedFriendRequest),
     hasSentFriendRequest: Boolean(hasSentFriendRequest),
     isFollowing: Boolean(isFollowing),
+    isFriend: Boolean(isFriend),
   };
 };

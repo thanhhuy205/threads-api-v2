@@ -61,7 +61,7 @@ class UserRepository {
   }
 
   async findUserRequestFriend(currentUserId: string, targetUserId: string) {
-    const [receivedFriendRequest, sentFriendRequest] = await Promise.all([
+    const [receivedFriendRequest, sentFriendRequest, isFriend] = await Promise.all([
       prisma.friendRequest.findFirst({
         where: {
           senderId: targetUserId,
@@ -82,11 +82,30 @@ class UserRepository {
           id: true,
         },
       }),
+      prisma.friendRequest.findFirst({
+        where: {
+          OR: [
+            {
+              senderId: currentUserId,
+              receiverId: targetUserId,
+            },
+            {
+              senderId: targetUserId,
+              receiverId: currentUserId,
+            },
+          ],
+          status: FriendRequestStatus.ACCEPTED,
+        },
+        select: {
+          id: true,
+        },
+      }),
     ]);
 
     return {
       hasReceivedFriendRequest: Boolean(receivedFriendRequest),
       hasSentFriendRequest: Boolean(sentFriendRequest),
+      isFriend: Boolean(isFriend),
     };
   }
 

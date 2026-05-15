@@ -85,11 +85,11 @@ class FriendRequestRepository implements ICursorPagination<
       after: receiverId,
       cursor: receiverId
         ? {
-            senderId_receiverId: {
-              senderId,
-              receiverId,
-            },
-          }
+          senderId_receiverId: {
+            senderId,
+            receiverId,
+          },
+        }
         : undefined,
       select: {
         id: true,
@@ -109,15 +109,24 @@ class FriendRequestRepository implements ICursorPagination<
     });
   }
 
-  async create(
+  async upsert(
     senderId: string,
     receiverId: string,
     tx: Prisma.TransactionClient = prisma,
   ) {
-    return tx.friendRequest.create({
-      data: {
+    return tx.friendRequest.upsert({
+      where: {
+        senderId_receiverId: {
+          senderId,
+          receiverId,
+        },
+      },
+      create: {
         senderId,
         receiverId,
+        status: "PENDING",
+      },
+      update: {
         status: "PENDING",
       },
     });

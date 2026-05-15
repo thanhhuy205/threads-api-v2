@@ -146,7 +146,7 @@ class UserService {
       return { sendFriends: false };
     }
 
-    await friendRequestRepository.create(userId, targetUser.id);
+    await friendRequestRepository.upsert(userId, targetUser.id);
     return { sendFriends: true };
   }
 
@@ -268,6 +268,16 @@ class UserService {
 
   async findByUserId(userId: string) {
     return userRepository.findById(userId);
+  }
+   
+
+  async findByUsernameNotRelationShip(username: string) {
+    const user = await userRepository.findByUsername(username);
+    if (!user) {
+      return null;
+    }
+
+    return mapUserProfileForFE(user);
   }
 
   async findByUsername(username: string, userId?: string) {
