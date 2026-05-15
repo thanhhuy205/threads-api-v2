@@ -4,8 +4,6 @@ import { Prisma } from "@prisma/client";
 
 const memberMessageGroupSelect = {
   id: true,
-  userId: true,
-  createdAt: true,
   user: {
     select: {
       id: true,
@@ -19,7 +17,7 @@ const memberMessageGroupSelect = {
 class MemberMessageGroupRepository {
   createMany(
     data: {
-      messageGroupId: string;
+      messageGroupId: number;
       userId: string;
     }[],
     tx: Prisma.TransactionClient = prisma,
@@ -30,7 +28,7 @@ class MemberMessageGroupRepository {
     });
   }
 
-  findByGroupIdAndUserId(messageGroupId: string, userId: string) {
+  findByGroupIdAndUserId(messageGroupId: number, userId: string) {
     return prisma.memberMessageGroup.findUnique({
       where: {
         messageGroupId_userId: {
@@ -46,7 +44,7 @@ class MemberMessageGroupRepository {
     after,
     take,
   }: {
-    messageGroupId: string;
+    messageGroupId: number;
     after?: string;
     take: number;
   }) {

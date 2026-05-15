@@ -3,26 +3,15 @@ import { buildPagination } from "@/shared/pagination/cursor-pagination";
 import { Prisma } from "@prisma/client";
 
 const messageSelect = {
-  id: true,
   publicId: true,
   messageGroupId: true,
   senderId: true,
   content: true,
   createdAt: true,
-  updatedAt: true,
-  sender: {
-    select: {
-      id: true,
-      username: true,
-      name: true,
-      avatar: true,
-    },
-  },
 } satisfies Prisma.MessageSelect;
 
 class MessageRepository
-  implements ICursorPagination<Prisma.MessageWhereInput, Prisma.MessageGetPayload<{ select: typeof messageSelect }>>
-{
+  implements ICursorPagination<Prisma.MessageWhereInput, Prisma.MessageGetPayload<{ select: typeof messageSelect }>> {
   findAll({
     after,
     take,
@@ -38,7 +27,7 @@ class MessageRepository
 
     return prisma.message.findMany({
       where,
-      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
       take: currentLimit ? currentLimit + 1 : undefined,
       skip: currentAfter ? 1 : 0,
       cursor: currentAfter ? cursor : undefined,
@@ -48,7 +37,7 @@ class MessageRepository
 
   create(
     data: {
-      messageGroupId: string;
+      messageGroupId: number;
       senderId: string;
       content: string;
     },
@@ -60,7 +49,7 @@ class MessageRepository
     });
   }
 
-  findByPublicIdAndGroupId(publicId: string, messageGroupId: string) {
+  findByPublicIdAndGroupId(publicId: string, messageGroupId: number) {
     return prisma.message.findFirst({
       where: {
         publicId,
@@ -74,7 +63,7 @@ class MessageRepository
   }
 
   findMessagesByGroupIdAndPublicId(
-    messageGroupId: string,
+    messageGroupId: number,
     messagePublicId: string | undefined,
     take: number,
   ) {

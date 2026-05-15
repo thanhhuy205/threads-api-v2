@@ -7,14 +7,11 @@ const messageGroupSelect = {
   publicId: true,
   name: true,
   groupType: true,
-  createdById: true,
   lastMessageAt: true,
   createdAt: true,
-  updatedAt: true,
   members: {
     select: {
       id: true,
-      userId: true,
       user: {
         select: {
           id: true,
@@ -77,7 +74,7 @@ class MessageGroupRepository {
   }
 
   updateLastMessageAt(
-    id: string,
+    id: number,
     lastMessageAt: Date,
     tx: Prisma.TransactionClient = prisma,
   ) {

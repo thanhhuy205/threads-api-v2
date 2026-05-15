@@ -5,6 +5,10 @@ import {
 } from "@/shared/pagination/cursor-pagination";
 import { GroupType, Prisma } from "@prisma/client";
 
+type MessageGroupListRow = Awaited<
+  ReturnType<typeof messageGroupRepository.findByUserId>
+>[number];
+
 class MessageGroupService {
   createGroup(
     data: {
@@ -22,7 +26,7 @@ class MessageGroupService {
   }
 
   updateLastMessageAt(
-    id: string,
+    id: number,
     lastMessageAt: Date,
     tx?: Prisma.TransactionClient,
   ) {
@@ -42,7 +46,7 @@ class MessageGroupService {
     after?: string;
     take: number;
   }): Promise<{
-    rows: unknown[];
+    rows: MessageGroupListRow[];
     pagination: PaginationResponse<string | number | null>;
   }> {
     const groups = await messageGroupRepository.findByUserId({

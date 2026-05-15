@@ -90,61 +90,47 @@ export const messageGroupSwaggerSchemas = {
     type: "object",
     properties: {
       id: { type: "string" },
-      userId: { type: "string" },
-      createdAt: { type: "string", format: "date-time" },
       user: { $ref: "#/components/schemas/MessageGroupMemberUser" },
     },
-    required: ["id", "userId", "createdAt", "user"],
+    required: ["id", "user"],
   },
   MessageGroupItem: {
     type: "object",
     properties: {
-      id: { type: "string" },
       publicId: { type: "string" },
       name: { type: "string" },
       groupType: { type: "string", enum: ["PRIVATE", "CROWD"] },
-      createdById: { type: "string" },
       lastMessageAt: { type: "string", format: "date-time" },
       createdAt: { type: "string", format: "date-time" },
-      updatedAt: { type: "string", format: "date-time" },
       members: {
         type: "array",
         items: { $ref: "#/components/schemas/MessageGroupMember" },
       },
     },
     required: [
-      "id",
       "publicId",
       "name",
       "groupType",
-      "createdById",
       "lastMessageAt",
       "createdAt",
-      "updatedAt",
       "members",
     ],
   },
   MessageItem: {
     type: "object",
     properties: {
-      id: { type: "integer" },
       publicId: { type: "string" },
-      messageGroupId: { type: "string" },
+      messageGroupId: { type: "integer" },
       senderId: { type: "string" },
       content: { type: "string" },
       createdAt: { type: "string", format: "date-time" },
-      updatedAt: { type: "string", format: "date-time" },
-      sender: { $ref: "#/components/schemas/MessageGroupMemberUser" },
     },
     required: [
-      "id",
       "publicId",
       "messageGroupId",
       "senderId",
       "content",
       "createdAt",
-      "updatedAt",
-      "sender",
     ],
   },
   MessageGroupSuccessResponse: {
@@ -204,7 +190,7 @@ export const messageGroupSwaggerSchemas = {
 };
 
 export const messageGroupSwaggerPaths = {
-  "/message-group": {
+  "/message-groups": {
     post: {
       tags: ["MessageGroup"],
       summary: "Create message group",
@@ -251,7 +237,7 @@ export const messageGroupSwaggerPaths = {
       },
     },
   },
-  "/message-group/{publicId}/messages": {
+  "/message-groups/{publicId}/messages": {
     post: {
       tags: ["MessageGroup"],
       summary: "Send message to group",
@@ -299,7 +285,7 @@ export const messageGroupSwaggerPaths = {
       },
     },
   },
-  "/message-group/{publicId}/members": {
+  "/message-groups/{publicId}/members": {
     get: {
       tags: ["MessageGroup"],
       summary: "Get group members",
@@ -323,4 +309,3 @@ export const messageGroupSwaggerPaths = {
     },
   },
 };
-

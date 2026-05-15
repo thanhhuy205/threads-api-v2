@@ -5,10 +5,14 @@ import {
 } from "@/shared/pagination/cursor-pagination";
 import { Prisma } from "@prisma/client";
 
+type MessageListRow = Awaited<
+  ReturnType<typeof messageRepository.findMessagesByGroupIdAndPublicId>
+>[number];
+
 class MessageService {
   createMessage(
     data: {
-      messageGroupId: string;
+      messageGroupId: number;
       senderId: string;
       content: string;
     },
@@ -17,7 +21,7 @@ class MessageService {
     return messageRepository.create(data, tx);
   }
 
-  findMessageByPublicIdAndGroupId(publicId: string, messageGroupId: string) {
+  findMessageByPublicIdAndGroupId(publicId: string, messageGroupId: number) {
     return messageRepository.findByPublicIdAndGroupId(publicId, messageGroupId);
   }
 
@@ -26,11 +30,11 @@ class MessageService {
     messagePublicId,
     take,
   }: {
-    messageGroupId: string;
+    messageGroupId: number;
     messagePublicId?: string;
     take: number;
   }): Promise<{
-    rows: unknown[];
+    rows: MessageListRow[];
     pagination: PaginationResponse<string | number | null>;
   }> {
     const messages = await messageRepository.findMessagesByGroupIdAndPublicId(
@@ -48,4 +52,3 @@ class MessageService {
 }
 
 export const messageService = new MessageService();
-

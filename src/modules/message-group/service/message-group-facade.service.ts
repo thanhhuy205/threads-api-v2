@@ -1,4 +1,10 @@
 import { BadRequestException, NotFoundException } from "@/errors/error";
+import { baseLogger } from "@/middlewares/logger";
+import {
+  mapMessageGroupResponse,
+  mapMessageGroupMemberResponse,
+  mapMessageResponse,
+} from "@/modules/message-group/mapper/message-group.mapper";
 import { CreateMessageGroupInput } from "@/modules/message-group/interfaces/create-message-group-input";
 import { userService } from "@/modules/user/service/user.service";
 import { transactionService } from "@/shared/transaction/transaction.service";
@@ -37,7 +43,9 @@ class MessageGroupFacadeService {
       return group;
     });
 
-    return messageGroupService.findByPublicId(messageGroup.publicId);
+    const group = await this.findMessageGroupOrThrow(messageGroup.publicId);
+
+    return mapMessageGroupResponse(group, creatorId);
   }
 
   async createPrivateMessageGroup(
@@ -90,7 +98,7 @@ class MessageGroupFacadeService {
 
       await messageGroupService.updateLastMessageAt(messageGroup.id, new Date(), tx);
 
-      return message;
+      return mapMessageResponse(message);
     });
   }
 
@@ -119,11 +127,16 @@ class MessageGroupFacadeService {
       }
     }
 
-    return messageService.getMessagesByGroupId({
+    const messages = await messageService.getMessagesByGroupId({
       messageGroupId: messageGroup.id,
       messagePublicId: messagePublicId ?? undefined,
       take,
     });
+
+    return {
+      ...messages,
+      rows: messages.rows.map((message) => mapMessageResponse(message)),
+    };
   }
 
   async getMessageGroups({
@@ -135,11 +148,16 @@ class MessageGroupFacadeService {
     after?: string;
     take: number;
   }) {
-    return messageGroupService.getMessageGroupsByUserId({
+    const groups = await messageGroupService.getMessageGroupsByUserId({
       userId,
       after,
       take,
     });
+
+    return {
+      ...groups,
+      rows: groups.rows.map((group) => mapMessageGroupResponse(group, userId)),
+    };
   }
 
   async getGroupMembers({
@@ -156,11 +174,16 @@ class MessageGroupFacadeService {
     const messageGroup = await this.findMessageGroupOrThrow(groupPublicId);
     await messageMemberService.assertMemberOrThrow(messageGroup.id, userId);
 
-    return messageMemberService.getMembersByGroupId({
+    const members = await messageMemberService.getMembersByGroupId({
       messageGroupId: messageGroup.id,
       after,
       take,
     });
+
+    return {
+      ...members,
+      rows: members.rows.map((member) => mapMessageGroupMemberResponse(member)),
+    };
   }
 
   private validateMemberCount(type: GroupType, memberCount: number) {
@@ -176,8 +199,9 @@ class MessageGroupFacadeService {
   }
 
   private async findMessageGroupOrThrow(publicId: string) {
+    baseLogger.info("Finding message group with publicId: %s", publicId);
     const messageGroup = await messageGroupService.findByPublicId(publicId);
-
+    baseLogger.info("Found message group with publicId: %s, result: %o", publicId, messageGroup);
     if (!messageGroup) {
       throw new NotFoundException(`Message group ${publicId} not found`);
     }
@@ -187,4 +211,3 @@ class MessageGroupFacadeService {
 }
 
 export const messageGroupFacadeService = new MessageGroupFacadeService();
-

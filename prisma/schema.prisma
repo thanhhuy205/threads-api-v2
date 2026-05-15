@@ -324,7 +324,7 @@ model VerificationCode {
 }
 
 model MessageGroup {
-  id        String    @id @default(cuid())
+  id        Int       @id @default(autoincrement())
   publicId  String    @unique @default(cuid()) @map("public_id")
   name      String    @default("") @db.VarChar(255)
   groupType GroupType @default(PRIVATE)
@@ -347,7 +347,7 @@ model MemberMessageGroup {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   messageGroup   MessageGroup? @relation(fields: [messageGroupId], references: [id])
-  messageGroupId String?
+  messageGroupId Int?
   user           User          @relation(fields: [userId], references: [id])
 
   @@unique([messageGroupId, userId], map: "uq_member_message_groups_group_user")
@@ -358,7 +358,7 @@ model MemberMessageGroup {
 model Message {
   id             Int      @id @default(autoincrement())
   publicId       String   @unique @default(cuid()) @map("public_id")
-  messageGroupId String   @map("message_group_id")
+  messageGroupId Int      @map("message_group_id")
   senderId       String   @map("sender_id")
   content        String   @db.Text
   createdAt      DateTime @default(now()) @map("created_at")

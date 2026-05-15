@@ -6,10 +6,14 @@ import {
 } from "@/shared/pagination/cursor-pagination";
 import { Prisma } from "@prisma/client";
 
+type MessageMemberListRow = Awaited<
+  ReturnType<typeof memberMessageGroupRepository.findByGroupId>
+>[number];
+
 class MessageMemberService {
   createManyMembers(
     data: {
-      messageGroupId: string;
+      messageGroupId: number;
       userId: string;
     }[],
     tx?: Prisma.TransactionClient,
@@ -17,14 +21,14 @@ class MessageMemberService {
     return memberMessageGroupRepository.createMany(data, tx);
   }
 
-  findMemberByGroupAndUser(messageGroupId: string, userId: string) {
+  findMemberByGroupAndUser(messageGroupId: number, userId: string) {
     return memberMessageGroupRepository.findByGroupIdAndUserId(
       messageGroupId,
       userId,
     );
   }
 
-  async assertMemberOrThrow(messageGroupId: string, userId: string) {
+  async assertMemberOrThrow(messageGroupId: number, userId: string) {
     const member = await this.findMemberByGroupAndUser(messageGroupId, userId);
 
     if (!member) {
@@ -37,11 +41,11 @@ class MessageMemberService {
     after,
     take,
   }: {
-    messageGroupId: string;
+    messageGroupId: number;
     after?: string;
     take: number;
   }): Promise<{
-    rows: unknown[];
+    rows: MessageMemberListRow[];
     pagination: PaginationResponse<string | number | null>;
   }> {
     const members = await memberMessageGroupRepository.findByGroupId({
@@ -59,4 +63,3 @@ class MessageMemberService {
 }
 
 export const messageMemberService = new MessageMemberService();
-
