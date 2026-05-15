@@ -1,6 +1,25 @@
+import prisma from "@/config/prisma";
+import type { Prisma } from "@prisma/client";
+
 class ReportManagementRepository {
-  async moderateReport(_reportId: string, _action: "approve" | "hide_post" | "delete_post") {
-    return;
+  async create(data: Prisma.ReportUncheckedCreateInput) {
+    return prisma.report.create({ data });
+  }
+
+  async findById(reportId: string) {
+    return prisma.report.findUnique({
+      where: { id: reportId },
+    });
+  }
+
+  async updateById(
+    reportId: string,
+    data: Prisma.ReportUncheckedUpdateInput,
+  ) {
+    return prisma.report.update({
+      where: { id: reportId },
+      data,
+    });
   }
 }
 

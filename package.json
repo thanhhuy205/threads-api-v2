@@ -31,6 +31,7 @@
         "@aws-sdk/lib-storage": "^3.1041.0",
         "@mixedbread-ai/sdk": "^2.2.11",
         "@mux/mux-node": "^14.0.1",
+        "@openrouter/sdk": "^0.12.35",
         "@pinecone-database/pinecone": "^7.2.0",
         "@prisma/adapter-mariadb": "^7.0.0",
         "@prisma/client": "^7.0.0",

@@ -1,4 +1,5 @@
 import app from '@/app';
+import { autoRemoveBanProducer } from '@/modules/job/auto-remove-ban/producer/auto-remove-ban.producer';
 import { likeProducer } from '@/modules/job/like-job/producer/like.producer';
 import configService from './config/config';
 import prisma from './config/prisma';
@@ -39,6 +40,13 @@ const bootstrap = async () => {
         console.log('Initialized like sync repeat job');
     } catch (error) {
         console.error('Failed to initialize like sync repeat job:', error);
+    }
+
+    try {
+        await autoRemoveBanProducer.initAutoRemoveBanJob();
+        console.log('Initialized auto-remove-ban repeat job');
+    } catch (error) {
+        console.error('Failed to initialize auto-remove-ban repeat job:', error);
     }
 
     process.on('SIGINT', () => {

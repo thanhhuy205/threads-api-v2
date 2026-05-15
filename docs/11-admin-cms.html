@@ -153,7 +153,7 @@ footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--gray-300);fon
       <tr><td><span class="step-num">07</span></td><td><div class="step-name">PATCH /admin/reports/:id</div><div class="step-desc">Xử lý báo cáo</div></td><td>Route + controller có. Service/repo stub.</td><td><span class="badge badge-stub">stub</span></td></tr>
       <tr><td><span class="step-num">08</span></td><td><div class="step-name">GET /admin/hashtags/trending</div></td><td>Route + controller có. Service/repo stub.</td><td><span class="badge badge-stub">stub</span></td></tr>
       <tr><td><span class="step-num">09</span></td><td><div class="step-name">GET /admin/stats</div></td><td>Route + controller có. Service/repo stub.</td><td><span class="badge badge-stub">stub</span></td></tr>
-      <tr><td><span class="step-num">10</span></td><td><div class="step-name">Cron: auto-unban</div></td><td>Job chạy mỗi giờ: tìm users có <code>bannedUntil < now()</code> → update status ACTIVE.</td><td><span class="badge badge-todo">todo</span></td></tr>
+      <tr><td><span class="step-num">10</span></td><td><div class="step-name">Cron: auto-remove-ban</div></td><td>Job chạy mỗi giờ: tìm users có <code>bannedUntil < now()</code> → update status ACTIVE.</td><td><span class="badge badge-todo">todo</span></td></tr>
     </tbody>
   </table>
 </section>

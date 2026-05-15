@@ -59,6 +59,17 @@ enum UserStatus {
   DEACTIVATED
 }
 
+enum ReportTargetType {
+  POST
+  USER
+}
+
+enum ReportStatus {
+  PENDING
+  RESOLVED
+  DISMISSED
+}
+
 enum Visibility {
   PUBLIC
   PRIVATE
@@ -152,6 +163,20 @@ enum GroupType {
   CROWD
 }
 
+enum BadgeType {
+  HERO // huy hiệu anh hùng, dành cho những thành viên có đóng góp tích cực cho nhóm, giúp đỡ các thành viên khác, tạo ra nội dung chất lượng cao, hoặc có ảnh hưởng tích cực đến cộng đồng nhóm.
+  LEGEND // thành viên kì cựu
+  KARMA_SACRIFICE // đốt karma cứu nhóm
+  CPR_HERO // comment trong CPR thành công
+  FOUNDER // người tạo nhóm 
+}
+
+enum KarmaReason {
+  QUEST_REWARD // hoàn thành nhiệm vụ
+  BURN_FOR_CIRCLE // đốt cứu nhóm
+  ADMIN_GRANT // admin cấp
+}
+
 model Role {
   id              String           @id @default(cuid())
   name            String           @unique @db.VarChar(20)
@@ -216,6 +241,7 @@ model User {
   avatar     String?    @db.VarChar(255)
   verifiedAt DateTime?  @map("verified_at")
   status     UserStatus @default(ACTIVE)
+  bannedUntil DateTime?  @map("banned_until")
 
   followersCount Int @default(0) @map("followers_count")
   followingCount Int @default(0) @map("following_count")
@@ -250,9 +276,34 @@ model User {
   userKarmas          UserKarma[]
   userRestrictions    UserRestriction[]
   messages            Message[]
+  circleExpLogs       CircleExpLog[]
+  heroBadges          HeroBadge[]
+  karmaTransactions   KarmaTransaction[]
+  userQuestLogs       UserQuestLog[]
+  reports             Report[]            @relation("UserReports")
 
   @@index([deletedAt], map: "idx_users_deleted_at")
+  @@index([bannedUntil], map: "idx_users_banned_until")
+  @@index([status, bannedUntil], map: "idx_users_status_banned_until")
   @@map("users")
+}
+
+model Report {
+  id         String           @id @default(cuid())
+  reporterId String           @map("reporter_id")
+  targetType ReportTargetType @map("target_type")
+  targetId   String           @map("target_id") @db.VarChar(255)
+  reason     String           @db.Text
+  status     ReportStatus     @default(PENDING)
+  adminNote  String?          @map("admin_note") @db.Text
+  createdAt  DateTime         @default(now()) @map("created_at")
+
+  reporter User @relation("UserReports", fields: [reporterId], references: [id])
+
+  @@index([reporterId], map: "idx_reports_reporter_id")
+  @@index([targetType, targetId], map: "idx_reports_target")
+  @@index([status, createdAt], map: "idx_reports_status_created_at")
+  @@map("reports")
 }
 
 model VerificationCode {
@@ -557,6 +608,8 @@ model Circle {
   circlePostQualityLogs CirclePostQualityLog[]
   circleSoulStone       CircleSoulStone?
   cprSessions           CprSession[]
+  circleExpLogs         CircleExpLog[]
+  heroBadges            HeroBadge[]
 
   @@index([createById], map: "idx_circles_created_by")
   @@map("circles")
@@ -578,11 +631,42 @@ model CircleMember {
   @@map("circle_members")
 }
 
+model DailyQuest {
+  id            Int            @id @default(autoincrement())
+  code          String         @unique // "COMMENT_3", "POST_1", "REACT_5"
+  description   String         @db.VarChar(255)
+  karmaReward   Int // thường là 1, nhiệm vụ khó hơn là 2
+  requirement   Int // số lần cần hoàn thành
+  isActive      Boolean        @default(true)
+  userQuestLogs UserQuestLog[]
+
+  @@map("daily_quests")
+}
+
+model UserQuestLog {
+  id        Int       @id @default(autoincrement())
+  userId    String    @map("user_id")
+  questId   Int       @map("quest_id")
+  progress  Int       @default(0)
+  completed Boolean   @default(false)
+  claimedAt DateTime? @map("claimed_at")
+  date      DateTime  @default(now()) @db.Date // reset mỗi ngày
+
+  user  User       @relation(fields: [userId], references: [id])
+  quest DailyQuest @relation(fields: [questId], references: [id]) // cơ chế nhiệm vụ hàng ngày, 
+  // mỗi ngày sẽ có 1-3 nhiệm vụ khác nhau, người dùng hoàn thành sẽ nhận được karma, có thể tích lũy để đốt cứu nhóm hoặc nhận huy hiệu anh hùng tùy theo số karma đã tích lũy. Nhiệm vụ có thể là: tạo bài viết, bình luận, react, tham gia nhóm, mời bạn bè vào nhóm, v.v.
+
+  @@unique([userId, questId, date])
+  @@map("user_quest_logs")
+}
+
 model CircleEnergy {
   id        Int      @id @default(autoincrement())
   circleId  Int      @map("circle_id")
+  level     Int      @default(1)
+  exp       Int      @default(0)
   current   Int      @default(500)
-  max       Int      @default(1000)
+  max       Int      @default(500)
   peak      Int      @default(500)
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -591,6 +675,33 @@ model CircleEnergy {
 
   @@index([circleId], map: "idx_circle_energy_circle_id")
   @@map("circle_energy")
+}
+
+model HeroBadge {
+  id        Int       @id @default(autoincrement())
+  userId    String    @map("user_id")
+  circleId  Int       @map("circle_id")
+  type      BadgeType
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user   User   @relation(fields: [userId], references: [id])
+  circle Circle @relation(fields: [circleId], references: [id])
+
+  @@map("hero_badges")
+}
+
+model KarmaTransaction {
+  id        Int         @id @default(autoincrement())
+  userId    String      @map("user_id")
+  delta     Int // +1 quest, -5 đốt karma
+  reason    KarmaReason
+  circleId  Int         @map("circle_id") // null nếu không liên quan nhóm
+  createdAt DateTime    @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@map("karma_transactions")
 }
 
 model CirclePostQualityLog {
@@ -607,6 +718,21 @@ model CirclePostQualityLog {
   @@index([circleId], map: "idx_circle_post_quality_log_circle_id")
   @@index([postId], map: "idx_circle_post_quality_log_post_id")
   @@map("circle_post_quality_logs")
+}
+
+model CircleExpLog {
+  id        Int      @id @default(autoincrement())
+  userId    String   @map("user_id")
+  circleId  Int      @map("circle_id")
+  expDelta  Int      @default(0) @map("exp_delta") // +5, 0, -1
+  createdAt DateTime @default(now()) @map("created_at")
+
+  circle Circle @relation(fields: [circleId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@index([circleId], map: "idx_circle_exp_log_circle_id")
+  @@index([userId], map: "idx_circle_exp_log_user_id")
+  @@map("circle_exp_logs")
 }
 
 model UserKarma {
@@ -640,13 +766,16 @@ model UserRestriction {
 
 // Hồi sức cho nhóm only admin 
 model CprSession {
-  id          String   @id @default(cuid())
-  circleId    String
-  activatedBy String
-  expiresAt   DateTime
-  resolved    Boolean  @default(false)
-  success     Boolean?
-  createdAt   DateTime @default(now())
+  id              String   @id @default(cuid())
+  circleId        String
+  activatedBy     String
+  expiresAt       DateTime
+  resolved        Boolean  @default(false)
+  targetComments  Int      @default(10) @map("target_comments")
+  currentComments Int      @default(0) @map("current_comments")
+  postId          Int?     @map("post_id") // bài CPR cụ thể
+  success         Boolean?
+  createdAt       DateTime @default(now())
 
   circle Circle @relation(fields: [circleId], references: [publicId])
 

@@ -1,13 +1,9 @@
+import type { GetAdminStatsInput } from "./interfaces/get-admin-stats.input";
 import { statisticsRepository } from "./statistics.repository";
 
 class StatisticsService {
-  async getOverview() {
-    const overview = await statisticsRepository.getOverview();
-
-    return {
-      ...overview,
-      implemented: false,
-    };
+  async getOverview(input: GetAdminStatsInput = {}) {
+    return statisticsRepository.getOverview(input);
   }
 }
 

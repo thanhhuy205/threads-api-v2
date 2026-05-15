@@ -1,12 +1,12 @@
+import type { GetTrendingHashtagsInput } from "./interfaces/get-trending-hashtags.input";
 import { hashtagTrendingRepository } from "./hashtag-trending.repository";
 
 class HashtagTrendingService {
-  async listTrendingHashtags() {
-    const hashtags = await hashtagTrendingRepository.getTrendingHashtags();
+  async listTrendingHashtags(input: GetTrendingHashtagsInput) {
+    const hashtags = await hashtagTrendingRepository.getTrendingHashtags(input);
 
     return {
       hashtags,
-      implemented: false,
     };
   }
 }

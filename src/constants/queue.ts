@@ -3,6 +3,7 @@ export const QUEUE_NAME = {
   EMAIL_QUEUE: "email_queue",
   BLOOM_QUEUE: "bloom_queue",
   LIKE_QUEUE: "like_queue",
+  AUTO_REMOVE_BAN_QUEUE: "auto_remove_ban_queue",
   LIKED_ADD_QUEUE: "likes_add",
   LIKED_REMOVE_QUEUE: "likes_remove",
 };
@@ -13,6 +14,7 @@ export const WORKER_NAME = {
   EMAIL_WORKER: "email_verification_worker",
   BLOOM_WORKER: "bloom_worker",
   LIKE_WORKER: "like_worker",
+  AUTO_REMOVE_BAN_WORKER: "auto_remove_ban_worker",
 };
 
 export const PINECONE_JOB_NAME = {
@@ -30,6 +32,10 @@ export const BLOOM_JOB_NAME = {
 export const LIKE_JOB_NAME = {
   SYNC_POST_LIKE: "sync-post-like",
   INIT_SYNC_JOB: "init-sync-job",
+};
+
+export const AUTO_REMOVE_BAN_JOB_NAME = {
+  RUN_AUTO_REMOVE_BAN: "run-auto-remove-ban",
 };
 
 export const BLOOM_KEY = {

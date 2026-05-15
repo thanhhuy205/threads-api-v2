@@ -1,4 +1,5 @@
 import { UserStatus } from "@prisma/client";
+import type { BanUserInput } from "./interfaces/ban-user.input";
 import { userManagementRepository } from "./user-management.repository";
 
 class UserManagementService {
@@ -11,8 +12,13 @@ class UserManagementService {
     }));
   }
 
-  async banUser(userId: string) {
-    return userManagementRepository.updateUserStatus(userId, UserStatus.BANNED);
+  async banUser(input: BanUserInput) {
+    // TODO: finalize temporary-ban business rules here before calling repo.
+    return userManagementRepository.updateUserBanFields({
+      userId: input.userId,
+      status: UserStatus.BANNED,
+      bannedUntil: input.bannedUntil,
+    });
   }
 }
 
