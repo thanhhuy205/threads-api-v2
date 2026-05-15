@@ -95,13 +95,7 @@ class FriendService {
       }
 
       if (isAccept) {
-        await messageGroupService.createMessageGroup(
-          {
-            type: GroupType.PRIVATE,
-            members: [sender.username],
-          },
-          userId,
-        );
+        await messageGroupService.createPrivateMessageGroup(sender.id, userId, tx);
         await friendRequestRepository.updateStatusById(
           friendRequest.id,
           FriendRequestStatus.ACCEPTED,

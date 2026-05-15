@@ -10,7 +10,7 @@ import { messageRepository } from "@/modules/message-group/repository/message.re
 import { userService } from "@/modules/user/service/user.service";
 import { buildCursorPagination } from "@/shared/pagination/cursor-pagination";
 import { transactionService } from "@/shared/transaction/transaction.service";
-import { GroupType } from "@prisma/client";
+import { GroupType, Prisma } from "@prisma/client";
 
 class MessageGroupService {
   async createMessageGroup(data: CreateMessageGroupInput, creatorId: string) {
@@ -45,6 +45,30 @@ class MessageGroupService {
     return messageGroupRepository.findByPublicId(messageGroup.publicId);
   }
 
+  async createPrivateMessageGroup(targetUsername: string, creatorId: string, tx: Prisma.TransactionClient) {
+    const targetUser = await userService.findByUsernameNotRelationShip(targetUsername, tx);
+    if (!targetUser) {
+      throw new NotFoundException("Target user not found");
+    }
+
+    const existingGroup = await messageGroupRepository.findPrivateGroupByUserIds(
+      [creatorId, targetUser.id], tx
+    );
+
+    if (existingGroup) {
+      return existingGroup;
+    }
+
+    return messageGroupRepository.createWithMembers(
+      {
+        groupType: GroupType.PRIVATE,
+        createdById: creatorId,
+        lastMessageAt: new Date(),
+      },
+      [creatorId, targetUser.id],
+      tx
+    );
+  }
 
   async sendMessage(
     groupPublicId: string,

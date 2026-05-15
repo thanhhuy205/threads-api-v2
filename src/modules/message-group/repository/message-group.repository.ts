@@ -41,8 +41,33 @@ class MessageGroupRepository {
     });
   }
 
-  findByPublicId(publicId: string) {
-    return prisma.messageGroup.findUnique({
+  createWithMembers(
+    data: {
+      groupType: GroupType;
+      createdById: string;
+      lastMessageAt: Date;
+    },
+    memberIds: string[],
+    tx: Prisma.TransactionClient = prisma,
+  ) {
+    return tx.messageGroup.create({
+      data: {
+        ...data,
+        members: {
+          createMany: {
+            data: memberIds.map((userId) => ({
+              userId,
+            })),
+          },
+        },
+      },
+      select: messageGroupSelect,
+    });
+  }
+
+
+  findByPublicId(publicId: string, tx: Prisma.TransactionClient = prisma) {
+    return tx.messageGroup.findUnique({
       where: {
         publicId,
       },
@@ -61,6 +86,22 @@ class MessageGroupRepository {
       },
       data: {
         lastMessageAt,
+      },
+      select: messageGroupSelect,
+    });
+  }
+
+  findPrivateGroupByUserIds(userIds: string[], tx: Prisma.TransactionClient = prisma) {
+    return tx.messageGroup.findFirst({
+      where: {
+        groupType: GroupType.PRIVATE,
+        members: {
+          every: {
+            userId: {
+              in: userIds,
+            },
+          },
+        },
       },
       select: messageGroupSelect,
     });

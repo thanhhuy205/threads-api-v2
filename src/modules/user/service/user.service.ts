@@ -1,4 +1,5 @@
 import { userRepository } from "@/modules/user/repository/user.repository";
+import { Prisma } from "@prisma/client";
 import { mapUserProfileForFE } from "../mapper/user.mapper";
 
 class UserService {
@@ -6,8 +7,8 @@ class UserService {
     return userRepository.findById(userId);
   }
 
-  async findByUsernameNotRelationShip(username: string) {
-    const user = await userRepository.findByUsername(username);
+  async findByUsernameNotRelationShip(username: string, tx: Prisma.TransactionClient) {
+    const user = await userRepository.findByUsername(username, tx);
     if (!user) {
       return null;
     }
