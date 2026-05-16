@@ -3,6 +3,7 @@ export const QUEUE_NAME = {
   EMAIL_QUEUE: "email_queue",
   BLOOM_QUEUE: "bloom_queue",
   LIKE_QUEUE: "like_queue",
+  NOTIFICATION_QUEUE: "notification",
   AUTO_REMOVE_BAN_QUEUE: "auto_remove_ban_queue",
   LIKED_ADD_QUEUE: "likes_add",
   LIKED_REMOVE_QUEUE: "likes_remove",
@@ -14,6 +15,7 @@ export const WORKER_NAME = {
   EMAIL_WORKER: "email_verification_worker",
   BLOOM_WORKER: "bloom_worker",
   LIKE_WORKER: "like_worker",
+  NOTIFICATION_WORKER: "notification_worker",
   AUTO_REMOVE_BAN_WORKER: "auto_remove_ban_worker",
 };
 
@@ -36,6 +38,10 @@ export const LIKE_JOB_NAME = {
 
 export const AUTO_REMOVE_BAN_JOB_NAME = {
   RUN_AUTO_REMOVE_BAN: "run-auto-remove-ban",
+};
+
+export const NOTIFICATION_JOB_NAME = {
+  INIT_SYNC_NOTIFICATION_BATCH: "initSyncNotificationBatch",
 };
 
 export const BLOOM_KEY = {

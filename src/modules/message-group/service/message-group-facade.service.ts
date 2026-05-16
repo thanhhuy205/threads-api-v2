@@ -7,7 +7,7 @@ import {
   mapMessageGroupResponse,
   mapMessageResponse,
 } from "@/modules/message-group/mapper/message-group.mapper";
-import { pusherChannel } from "@/modules/pusher/pusher-channel";
+import { pusherChannel } from "@/modules/pusher/channel/pusher-channel";
 import { pusherService } from "@/modules/pusher/service/pusher.service";
 import { userService } from "@/modules/user/service/user.service";
 import { transactionService } from "@/shared/transaction/transaction.service";

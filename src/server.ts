@@ -1,6 +1,7 @@
 import app from '@/app';
 import { autoRemoveBanProducer } from '@/modules/job/auto-remove-ban/producer/auto-remove-ban.producer';
 import { likeProducer } from '@/modules/job/like-job/producer/like.producer';
+import { notificationProducer } from '@/modules/job/notification-job/producer/notification.producer';
 import configService from './config/config';
 import prisma from './config/prisma';
 import { redisService } from './providers/redis.provider';
@@ -47,6 +48,13 @@ const bootstrap = async () => {
         console.log('Initialized auto-remove-ban repeat job');
     } catch (error) {
         console.error('Failed to initialize auto-remove-ban repeat job:', error);
+    }
+
+    try {
+        await notificationProducer.initSyncNotificationBatchJob();
+        console.log('Initialized notification batch repeat job');
+    } catch (error) {
+        console.error('Failed to initialize notification batch repeat job:', error);
     }
 
     process.on('SIGINT', () => {
