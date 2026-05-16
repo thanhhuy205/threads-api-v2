@@ -1,4 +1,5 @@
 import { AUTH_MESSAGE } from "@/constants/message";
+import { redisKey } from "@/constants/resolve-key/redis-key";
 import { ForbiddenException, UnauthorizedException } from "@/errors/error";
 import { userRoleService } from "@/modules/access-control/role/service/user-role.service";
 import { jwtService } from "@/modules/jwt/service/jwt.service";
@@ -23,7 +24,9 @@ export const authorization = async (
       throw new UnauthorizedException(AUTH_MESSAGE.TOKEN_INVALID);
     }
 
-    const isBlacklisted = await redisService.exists(`bl:at:${token}`);
+    const isBlacklisted = await redisService.exists(
+      redisKey.auth.accessTokenBlacklist(token),
+    );
 
     if (isBlacklisted > 0) {
       throw new UnauthorizedException(AUTH_MESSAGE.TOKEN_INVALID);

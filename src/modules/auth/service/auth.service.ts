@@ -1,4 +1,5 @@
 import configService from "@/config/config";
+import { redisKey } from "@/constants/resolve-key/redis-key";
 import { NotFoundException } from "@/errors/error";
 import { baseLogger } from "@/middlewares/logger";
 import type { SessionMetadata } from "@/modules/auth/interfaces/session-metadata";
@@ -199,7 +200,7 @@ class AuthService {
     payload: ValidateEmailDto,
   ): Promise<ValidateUserResponseDto> {
     const isExistingEmail = await redisService.bf.exists(
-      "filter:emails",
+      redisKey.bloom.emails(),
       payload.email,
     );
     baseLogger.info(
@@ -214,7 +215,7 @@ class AuthService {
     payload: ValidateUsernameDto,
   ): Promise<ValidateUserResponseDto> {
     const isExistingUsername = await redisService.bf.exists(
-      "filter:usernames",
+      redisKey.bloom.usernames(),
       payload.username,
     );
     baseLogger.info(
@@ -320,7 +321,7 @@ class AuthService {
   }
 
   async logout(accessToken: string, payload: LogoutDto): Promise<void> {
-    await redisService.set(`bl:at:${accessToken}`, "1", {
+    await redisService.set(redisKey.auth.accessTokenBlacklist(accessToken), "1", {
       EX: 15 * 60,
     });
 

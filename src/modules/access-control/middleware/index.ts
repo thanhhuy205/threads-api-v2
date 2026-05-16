@@ -1,4 +1,5 @@
 import { ForbiddenException, UnauthorizedException } from "@/errors/error";
+import { redisKey } from "@/constants/resolve-key/redis-key";
 import type { Request, Response, NextFunction } from "express";
 import { permissionRepository } from "../permission/repository/permission.repository";
 import { rolePermissionRepository } from "../permission/repository/role-permission.repository";
@@ -12,7 +13,7 @@ export const checkPermission = (permission: string) => {
       throw new UnauthorizedException("User not found");
     }
 
-    const cacheKey = `user:${userId}:permission`;
+    const cacheKey = redisKey.accessControl.userPermission(userId);
     const cachedPermissions = await redisService.get(cacheKey);
 
     if (cachedPermissions) {

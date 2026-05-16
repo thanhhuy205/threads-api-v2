@@ -1,5 +1,6 @@
 import { baseLogger } from "@/middlewares/logger";
 import { LIKE_JOB_NAME, QUEUE_NAME } from "../src/constants/queue";
+import { redisKey } from "../src/constants/resolve-key/redis-key";
 import { likeRepository } from '../src/modules/post/repository/like.repository';
 import { postRepository } from '../src/modules/post/repository/post.repository';
 import { createWorker } from "../src/providers/bullmq.provider";
@@ -17,7 +18,7 @@ const redisReady = redisService.isOpen
 
 
 class LikeWorker {
-  private readonly syncLockKey = "like:sync:init:lock";
+  private readonly syncLockKey = redisKey.job.likeSyncInitLock();
   private readonly syncLockTtlSeconds = 30;
 
   private readonly worker = createWorker(QUEUE_NAME.LIKE_QUEUE, async (job) => {

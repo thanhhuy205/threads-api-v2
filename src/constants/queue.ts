@@ -45,6 +45,6 @@ export const NOTIFICATION_JOB_NAME = {
 };
 
 export const BLOOM_KEY = {
-  FILTER_USERNAME: "filter:usernames  ",
-  FILTER_EMAIL: "filter:emails  ",
+  FILTER_USERNAME: "filter:usernames",
+  FILTER_EMAIL: "filter:emails",
 };

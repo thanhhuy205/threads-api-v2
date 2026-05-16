@@ -1,4 +1,5 @@
 import { QUEUE_NAME } from "@/constants/queue";
+import { redisKey } from "@/constants/resolve-key/redis-key";
 import {
   BadRequestException,
   ForbiddenException,
@@ -426,8 +427,8 @@ class PostService {
     userId: string,
     isLiked: boolean,
   ): Promise<number> {
-    const likeKey = `post:${publicId}:likes`;
-    const countKey = `post:${publicId}:likeCount`;
+    const likeKey = redisKey.post.likesSet(publicId);
+    const countKey = redisKey.post.likeCount(publicId);
 
     baseLogger.info(`User ${userId} is ${isLiked ? "liking" : "unliking"} post ${publicId}`);
     baseLogger.info(`Like key: ${likeKey}, Count key: ${countKey}`);
