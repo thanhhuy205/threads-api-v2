@@ -24,6 +24,10 @@ import {
 } from '../modules/upload/docs/upload.swagger';
 
 import {
+    adminSwaggerPaths,
+    adminSwaggerSchemas,
+} from '../modules/admin/docs/admin.swagger';
+import {
     circleSwaggerPaths,
     circleSwaggerSchemas,
 } from '../modules/circle/docs/circle.swagger';
@@ -31,17 +35,13 @@ import {
     jwtSwaggerSchemas,
 } from '../modules/jwt/docs/jwt.swagger';
 import {
-    notificationSwaggerPaths,
-    notificationSwaggerSchemas,
-} from '../modules/notification/docs/notification.swagger';
-import {
-    adminSwaggerPaths,
-    adminSwaggerSchemas,
-} from '../modules/admin/docs/admin.swagger';
-import {
     messageGroupSwaggerPaths,
     messageGroupSwaggerSchemas,
 } from '../modules/message-group/docs/message-group.swagger';
+import {
+    notificationSwaggerPaths,
+    notificationSwaggerSchemas,
+} from '../modules/notification-group/docs/notification.swagger';
 
 export const swaggerDocument = {
     openapi: '3.0.0',

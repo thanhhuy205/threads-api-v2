@@ -1,4 +1,5 @@
 import { COMMON_MESSAGE } from '@/constants/message';
+import { baseLogger } from '@/middlewares/logger';
 import { NextFunction, Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import { z, ZodSchema } from 'zod';
@@ -9,6 +10,7 @@ export const validate =
                 const dataToValidate = source === 'body' ? req.body : source === 'params' ? req.params : req.query;
 
                 const parsed = await schema.parseAsync(dataToValidate);
+                baseLogger.info(`Validation successful for ${source}: %o`, parsed);
 
                 if (source === 'body') req.body = parsed;
                 if (source === 'params') req.params = parsed;

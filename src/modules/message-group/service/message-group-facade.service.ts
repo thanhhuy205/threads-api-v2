@@ -1,6 +1,6 @@
+import { PUSHER_EVENT } from "@/constants/pusher";
 import { BadRequestException, NotFoundException } from "@/errors/error";
 import { baseLogger } from "@/middlewares/logger";
-import { PUSHER_EVENT } from "@/constants/pusher";
 import { CreateMessageGroupInput } from "@/modules/message-group/interfaces/create-message-group-input";
 import {
   mapMessageGroupMemberResponse,
@@ -118,7 +118,7 @@ class MessageGroupFacadeService {
         },
       );
     } catch (error) {
-      baseLogger.error("Failed to trigger chat realtime event: %o", error);
+      baseLogger.error("Failed to trigger chat realtime event: %o", JSON.stringify(error));
     }
 
 

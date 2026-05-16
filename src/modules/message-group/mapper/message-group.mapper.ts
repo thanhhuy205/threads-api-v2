@@ -2,7 +2,9 @@ import { GroupType } from "@prisma/client";
 
 type MessageResponseInput = {
   publicId: string;
-  messageGroupId: number;
+  messageGroup: {
+    publicId: string;
+  },
   senderId: string;
   content: string;
   createdAt: Date;
@@ -31,7 +33,7 @@ type MessageGroupResponseInput = {
 
 export const mapMessageResponse = (message: MessageResponseInput) => ({
   publicId: message.publicId,
-  messageGroupId: message.messageGroupId,
+  messageGroupId: message.messageGroup.publicId,
   senderId: message.senderId,
   content: message.content,
   createdAt: message.createdAt,

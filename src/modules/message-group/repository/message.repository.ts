@@ -4,7 +4,11 @@ import { Prisma } from "@prisma/client";
 
 const messageSelect = {
   publicId: true,
-  messageGroupId: true,
+  messageGroup: {
+    select: {
+      publicId: true,
+    },
+  },
   senderId: true,
   content: true,
   createdAt: true,

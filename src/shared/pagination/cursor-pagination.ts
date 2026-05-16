@@ -72,20 +72,23 @@ export function buildCursorPagination<T>({
   rows,
   take,
   getAfter,
+  before = false
 }: {
   rows: T[];
   take: number;
   getAfter: (item: T) => string;
+  before?: boolean;
 }): { rows: T[]; pagination: PaginationResponse<string | number | null> } {
   const hasMore = rows.length > take;
   const currentRows = hasMore ? rows.slice(0, take) : rows;
   baseLogger.info(
     `Building cursor pagination response - total rows: ${rows.length}, take: ${take}, hasMore: ${hasMore}`,
   );
-  const nextAfter =
-    hasMore && currentRows.length
-      ? getAfter(currentRows[currentRows.length - 1])
-      : null;
+  const nextAfter = !before ? (hasMore && currentRows.length
+    ? getAfter(currentRows[currentRows.length - 1])
+    : null) : (hasMore && currentRows.length
+      ? getAfter(currentRows[0])
+      : null)
 
   baseLogger.info(
     `Cursor pagination response - nextAfter: ${nextAfter}, take: ${take}, hasMore: ${hasMore}`,

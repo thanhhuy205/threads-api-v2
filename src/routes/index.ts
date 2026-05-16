@@ -6,7 +6,7 @@ import authRouter from "@/modules/auth/auth.routes";
 import circleRouter from "@/modules/circle/circle.routes";
 import healthRouter from "@/modules/health/health.routes";
 import messageGroupRouter from "@/modules/message-group/routes/message-group.routes";
-import notificationRouter from "@/modules/notification/notification.route";
+import notificationRouter from "@/modules/notification-group/notification.route";
 import postRouter from "@/modules/post/post.routes";
 import pusherRouter from "@/modules/pusher/routes/pusher.routes";
 import searchRouter from "@/modules/search/search.routes";
