@@ -146,6 +146,7 @@ enum FriendRequestStatus {
 }
 
 enum NotificationType {
+  POST
   LIKE
   FOLLOW
   QUOTE

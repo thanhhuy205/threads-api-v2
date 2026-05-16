@@ -42,6 +42,7 @@ export const AUTO_REMOVE_BAN_JOB_NAME = {
 
 export const NOTIFICATION_JOB_NAME = {
   INIT_SYNC_NOTIFICATION_BATCH: "initSyncNotificationBatch",
+  BATCH_SYNC_NOTIFICATION: "batchSyncNotification",
 };
 
 export const BLOOM_KEY = {

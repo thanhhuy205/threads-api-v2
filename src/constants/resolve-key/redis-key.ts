@@ -42,6 +42,7 @@ export const redisKey = {
     likesSet: (publicId: string) => `${POST_PREFIX}${publicId}${POST_LIKES_SUFFIX}`,
     likeCount: (publicId: string) =>
       `${POST_PREFIX}${publicId}${POST_LIKE_COUNT_SUFFIX}`,
+    replyCount: (publicId: string) => `${POST_PREFIX}${publicId}:replyCount`,
   },
   interaction: {
     userPost: (userId: string, postId: string, type: RedisInteractionType) =>
@@ -58,4 +59,6 @@ export const redisKey = {
   job: {
     likeSyncInitLock: () => LIKE_SYNC_INIT_LOCK,
   },
+
+
 } as const;

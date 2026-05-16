@@ -105,6 +105,39 @@ class NotificationRepository
             cursor: after ? { publicId: after } : undefined,
         });
     }
+
+    createMany(
+        data: {
+            recipientId: string;
+            type: NotificationType;
+            targetType: string;
+            targetId: string;
+            actorIds: Prisma.InputJsonValue;
+
+            lastActorId: string;
+            lastEventAt: Date;
+            count?: number;
+            isRead?: boolean;
+            userId?: string | null;
+        }[],
+        tx: Prisma.TransactionClient = prisma,
+    ) {
+        return tx.notificationGroup.createMany({
+            data: data.map((item) => ({
+                recipientId: item.recipientId,
+                type: item.type,
+                targetType: item.targetType,
+                targetId: item.targetId,
+                actorIds: item.actorIds,
+                count: item.count,
+                isRead: item.isRead,
+                lastActorId: item.lastActorId,
+                lastEventAt: item.lastEventAt,
+                userId: item.userId ?? undefined,
+            })),
+            skipDuplicates: true,
+        });
+    }
 }
 
 export const notificationRepository = new NotificationRepository();

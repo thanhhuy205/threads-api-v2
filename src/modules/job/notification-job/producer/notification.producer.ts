@@ -10,6 +10,7 @@ class NotificationProducer {
     baseLogger.info("NotificationProducer initialized");
   }
 
+
   async initSyncNotificationBatchJob() {
     const repeatableJobs = await this.notificationQueue.getRepeatableJobs();
     const notificationRepeatableJobs = repeatableJobs.filter(

@@ -8,6 +8,7 @@ import {
 import { baseLogger } from "@/middlewares/logger";
 import { pineProducer } from "@/modules/job/pine-vector/producer/pine.producer";
 import { mixedBreadService } from "@/modules/mixed-bread/service/mixed-bread.service";
+import { notificationService } from "@/modules/notification-group/service/notification.service";
 import { pineconeService } from "@/modules/pinecone/service/pinecone.service";
 import { NewFeedType } from "@/modules/post/enum";
 import {
@@ -29,6 +30,7 @@ import {
 } from "@/shared/pagination/cursor-pagination";
 import { transactionService } from "@/shared/transaction/transaction.service";
 import {
+  NotificationType,
   PostType,
   Prisma,
   ReplyPermission,
@@ -301,7 +303,10 @@ class PostService {
     const snapshot = await this.resolveUser(payload.userId);
     const mentionIds = await this.validateMentions(payload.mentions);
     const options = this.resolvePostOptions(payload);
-
+    const existPost = await postRepository.findByPublicId(publicId);
+    if (!existPost) {
+      throw new NotFoundException("Origin post not found");
+    }
     const post = await this.createInTransaction(
       (tx) =>
         postRepository.createReply(
@@ -312,6 +317,17 @@ class PostService {
         ),
       { topic: payload.topic, mentionIds },
     );
+    baseLogger.info("Created reply post, adding notification group");
+    await notificationService.addPostNotificationGroup(
+      {
+        postPublicId: publicId,
+        notificationType: NotificationType.POST,
+        targetType: PostType.REPLY,
+        userId: payload.userId,
+        authorId: existPost.userId,
+      },
+    );
+
     return {
       publicId: post.publicId,
       content: post.content!,
