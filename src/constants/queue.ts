@@ -45,6 +45,10 @@ export const NOTIFICATION_JOB_NAME = {
   BATCH_SYNC_NOTIFICATION: "batchSyncNotification",
 };
 
+export const NOTIFICATION_JOB_KEY = {
+  BATCH_SYNC_NOTIFICATION: "batch_sync_notification_job",
+}
+
 export const BLOOM_KEY = {
   FILTER_USERNAME: "filter:usernames",
   FILTER_EMAIL: "filter:emails",

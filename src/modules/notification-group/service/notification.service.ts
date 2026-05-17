@@ -1,3 +1,4 @@
+import { NOTIFICATION_JOB_KEY } from "@/constants/queue";
 import { baseLogger } from "@/middlewares/logger";
 import type {
   CreateNotificationGroupInput,
@@ -54,57 +55,55 @@ class NotificationService {
   }
 
 
-  async addPostNotificationGroup({ postPublicId, notificationType, targetType, userId, authorId }: {
-    postPublicId: string,
-    notificationType: NotificationType,
-    targetType: PostType,
-    userId: string,
-    authorId: string,
+  async handleNewComment({ actorId, recipientId, postId, postOwnerId, replyId }: {
+    actorId: string;
+    recipientId: string;
+    postId: string;
+    postOwnerId: string;
+    replyId?: string;
   }) {
-    baseLogger.info(`Adding post notification group to Redis ${JSON.stringify({ postPublicId, notificationType, targetType, userId, authorId })}`);
-    if (userId === authorId) return;
-    baseLogger.info("Adding post notification group");
+    // Kiểm tra xem người nhận có phải là chủ bài viết không để xác định group key
+    const isOwner = recipientId === postOwnerId;
+    // Nếu là chủ groupKey thì đặt tên là post , còn nếu không đặt tên là thread để phân biệt với comment của post
+    const groupKey = isOwner ? `post:${postId}` :
+      `thread:${postId}`;
+
+    // Tạo khóa Redis cho nhóm thông báo này
+    const redisKey = `notification:pending:${recipientId}:comment:${groupKey}`;
+    baseLogger.info(`Handling new comment notification for Redis key: ${redisKey}`);
+    // Sử dụng pipeline để thực hiện các lệnh Redis một cách hiệu quả
+    const pipeline = redisService.multi();
 
 
-    const key = `notification:pending:post:${authorId}:${postPublicId}:${notificationType}`;
-    const pendingListKey = `notification:pending:keys`;
-    
-    // Actor 
-    const actorsKey = `${key}:actors`;
+    // Cập nhật thông tin nhóm thông báo trong Redis
+    const payload: Record<string, string> = {
+      type: NotificationType.REPLY,
+      groupKey: String(groupKey),
+      postId: String(postId),
+      isOwner: String(isOwner),
+      lastActorId: String(actorId),
+      lastCommentId: replyId ?? "",
+      updatedAt: String(Date.now()),
+    };
+    pipeline.hSet(redisKey, payload);
 
-    const queuedKey = `${key}:queued`;
-    await redisService.hIncrBy(key, "count", 1);
-    const added = await redisService.sAdd(actorsKey, userId);
-    if (added === 1) {
-      await redisService.hSet(key, {
-        authorId,
-        postPublicId,
-        notificationType,
-        targetType,
-        lastActorId: userId,
-        userId: userId,
-        updatedAt: Date.now().toString(),
-      });
-    }
+    // Thêm actor vào set của nhóm thông báo và tăng số lượng thông báo
+    pipeline.sAdd(`${redisKey}:actors`, actorId);
+    pipeline.sCard(`${redisKey}:actors`); // đếm số người đã tương tác để cập nhật count
+    pipeline.hIncrBy(redisKey, 'count', 1);
 
-    const queued = await redisService.set(queuedKey, "1", {
-      EX: 60,
-      NX: true,
-    });
+    // Đặt thời gian hết hạn cho khóa Redis để tránh lưu trữ quá lâu
+    pipeline.expire(redisKey, 3600);
 
-    if (queued === "OK") {
-      await redisService.lPush(pendingListKey, key);
-    }
+    // Thực hiện các lệnh trong pipeline
+    await pipeline.exec();
 
-    console.log("PUSHED:", {
-      pendingListKey,
-      key,
-      queued,
-      count: await redisService.hGet(key, "count"),
-      listLength: await redisService.lLen(pendingListKey),
-      listType: await redisService.type(pendingListKey),
+    await redisService.zAdd(NOTIFICATION_JOB_KEY.BATCH_SYNC_NOTIFICATION, {
+      score: Date.now() + 5000,
+      value: redisKey,
     });
   }
+
 
   async addNotificationPostAllBatch(batch: {
     authorId: string;

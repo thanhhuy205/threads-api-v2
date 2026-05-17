@@ -14,7 +14,7 @@ class NotificationProducer {
   async initSyncNotificationBatchJob() {
     const repeatableJobs = await this.notificationQueue.getRepeatableJobs();
     const notificationRepeatableJobs = repeatableJobs.filter(
-      (job) => job.name === NOTIFICATION_JOB_NAME.INIT_SYNC_NOTIFICATION_BATCH,
+      (job) => job.name === NOTIFICATION_JOB_NAME.BATCH_SYNC_NOTIFICATION,
     );
 
     if (notificationRepeatableJobs.length > 0) {
@@ -34,11 +34,11 @@ class NotificationProducer {
     };
 
     await this.notificationQueue.add(
-      NOTIFICATION_JOB_NAME.INIT_SYNC_NOTIFICATION_BATCH,
+      NOTIFICATION_JOB_NAME.BATCH_SYNC_NOTIFICATION,
       payload,
       {
-        jobId: NOTIFICATION_JOB_NAME.INIT_SYNC_NOTIFICATION_BATCH,
-        repeat: { every: 40_000 },
+        jobId: NOTIFICATION_JOB_NAME.BATCH_SYNC_NOTIFICATION,
+        repeat: { every: 30_000 },
         attempts: 1,
       },
     );

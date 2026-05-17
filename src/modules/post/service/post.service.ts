@@ -318,13 +318,13 @@ class PostService {
       { topic: payload.topic, mentionIds },
     );
     baseLogger.info("Created reply post, adding notification group");
-    await notificationService.addPostNotificationGroup(
+    await notificationService.handleNewComment(
       {
-        postPublicId: publicId,
-        notificationType: NotificationType.POST,
-        targetType: PostType.REPLY,
-        userId: payload.userId,
-        authorId: existPost.userId,
+        actorId: payload.userId,
+        recipientId: existPost.userId,
+        postId: existPost.publicId,
+        postOwnerId: existPost.userId,
+        replyId: post.publicId
       },
     );
 
