@@ -30,11 +30,10 @@ import {
 } from "@/shared/pagination/cursor-pagination";
 import { transactionService } from "@/shared/transaction/transaction.service";
 import {
-  NotificationType,
   PostType,
   Prisma,
   ReplyPermission,
-  VisibilityPost,
+  VisibilityPost
 } from "@prisma/client";
 import { CreatePostDto, UpdatePostDto } from "../dto/post.dto";
 import { normalizeTopic } from "../helper/nomalize.hepler";
@@ -322,9 +321,10 @@ class PostService {
       {
         actorId: payload.userId,
         recipientId: existPost.userId,
-        postId: existPost.publicId,
+        targetPostId: post.publicId,
+        originPostId: existPost.publicId,
         postOwnerId: existPost.userId,
-        replyId: post.publicId
+        username: snapshot.username,
       },
     );
 

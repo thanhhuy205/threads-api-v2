@@ -418,11 +418,13 @@ model Post {
   root   Post?  @relation("PostRoot", fields: [rootPostId], references: [id])
   thread Post[] @relation("PostRoot")
 
-  media                 PostMedia[]
-  mentions              PostMention[]
-  topicsPosts           TopicsPost[]
-  likes                 Like[]
-  circlePostQualityLogs CirclePostQualityLog[]
+  media                   PostMedia[]
+  mentions                PostMention[]
+  topicsPosts             TopicsPost[]
+  likes                   Like[]
+  circlePostQualityLogs   CirclePostQualityLog[]
+  originPostNotifications NotificationGroup[]    @relation("NotificationOriginPost")
+  targetPostNotifications NotificationGroup[]    @relation("NotificationTargetPost")
 
   @@index([userId, createdAt])
   @@index([parentId])
@@ -833,21 +835,24 @@ model AntiSpam {
 }
 
 model NotificationGroup {
-  id          Int              @id @default(autoincrement())
-  publicId    String           @unique @default(cuid()) @map("public_id")
-  recipientId String           @map("recipient_id")
-  type        NotificationType
-  targetType  String           @map("target_type")
-  targetId    String           @map("target_id")
-  actorIds    Json             @map("actor_ids")
-  count       Int              @default(1)
-  isRead      Boolean          @default(false) @map("is_read")
-  lastActorId String           @map("last_actor_id")
-  lastEventAt DateTime         @map("last_event_at")
-  createdAt   DateTime         @default(now()) @map("created_at")
-  updatedAt   DateTime         @updatedAt @map("updated_at")
-  user        User?            @relation(fields: [userId], references: [id])
-  userId      String?
+  id           Int              @id @default(autoincrement())
+  publicId     String           @unique @default(cuid()) @map("public_id")
+  recipientId  String           @map("recipient_id")
+  type         NotificationType
+  targetType   String           @map("target_type")
+  targetId     String           @map("target_id")
+  actorIds     Json             @map("actor_ids")
+  count        Int              @default(1)
+  isRead       Boolean          @default(false) @map("is_read")
+  lastActorId  String           @map("last_actor_id")
+  lastEventAt  DateTime         @map("last_event_at")
+  createdAt    DateTime         @default(now()) @map("created_at")
+  updatedAt    DateTime         @updatedAt @map("updated_at")
+  originPostId String?          @map("origin_post") // dùng để lưu publicId của bài gốc trong trường hợp notification liên quan đến bài viết, giúp tránh việc phải join nhiều bảng để lấy thông tin bài gốc khi hiển thị notification
+  lastActor    User?            @relation(fields: [lastActorId], references: [id])
+
+  targetPost Post  @relation("NotificationTargetPost", fields: [targetId], references: [publicId])
+  originPost Post? @relation("NotificationOriginPost", fields: [originPostId], references: [publicId])
 
   @@index([recipientId, isRead, lastEventAt])
   @@index([recipientId, type, targetType, targetId])

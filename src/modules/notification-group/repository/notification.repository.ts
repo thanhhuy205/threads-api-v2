@@ -9,13 +9,29 @@ const notificationGroupSelect = {
     type: true,
     targetType: true,
     targetId: true,
-    actorIds: true,
     count: true,
     isRead: true,
     lastActorId: true,
     lastEventAt: true,
     createdAt: true,
     updatedAt: true,
+    lastActor: {
+        select: {
+            username: true,
+            avatar: true,
+        },
+    },
+    // bài gốc cmt
+    originPost: {
+        select: {
+            publicId: true,
+        }
+    },
+    targetPost: {
+        select: {
+            publicId: true,
+        }
+    }
 } satisfies Prisma.NotificationGroupSelect;
 
 class NotificationRepository
@@ -66,7 +82,6 @@ class NotificationRepository
             lastEventAt: Date;
             count?: number;
             isRead?: boolean;
-            userId?: string | null;
         },
         tx: Prisma.TransactionClient = prisma,
     ) {
@@ -81,7 +96,6 @@ class NotificationRepository
                 isRead: data.isRead,
                 lastActorId: data.lastActorId,
                 lastEventAt: data.lastEventAt,
-                userId: data.userId ?? undefined,
             },
             select: notificationGroupSelect,
         });
@@ -103,14 +117,6 @@ class NotificationRepository
                 recipientId,
             },
             select: {
-                user: {
-                    select: {
-                        id: true,
-                        name: true,
-                        username: true,
-                        avatar: true,
-                    },
-                }, 
                 publicId: true,
                 type: true,
                 targetType: true,
@@ -118,7 +124,22 @@ class NotificationRepository
                 isRead: true,
                 createdAt: true,
                 lastEventAt: true,
-                actorIds: true,
+                lastActor: {
+                    select: {
+                        username: true,
+                        avatar: true,
+                    },
+                },
+                originPost: {
+                    select: {
+                        publicId: true,
+                    }
+                },
+                targetPost: {
+                    select: {
+                        publicId: true,
+                    }
+                }
             },
             cursor: after ? { publicId: after } : undefined,
         });
@@ -130,20 +151,19 @@ class NotificationRepository
             type: NotificationType;
             targetType: string;
             targetId: string;
+            originPostId: string;
             actorIds: Prisma.InputJsonValue;
-
             lastActorId: string;
             lastEventAt: Date;
             count?: number;
             isRead?: boolean;
-            userId?: string | null;
         }[],
         tx: Prisma.TransactionClient = prisma,
     ) {
         return tx.notificationGroup.createMany({
             data: data.map((item) => ({
                 recipientId: item.recipientId,
-                type: item.type,
+                type: item.type as NotificationType,
                 targetType: item.targetType,
                 targetId: item.targetId,
                 actorIds: item.actorIds,
@@ -151,7 +171,8 @@ class NotificationRepository
                 isRead: item.isRead,
                 lastActorId: item.lastActorId,
                 lastEventAt: item.lastEventAt,
-                userId: item.userId ?? undefined,
+                originPostId: item.originPostId,
+
             })),
             skipDuplicates: true,
         });

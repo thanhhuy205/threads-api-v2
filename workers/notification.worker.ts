@@ -1,3 +1,9 @@
+import type {
+  CommentNotificationMessageMeta,
+  PendingCommentNotificationBatchItem,
+  PendingCommentNotificationRedisKey,
+  PendingCommentNotificationRedisMeta,
+} from "@/modules/notification-group/interface/notification.types";
 import { notificationRepository } from "@/modules/notification-group/repository/notification.repository";
 import { pusher } from "@/providers/pusher.provider";
 import { redisService } from "@/providers/redis.provider";
@@ -5,6 +11,41 @@ import { NotificationType } from "@prisma/client";
 import { NOTIFICATION_JOB_KEY, NOTIFICATION_JOB_NAME, QUEUE_NAME } from "../src/constants/queue";
 import { baseLogger } from "../src/middlewares/logger";
 import { createWorker } from "../src/providers/bullmq.provider";
+
+const pendingCommentKeyPattern =
+  /^notification:pending:([^:]+):comment:(post|thread):(.+)$/;
+
+const requiredPendingCommentMetaFields = [
+  "type",
+  "groupKey",
+  "originPostId",
+  "targetPostId",
+  "isOwner",
+  "lastActorId",
+  "updatedAt",
+  "count",
+  "username",
+] satisfies (keyof PendingCommentNotificationRedisMeta)[];
+
+const extractRecipientIdFromPendingCommentKey = (
+  redisKey: string,
+): string | null => {
+  const match = redisKey.match(pendingCommentKeyPattern);
+  return match?.[1] ?? null;
+};
+
+const toPendingCommentNotificationMeta = (
+  meta: Record<string, string>,
+): PendingCommentNotificationRedisMeta | null => {
+  const missingFields = requiredPendingCommentMetaFields.filter(
+    (field) => !(field in meta),
+  );
+
+  if (missingFields.length) return null;
+  if (meta.isOwner !== "true" && meta.isOwner !== "false") return null;
+
+  return meta as PendingCommentNotificationRedisMeta;
+};
 
 class NotificationWorker {
   private readonly worker = createWorker(QUEUE_NAME.NOTIFICATION_QUEUE, async (job) => {
@@ -16,42 +57,28 @@ class NotificationWorker {
     }
   });
 
-  buildNotificationMessage({ meta, actorCount, actors }: {
-    meta: {
-      type: string,
-      groupKey: string,
-      postId: string,
-      isOwner: boolean,
-      lastActorId: string,
-      lastCommentId: string,
-      updatedAt: Date,
-      count: number,
-    },
-    actorCount: number,
-    actors: string[],
+  buildNotificationMessage({
+    meta,
+    actorCount,
+    actors,
+  }: {
+    meta: CommentNotificationMessageMeta;
+    actorCount: number;
+    actors: string[];
   }) {
-    const { isOwner, count, lastActorId, groupKey } = meta;
-    const firstName = actors[0]; // lấy tên từ DB hoặc cache
+    const { isOwner, count, username } = meta;
+    const firstName = username;
 
-    // Nhóm 5: thread của người khác
     if (!isOwner) {
       if (actorCount === 1) return `${firstName} đã bình luận trong cuộc trò chuyện bạn tham gia`;
       return `${firstName} và ${actorCount - 1} người khác đã trả lời trong cuộc trò chuyện`;
     }
 
-    // Nhóm 1: 1 người, 1 bài, nhiều lần
     if (actorCount === 1 && count > 1) {
       return `${firstName} đã bình luận ${count} lần về bài của bạn`;
     }
+    if (actorCount >= 2) return `${firstName}, ${actorCount - 1} người khác đã bình luận về bài của bạn`;
 
-    // Nhóm 2: 1 người, nhiều bài → cần check thêm
-    // (groupKey sẽ là "actor:{actorId}" thay vì "post:{postId}")
-
-    // Nhóm 3: nhiều người, 1 bài
-    if (actorCount === 2) return `${actors[0]} và ${actors[1]} đã bình luận về bài của bạn`;
-    if (actorCount > 2) return `${actors[0]}, ${actors[1]} và ${actorCount - 2} người khác đã bình luận về bài của bạn`;
-
-    // Default
     return `${firstName} đã bình luận về bài của bạn`;
   }
   async batchCommentNotification() {
@@ -64,37 +91,38 @@ class NotificationWorker {
     );
 
     if (!dueItems.length) return;
-    const notificationSave: {
-      recipientId: string;
-      meta: {
-        type: NotificationType,
-        groupKey: string,
-        postId: string,
-        isOwner: 'true',
-        lastActorId: string,
-        lastCommentId: string,
-        updatedAt: string,
-        count: string,
-      },
-      actorCount: 1,
-      actors: [string]
-    }[] = [];
-    for (const redisKey of dueItems) {
+    const notificationSave: PendingCommentNotificationBatchItem[] = [];
+
+    for (const redisKey of dueItems as PendingCommentNotificationRedisKey[]) {
       baseLogger.info(`[QUEUE_ITEM] ${redisKey}`);
 
-      const [meta, actorCount, actors] = await Promise.all([
+      const [rawMeta, actorCount, actors] = await Promise.all([
         redisService.hGetAll(redisKey),
         redisService.sCard(`${redisKey}:actors`),
         redisService.sMembers(`${redisKey}:actors`),
       ]);
 
-      if (!Object.keys(meta).length) {
+      const meta = toPendingCommentNotificationMeta(rawMeta);
+      const recipientId = extractRecipientIdFromPendingCommentKey(redisKey);
+      const missingFields = requiredPendingCommentMetaFields.filter(
+        (field) => !(field in rawMeta),
+      );
+
+      if (!meta || !recipientId) {
+        baseLogger.warn(
+          `[notification-worker] Invalid pending comment notification: ${JSON.stringify({
+            redisKey,
+            recipientId,
+            missingFields,
+            meta: rawMeta,
+          })}`,
+        );
         await redisService.zRem(NOTIFICATION_JOB_KEY.BATCH_SYNC_NOTIFICATION, redisKey);
         continue;
       }
 
-      const recipientId = redisKey.split(":")[2];
       notificationSave.push({
+        redisKey,
         recipientId,
         meta,
         actorCount,
@@ -121,7 +149,8 @@ class NotificationWorker {
         recipientId: item.recipientId,
         type: item.meta.type as NotificationType,
         targetType: "POST",
-        targetId: item.meta.postId,
+        targetId: item.meta.targetPostId,
+        originPostId: item.meta.originPostId,
         actorIds: item.actors,
         lastActorId: item.meta.lastActorId,
         lastEventAt: new Date(),

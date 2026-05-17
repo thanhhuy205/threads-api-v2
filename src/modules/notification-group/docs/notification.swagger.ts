@@ -12,7 +12,6 @@ export const notificationSwaggerSchemas = {
             type: { type: 'string', example: 'LIKE' },
             targetType: { type: 'string', example: 'POST' },
             targetId: { type: 'string', example: 'post_123' },
-            actorIds: { type: 'array', items: { type: 'string' }, example: ['user_456'] },
             count: { type: 'number', example: 1 },
             isRead: { type: 'boolean', example: false },
             lastActorId: { type: 'string', example: 'user_456' },
@@ -20,7 +19,7 @@ export const notificationSwaggerSchemas = {
             createdAt: { type: 'string', format: 'date-time' },
             updatedAt: { type: 'string', format: 'date-time' },
         },
-        required: ['id', 'publicId', 'recipientId', 'type', 'targetType', 'targetId', 'actorIds', 'count', 'isRead', 'lastActorId', 'lastEventAt', 'createdAt', 'updatedAt'],
+        required: ['id', 'publicId', 'recipientId', 'type', 'targetType', 'targetId', 'count', 'isRead', 'lastActorId', 'lastEventAt', 'createdAt', 'updatedAt'],
     },
     NotificationListResponse: {
         type: 'object',
