@@ -66,21 +66,26 @@ class NotificationService {
     baseLogger.info("Adding post notification group");
 
 
-    const key = `notification:pending:post:${authorId}:${postPublicId}:${notificationType}:${userId}`;
+    const key = `notification:pending:post:${authorId}:${postPublicId}:${notificationType}`;
     const pendingListKey = `notification:pending:keys`;
+    
+    // Actor 
+    const actorsKey = `${key}:actors`;
+
     const queuedKey = `${key}:queued`;
     await redisService.hIncrBy(key, "count", 1);
-
-    await redisService.hSet(key, {
-      authorId,
-      postPublicId,
-      notificationType,
-      targetType,
-      lastActorId: userId,
-      updatedAt: Date.now().toString(),
-    });
-    await redisService.lPush(pendingListKey, key);
-
+    const added = await redisService.sAdd(actorsKey, userId);
+    if (added === 1) {
+      await redisService.hSet(key, {
+        authorId,
+        postPublicId,
+        notificationType,
+        targetType,
+        lastActorId: userId,
+        userId: userId,
+        updatedAt: Date.now().toString(),
+      });
+    }
 
     const queued = await redisService.set(queuedKey, "1", {
       EX: 60,
@@ -105,6 +110,7 @@ class NotificationService {
     authorId: string;
     postPublicId: string;
     notificationType: NotificationType;
+    actorIds: string[];
     targetType: PostType;
     lastActorId: string;
     count: number;
@@ -117,7 +123,7 @@ class NotificationService {
         type: item.notificationType as NotificationType,
         targetType: item.targetType,
         targetId: item.postPublicId,
-        actorIds: [item.lastActorId],
+        actorIds: item.actorIds,
         lastActorId: item.lastActorId,
         lastEventAt: new Date(),
         count: item.count,

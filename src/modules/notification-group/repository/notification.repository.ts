@@ -102,6 +102,24 @@ class NotificationRepository
             where: {
                 recipientId,
             },
+            select: {
+                user: {
+                    select: {
+                        id: true,
+                        name: true,
+                        username: true,
+                        avatar: true,
+                    },
+                }, 
+                publicId: true,
+                type: true,
+                targetType: true,
+                count: true,
+                isRead: true,
+                createdAt: true,
+                lastEventAt: true,
+                actorIds: true,
+            },
             cursor: after ? { publicId: after } : undefined,
         });
     }

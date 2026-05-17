@@ -38,10 +38,13 @@ class NotificationWorker {
 
     for (const key of keys) {
       const data = await redisService.hGetAll(key);
+      const actorIds = await redisService.sMembers(`${key}:actors`);
       console.log("PROCESS:", {
         key,
         data,
+        actorIds,
       });
+
 
       if (!data?.authorId) {
         await redisService.del(`${key}:queued`);
@@ -55,11 +58,11 @@ class NotificationWorker {
         await redisService.del(`${key}:queued`);
         continue;
       }
-
       notificationBatch.push({
         authorId: data.authorId,
         postPublicId: data.postPublicId,
         notificationType: data.notificationType as NotificationType,
+        actorIds,
         targetType: data.targetType as PostType,
         lastActorId: data.lastActorId,
         count,
@@ -67,6 +70,7 @@ class NotificationWorker {
 
       await redisService.del(key);
       await redisService.del(`${key}:queued`);
+      await redisService.del(`${key}:actors`);
     }
 
     await notificationService.addNotificationPostAllBatch(notificationBatch);

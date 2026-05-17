@@ -38,7 +38,7 @@ class NotificationProducer {
       payload,
       {
         jobId: NOTIFICATION_JOB_NAME.INIT_SYNC_NOTIFICATION_BATCH,
-        repeat: { every: 10_000 },
+        repeat: { every: 40_000 },
         attempts: 1,
       },
     );
