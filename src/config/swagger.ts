@@ -42,6 +42,10 @@ import {
     notificationSwaggerPaths,
     notificationSwaggerSchemas,
 } from '../modules/notification-group/docs/notification.swagger';
+import {
+    topicSwaggerPaths,
+    topicSwaggerSchemas,
+} from '../modules/topic/docs/topic.swagger';
 
 export const swaggerDocument = {
     openapi: '3.0.0',
@@ -96,6 +100,10 @@ export const swaggerDocument = {
             name: 'MessageGroup',
             description: 'Message group and message APIs',
         },
+        {
+            name: 'Topic',
+            description: 'Topic APIs',
+        },
     ],
 
     paths: {
@@ -108,6 +116,7 @@ export const swaggerDocument = {
         ...notificationSwaggerPaths,
         ...adminSwaggerPaths,
         ...messageGroupSwaggerPaths,
+        ...topicSwaggerPaths,
     },
 
     components: {
@@ -122,6 +131,7 @@ export const swaggerDocument = {
             ...jwtSwaggerSchemas,
             ...adminSwaggerSchemas,
             ...messageGroupSwaggerSchemas,
+            ...topicSwaggerSchemas,
         },
 
         securitySchemes: {

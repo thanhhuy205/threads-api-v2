@@ -14,6 +14,7 @@ const POST_LIKE_COUNT_SUFFIX = ":likeCount";
 const LIKE_SYNC_INIT_LOCK = "like:sync:init:lock";
 const USER_POST_INTERACTION_PREFIX = "user:";
 const USER_POST_INTERACTION_POST_SEGMENT = ":post:";
+const TOPIC_LIST_CACHE_KEY = "topic:list:names";
 
 export type RedisPostInteractionType = Lowercase<Exclude<PostType, "POST">>;
 export type RedisInteractionType = "like" | RedisPostInteractionType;
@@ -59,6 +60,8 @@ export const redisKey = {
   job: {
     likeSyncInitLock: () => LIKE_SYNC_INIT_LOCK,
   },
-
+  topic: {
+    listNames: () => TOPIC_LIST_CACHE_KEY,
+  },
 
 } as const;

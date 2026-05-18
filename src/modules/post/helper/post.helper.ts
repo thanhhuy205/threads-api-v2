@@ -1,5 +1,5 @@
 import { NewFeedType } from "@/modules/post/enum";
-import { PostType, Prisma, VisibilityPost } from "@prisma/client";
+import { FriendRequestStatus, PostType, Prisma, VisibilityPost } from "@prisma/client";
 
 type PostCursorInfo = {
     id: number;
@@ -61,8 +61,34 @@ export const buildNewFeedWhere = ({
                 followers: {
                     some: {
                         userId,
+                        isFollowing: true,
                     },
                 },
+            },
+        });
+    }
+    if (feedType === NewFeedType.FRIEND && userId) {
+        return ({
+            ...where,
+            user: {
+                OR: [
+                    {
+                        friendRequests: {
+                            some: {
+                                receiverId: userId,
+                                status: FriendRequestStatus.ACCEPTED,
+                            },
+                        },
+                    },
+                    {
+                        receivedRequests: {
+                            some: {
+                                senderId: userId,
+                                status: FriendRequestStatus.ACCEPTED,
+                            },
+                        },
+                    },
+                ],
             },
         });
     }
