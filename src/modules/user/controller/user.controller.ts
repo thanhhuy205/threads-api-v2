@@ -156,6 +156,25 @@ class UserController {
     });
     return res.paginate({ rows, pagination });
   }
+
+  async getUsernames(
+    req: Request<{}, {}, {}, FollowersQueryDto>,
+    res: Response,
+  ) {
+    const userId = req.user?.sub;
+    if (!userId) {
+      return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
+    }
+
+    const { after, take } = getPagination(req);
+    const { rows, pagination } = await userService.getNetworkUsernames({
+      userId,
+      after: after ?? undefined,
+      take,
+    });
+
+    return res.paginate({ rows, pagination });
+  }
 }
 
 export const userController = new UserController();

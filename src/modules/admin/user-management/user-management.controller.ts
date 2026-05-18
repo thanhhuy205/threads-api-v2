@@ -1,11 +1,20 @@
 import { Request, Response } from "express";
 import type { BanUserRequestDto } from "./dto/request/ban-user.request.dto";
+import type { ListUsersQueryDto } from "./dto/request/list-users.query.dto";
 import { userManagementService } from "./user-management.service";
+import { getPagination } from "@/shared/pagination/pagination";
 
 class UserManagementController {
-  listUsers = async (_req: Request, res: Response) => {
-    const result = await userManagementService.getAllUsers();
-    return res.success(200, "Users retrieved successfully", result);
+  listUsers = async (
+    req: Request<{}, {}, {}, ListUsersQueryDto>,
+    res: Response,
+  ) => {
+    const { currentPage, perPage } = getPagination(req);
+    const result = await userManagementService.getAllUsers({
+      page: currentPage,
+      limit: perPage,
+    });
+    return res.paginate(result);
   };
 
   banUser = async (

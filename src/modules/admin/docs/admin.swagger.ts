@@ -3,6 +3,43 @@ import { COMMON_MESSAGE } from '@/constants/message';
 const bearerAuthSecurity = [{ bearerAuth: [] }];
 
 export const adminSwaggerSchemas = {
+    AdminLoginRequest: {
+        type: 'object',
+        properties: {
+            login: { type: 'string', example: 'admin@example.com' },
+            password: { type: 'string', example: 'secret123' },
+        },
+        required: ['login', 'password'],
+    },
+    AdminLoginData: {
+        type: 'object',
+        properties: {
+            user: {
+                type: 'object',
+                properties: {
+                    email: { type: 'string', example: 'admin@example.com' },
+                    username: { type: 'string', example: 'admin_user' },
+                    name: { type: ['string', 'null'], example: 'Admin' },
+                    bio: { type: ['string', 'null'], example: null },
+                    avatar: { type: ['string', 'null'], example: null },
+                },
+                required: ['email', 'username'],
+            },
+            accessToken: { type: 'string' },
+            refreshToken: { type: 'string' },
+            sessionId: { type: 'string' },
+        },
+        required: ['user', 'accessToken', 'refreshToken', 'sessionId'],
+    },
+    AdminLoginResponse: {
+        type: 'object',
+        properties: {
+            success: { type: 'boolean', example: true },
+            message: { type: 'string', example: 'Login success' },
+            data: { $ref: '#/components/schemas/AdminLoginData' },
+        },
+        required: ['success', 'message', 'data'],
+    },
     AdminUserItem: {
         type: 'object',
         properties: {
@@ -11,22 +48,36 @@ export const adminSwaggerSchemas = {
             email: { type: 'string', example: 'john@example.com' },
             username: { type: 'string', example: 'johndoe' },
             status: { type: 'string', example: 'ACTIVE' },
+            bannedUntil: { type: ['string', 'null'], format: 'date-time' },
             verifiedAt: { type: ['string', 'null'], format: 'date-time' },
             createdAt: { type: 'string', format: 'date-time' },
             roles: { type: 'array', items: { type: 'string', example: 'USER' } },
             isVerified: { type: 'boolean', example: true },
         },
     },
+    AdminOffsetPagination: {
+        type: 'object',
+        properties: {
+            currentPage: { type: 'integer', example: 1 },
+            perPage: { type: 'integer', example: 10 },
+            total: { type: 'integer', example: 128 },
+            lastPage: { type: 'integer', example: 13 },
+            from: { type: 'integer', example: 1 },
+            to: { type: 'integer', example: 10 },
+        },
+        required: ['currentPage', 'perPage', 'total', 'lastPage', 'from', 'to'],
+    },
     AdminUserListResponse: {
         type: 'object',
         properties: {
             success: { type: 'boolean', example: true },
-            message: { type: 'string', example: 'Users retrieved successfully' },
             data: {
                 type: 'array',
                 items: { $ref: '#/components/schemas/AdminUserItem' },
             },
+            pagination: { $ref: '#/components/schemas/AdminOffsetPagination' },
         },
+        required: ['success', 'data', 'pagination'],
     },
     AdminBanUserResponse: {
         type: 'object',
@@ -61,8 +112,19 @@ export const adminSwaggerSchemas = {
         type: 'object',
         properties: {
             success: { type: 'boolean', example: true },
-            message: { type: 'string', example: 'Admin trending hashtags route ready' },
-            data: { type: 'array', items: { type: 'object' } },
+            data: { type: 'array', items: { $ref: '#/components/schemas/AdminTrendingHashtagItem' } },
+            pagination: { $ref: '#/components/schemas/AdminOffsetPagination' },
+        },
+        required: ['success', 'data', 'pagination'],
+    },
+    AdminTrendingHashtagItem: {
+        type: 'object',
+        properties: {
+            id: { type: 'number', example: 1 },
+            name: { type: 'string', example: 'typescript' },
+            count: { type: 'integer', example: 42 },
+            createdAt: { type: 'string', format: 'date-time' },
+            updatedAt: { type: 'string', format: 'date-time' },
         },
     },
     AdminStatisticsResponse: {
@@ -76,14 +138,38 @@ export const adminSwaggerSchemas = {
 };
 
 export const adminSwaggerPaths = {
+    '/admin/login': {
+        post: {
+            tags: ['Admin'],
+            summary: 'Login admin or moderator account',
+            security: [],
+            requestBody: {
+                required: true,
+                content: {
+                    'application/json': {
+                        schema: { $ref: '#/components/schemas/AdminLoginRequest' },
+                    },
+                },
+            },
+            responses: {
+                200: {
+                    description: 'Login success',
+                    content: { 'application/json': { schema: { $ref: '#/components/schemas/AdminLoginResponse' } } },
+                },
+                401: {
+                    description: 'Invalid credentials',
+                },
+            },
+        },
+    },
     '/admin/users': {
         get: {
             tags: ['Admin'],
             summary: 'List all users for admin',
             security: bearerAuthSecurity,
             parameters: [
-                { name: 'after', in: 'query', schema: { type: 'string' } },
-                { name: 'take', in: 'query', schema: { type: 'number', example: 10 } },
+                { name: 'page', in: 'query', schema: { type: 'number', example: 1 } },
+                { name: 'limit', in: 'query', schema: { type: 'number', example: 10 } },
             ],
             responses: {
                 200: {
@@ -139,6 +225,10 @@ export const adminSwaggerPaths = {
             tags: ['Admin'],
             summary: 'Get trending hashtags for admin',
             security: bearerAuthSecurity,
+            parameters: [
+                { name: 'page', in: 'query', schema: { type: 'number', example: 1 } },
+                { name: 'limit', in: 'query', schema: { type: 'number', example: 10 } },
+            ],
             responses: {
                 200: {
                     description: 'Trending hashtags retrieved',

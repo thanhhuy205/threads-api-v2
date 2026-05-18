@@ -17,6 +17,12 @@ userRouter.get(
   userController.getFollower,
 );
 
+userRouter.get(
+  "/usernames",
+  validate(followersQuerySchema, "query"),
+  userController.getUsernames,
+);
+
 userRouter.post(
   "/:username/friend-requests",
   validate(friendRequestParamsSchema, "params"),

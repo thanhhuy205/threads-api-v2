@@ -45,6 +45,9 @@ export type UserProfile = Prisma.UserGetPayload<{
 export type UserBasicIdentity = Prisma.UserGetPayload<{
   select: typeof userBasicIdentitySelect;
 }>;
+export type UserUsernameItem = {
+  username: string;
+};
 
 class UserRepository {
   async findById(id: string): Promise<UserProfile | null> {
@@ -83,6 +86,67 @@ class UserRepository {
         },
       },
       select: userBasicIdentitySelect,
+    });
+  }
+
+  async findNetworkUsernames({
+    userId,
+    after,
+    take = 10,
+  }: {
+    userId: string;
+    after?: string;
+    take?: number;
+  }): Promise<UserUsernameItem[]> {
+    return prisma.user.findMany({
+      where: {
+        id: {
+          not: userId,
+        },
+        OR: [
+          {
+            followers: {
+              some: {
+                userId,
+                isFollowing: true,
+              },
+            },
+          },
+          {
+            OR: [
+              {
+                friendRequests: {
+                  some: {
+                    receiverId: userId,
+                    status: FriendRequestStatus.ACCEPTED,
+                  },
+                },
+              },
+              {
+                receivedRequests: {
+                  some: {
+                    senderId: userId,
+                    status: FriendRequestStatus.ACCEPTED,
+                  },
+                },
+              },
+            ],
+          },
+        ],
+      },
+      orderBy: {
+        username: "asc",
+      },
+      take: after ? take + 1 : take,
+      skip: after ? 1 : 0,
+      cursor: after
+        ? {
+            username: after,
+          }
+        : undefined,
+      select: {
+        username: true,
+      },
     });
   }
 

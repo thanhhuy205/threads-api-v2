@@ -94,6 +94,35 @@ export const userSwaggerSchemas = {
         },
         required: ['success', 'data', 'pagination'],
     },
+    UserUsernameItem: {
+        type: 'object',
+        properties: {
+            username: {
+                type: 'string',
+                example: 'john_doe',
+            },
+        },
+        required: ['username'],
+    },
+    UserUsernamesPaginatedResponse: {
+        type: 'object',
+        properties: {
+            success: {
+                type: 'boolean',
+                example: true,
+            },
+            data: {
+                type: 'array',
+                items: {
+                    $ref: '#/components/schemas/UserUsernameItem',
+                },
+            },
+            pagination: {
+                $ref: '#/components/schemas/UserFollowersPagination',
+            },
+        },
+        required: ['success', 'data', 'pagination'],
+    },
     FriendRequestHandleRequest: {
         type: 'object',
         properties: {
@@ -259,6 +288,29 @@ export const userSwaggerPaths = {
                         'application/json': {
                             schema: {
                                 $ref: '#/components/schemas/UserFollowersPaginatedResponse',
+                            },
+                        },
+                    },
+                },
+                401: {
+                    description: AUTH_MESSAGE.TOKEN_INVALID,
+                },
+            },
+        },
+    },
+    '/me/usernames': {
+        get: {
+            tags: ['User'],
+            summary: 'Get usernames from following or accepted friends of current user',
+            security: bearerAuthSecurity,
+            parameters: followersPaginationQueryParameters,
+            responses: {
+                200: {
+                    description: 'Usernames retrieved',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                $ref: '#/components/schemas/UserUsernamesPaginatedResponse',
                             },
                         },
                     },

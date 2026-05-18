@@ -3,8 +3,12 @@
  */
 export interface GetTrendingHashtagsInput {
   /**
+   * Current page in offset pagination.
+   */
+  page: number;
+
+  /**
    * Number of topics to return.
-   * The controller currently defaults this to 10.
    */
   limit: number;
 }

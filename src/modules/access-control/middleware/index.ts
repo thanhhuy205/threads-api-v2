@@ -1,10 +1,10 @@
-import { ForbiddenException, UnauthorizedException } from "@/errors/error";
 import { redisKey } from "@/constants/resolve-key/redis-key";
-import type { Request, Response, NextFunction } from "express";
+import { ForbiddenException, UnauthorizedException } from "@/errors/error";
+import { redisService } from "@/providers/redis.provider";
+import { UserRoleType } from "@prisma/client";
+import type { NextFunction, Request, Response } from "express";
 import { permissionRepository } from "../permission/repository/permission.repository";
 import { rolePermissionRepository } from "../permission/repository/role-permission.repository";
-import { UserRoleType } from "@prisma/client";
-import { redisService } from "@/providers/redis.provider";
 
 export const checkPermission = (permission: string) => {
   return async (req: Request, res: Response, next: NextFunction) => {
@@ -12,7 +12,6 @@ export const checkPermission = (permission: string) => {
     if (!req.user || !userId) {
       throw new UnauthorizedException("User not found");
     }
-
     const cacheKey = redisKey.accessControl.userPermission(userId);
     const cachedPermissions = await redisService.get(cacheKey);
 
@@ -55,9 +54,12 @@ export const checkPermission = (permission: string) => {
 
 export const checkRole = (role: UserRoleType) => {
   return async (req: Request, res: Response, next: NextFunction) => {
+    console.log(req.user);
     if (!req.user) {
       throw new UnauthorizedException("User not found");
     }
+    console.log(req.user.roles);
+    console.log(role);
 
     if (!req.user.roles.includes(role)) {
       throw new ForbiddenException("Role not found");

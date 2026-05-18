@@ -1,7 +1,7 @@
 /**
- * External query string for GET /admin/hashtags/trending.
+ * External query string for GET /admin/users.
  */
-export type TrendingHashtagQueryDto = {
+export type ListUsersQueryDto = {
   /**
    * Raw page from ?page=1.
    */

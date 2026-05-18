@@ -1,5 +1,6 @@
 import { swaggerDocument } from "@/config/swagger";
 import { authorization } from "@/middlewares/auth";
+import adminAuthRouter from "@/modules/admin/admin-auth.routes";
 import adminRouter from "@/modules/admin/admin.routes";
 import aiRouter from "@/modules/ai/ai.routes";
 import authRouter from "@/modules/auth/auth.routes";
@@ -21,6 +22,7 @@ import swaggerUi from "swagger-ui-express";
 
 const router = Router();
 router.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+router.use("/admin", adminAuthRouter);
 router.use("/admin", authorization, adminRouter);
 router.use("/auth", authRouter);
 router.use("/circle", circleRouter);
