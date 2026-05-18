@@ -1,5 +1,5 @@
 import { NewFeedType } from "@/modules/post/enum";
-import { PostType, Prisma } from "@prisma/client";
+import { PostType, Prisma, VisibilityPost } from "@prisma/client";
 
 type PostCursorInfo = {
     id: number;
@@ -41,6 +41,9 @@ export const buildNewFeedWhere = ({
         type: {
             not: PostType.REPLY
         },
+        visibility: {
+            notIn: [VisibilityPost.FRIEND, VisibilityPost.PRIVATE]
+        }
     };
 
     if (feedType === NewFeedType.FOR_YOU && userId) {
@@ -51,12 +54,33 @@ export const buildNewFeedWhere = ({
             },
         });
     }
+    if (feedType === NewFeedType.FOLLOWING && userId) {
+        return ({
+            ...where,
+            user: {
+                followers: {
+                    some: {
+                        userId,
+                    },
+                },
+            },
+        });
+    }
 
     return where;
 
 }
 
 
+
+export const buildRepliesWhere = ({
+    publicId,
+}: BuildRepliesWhereOptions): Prisma.PostWhereInput => {
+    return ({
+        parentPublicId: publicId,
+        type: PostType.REPLY,
+    });
+};
 export const buildUserPostsWhere = ({
     userId,
     postType,
@@ -84,16 +108,6 @@ export const buildUserPostsWhere = ({
 
     return where;
 };
-
-export const buildRepliesWhere = ({
-    publicId,
-}: BuildRepliesWhereOptions): Prisma.PostWhereInput => {
-    return ({
-        parentPublicId: publicId,
-        type: PostType.REPLY,
-    });
-};
-
 export const buildQuoteWhere = ({
     userId,
 }: BuildQuoteWhereOptions): Prisma.PostWhereInput => {

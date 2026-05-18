@@ -22,6 +22,7 @@ import type { GetPostWithPublicId } from "@/modules/post/interfaces/get-post-wit
 import type { GetPostWithUser } from "@/modules/post/interfaces/get-post-with-user";
 import type { NewsFeedPayload } from "@/modules/post/interfaces/news-feed-payload";
 import { PostMapper } from "@/modules/post/mapper/post.mapper";
+import { followerService } from "@/modules/user/service/follower.service";
 import { userService } from "@/modules/user/service/user.service";
 import { redisService } from "@/providers/redis.provider";
 import {
@@ -181,7 +182,24 @@ class PostService {
       },
     });
 
-    const rows = posts.map((post) =>
+    const authorIds = [...new Set(posts.map((post) => post.userId))];
+    const following = await followerService.getUserFollowingPostByAuth(userId ?? "", authorIds);
+    const follower = await followerService.getUserFollowersByAuth(userId ?? "", authorIds);
+    const followingSet = new Set(
+      following.map((row) => row.followingId)
+    );
+    const followerSet = new Set(
+      follower.map((row) => row.userId)
+    );
+
+    const data = posts.map((post) => ({
+      ...post,
+      isFollowingAuthor: followingSet.has(post.userId),
+      isFollowedByAuthor: followerSet.has(post.userId),
+    }));
+
+
+    const rows = data.map((post) =>
       PostMapper.toFeedResponse(post, userId ?? undefined),
     );
 

@@ -16,11 +16,15 @@ export type PostFeedItem = Prisma.PostGetPayload<{
     userId: string;
   }[];
   derivatives?: PostOriginItem[] | null;
+  isFollowingAuthor?: boolean;
+  isFollowedByAuthor?: boolean;
 };
 
 export type PostFeedResponse = Omit<PostFeedItem, "likes"> & {
   isLikedByAuth: boolean;
   isRepostByAuth: boolean;
+  isFollowingAuthor: boolean;
+  isFollowedByAuthor: boolean;
 };
 export type UserSnapshot = {
   id: string;
@@ -81,6 +85,8 @@ export class PostMapper {
       isRepostByAuth: Boolean(
         userId && post.derivatives && post.derivatives.length > 0,
       ),
+      isFollowingAuthor: post.isFollowingAuthor ?? false,
+      isFollowedByAuthor: post.isFollowedByAuthor ?? false,
     };
   }
 }

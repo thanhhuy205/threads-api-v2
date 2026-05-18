@@ -159,6 +159,7 @@ class NotificationWorker {
     );
     console.log(notificationSave)
   }
+
   async sendPushNotification(recipientId: string, message: string) {
     console.log(`Sending push notification to user ${recipientId}: ${message}`);
     await pusher.trigger(`private-user-notification-${recipientId}`, "new-notifications", {

@@ -34,7 +34,14 @@ class CircleController {
 
 
   async createCircle(req: Request, res: Response) {
-    const circle = await circleService.createCircle(req.body);
+    const userId = req.user?.sub;
+    if (!userId) {
+      return res.error(401, "Unauthorized");
+    }
+    const circle = await circleService.createCircle({
+      ...req.body,
+      createById: userId,
+    });
     return res.success(201, "Circle created successfully", circle);
   }
 

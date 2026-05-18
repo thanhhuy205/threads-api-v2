@@ -138,6 +138,27 @@ class FollowRepository {
       },
     });
   }
-}
 
+  async findUserFollowingPostByAuth(userId: string, authorIds: string[]) {
+    return prisma.follow.findMany({
+      where: {
+        userId,
+        followingId: {
+          in: authorIds,
+        },
+      }
+    });
+  }
+
+  async findUserFollowersByAuth(userId: string, authorIds: string[]) {
+    return prisma.follow.findMany({
+      where: {
+        followingId: userId,
+        userId: {
+          in: authorIds,
+        },
+      }
+    });
+  }
+}
 export const followRepository = new FollowRepository();

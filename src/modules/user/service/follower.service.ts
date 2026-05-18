@@ -54,6 +54,17 @@ class FollowerService {
     };
   }
 
+
+  async getUserFollowingPostByAuth(userId: string, authorIds: string[]) {
+    const followingPosts = await followRepository.findUserFollowingPostByAuth(userId, authorIds);
+    return followingPosts;
+  }
+
+  async getUserFollowersByAuth(userId: string, authorIds: string[]) {
+    const followers = await followRepository.findUserFollowersByAuth(userId, authorIds);
+    return followers;
+  }
+
   async getFollowing({
     userId,
     after,
