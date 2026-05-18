@@ -71,13 +71,14 @@ export const adminSwaggerSchemas = {
         type: 'object',
         properties: {
             success: { type: 'boolean', example: true },
+            message: { type: 'string', example: 'Users retrieved successfully' },
             data: {
                 type: 'array',
                 items: { $ref: '#/components/schemas/AdminUserItem' },
             },
             pagination: { $ref: '#/components/schemas/AdminOffsetPagination' },
         },
-        required: ['success', 'data', 'pagination'],
+        required: ['success', 'message', 'data', 'pagination'],
     },
     AdminBanUserResponse: {
         type: 'object',
@@ -112,10 +113,11 @@ export const adminSwaggerSchemas = {
         type: 'object',
         properties: {
             success: { type: 'boolean', example: true },
+            message: { type: 'string', example: 'Admin trending hashtags route ready' },
             data: { type: 'array', items: { $ref: '#/components/schemas/AdminTrendingHashtagItem' } },
             pagination: { $ref: '#/components/schemas/AdminOffsetPagination' },
         },
-        required: ['success', 'data', 'pagination'],
+        required: ['success', 'message', 'data', 'pagination'],
     },
     AdminTrendingHashtagItem: {
         type: 'object',

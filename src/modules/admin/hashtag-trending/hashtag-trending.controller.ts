@@ -14,7 +14,9 @@ class HashtagTrendingController {
       limit: perPage,
     });
 
-    return res.paginate(result);
+    return res.success(200, "Admin trending hashtags route ready", result.rows, {
+      pagination: result.pagination,
+    });
   };
 }
 

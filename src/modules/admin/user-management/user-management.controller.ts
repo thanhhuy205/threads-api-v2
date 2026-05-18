@@ -14,7 +14,9 @@ class UserManagementController {
       page: currentPage,
       limit: perPage,
     });
-    return res.paginate(result);
+    return res.success(200, "Users retrieved successfully", result.rows, {
+      pagination: result.pagination,
+    });
   };
 
   banUser = async (
