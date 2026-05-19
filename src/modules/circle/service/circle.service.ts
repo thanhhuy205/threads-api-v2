@@ -10,10 +10,147 @@ import {
   RoleMembership,
   Visibility,
 } from "@prisma/client";
+import {
+  CirclePostBodyDto,
+  CirclePostsQueryDto,
+  CprBodyDto,
+  ExpLogQueryDto,
+  SacrificeBodyDto,
+} from "../dto/runtime.dto";
 import { circleMemberRepository } from "../repository/circle-member.repository";
 import { circleRepository } from "../repository/circle.repository";
 
 class CircleService {
+  async getCircleEnergy(publicId: string) {
+    return {
+      publicId,
+      current: 860,
+      max: 1000,
+      percent: 86,
+      level: 3,
+      exp: 240,
+      expToNext: 60,
+      stage: "stable",
+      drainRate: 2,
+      lastDrainAt: new Date().toISOString(),
+    };
+  }
+
+  async getCircleExpLog(publicId: string, query: ExpLogQueryDto) {
+    const limit = query.limit ?? 20;
+    const cursor = query.cursor ?? null;
+
+    const logs = [
+      {
+        expDelta: 12,
+        reason: "post_quality_done",
+        createdAt: new Date().toISOString(),
+        userId: "user_stub_1",
+      },
+      {
+        expDelta: -4,
+        reason: "energy_drain",
+        createdAt: new Date(Date.now() - 60_000).toISOString(),
+        userId: "system",
+      },
+    ].slice(0, limit);
+
+    return {
+      publicId,
+      logs,
+      nextCursor: cursor ? null : "exp_log_cursor_stub",
+    };
+  }
+
+  async createCirclePost(
+    publicId: string,
+    userId: string,
+    body: CirclePostBodyDto,
+  ) {
+    return {
+      postId: Date.now(),
+      circlePublicId: publicId,
+      userId,
+      content: body.content,
+      parentId: body.parentId ?? null,
+      judgeStatus: "pending",
+      qualityScore: null,
+      createdAt: new Date().toISOString(),
+    };
+  }
+
+  async getCirclePosts(publicId: string, query: CirclePostsQueryDto) {
+    return {
+      circlePublicId: publicId,
+      stage: "stable",
+      posts: [
+        {
+          postId: 1001,
+          content: "Skeleton post for circle feed",
+          qualityScore: 0.91,
+          judgeStatus: "done",
+          createdAt: new Date().toISOString(),
+        },
+      ],
+      nextCursor: query.cursor ? null : "circle_posts_cursor_stub",
+      limit: query.limit ?? 20,
+      sort: query.sort ?? "latest",
+    };
+  }
+
+  async createCprSession(publicId: string, userId: string, body: CprBodyDto) {
+    return {
+      requestedBy: userId,
+      circlePublicId: publicId,
+      targetComments: body.targetComments,
+      sessionId: Date.now(),
+      expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+      postId: 9001,
+    };
+  }
+
+  async getCprStatus(publicId: string) {
+    return {
+      circlePublicId: publicId,
+      active: true,
+      currentComments: 4,
+      targetComments: 10,
+      timeLeft: 1520,
+      expiresAt: new Date(Date.now() + 25 * 60 * 1000).toISOString(),
+    };
+  }
+
+  async sacrificeKarma(
+    publicId: string,
+    userId: string,
+    body: SacrificeBodyDto,
+  ) {
+    return {
+      circlePublicId: publicId,
+      userId,
+      karmaSpent: body.karmaAmount,
+      hpGained: Math.max(1, Math.floor(body.karmaAmount / 5)),
+      newKarma: 1000 - body.karmaAmount,
+      restrictionUntil: null,
+      badgeGranted: true,
+    };
+  }
+
+  async getCircleStats(publicId: string) {
+    return {
+      circlePublicId: publicId,
+      totalPosts: 120,
+      deepTalkCount: 45,
+      averageScore: 0.82,
+      topContributors: [
+        { userId: "user_stub_1", totalPosts: 17, karmaSpent: 60 },
+        { userId: "user_stub_2", totalPosts: 12, karmaSpent: 20 },
+      ],
+      cprCount: 2,
+      sacrificeCount: 9,
+    };
+  }
+
   async getCircle(publicId?: string, take: number = 10) {
     const circles = await circleRepository.findCircles({
       after: publicId,

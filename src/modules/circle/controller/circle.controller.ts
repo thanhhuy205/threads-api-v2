@@ -2,6 +2,14 @@ import { ResponseInvitationDto } from "@/modules/circle/dto/response-invitation.
 import type { SendInvitationDto } from "@/modules/circle/dto/send-invitation.dto";
 import { getPagination } from "@/shared/pagination/cursor-pagination";
 import type { Request, Response } from "express";
+import {
+  CirclePostBodyDto,
+  CirclePostsQueryDto,
+  CirclePublicIdParamsDto,
+  CprBodyDto,
+  ExpLogQueryDto,
+  SacrificeBodyDto,
+} from "../dto/runtime.dto";
 import { circleService } from "../service/circle.service";
 
 class CircleController {
@@ -12,7 +20,7 @@ class CircleController {
   }
 
   async getCircleDetail(
-    req: Request<{ publicId: string }>,
+    req: Request<CirclePublicIdParamsDto>,
     res: Response,
   ) {
     const { publicId } = req.params;
@@ -20,7 +28,7 @@ class CircleController {
     return res.success(200, "Circle detail retrieved successfully", circle);
   }
 
-  async getMembers(req: Request<{ publicId: string }>, res: Response) {
+  async getMembers(req: Request<CirclePublicIdParamsDto>, res: Response) {
     const { publicId } = req.params;
 
     const { after: memberId, take } = getPagination(req);
@@ -30,6 +38,93 @@ class CircleController {
       take,
     });
     return res.paginate(members);
+  }
+
+  async getCircleEnergy(
+    req: Request<CirclePublicIdParamsDto>,
+    res: Response,
+  ) {
+    const { publicId } = req.params;
+    const data = await circleService.getCircleEnergy(publicId);
+    return res.success(200, "Circle energy retrieved successfully", data);
+  }
+
+  async getCircleExpLog(
+    req: Request<CirclePublicIdParamsDto, {}, {}, ExpLogQueryDto>,
+    res: Response,
+  ) {
+    const { publicId } = req.params;
+    const data = await circleService.getCircleExpLog(publicId, req.query_parsed);
+    return res.success(200, "Circle exp log retrieved successfully", data);
+  }
+
+  async createCirclePost(
+    req: Request<CirclePublicIdParamsDto, {}, CirclePostBodyDto>,
+    res: Response,
+  ) {
+    const userId = req.user?.sub;
+    if (!userId) {
+      return res.error(401, "Unauthorized");
+    }
+
+    const { publicId } = req.params;
+    const data = await circleService.createCirclePost(publicId, userId, req.body);
+    return res.success(202, "Post accepted for judging", data);
+  }
+
+  async getCirclePosts(
+    req: Request<CirclePublicIdParamsDto, {}, {}, CirclePostsQueryDto>,
+    res: Response,
+  ) {
+    const { publicId } = req.params;
+    const data = await circleService.getCirclePosts(publicId, req.query_parsed);
+    return res.success(200, "Circle posts retrieved successfully", data);
+  }
+
+  async createCprSession(
+    req: Request<CirclePublicIdParamsDto, {}, CprBodyDto>,
+    res: Response,
+  ) {
+    const userId = req.user?.sub;
+    if (!userId) {
+      return res.error(401, "Unauthorized");
+    }
+
+    const { publicId } = req.params;
+    const data = await circleService.createCprSession(publicId, userId, req.body);
+    return res.success(201, "CPR session created", data);
+  }
+
+  async getCprStatus(
+    req: Request<CirclePublicIdParamsDto>,
+    res: Response,
+  ) {
+    const { publicId } = req.params;
+    const data = await circleService.getCprStatus(publicId);
+    return res.success(200, "CPR status retrieved successfully", data);
+  }
+
+  async sacrificeKarma(
+    req: Request<CirclePublicIdParamsDto, {}, SacrificeBodyDto>,
+    res: Response,
+  ) {
+    const userId = req.user?.sub;
+    if (!userId) {
+      return res.error(401, "Unauthorized");
+    }
+
+    const { publicId } = req.params;
+    const data = await circleService.sacrificeKarma(publicId, userId, req.body);
+    return res.success(200, "Karma sacrificed successfully", data);
+  }
+
+  async getCircleStats(
+    req: Request<CirclePublicIdParamsDto>,
+    res: Response,
+  ) {
+    const { publicId } = req.params;
+    const data = await circleService.getCircleStats(publicId);
+    return res.success(200, "Circle stats retrieved successfully", data);
   }
 
 

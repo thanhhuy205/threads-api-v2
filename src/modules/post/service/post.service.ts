@@ -42,6 +42,17 @@ import { PostRecord, postRepository } from "../repository/post.repository";
 import { topicsPostRepository } from "../repository/topics-post.repository";
 
 class PostService {
+  async getJudgeStatus(postId: number) {
+    return {
+      postId,
+      status: "pending" as "pending" | "done",
+      score: undefined,
+      category: undefined,
+      hpDelta: undefined,
+      expDelta: undefined,
+    };
+  }
+
   private resolveReplyPermission(replyPermission?: string): ReplyPermission {
     const normalized = (replyPermission ?? ReplyPermission.EVERYONE)
       .trim()

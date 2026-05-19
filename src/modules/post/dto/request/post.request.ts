@@ -22,6 +22,12 @@ export const publicIdParamsSchema = z.object({
 
 export type PublicIdParamsDto = z.infer<typeof publicIdParamsSchema>;
 
+export const postIdParamsSchema = z.object({
+    postId: z.coerce.number().int('Post id must be an integer').positive('Post id must be a positive number'),
+});
+
+export type PostIdParamsDto = z.infer<typeof postIdParamsSchema>;
+
 export const usernameParamsSchema = z.object({
     username: z.string().min(1, 'Username is required'),
 });

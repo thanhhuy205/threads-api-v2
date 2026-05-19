@@ -19,6 +19,9 @@ import usersRouter from "@/modules/user/users.routes";
 import webhooksRouter from "@/modules/webhooks/router";
 import { Router } from "express";
 import swaggerUi from "swagger-ui-express";
+import internalRouter from "../modules/internal/internal.routes";
+import museumRouter from "../modules/museum/museum.routes";
+import questRouter from "../modules/quest/quest.routes";
 
 const router = Router();
 router.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
@@ -39,5 +42,8 @@ router.use("/search", searchRouter);
 router.use("/message-groups", messageGroupRouter);
 router.use("/pusher", pusherRouter);
 router.use("/ai", aiRouter);
+router.use("/quests", questRouter);
+router.use("/museum", museumRouter);
+router.use("/internal", internalRouter);
 
 export default router;

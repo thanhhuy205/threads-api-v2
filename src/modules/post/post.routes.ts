@@ -6,6 +6,7 @@ import { createPostSchema, updatePostSchema } from "./dto/post.dto";
 import {
   cursorPaginationQuerySchema,
   newsFeedQuerySchema,
+  postIdParamsSchema,
   publicIdParamsSchema,
   reportSchema,
   usernameParamsSchema,
@@ -50,6 +51,12 @@ postRouter.get(
 );
 
 postRouter.use(authorization);
+
+postRouter.get(
+  "/:postId/judge-status",
+  validate(postIdParamsSchema, "params"),
+  postController.getJudgeStatus,
+);
 
 postRouter.get(
   "/me",
