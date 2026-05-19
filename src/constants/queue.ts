@@ -7,6 +7,7 @@ export const QUEUE_NAME = {
   AUTO_REMOVE_BAN_QUEUE: "auto_remove_ban_queue",
   LIKED_ADD_QUEUE: "likes_add",
   LIKED_REMOVE_QUEUE: "likes_remove",
+  EVALUATION_QUEUE: "evaluation_queue",
 };
 
 
@@ -17,6 +18,7 @@ export const WORKER_NAME = {
   LIKE_WORKER: "like_worker",
   NOTIFICATION_WORKER: "notification_worker",
   AUTO_REMOVE_BAN_WORKER: "auto_remove_ban_worker",
+  EVALUATE_WORKER: "evaluate_worker",
 };
 
 export const PINECONE_JOB_NAME = {
@@ -52,4 +54,8 @@ export const NOTIFICATION_JOB_KEY = {
 export const BLOOM_KEY = {
   FILTER_USERNAME: "filter:usernames",
   FILTER_EMAIL: "filter:emails",
+};
+
+export const EVALUATION_JOB_NAME = {
+  EVALUATION_POST: "evaluation-post",
 };

@@ -1,8 +1,10 @@
+import prisma from "@/config/prisma";
 import { NotFoundException } from "@/errors/error";
 import { CreateCircleInput } from "@/modules/circle/interfaces/circle-service.interface";
 import { ResponseInvitationInput } from "@/modules/circle/interfaces/response-invitation.dto";
 import { SendInvitationInput } from "@/modules/circle/interfaces/send-invitation.interface";
 import { circleInvitationRepository } from "@/modules/circle/repository/circle-invation.repository";
+import { redisService } from "@/providers/redis.provider";
 import { buildCursorPagination } from "@/shared/pagination/cursor-pagination";
 import { transactionService } from "@/shared/transaction/transaction.service";
 import {
@@ -17,7 +19,9 @@ import {
   ExpLogQueryDto,
   SacrificeBodyDto,
 } from "../dto/runtime.dto";
+import { evaluationProducer } from "../../job/evaluation-post/producer/evaluation.producer";
 import { circleMemberRepository } from "../repository/circle-member.repository";
+import { circleRuntimePostRepository } from "../repository/circle-runtime-post.repository";
 import { circleRepository } from "../repository/circle.repository";
 
 class CircleService {
@@ -67,16 +71,61 @@ class CircleService {
     userId: string,
     body: CirclePostBodyDto,
   ) {
-    return {
-      postId: Date.now(),
+    // 1. Verify circle exists and get its ID
+    const circle = await circleRepository.findByPublicId(publicId);
+    if (!circle) {
+      throw new NotFoundException("Circle not found");
+    }
+
+    // 2. Check rate limit (5 posts/hour per user per circle)
+    const rateLimitKey = `circle:post:limit:${userId}:${publicId}:${Math.floor(Date.now() / (60 * 60 * 1000))}`;
+    const postCount = await redisService.incr(rateLimitKey);
+
+    if (postCount === 1) {
+      // Set expiry only on first increment (1 hour)
+      await redisService.expire(rateLimitKey, 3600);
+    }
+
+    if (postCount > 5) {
+      throw new Error("RATE_LIMIT_EXCEEDED");
+    }
+
+    // 3. Check user restriction (if restricted, cannot post)
+    const restriction = await prisma.userRestriction.findFirst({
+      where: {
+        userId,
+        expiresAt: {
+          gt: new Date(),
+        },
+      },
+    });
+
+    if (restriction) {
+      throw new Error("USER_RESTRICTED");
+    }
+
+    // 4. Create post in database and quality log entry
+    const post = await transactionService.doInTransaction(async (tx) => {
+      return circleRuntimePostRepository.create(
+        {
+          circleId: circle.id,
+          userId,
+          content: body.content,
+          parentId: body.parentId,
+        },
+        tx,
+      );
+    });
+
+    // 5. Enqueue evaluation job
+    await evaluationProducer.enqueueEvaluationPost({
+      postId: post.postId,
       circlePublicId: publicId,
       userId,
       content: body.content,
-      parentId: body.parentId ?? null,
-      judgeStatus: "pending",
-      qualityScore: null,
-      createdAt: new Date().toISOString(),
-    };
+    });
+
+    return post;
   }
 
   async getCirclePosts(publicId: string, query: CirclePostsQueryDto) {
