@@ -1,3 +1,4 @@
+import { aiService } from "@/modules/ai/service/ai.service";
 import { EVALUATION_JOB_NAME, QUEUE_NAME } from "../src/constants/queue";
 import { createWorker } from "../src/providers/bullmq.provider";
 
@@ -10,29 +11,14 @@ interface EvaluationPostJob {
 
 const processEvaluationPost = async (job: EvaluationPostJob) => {
     try {
-        // TODO: Implement post quality evaluation logic
-        // For now, generate a random quality score between 0.7 and 0.95
-        const qualityScore = Math.round((Math.random() * 0.25 + 0.7) * 100) / 100;
-        const category = "general"; // TODO: Implement category detection
-        const hpDelta = Math.floor(qualityScore * 10); // Example: quality score * 10 = hp delta
-        const expDelta = Math.floor(qualityScore * 5); // Example: quality score * 5 = exp delta
 
-        console.log(
-            `[EVALUATE] Post ${job.postId} in circle ${job.circlePublicId} - Score: ${qualityScore}`,
-        );
+        const result = await aiService.scorePostAI(job.content);
 
-        // TODO: Update database with evaluation results
-        // - Update CirclePostQualityLog
-        // - Update CircleEnergy
-        // - Dispatch completion event to internal webhook
-
+        console.log(result);
         return {
             processed: true,
             postId: job.postId,
-            qualityScore,
-            category,
-            hpDelta,
-            expDelta,
+            result
         };
     } catch (error) {
         console.error(

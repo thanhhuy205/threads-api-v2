@@ -1,4 +1,4 @@
-import type { UserRole, UserRoleType } from "@prisma/client";
+import type { UserRoleType } from "@prisma/client";
 import type { JwtPayload } from "jsonwebtoken";
 
 declare module "jsonwebtoken" {
@@ -49,4 +49,4 @@ declare global {
   }
 }
 
-export {};
+export { };

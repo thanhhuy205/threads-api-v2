@@ -4,6 +4,7 @@ import { jwtConfig } from '@/config/jwt';
 import { mixedbreadAIConfig } from '@/config/mixedbread-ai';
 import { muxConfig } from '@/config/mux';
 import { nodemailerConfig } from '@/config/nodemailer';
+import { openRouterConfig } from '@/config/openrouter';
 import { pineconeConfig } from '@/config/pinecone';
 import { pusherConfig } from '@/config/pusher';
 import { rateLimitConfig } from '@/config/ratelimit';
@@ -29,6 +30,7 @@ const envSchema = z.object({
     ...cloudflareConfig.shape,
     ...pusherConfig.shape,
     ...muxConfig.shape,
+    ...openRouterConfig.shape,
 
 });
 

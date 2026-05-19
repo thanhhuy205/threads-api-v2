@@ -178,6 +178,15 @@ enum KarmaReason {
   ADMIN_GRANT // admin cấp
 }
 
+enum PostScoreLabel {
+  MASTERPIECE
+  DEEP_TALK
+  SOLID
+  NEUTRAL
+  NOISE
+  TOXIC
+}
+
 model Role {
   id              String           @id @default(cuid())
   name            String           @unique @db.VarChar(20)
@@ -708,11 +717,22 @@ model KarmaTransaction {
 }
 
 model CirclePostQualityLog {
-  id        Int      @id @default(autoincrement())
-  circleId  Int      @map("circle_id")
-  postId    Int      @map("post_id")
-  score     Int      @default(0) // 0 - 10 
-  hpDelta   Int      @default(0) @map("hp_delta") // // +5, 0, -1
+  id       Int @id @default(autoincrement())
+  circleId Int @map("circle_id")
+  postId   Int @map("post_id")
+
+  score Int            @default(0) // 0 - 10
+  label PostScoreLabel // Masterpiece | Deep Talk | Solid | Neutral | Noise | Toxic
+
+  hpDelta  Int @default(0) @map("hp_delta") // +5, +3, +1, 0, -1, -3
+  expDelta Int @default(0) @map("exp_delta") // +10, +6, +2, 0
+
+  reason     String?  @db.Text
+  confidence Decimal? @db.Decimal(3, 2) // 0.00 - 1.00
+
+  isToxic Boolean @default(false) @map("is_toxic")
+  isSpam  Boolean @default(false) @map("is_spam")
+
   createdAt DateTime @default(now()) @map("created_at")
 
   circle Circle @relation(fields: [circleId], references: [id])
@@ -720,6 +740,10 @@ model CirclePostQualityLog {
 
   @@index([circleId], map: "idx_circle_post_quality_log_circle_id")
   @@index([postId], map: "idx_circle_post_quality_log_post_id")
+  @@index([score], map: "idx_circle_post_quality_log_score")
+  @@index([label], map: "idx_circle_post_quality_log_label")
+  @@index([isToxic], map: "idx_circle_post_quality_log_is_toxic")
+  @@index([isSpam], map: "idx_circle_post_quality_log_is_spam")
   @@map("circle_post_quality_logs")
 }
 

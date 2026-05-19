@@ -1,9 +1,9 @@
-import prisma from "@/config/prisma";
 import { NotFoundException } from "@/errors/error";
 import { CreateCircleInput } from "@/modules/circle/interfaces/circle-service.interface";
 import { ResponseInvitationInput } from "@/modules/circle/interfaces/response-invitation.dto";
 import { SendInvitationInput } from "@/modules/circle/interfaces/send-invitation.interface";
 import { circleInvitationRepository } from "@/modules/circle/repository/circle-invation.repository";
+import { userRestrictionService } from "@/modules/user-restriction/service/user-restriction.service";
 import { redisService } from "@/providers/redis.provider";
 import { buildCursorPagination } from "@/shared/pagination/cursor-pagination";
 import { transactionService } from "@/shared/transaction/transaction.service";
@@ -12,6 +12,7 @@ import {
   RoleMembership,
   Visibility,
 } from "@prisma/client";
+import { evaluationProducer } from "../../job/evaluation-post/producer/evaluation.producer";
 import {
   CirclePostBodyDto,
   CirclePostsQueryDto,
@@ -19,7 +20,6 @@ import {
   ExpLogQueryDto,
   SacrificeBodyDto,
 } from "../dto/runtime.dto";
-import { evaluationProducer } from "../../job/evaluation-post/producer/evaluation.producer";
 import { circleMemberRepository } from "../repository/circle-member.repository";
 import { circleRuntimePostRepository } from "../repository/circle-runtime-post.repository";
 import { circleRepository } from "../repository/circle.repository";
@@ -91,18 +91,7 @@ class CircleService {
     }
 
     // 3. Check user restriction (if restricted, cannot post)
-    const restriction = await prisma.userRestriction.findFirst({
-      where: {
-        userId,
-        expiresAt: {
-          gt: new Date(),
-        },
-      },
-    });
-
-    if (restriction) {
-      throw new Error("USER_RESTRICTED");
-    }
+    await userRestrictionService.checkUserRestriction(userId);
 
     // 4. Create post in database and quality log entry
     const post = await transactionService.doInTransaction(async (tx) => {

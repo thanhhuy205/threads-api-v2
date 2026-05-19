@@ -179,6 +179,34 @@ export const circleSwaggerSchemas = {
         },
         required: ['success', 'data', 'pagination'],
     },
+    CirclePostRequest: {
+        type: 'object',
+        properties: {
+            content: { type: 'string', example: 'This is my circle post about deep thinking and personal growth', maxLength: 5000 },
+            parentId: { type: 'integer', example: 101, nullable: true },
+        },
+        required: ['content'],
+    },
+    CirclePostItem: {
+        type: 'object',
+        properties: {
+            postId: { type: 'number', example: 1001 },
+            content: { type: 'string', example: 'This is my circle post' },
+            qualityScore: { type: 'number', format: 'float', example: 0.91 },
+            judgeStatus: { type: 'string', enum: ['pending', 'done', 'failed'], example: 'done' },
+            createdAt: { type: 'string', format: 'date-time' },
+        },
+        required: ['postId', 'content', 'qualityScore', 'judgeStatus', 'createdAt'],
+    },
+    CirclePostResponse: {
+        type: 'object',
+        properties: {
+            success: { type: 'boolean', example: true },
+            message: { type: 'string', example: 'Post accepted for judging' },
+            data: { $ref: '#/components/schemas/CirclePostItem' },
+        },
+        required: ['success', 'message', 'data'],
+    },
 };
 
 export const circleSwaggerPaths = {
@@ -291,6 +319,32 @@ export const circleSwaggerPaths = {
                 200: { description: 'Invitation response recorded', content: { 'application/json': { schema: { $ref: '#/components/schemas/ResponseInvitationResponse' } } } },
                 400: { description: COMMON_MESSAGE.BAD_REQUEST },
                 401: { description: COMMON_MESSAGE.UNAUTHORIZED },
+            },
+        },
+    },
+    '/circle/{publicId}/posts': {
+        post: {
+            tags: ['Circle'],
+            summary: 'Create a post in circle',
+            description: 'Create a new post in a circle for quality evaluation. Post is accepted (202) and queued for judging.',
+            security: bearerAuthSecurity,
+            parameters: [
+                { name: 'publicId', in: 'path', required: true, schema: { type: 'string' }, description: 'Circle public ID' },
+            ],
+            requestBody: {
+                required: true,
+                content: { 'application/json': { schema: { $ref: '#/components/schemas/CirclePostRequest' } } },
+            },
+            responses: {
+                202: {
+                    description: 'Post accepted for judging',
+                    content: { 'application/json': { schema: { $ref: '#/components/schemas/CirclePostResponse' } } },
+                },
+                400: { description: COMMON_MESSAGE.BAD_REQUEST },
+                401: { description: COMMON_MESSAGE.UNAUTHORIZED },
+                403: { description: 'User is restricted from posting' },
+                404: { description: 'Circle not found' },
+                429: { description: 'Rate limit exceeded: maximum 5 posts per hour' },
             },
         },
     },
