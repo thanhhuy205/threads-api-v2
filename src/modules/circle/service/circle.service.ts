@@ -1,5 +1,5 @@
-import { BadRequestException, NotFoundException } from "@/errors/error";
 import { redisKey } from "@/constants/resolve-key/redis-key";
+import { BadRequestException, NotFoundException } from "@/errors/error";
 import { CreateCircleInput } from "@/modules/circle/interfaces/circle-service.interface";
 import { ResponseInvitationInput } from "@/modules/circle/interfaces/response-invitation.dto";
 import { SendInvitationInput } from "@/modules/circle/interfaces/send-invitation.interface";
@@ -20,6 +20,7 @@ import { evaluationProducer } from "../../job/evaluation-post/producer/evaluatio
 import {
   CirclePostBodyDto,
   CirclePostsQueryDto,
+  CircleRepliesQueryDto,
   CprBodyDto,
   ExpLogQueryDto,
   SacrificeBodyDto,
@@ -60,7 +61,7 @@ class CircleService {
 
   async getCircleExpLog(publicId: string, query: ExpLogQueryDto) {
     const limit = query.limit ?? 20;
-    const cursor = query.cursor ?? null;
+    const cursor = query.after ?? null;
 
     const logs = [
       {
@@ -109,8 +110,7 @@ class CircleService {
     }
 
     // 3. Check user restriction (if restricted, cannot post)
-    await userRestrictionService.checkUserRestriction(userId);
-
+    await userRestrictionService.getActiveRestriction(userId);
     // 4. Create circle post via shared post pipeline
     const post = await postService.createCircle({
       ...body,
@@ -160,21 +160,143 @@ class CircleService {
   }
 
   async getCirclePosts(publicId: string, query: CirclePostsQueryDto) {
+    const circle = await circleRepository.findByPublicId(publicId);
+    if (!circle) {
+      throw new NotFoundException(`Circle ${publicId} not found`);
+    }
+
+    const take = query.limit ?? 20;
+    const sort = query.sort ?? "latest";
+    const logs = await circlePostQualityLogRepository.findCirclePosts({
+      circleId: circle.id,
+      after: query.after ?? undefined,
+      take,
+      sort,
+    });
+
+    const { rows, pagination } = buildCursorPagination({
+      rows: logs,
+      take,
+      getAfter: (item) => item.post.publicId,
+    });
+
     return {
-      circlePublicId: publicId,
-      stage: "stable",
-      posts: [
-        {
-          postId: 1001,
-          content: "Skeleton post for circle feed",
-          qualityScore: 0.91,
-          judgeStatus: "done",
-          createdAt: new Date().toISOString(),
+      rows: rows.map((item) => ({
+        postId: item.post.id,
+        publicId: item.post.publicId,
+        userId: item.post.userId,
+        content: item.post.content,
+        createdAt: item.post.createdAt,
+        userSnapshot: item.post.userSnapshot,
+        qualityLog: {
+          score: item.score,
+          label: item.label,
+          hpDelta: item.hpDelta,
+          expDelta: item.expDelta,
+          reason: item.reason,
+          confidence: item.confidence,
+          isToxic: item.isToxic,
+          isSpam: item.isSpam,
+          createdAt: item.createdAt,
         },
-      ],
-      nextCursor: query.cursor ? null : "circle_posts_cursor_stub",
-      limit: query.limit ?? 20,
-      sort: query.sort ?? "latest",
+      })),
+      pagination,
+    };
+  }
+
+  async createCircleReply(
+    publicId: string,
+    postPublicId: string,
+    userId: string,
+    body: CirclePostBodyDto,
+  ) {
+    const circle = await circleRepository.findByPublicId(publicId);
+    if (!circle) {
+      throw new NotFoundException("Circle not found");
+    }
+    const parentInCircle =
+      await circlePostQualityLogRepository.findByCircleAndPostPublicId(
+        circle.id,
+        postPublicId,
+      );
+    if (!parentInCircle) {
+      throw new NotFoundException("Circle post not found");
+    }
+
+    await userRestrictionService.getActiveRestriction(userId);
+
+    const post = await postService.createCircleReply(postPublicId, {
+      ...body,
+      userId,
+    });
+
+    if (!post.id) {
+      throw new BadRequestException("Failed to create reply");
+    }
+
+    const qualityLog = await circlePostQualityLogRepository.create({
+      circleId: circle.id,
+      postId: post.id,
+      score: 0,
+      hpDelta: 0,
+    });
+
+    await evaluationProducer.enqueueEvaluationPost({
+      postId: post.id,
+      circlePublicId: publicId,
+      userId,
+      content: body.content,
+    });
+
+    return {
+      postId: post.id,
+      publicId: post.publicId,
+      circleId: circle.id,
+      userId: post.userId,
+      content: post.content,
+      qualityLog: {
+        score: qualityLog.score,
+        label: PostScoreLabel.PENDING,
+        hpDelta: qualityLog.hpDelta,
+        expDelta: qualityLog.expDelta,
+        reason: qualityLog.reason,
+        confidence: qualityLog.confidence,
+        isToxic: qualityLog.isToxic,
+        isSpam: qualityLog.isSpam,
+        createdAt: qualityLog.createdAt,
+      },
+      createdAt: post.createdAt,
+    };
+  }
+
+  async getCircleReplies(
+    publicId: string,
+    postPublicId: string,
+    query: CircleRepliesQueryDto,
+  ) {
+    const circle = await circleRepository.findByPublicId(publicId);
+    if (!circle) {
+      throw new NotFoundException(`Circle ${publicId} not found`);
+    }
+    const parentInCircle =
+      await circlePostQualityLogRepository.findByCircleAndPostPublicId(
+        circle.id,
+        postPublicId,
+      );
+    if (!parentInCircle) {
+      throw new NotFoundException("Circle post not found");
+    }
+
+    const take = query.limit ?? 20;
+    const { posts, pagination } = await postService.getCircleReplies({
+      after: query.after ?? undefined,
+      take,
+      publicId: postPublicId,
+    });
+
+    return {
+      rows: posts,
+      pagination,
     };
   }
 

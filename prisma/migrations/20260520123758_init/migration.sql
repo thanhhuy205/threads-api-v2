@@ -116,7 +116,7 @@ CREATE TABLE `verification_codes` (
 
 -- CreateTable
 CREATE TABLE `message_groups` (
-    `id` VARCHAR(191) NOT NULL,
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
     `public_id` VARCHAR(191) NOT NULL,
     `name` VARCHAR(255) NOT NULL DEFAULT '',
     `groupType` ENUM('PRIVATE', 'CROWD') NOT NULL DEFAULT 'PRIVATE',
@@ -135,7 +135,7 @@ CREATE TABLE `member_message_groups` (
     `user_id` VARCHAR(191) NOT NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NOT NULL,
-    `messageGroupId` VARCHAR(191) NULL,
+    `messageGroupId` INTEGER NULL,
 
     INDEX `idx_messages_sender_id`(`user_id`),
     UNIQUE INDEX `uq_member_message_groups_group_user`(`messageGroupId`, `user_id`),
@@ -146,7 +146,7 @@ CREATE TABLE `member_message_groups` (
 CREATE TABLE `messages` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `public_id` VARCHAR(191) NOT NULL,
-    `message_group_id` VARCHAR(191) NOT NULL,
+    `message_group_id` INTEGER NOT NULL,
     `sender_id` VARCHAR(191) NOT NULL,
     `content` TEXT NOT NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -163,8 +163,8 @@ CREATE TABLE `posts` (
     `public_id` VARCHAR(191) NOT NULL,
     `user_id` VARCHAR(191) NOT NULL,
     `content` TEXT NOT NULL,
-    `type` ENUM('POST', 'REPLY', 'REPOST', 'QUOTE') NOT NULL DEFAULT 'POST',
-    `visibility` ENUM('PUBLIC', 'FRIEND', 'PRIVATE') NOT NULL DEFAULT 'PUBLIC',
+    `type` ENUM('POST', 'REPLY', 'REPOST', 'QUOTE', 'CIRCLE') NOT NULL DEFAULT 'POST',
+    `visibility` ENUM('PUBLIC', 'FRIEND', 'PRIVATE', 'CIRCLE') NOT NULL DEFAULT 'PUBLIC',
     `parent_id` INTEGER NULL,
     `origin_post_id` INTEGER NULL,
     `root_post_id` INTEGER NULL,
@@ -442,11 +442,21 @@ CREATE TABLE `circle_post_quality_logs` (
     `circle_id` INTEGER NOT NULL,
     `post_id` INTEGER NOT NULL,
     `score` INTEGER NOT NULL DEFAULT 0,
+    `label` ENUM('MASTERPIECE', 'DEEP_TALK', 'SOLID', 'NEUTRAL', 'NOISE', 'TOXIC', 'PENDING') NOT NULL DEFAULT 'PENDING',
     `hp_delta` INTEGER NOT NULL DEFAULT 0,
+    `exp_delta` INTEGER NOT NULL DEFAULT 0,
+    `reason` TEXT NULL,
+    `confidence` DECIMAL(3, 2) NULL,
+    `is_toxic` BOOLEAN NOT NULL DEFAULT false,
+    `is_spam` BOOLEAN NOT NULL DEFAULT false,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
     INDEX `idx_circle_post_quality_log_circle_id`(`circle_id`),
     INDEX `idx_circle_post_quality_log_post_id`(`post_id`),
+    INDEX `idx_circle_post_quality_log_score`(`score`),
+    INDEX `idx_circle_post_quality_log_label`(`label`),
+    INDEX `idx_circle_post_quality_log_is_toxic`(`is_toxic`),
+    INDEX `idx_circle_post_quality_log_is_spam`(`is_spam`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -455,11 +465,19 @@ CREATE TABLE `circle_exp_logs` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `user_id` VARCHAR(191) NOT NULL,
     `circle_id` INTEGER NOT NULL,
+    `post_id` INTEGER NULL,
+    `exp_reason_enum` ENUM('POST_MASTERPIECE', 'POST_DEEP_TALK', 'POST_SOLID', 'POST_NEUTRAL', 'POST_NOISE', 'POST_TOXIC', 'CPR_SUCCESS', 'MEMBER_JOIN', 'CPR_SURVIVED', 'CPR_FAIL') NOT NULL,
     `exp_delta` INTEGER NOT NULL DEFAULT 0,
+    `is_delta` BOOLEAN NOT NULL DEFAULT false,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
     INDEX `idx_circle_exp_log_circle_id`(`circle_id`),
     INDEX `idx_circle_exp_log_user_id`(`user_id`),
+    INDEX `idx_circle_exp_log_post_id`(`post_id`),
+    INDEX `idx_circle_exp_log_exp_reason`(`exp_reason_enum`),
+    INDEX `idx_circle_exp_log_is_delta`(`is_delta`),
+    INDEX `idx_circle_exp_log_created_at`(`created_at`),
+    UNIQUE INDEX `uq_circle_exp_logs_circle_post_reason`(`circle_id`, `post_id`, `exp_reason_enum`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -552,16 +570,25 @@ CREATE TABLE `anti_spam` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `notifications` (
+CREATE TABLE `notification_groups` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
-    `user_id` VARCHAR(191) NOT NULL,
-    `type` ENUM('LIKE', 'FOLLOW', 'QUOTE', 'SHARE', 'MESSAGE', 'REPLY') NOT NULL,
-    `content` VARCHAR(255) NOT NULL,
+    `public_id` VARCHAR(191) NOT NULL,
+    `recipient_id` VARCHAR(191) NOT NULL,
+    `type` ENUM('POST', 'LIKE', 'FOLLOW', 'QUOTE', 'SHARE', 'MESSAGE', 'REPLY') NOT NULL,
+    `target_type` VARCHAR(191) NOT NULL,
+    `target_id` VARCHAR(191) NOT NULL,
+    `actor_ids` JSON NOT NULL,
+    `count` INTEGER NOT NULL DEFAULT 1,
     `is_read` BOOLEAN NOT NULL DEFAULT false,
+    `last_actor_id` VARCHAR(191) NOT NULL,
+    `last_event_at` DATETIME(3) NOT NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at` DATETIME(3) NOT NULL,
+    `origin_post` VARCHAR(191) NULL,
 
-    INDEX `idx_notifications_user_id`(`user_id`),
-    INDEX `idx_notifications_is_read`(`is_read`),
+    UNIQUE INDEX `notification_groups_public_id_key`(`public_id`),
+    INDEX `notification_groups_recipient_id_is_read_last_event_at_idx`(`recipient_id`, `is_read`, `last_event_at`),
+    INDEX `notification_groups_recipient_id_type_target_type_target_id_idx`(`recipient_id`, `type`, `target_type`, `target_id`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -689,6 +716,9 @@ ALTER TABLE `circle_exp_logs` ADD CONSTRAINT `circle_exp_logs_circle_id_fkey` FO
 ALTER TABLE `circle_exp_logs` ADD CONSTRAINT `circle_exp_logs_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `circle_exp_logs` ADD CONSTRAINT `circle_exp_logs_post_id_fkey` FOREIGN KEY (`post_id`) REFERENCES `posts`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE `user_karma` ADD CONSTRAINT `user_karma_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -713,4 +743,10 @@ ALTER TABLE `circle_invitations` ADD CONSTRAINT `circle_invitations_inviter_id_f
 ALTER TABLE `anti_spam` ADD CONSTRAINT `anti_spam_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `notifications` ADD CONSTRAINT `notifications_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `notification_groups` ADD CONSTRAINT `notification_groups_last_actor_id_fkey` FOREIGN KEY (`last_actor_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `notification_groups` ADD CONSTRAINT `notification_groups_target_id_fkey` FOREIGN KEY (`target_id`) REFERENCES `posts`(`public_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `notification_groups` ADD CONSTRAINT `notification_groups_origin_post_fkey` FOREIGN KEY (`origin_post`) REFERENCES `posts`(`public_id`) ON DELETE SET NULL ON UPDATE CASCADE;

@@ -1,6 +1,6 @@
-import { z } from 'zod';
-import { VisibilityPost } from '@prisma/client';
 import { CreatePostDto, createPostSchema } from '@/modules/post/dto/post.dto';
+import { VisibilityPost } from '@prisma/client';
+import { z } from 'zod';
 
 export const circlePublicIdParamsSchema = z.object({
     publicId: z.string().min(1, 'Circle public ID is required'),
@@ -8,9 +8,16 @@ export const circlePublicIdParamsSchema = z.object({
 
 export type CirclePublicIdParamsDto = z.infer<typeof circlePublicIdParamsSchema>;
 
+export const circleReplyParamsSchema = z.object({
+    publicId: z.string().min(1, 'Circle public ID is required'),
+    postPublicId: z.string().min(1, 'Post public ID is required'),
+});
+
+export type CircleReplyParamsDto = z.infer<typeof circleReplyParamsSchema>;
+
 export const cursorLimitQuerySchema = z.object({
     limit: z.coerce.number().int('Limit must be an integer').positive('Limit must be a positive number').max(100, 'Limit must be at most 100').optional(),
-    cursor: z.string().trim().min(1, 'Cursor must not be empty').optional(),
+    after: z.string().trim().min(1, 'Cursor must not be empty').optional(),
 });
 
 export const expLogQuerySchema = cursorLimitQuerySchema;
@@ -21,6 +28,7 @@ export const circlePostsQuerySchema = cursorLimitQuerySchema.extend({
 });
 
 export type CirclePostsQueryDto = z.infer<typeof circlePostsQuerySchema>;
+export type CircleRepliesQueryDto = z.infer<typeof cursorLimitQuerySchema>;
 
 export const createCirclePostRuntimeSchema = z.preprocess(
     (value) => {

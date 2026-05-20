@@ -39,7 +39,7 @@ export const buildNewFeedWhere = ({
 }: BuildNewFeedWhereOptions) => {
     const where: Prisma.PostWhereInput = {
         type: {
-            notIn: [PostType.REPLY, PostType.CIRCLE],
+            notIn: [PostType.REPLY, PostType.CIRCLE, PostType.CIRCLE_REPLY],
         },
         visibility: {
             notIn: [VisibilityPost.FRIEND, VisibilityPost.PRIVATE, VisibilityPost.CIRCLE]
@@ -127,7 +127,7 @@ export const buildUserPostsWhere = ({
         return ({
             ...where,
             type: {
-                not: PostType.REPLY
+                notIn: [PostType.REPLY, PostType.CIRCLE_REPLY]
             }
         });
     }

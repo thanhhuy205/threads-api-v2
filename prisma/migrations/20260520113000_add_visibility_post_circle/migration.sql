@@ -1,3 +1,0 @@
--- AlterTable
-ALTER TABLE `posts`
-    MODIFY `visibility` ENUM('PUBLIC', 'FRIEND', 'PRIVATE', 'CIRCLE') NOT NULL DEFAULT 'PUBLIC';

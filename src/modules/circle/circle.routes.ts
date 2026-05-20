@@ -7,8 +7,10 @@ import { createCircleSchema } from './dto/create-circle.dto';
 import {
     circlePostsQuerySchema,
     circlePublicIdParamsSchema,
+    circleReplyParamsSchema,
     cprBodySchema,
     createCirclePostRuntimeSchema,
+    cursorLimitQuerySchema,
     expLogQuerySchema,
     sacrificeBodySchema,
 } from './dto/runtime.dto';
@@ -46,6 +48,18 @@ circleRouter.get(
     validate(circlePublicIdParamsSchema, 'params'),
     validate(circlePostsQuerySchema, 'query'),
     circleController.getCirclePosts,
+);
+circleRouter.post(
+    '/:publicId/posts/:postPublicId/reply',
+    validate(circleReplyParamsSchema, 'params'),
+    validate(createCirclePostRuntimeSchema),
+    circleController.createCircleReply,
+);
+circleRouter.get(
+    '/:publicId/posts/:postPublicId/replies',
+    validate(circleReplyParamsSchema, 'params'),
+    validate(cursorLimitQuerySchema, 'query'),
+    circleController.getCircleReplies,
 );
 circleRouter.post(
     '/:publicId/cpr',

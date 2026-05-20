@@ -6,6 +6,8 @@ import {
   CirclePostBodyDto,
   CirclePostsQueryDto,
   CirclePublicIdParamsDto,
+  CircleRepliesQueryDto,
+  CircleReplyParamsDto,
   CprBodyDto,
   ExpLogQueryDto,
   SacrificeBodyDto,
@@ -86,7 +88,39 @@ class CircleController {
   ) {
     const { publicId } = req.params;
     const data = await circleService.getCirclePosts(publicId, req.query_parsed);
-    return res.success(200, "Circle posts retrieved successfully", data);
+    return res.paginate(data);
+  }
+
+  async createCircleReply(
+    req: Request<CircleReplyParamsDto, {}, CirclePostBodyDto>,
+    res: Response,
+  ) {
+    const userId = req.user?.sub;
+    if (!userId) {
+      return res.error(401, "Unauthorized");
+    }
+
+    const { publicId, postPublicId } = req.params;
+    const data = await circleService.createCircleReply(
+      publicId,
+      postPublicId,
+      userId,
+      req.body,
+    );
+    return res.success(202, "Reply accepted for judging", data);
+  }
+
+  async getCircleReplies(
+    req: Request<CircleReplyParamsDto, {}, {}, CircleRepliesQueryDto>,
+    res: Response,
+  ) {
+    const { publicId, postPublicId } = req.params;
+    const data = await circleService.getCircleReplies(
+      publicId,
+      postPublicId,
+      req.query_parsed,
+    );
+    return res.paginate(data);
   }
 
   async createCprSession(

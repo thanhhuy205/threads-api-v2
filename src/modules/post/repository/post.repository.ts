@@ -190,6 +190,31 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
     };
   }
 
+  async createCircleReply(
+    payload: RepositoryCreatePostPayload,
+    parentPublicId: string,
+    userSnapshot: UserSnapshot,
+    tx: Prisma.TransactionClient = prisma,
+  ) {
+    const post = await tx.post.create({
+      data: {
+        ...this.baseData(payload, userSnapshot),
+        parentPublicId,
+        type: PostType.CIRCLE_REPLY,
+      },
+      select: postSelectRepository,
+    });
+
+    return {
+      id: post.id,
+      publicId: post.publicId,
+      content: post.content!,
+      userId: post.userId,
+      visibility: post.visibility,
+      createdAt: post.createdAt.toISOString(),
+    };
+  }
+
   async createRepost(
     payload: CreateRepostPayload,
     originPublicId: string,

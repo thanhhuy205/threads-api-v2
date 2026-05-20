@@ -18,6 +18,7 @@ enum PostType {
   REPOST
   QUOTE
   CIRCLE
+  CIRCLE_REPLY
 }
 
 enum FollowStatus {
@@ -778,13 +779,13 @@ model CircleExpLog {
   user   User   @relation(fields: [userId], references: [id])
   post   Post?  @relation(fields: [postId], references: [id])
 
+  @@unique([circleId, postId, expReason], map: "uq_circle_exp_logs_circle_post_reason")
   @@index([circleId], map: "idx_circle_exp_log_circle_id")
   @@index([userId], map: "idx_circle_exp_log_user_id")
   @@index([postId], map: "idx_circle_exp_log_post_id")
   @@index([expReason], map: "idx_circle_exp_log_exp_reason")
   @@index([isDelta], map: "idx_circle_exp_log_is_delta")
   @@index([createdAt], map: "idx_circle_exp_log_created_at")
-  @@unique([circleId, postId, expReason], map: "uq_circle_exp_logs_circle_post_reason")
   @@map("circle_exp_logs")
 }
 

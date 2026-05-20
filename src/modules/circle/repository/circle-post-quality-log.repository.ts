@@ -1,5 +1,5 @@
 import prisma from "@/config/prisma";
-import { PostScoreLabel, Prisma } from "@prisma/client";
+import { PostScoreLabel, PostType, Prisma } from "@prisma/client";
 
 type CreateCirclePostQualityLogInput = {
   circleId: number;
@@ -22,6 +22,134 @@ type SaveCirclePostJudgeResultInput = {
 };
 
 class CirclePostQualityLogRepository {
+  async findByCircleAndPostPublicId(circleId: number, postPublicId: string) {
+    return prisma.circlePostQualityLog.findFirst({
+      where: {
+        circleId,
+        post: {
+          publicId: postPublicId,
+          isDeleted: false,
+        },
+      },
+      select: {
+        id: true,
+        postId: true,
+      },
+    });
+  }
+
+  private async findCursorEntry(circleId: number, after: string) {
+    return prisma.circlePostQualityLog.findFirst({
+      where: {
+        circleId,
+        post: {
+          publicId: after,
+          isDeleted: false,
+          type: PostType.CIRCLE,
+        },
+      },
+      select: {
+        id: true,
+        expDelta: true,
+        createdAt: true,
+      },
+    });
+  }
+
+  async findCirclePosts(params: {
+    circleId: number;
+    after?: string;
+    take: number;
+    sort: "latest" | "quality";
+  }) {
+    const cursorEntry = params.after
+      ? await this.findCursorEntry(params.circleId, params.after)
+      : null;
+
+    if (params.after && !cursorEntry) {
+      return [];
+    }
+
+    const where: Prisma.CirclePostQualityLogWhereInput = {
+      circleId: params.circleId,
+      post: {
+        isDeleted: false,
+        type: PostType.CIRCLE,
+      },
+    };
+
+    if (cursorEntry) {
+      where.AND =
+        params.sort === "quality"
+          ? [
+            {
+              OR: [
+                { expDelta: { lt: cursorEntry.expDelta } },
+                {
+                  AND: [
+                    { expDelta: cursorEntry.expDelta },
+                    { createdAt: { lt: cursorEntry.createdAt } },
+                  ],
+                },
+                {
+                  AND: [
+                    { expDelta: cursorEntry.expDelta },
+                    { createdAt: cursorEntry.createdAt },
+                    { id: { lt: cursorEntry.id } },
+                  ],
+                },
+              ],
+            },
+          ]
+          : [
+            {
+              OR: [
+                { createdAt: { lt: cursorEntry.createdAt } },
+                {
+                  AND: [
+                    { createdAt: cursorEntry.createdAt },
+                    { id: { lt: cursorEntry.id } },
+                  ],
+                },
+              ],
+            },
+          ];
+    }
+
+    return prisma.circlePostQualityLog.findMany({
+      where,
+      take: params.take + 1,
+      orderBy:
+        params.sort === "quality"
+          ? [{ expDelta: "desc" }, { createdAt: "desc" }, { id: "desc" }]
+          : [{ createdAt: "desc" }, { id: "desc" }],
+      select: {
+        id: true,
+        score: true,
+        label: true,
+        hpDelta: true,
+        expDelta: true,
+        reason: true,
+        confidence: true,
+        isToxic: true,
+        isSpam: true,
+        createdAt: true,
+        post: {
+          select: {
+            id: true,
+            publicId: true,
+            userId: true,
+            content: true,
+            createdAt: true,
+            visibility: true,
+            replyPermission: true,
+            userSnapshot: true
+          },
+        },
+      },
+    });
+  }
+
   async create(
     data: CreateCirclePostQualityLogInput,
     tx: Prisma.TransactionClient = prisma,

@@ -394,6 +394,24 @@ class PostService {
     });
   }
 
+  async getCircleReplies({ after, take, publicId }: GetPostWithPublicId) {
+    return this.getCachedPostList({
+      scope: "reply-circle-post",
+      after,
+      take,
+      extra: publicId,
+      resolver: () =>
+        this.paginatePosts({
+          after,
+          take,
+          where: {
+            parentPublicId: publicId,
+            type: PostType.CIRCLE_REPLY,
+          },
+        }),
+    });
+  }
+
   async getQuote({ after, take, userId }: GetPostWithUser) {
     return this.getCachedPostList({
       scope: "quote-user",
@@ -496,6 +514,52 @@ class PostService {
         username: snapshot.username,
       },
     );
+
+    await this.bumpPostListCacheVersion();
+    return {
+      publicId: post.publicId,
+      content: post.content!,
+      userId: post.userId,
+      visibility: post.visibility,
+      createdAt: post.createdAt,
+    } as PostRecord;
+  }
+
+  async createCircleReply(
+    publicId: string,
+    payload: CreatePostDto & { userId: string },
+  ) {
+    const snapshot = await this.resolveUser(payload.userId);
+    const mentionIds = await this.validateMentions(payload.mentions);
+    const options = this.resolvePostOptions({
+      visibility: payload.visibility ?? VisibilityPost.CIRCLE,
+      replyPermission: payload.replyPermission ?? ReplyPermission.EVERYONE,
+    });
+    const existPost = await postRepository.findByPublicId(publicId);
+    if (!existPost) {
+      throw new NotFoundException("Origin post not found");
+    }
+
+    const post = await this.createInTransaction(
+      (tx) =>
+        postRepository.createCircleReply(
+          { ...payload, ...options },
+          publicId,
+          snapshot,
+          tx,
+        ),
+      { topic: payload.topic, mentionIds },
+    );
+
+    baseLogger.info("Created circle reply post, adding notification group");
+    await notificationService.handleNewComment({
+      actorId: payload.userId,
+      recipientId: existPost.userId,
+      targetPostId: post.publicId,
+      originPostId: existPost.publicId,
+      postOwnerId: existPost.userId,
+      username: snapshot.username,
+    });
 
     await this.bumpPostListCacheVersion();
     return {
