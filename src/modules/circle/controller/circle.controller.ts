@@ -64,7 +64,11 @@ class CircleController {
     res: Response,
   ) {
     const { publicId } = req.params;
-    const data = await circleService.getCircleExpLog(publicId, req.query_parsed);
+    const { after, take } = getPagination(req);
+    const data = await circleService.getCircleExpLog(publicId, {
+      after: after ?? undefined,
+      take,
+    });
     return res.success(200, "Circle exp log retrieved successfully", data);
   }
 
@@ -87,7 +91,11 @@ class CircleController {
     res: Response,
   ) {
     const { publicId } = req.params;
-    const data = await circleService.getCirclePosts(publicId, req.query_parsed);
+    const { after, take } = getPagination(req);
+    const data = await circleService.getCirclePosts(publicId, {
+      after: after ?? undefined,
+      take,
+    });
     return res.paginate(data);
   }
 

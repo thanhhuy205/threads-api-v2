@@ -16,7 +16,7 @@ export const circleReplyParamsSchema = z.object({
 export type CircleReplyParamsDto = z.infer<typeof circleReplyParamsSchema>;
 
 export const cursorLimitQuerySchema = z.object({
-    limit: z.coerce.number().int('Limit must be an integer').positive('Limit must be a positive number').max(100, 'Limit must be at most 100').optional(),
+    take: z.coerce.number().int('take must be an integer').positive('take must be a positive number').max(100, 'take must be at most 100').optional(),
     after: z.string().trim().min(1, 'Cursor must not be empty').optional(),
 });
 
@@ -25,6 +25,7 @@ export type ExpLogQueryDto = z.infer<typeof expLogQuerySchema>;
 
 export const circlePostsQuerySchema = cursorLimitQuerySchema.extend({
     sort: z.enum(['latest', 'quality']).optional(),
+    take: z.coerce.number().int('Take must be an integer').positive('Take must be a positive number').max(100, 'Take must be at most 100').optional(),
 });
 
 export type CirclePostsQueryDto = z.infer<typeof circlePostsQuerySchema>;

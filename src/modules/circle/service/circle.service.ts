@@ -60,8 +60,6 @@ class CircleService {
   }
 
   async getCircleExpLog(publicId: string, query: ExpLogQueryDto) {
-    const limit = query.limit ?? 20;
-    const cursor = query.after ?? null;
 
     const logs = [
       {
@@ -76,12 +74,12 @@ class CircleService {
         createdAt: new Date(Date.now() - 60_000).toISOString(),
         userId: "system",
       },
-    ].slice(0, limit);
+    ].slice(0, query.take ?? 20);
 
     return {
       publicId,
       logs,
-      nextCursor: cursor ? null : "exp_log_cursor_stub",
+      nextCursor: query.after ? null : "exp_log_cursor_stub",
     };
   }
 
@@ -165,7 +163,7 @@ class CircleService {
       throw new NotFoundException(`Circle ${publicId} not found`);
     }
 
-    const take = query.limit ?? 20;
+    const take = query.take ?? 20;
     const sort = query.sort ?? "latest";
     const logs = await circlePostQualityLogRepository.findCirclePosts({
       circleId: circle.id,
@@ -287,7 +285,7 @@ class CircleService {
       throw new NotFoundException("Circle post not found");
     }
 
-    const take = query.limit ?? 20;
+    const take = query.take ?? 20;
     const { posts, pagination } = await postService.getCircleReplies({
       after: query.after ?? undefined,
       take,
