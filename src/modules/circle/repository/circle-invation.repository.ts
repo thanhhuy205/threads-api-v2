@@ -21,8 +21,8 @@ class CircleInvitationRepository implements ICursorPagination<
     cursor?: Prisma.CircleInvitationWhereUniqueInput;
     select?: Prisma.CircleInvitationSelect;
     orderBy?:
-      | Prisma.CircleInvitationOrderByWithRelationInput
-      | Prisma.CircleInvitationOrderByWithRelationInput[];
+    | Prisma.CircleInvitationOrderByWithRelationInput
+    | Prisma.CircleInvitationOrderByWithRelationInput[];
   }): Promise<any[]> {
     const { currentAfter, currentLimit } = buildPagination({ after, take });
     return prisma.circleInvitation.findMany({
@@ -82,6 +82,25 @@ class CircleInvitationRepository implements ICursorPagination<
         userId: true,
         status: true,
         resentCount: true,
+      },
+    });
+  }
+
+  async findPendingInvitationsByCircleIds(circleIds: number[], userId: string) {
+    if (!circleIds.length) {
+      return [];
+    }
+
+    return prisma.circleInvitation.findMany({
+      where: {
+        userId,
+        status: CircleInvitationStatus.PENDING,
+        circleId: {
+          in: circleIds,
+        },
+      },
+      select: {
+        circleId: true,
       },
     });
   }

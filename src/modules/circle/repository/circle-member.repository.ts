@@ -75,6 +75,24 @@ class CircleMemberRepository implements ICursorPagination<Prisma.CircleMemberWhe
         });
         return member;
     }
+
+    async findMembershipsByCircleIds(circleIds: number[], userId: string) {
+        if (!circleIds.length) {
+            return [];
+        }
+
+        return prisma.circleMember.findMany({
+            where: {
+                userId,
+                circleId: {
+                    in: circleIds,
+                },
+            },
+            select: {
+                circleId: true,
+            },
+        });
+    }
 }
 
 export const circleMemberRepository = new CircleMemberRepository();

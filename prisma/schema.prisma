@@ -190,6 +190,19 @@ enum PostScoreLabel {
   PENDING
 }
 
+enum ExpReason {
+  POST_MASTERPIECE
+  POST_DEEP_TALK
+  POST_SOLID
+  POST_NEUTRAL
+  POST_NOISE
+  POST_TOXIC
+  CPR_SUCCESS
+  MEMBER_JOIN
+  CPR_SURVIVED
+  CPR_FAIL
+}
+
 model Role {
   id              String           @id @default(cuid())
   name            String           @unique @db.VarChar(20)
@@ -435,6 +448,7 @@ model Post {
   topicsPosts             TopicsPost[]
   likes                   Like[]
   circlePostQualityLogs   CirclePostQualityLog[]
+  circleExpLogs           CircleExpLog[]
   originPostNotifications NotificationGroup[]    @relation("NotificationOriginPost")
   targetPostNotifications NotificationGroup[]    @relation("NotificationTargetPost")
 
@@ -751,17 +765,26 @@ model CirclePostQualityLog {
 }
 
 model CircleExpLog {
-  id        Int      @id @default(autoincrement())
-  userId    String   @map("user_id")
-  circleId  Int      @map("circle_id")
-  expDelta  Int      @default(0) @map("exp_delta") // +5, 0, -1
-  createdAt DateTime @default(now()) @map("created_at")
+  id        Int       @id @default(autoincrement())
+  userId    String    @map("user_id")
+  circleId  Int       @map("circle_id")
+  postId    Int?      @map("post_id")
+  expReason ExpReason @map("exp_reason_enum")
+  expDelta  Int       @default(0) @map("exp_delta") // +5, 0, -1
+  isDelta   Boolean   @default(false) @map("is_delta")
+  createdAt DateTime  @default(now()) @map("created_at")
 
   circle Circle @relation(fields: [circleId], references: [id])
   user   User   @relation(fields: [userId], references: [id])
+  post   Post?  @relation(fields: [postId], references: [id])
 
   @@index([circleId], map: "idx_circle_exp_log_circle_id")
   @@index([userId], map: "idx_circle_exp_log_user_id")
+  @@index([postId], map: "idx_circle_exp_log_post_id")
+  @@index([expReason], map: "idx_circle_exp_log_exp_reason")
+  @@index([isDelta], map: "idx_circle_exp_log_is_delta")
+  @@index([createdAt], map: "idx_circle_exp_log_created_at")
+  @@unique([circleId, postId, expReason], map: "uq_circle_exp_logs_circle_post_reason")
   @@map("circle_exp_logs")
 }
 

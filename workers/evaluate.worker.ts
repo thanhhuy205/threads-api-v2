@@ -1,8 +1,14 @@
+import {
+    mapPostLabelToExpReason,
+    mapPostLabelToQualityLabel,
+    mapScoreToReward,
+} from "@/modules/ai/mapper/nomallize-score";
 import { aiService } from "@/modules/ai/service/ai.service";
+import { circleExpLogRepository } from "@/modules/circle/repository/circle-exp-log.repository";
+import { circlePostQualityLogRepository } from "@/modules/circle/repository/circle-post-quality-log.repository";
+import { circleRepository } from "@/modules/circle/repository/circle.repository";
 import { EVALUATION_JOB_NAME, QUEUE_NAME } from "../src/constants/queue";
 import { createWorker } from "../src/providers/bullmq.provider";
-import { pineconeIndex } from "@/providers/pinecone.provider";
-import { mixedBreadService } from '../src/modules/mixed-bread/service/mixed-bread.service';
 
 interface EvaluationPostJob {
     postId: number;
@@ -13,8 +19,40 @@ interface EvaluationPostJob {
 
 const processEvaluationPost = async (job: EvaluationPostJob) => {
     try {
-  
+
         const result = await aiService.scorePostAI(job.content);
+        const formatResult = mapScoreToReward(result);
+        const expReason = mapPostLabelToExpReason(formatResult.label);
+        const qualityLabel = mapPostLabelToQualityLabel(formatResult.label);
+
+        const circle = await circleRepository.findByPublicId(job.circlePublicId);
+        if (!circle) {
+            throw new Error(`Circle ${job.circlePublicId} not found`);
+        }
+
+        await Promise.all([
+            circleExpLogRepository.upsertPostQualityLog({
+                userId: job.userId,
+                circleId: circle.id,
+                postId: job.postId,
+                expReason,
+                expDelta: formatResult.expDelta,
+                isDelta: false,
+            }),
+            circlePostQualityLogRepository.saveJudgeResult({
+                circleId: circle.id,
+                postId: job.postId,
+                score: formatResult.score,
+                label: qualityLabel,
+                hpDelta: formatResult.hpDelta,
+                expDelta: formatResult.expDelta,
+                reason: formatResult.reason,
+                confidence: formatResult.confidence,
+                isToxic: formatResult.isToxic,
+                isSpam: formatResult.isSpam,
+            }),
+        ]);
+
         // const embedding = await mixedBreadService.generateEmbedding(job.content, );
         // await pineconeIndex.saveCirclePostEmbeddingToPinecone({
         //     postId: job.postId,
@@ -23,11 +61,11 @@ const processEvaluationPost = async (job: EvaluationPostJob) => {
         //     embedding: result.embedding,
         //     topics: result.topics,
         // });
-   
+
         return {
             processed: true,
             postId: job.postId,
-            result
+            result: formatResult
         };
     } catch (error) {
         console.error(

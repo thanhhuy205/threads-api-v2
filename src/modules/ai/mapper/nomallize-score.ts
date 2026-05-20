@@ -1,3 +1,5 @@
+import { ExpReason, PostScoreLabel as PrismaPostScoreLabel } from "@prisma/client";
+
 export type PostScoreLabel =
     | "Masterpiece"
     | "Deep Talk"
@@ -115,4 +117,44 @@ export function mapScoreToReward(aiResult: AiPostScoreResult): PostReward {
         isToxic: aiResult.isToxic,
         isSpam: aiResult.isSpam,
     };
+}
+
+export function mapPostLabelToExpReason(label: PostScoreLabel): ExpReason {
+    switch (label) {
+        case "Masterpiece":
+            return ExpReason.POST_MASTERPIECE;
+        case "Deep Talk":
+            return ExpReason.POST_DEEP_TALK;
+        case "Solid":
+            return ExpReason.POST_SOLID;
+        case "Neutral":
+            return ExpReason.POST_NEUTRAL;
+        case "Noise":
+            return ExpReason.POST_NOISE;
+        case "Toxic":
+            return ExpReason.POST_TOXIC;
+        default:
+            return ExpReason.POST_NEUTRAL;
+    }
+}
+
+export function mapPostLabelToQualityLabel(
+    label: PostScoreLabel,
+): PrismaPostScoreLabel {
+    switch (label) {
+        case "Masterpiece":
+            return PrismaPostScoreLabel.MASTERPIECE;
+        case "Deep Talk":
+            return PrismaPostScoreLabel.DEEP_TALK;
+        case "Solid":
+            return PrismaPostScoreLabel.SOLID;
+        case "Neutral":
+            return PrismaPostScoreLabel.NEUTRAL;
+        case "Noise":
+            return PrismaPostScoreLabel.NOISE;
+        case "Toxic":
+            return PrismaPostScoreLabel.TOXIC;
+        default:
+            return PrismaPostScoreLabel.NEUTRAL;
+    }
 }

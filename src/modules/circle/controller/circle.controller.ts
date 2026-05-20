@@ -15,7 +15,15 @@ import { circleService } from "../service/circle.service";
 class CircleController {
   async getCircle(req: Request, res: Response) {
     const { after: publicId, take } = getPagination(req);
-    const circle = await circleService.getCircle(publicId ?? undefined, take);
+    const userId = req.user?.sub;
+    if (!userId) {
+      return res.error(401, "Unauthorized");
+    }
+    const circle = await circleService.getCircle(
+      publicId ?? undefined,
+      take,
+      userId,
+    );
     return res.paginate(circle);
   }
 

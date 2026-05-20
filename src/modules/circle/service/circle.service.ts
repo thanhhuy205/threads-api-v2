@@ -1,4 +1,5 @@
 import { BadRequestException, NotFoundException } from "@/errors/error";
+import { redisKey } from "@/constants/resolve-key/redis-key";
 import { CreateCircleInput } from "@/modules/circle/interfaces/circle-service.interface";
 import { ResponseInvitationInput } from "@/modules/circle/interfaces/response-invitation.dto";
 import { SendInvitationInput } from "@/modules/circle/interfaces/send-invitation.interface";
@@ -10,6 +11,7 @@ import { buildCursorPagination } from "@/shared/pagination/cursor-pagination";
 import { transactionService } from "@/shared/transaction/transaction.service";
 import {
   CircleInvitationStatus,
+  ExpReason,
   PostScoreLabel,
   RoleMembership,
   Visibility,
@@ -22,11 +24,25 @@ import {
   ExpLogQueryDto,
   SacrificeBodyDto,
 } from "../dto/runtime.dto";
+import { mapCircleWithJoinStatus } from "../mapper/circle.mapper";
+import { circleExpLogRepository } from "../repository/circle-exp-log.repository";
 import { circleMemberRepository } from "../repository/circle-member.repository";
 import { circlePostQualityLogRepository } from "../repository/circle-post-quality-log.repository";
 import { circleRepository } from "../repository/circle.repository";
 
 class CircleService {
+  private readonly circleListCacheTtlSeconds = 60;
+
+  private async getCircleListCacheVersion() {
+    const versionRaw = await redisService.get(redisKey.circle.listVersion());
+    const version = Number(versionRaw);
+    return Number.isFinite(version) && version >= 0 ? version : 0;
+  }
+
+  private async bumpCircleListCacheVersion() {
+    await redisService.incr(redisKey.circle.listVersion());
+  }
+
   async getCircleEnergy(publicId: string) {
     return {
       publicId,
@@ -215,7 +231,24 @@ class CircleService {
     };
   }
 
-  async getCircle(publicId?: string, take: number = 10) {
+  async getCircle(publicId?: string, take: number = 10, userId?: string) {
+    const cacheVersion = await this.getCircleListCacheVersion();
+    const cacheKey = redisKey.circle.list(
+      cacheVersion,
+      publicId ?? "first",
+      take,
+      userId ?? "anonymous",
+    );
+    const cached = await redisService.get(cacheKey);
+
+    if (cached) {
+      try {
+        return JSON.parse(cached);
+      } catch {
+        // Ignore malformed cache and fall through to DB query.
+      }
+    }
+
     const circles = await circleRepository.findCircles({
       after: publicId,
       take,
@@ -226,11 +259,45 @@ class CircleService {
       },
     });
 
-    return buildCursorPagination({
-      rows: circles,
+    const circleIds = circles.map((circle) => circle.id);
+    let pendingCircleIdSet = new Set<number>();
+    let joinedCircleIdSet = new Set<number>();
+
+    if (userId && circleIds.length) {
+      const [pendingInvitations, memberships] = await Promise.all([
+        circleInvitationRepository.findPendingInvitationsByCircleIds(
+          circleIds,
+          userId,
+        ),
+        circleMemberRepository.findMembershipsByCircleIds(circleIds, userId),
+      ]);
+
+      pendingCircleIdSet = new Set(
+        pendingInvitations.map((invitation) => invitation.circleId),
+      );
+      joinedCircleIdSet = new Set(
+        memberships.map((membership) => membership.circleId),
+      );
+    }
+
+    const rows = circles.map((circle) =>
+      mapCircleWithJoinStatus(circle, {
+        pendingCircleIdSet,
+        joinedCircleIdSet,
+      }),
+    );
+
+    const result = buildCursorPagination({
+      rows,
       take,
       getAfter: (item) => item.publicId,
     });
+
+    await redisService.set(cacheKey, JSON.stringify(result), {
+      EX: this.circleListCacheTtlSeconds,
+    });
+
+    return result;
   }
 
   async getMembers({
@@ -295,6 +362,7 @@ class CircleService {
       description: data.description,
     });
 
+    await this.bumpCircleListCacheVersion();
     return newCircle;
   }
 
@@ -347,7 +415,7 @@ class CircleService {
       }
     }
 
-    return await transactionService.doInTransaction(async (tx) => {
+    const invitation = await transactionService.doInTransaction(async (tx) => {
       return await circleInvitationRepository.upsert(
         {
           circleId: data.circleId,
@@ -357,6 +425,9 @@ class CircleService {
         tx,
       );
     });
+
+    await this.bumpCircleListCacheVersion();
+    return invitation;
   }
 
   async acceptInvitation(data: ResponseInvitationInput) {
@@ -381,29 +452,55 @@ class CircleService {
     }
 
     if (data.status === CircleInvitationStatus.REJECTED) {
-      return await transactionService.doInTransaction(async (tx) => {
+      const rejected = await transactionService.doInTransaction(async (tx) => {
         await circleInvitationRepository.rejectInvitation(
           data.circleId,
           data.userId,
           tx,
         );
       });
+      await this.bumpCircleListCacheVersion();
+      return rejected;
     }
 
-    return await transactionService.doInTransaction(async (tx) => {
+    const member = await transactionService.doInTransaction(async (tx) => {
       await circleInvitationRepository.acceptInvitation(
         data.circleId,
         data.userId,
         tx,
       );
-      return await circleMemberRepository.create(
+      const member = await circleMemberRepository.create(
         {
           circleId: data.circleId,
           userId: data.userId,
         },
         tx,
       );
+
+      const existingJoinLog = await circleExpLogRepository.findMemberJoinLog(
+        data.circleId,
+        data.userId,
+        tx,
+      );
+
+      if (!existingJoinLog) {
+        await circleExpLogRepository.create(
+          {
+            userId: data.userId,
+            circleId: data.circleId,
+            expReason: ExpReason.MEMBER_JOIN,
+            expDelta: 5,
+            isDelta: false,
+          },
+          tx,
+        );
+      }
+
+      return member;
     });
+
+    await this.bumpCircleListCacheVersion();
+    return member;
   }
 
   async getRequestInvitation(

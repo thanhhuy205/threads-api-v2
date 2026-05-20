@@ -152,9 +152,12 @@ class CircleRepository implements ICursorPagination<
             current: true,
             max: true,
             peak: true,
+            exp: true,
+            level: true,
             createdAt: true,
           },
         },
+
       },
     });
   }

@@ -45,6 +45,8 @@ import { PostRecord, postRepository } from "../repository/post.repository";
 import { topicsPostRepository } from "../repository/topics-post.repository";
 
 class PostService {
+  private readonly postListCacheTtlSeconds = 60;
+
   async getJudgeStatus(postId: number) {
     return {
       postId,
@@ -236,6 +238,55 @@ class PostService {
     };
   }
 
+  private cacheSegment(value?: string | null) {
+    return encodeURIComponent(value ?? "none");
+  }
+
+  private async getPostListCacheVersion() {
+    const versionRaw = await redisService.get(redisKey.post.listVersion());
+    const version = Number(versionRaw);
+    return Number.isFinite(version) && version >= 0 ? version : 0;
+  }
+
+  private async bumpPostListCacheVersion() {
+    await redisService.incr(redisKey.post.listVersion());
+  }
+
+  private async getCachedPostList(params: {
+    scope: string;
+    after?: string;
+    take: number;
+    userId?: string | null;
+    extra?: string;
+    resolver: () => Promise<{ posts: any[]; pagination: any }>;
+  }) {
+    const version = await this.getPostListCacheVersion();
+    const cacheKey = redisKey.post.list(
+      version,
+      this.cacheSegment(params.scope),
+      this.cacheSegment(params.after),
+      params.take,
+      this.cacheSegment(params.userId),
+      this.cacheSegment(params.extra),
+    );
+    const cached = await redisService.get(cacheKey);
+
+    if (cached) {
+      try {
+        return JSON.parse(cached) as { posts: any[]; pagination: any };
+      } catch {
+        // Ignore malformed cache and read fresh data.
+      }
+    }
+
+    const result = await params.resolver();
+    await redisService.set(cacheKey, JSON.stringify(result), {
+      EX: this.postListCacheTtlSeconds,
+    });
+
+    return result;
+  }
+
   async getNewsFeed({
     after,
     take,
@@ -250,70 +301,114 @@ class PostService {
     baseLogger.info(
       `Getting news feed for user ${JSON.stringify(userId)} with feed type ${JSON.stringify(feedType)}. Generated where clause: ${JSON.stringify(where)}`,
     );
-    return this.paginatePosts({
-      userId,
+    return this.getCachedPostList({
+      scope: "news-feed",
       after,
       take,
-      where,
+      userId,
+      extra: feedType,
+      resolver: () =>
+        this.paginatePosts({
+          userId,
+          after,
+          take,
+          where,
+        }),
     });
   }
 
   async getPostMe({ after, take, userId }: GetPostWithUser) {
-    return this.paginatePosts({
+    return this.getCachedPostList({
+      scope: "post-me",
       after,
       take,
-      where: buildUserPostsWhere({
-        after,
-        userId,
-        postType: PostType.POST,
-      }),
       userId,
+      extra: userId,
+      resolver: () =>
+        this.paginatePosts({
+          after,
+          take,
+          where: buildUserPostsWhere({
+            after,
+            userId,
+            postType: PostType.POST,
+          }),
+          userId,
+        }),
     });
   }
 
   async getPostsByUser({ after, take, userId }: GetPostWithUser) {
-    return this.paginatePosts({
+    return this.getCachedPostList({
+      scope: "post-user",
       after,
       take,
-      where: buildUserPostsWhere({
-        after,
-        userId,
-        postType: PostType.POST,
-      }),
+      extra: userId,
+      resolver: () =>
+        this.paginatePosts({
+          after,
+          take,
+          where: buildUserPostsWhere({
+            after,
+            userId,
+            postType: PostType.POST,
+          }),
+        }),
     });
   }
 
   async getRepliesByUser({ after, take, userId }: GetPostWithUser) {
-    return this.paginatePosts({
+    return this.getCachedPostList({
+      scope: "reply-user",
       after,
       take,
-      where: buildUserPostsWhere({
-        after,
-        userId,
-        postType: PostType.REPLY,
-      }),
+      extra: userId,
+      resolver: () =>
+        this.paginatePosts({
+          after,
+          take,
+          where: buildUserPostsWhere({
+            after,
+            userId,
+            postType: PostType.REPLY,
+          }),
+        }),
     });
   }
 
   async getReplies({ after, take, publicId }: GetPostWithPublicId) {
-    return this.paginatePosts({
+    return this.getCachedPostList({
+      scope: "reply-post",
       after,
       take,
-      where: buildRepliesWhere({
-        after,
-        publicId,
-      }),
+      extra: publicId,
+      resolver: () =>
+        this.paginatePosts({
+          after,
+          take,
+          where: buildRepliesWhere({
+            after,
+            publicId,
+          }),
+        }),
     });
   }
 
   async getQuote({ after, take, userId }: GetPostWithUser) {
-    return this.paginatePosts({
+    return this.getCachedPostList({
+      scope: "quote-user",
       after,
       take,
-      where: buildQuoteWhere({
-        after,
-        userId,
-      }),
+      extra: userId,
+      resolver: () =>
+        this.paginatePosts({
+          after,
+          take,
+          where: buildQuoteWhere({
+            after,
+            userId,
+          }),
+        }),
     });
   }
 
@@ -335,6 +430,7 @@ class PostService {
       postId: post.id || 0,
       userId: payload.userId,
     });
+    await this.bumpPostListCacheVersion();
     return post;
   }
 
@@ -367,6 +463,7 @@ class PostService {
       userId: payload.userId,
     });
 
+    await this.bumpPostListCacheVersion();
     return post;
   }
 
@@ -400,6 +497,7 @@ class PostService {
       },
     );
 
+    await this.bumpPostListCacheVersion();
     return {
       publicId: post.publicId,
       content: post.content!,
@@ -421,6 +519,7 @@ class PostService {
       originPost.id,
     );
 
+    await this.bumpPostListCacheVersion();
     return {
       publicId: post.publicId,
       content: post.content,
@@ -448,6 +547,7 @@ class PostService {
       { topic: payload.topic, mentionIds },
     );
 
+    await this.bumpPostListCacheVersion();
     return {
       publicId: post.publicId,
       content: post.content,
@@ -502,6 +602,7 @@ class PostService {
     }
 
     await postRepository.updateIsGhost(publicId, !post.isGhost);
+    await this.bumpPostListCacheVersion();
   }
 
   async save(publicId: string, userId: string): Promise<void> {
@@ -569,6 +670,7 @@ class PostService {
     }
 
     await postRepository.softDeleteByPublicId(publicId);
+    await this.bumpPostListCacheVersion();
   }
 
   async update(
@@ -586,7 +688,9 @@ class PostService {
       throw new ForbiddenException("Users can only update their own posts");
     }
 
-    return postRepository.updateByPublicId(publicId, payload);
+    const updatedPost = await postRepository.updateByPublicId(publicId, payload);
+    await this.bumpPostListCacheVersion();
+    return updatedPost;
   }
 
   async report(
