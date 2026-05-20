@@ -17,7 +17,10 @@ import {
   buildRepliesWhere,
   buildUserPostsWhere,
 } from "@/modules/post/helper";
-import type { CreatePostPayload } from "@/modules/post/interfaces/create-post-payload";
+import type {
+  CreateCirclePostPayload,
+  CreatePostPayload,
+} from "@/modules/post/interfaces/create-post-payload";
 import type { GetPostWithPublicId } from "@/modules/post/interfaces/get-post-with-public-id";
 import type { GetPostWithUser } from "@/modules/post/interfaces/get-post-with-user";
 import type { NewsFeedPayload } from "@/modules/post/interfaces/news-feed-payload";
@@ -34,7 +37,7 @@ import {
   PostType,
   Prisma,
   ReplyPermission,
-  VisibilityPost
+  VisibilityPost,
 } from "@prisma/client";
 import { CreatePostDto, UpdatePostDto } from "../dto/post.dto";
 import { normalizeTopic } from "../helper/nomalize.hepler";
@@ -53,7 +56,9 @@ class PostService {
     };
   }
 
-  private resolveReplyPermission(replyPermission?: string): ReplyPermission {
+  private resolveReplyPermission(
+    replyPermission?: ReplyPermission,
+  ): ReplyPermission {
     const normalized = (replyPermission ?? ReplyPermission.EVERYONE)
       .trim()
       .toUpperCase();
@@ -68,7 +73,7 @@ class PostService {
     return normalized as ReplyPermission;
   }
 
-  private resolveVisibility(visibility?: string): VisibilityPost {
+  private resolveVisibility(visibility?: VisibilityPost): VisibilityPost {
     const normalized = (visibility ?? VisibilityPost.PUBLIC)
       .trim()
       .toUpperCase();
@@ -93,7 +98,12 @@ class PostService {
     return post;
   }
 
-  private resolvePostOptions(payload: CreatePostDto) {
+  private resolvePostOptions(
+    payload: {
+      replyPermission?: ReplyPermission;
+      visibility?: VisibilityPost;
+    },
+  ) {
     return {
       replyPermission: this.resolveReplyPermission(payload.replyPermission),
       visibility: this.resolveVisibility(payload.visibility),
@@ -115,7 +125,7 @@ class PostService {
   }
 
   private async validateMentions(
-    mentions?: CreatePostDto["mentions"],
+    mentions?: CreatePostPayload["mentions"],
   ): Promise<string[]> {
     if (!mentions?.length) {
       return [];
@@ -309,12 +319,13 @@ class PostService {
 
   async create(payload: CreatePostPayload) {
     const snapshot = await this.resolveUser(payload.userId);
+    const options = this.resolvePostOptions(payload);
     //Validate mentions
     const mentionIds = await this.validateMentions(payload.mentions);
 
     // Create post and attach meta in a transaction
     const post = await this.createInTransaction(
-      (tx) => postRepository.create(payload, snapshot, tx),
+      (tx) => postRepository.create({ ...payload, ...options }, snapshot, tx),
       { topic: payload.topic, mentionIds },
     );
 
@@ -324,6 +335,38 @@ class PostService {
       postId: post.id || 0,
       userId: payload.userId,
     });
+    return post;
+  }
+
+  async createCircle(payload: CreateCirclePostPayload) {
+    const snapshot = await this.resolveUser(payload.userId);
+    const mentionIds = await this.validateMentions(payload.mentions);
+    const options = this.resolvePostOptions({
+      visibility: payload.visibility ?? VisibilityPost.CIRCLE,
+      replyPermission: payload.replyPermission ?? ReplyPermission.EVERYONE,
+    });
+
+    const post = await this.createInTransaction(
+      (tx) =>
+        postRepository.create(
+          {
+            ...payload,
+            type: payload.type ?? PostType.CIRCLE,
+            ...options,
+          },
+          snapshot,
+          tx,
+        ),
+      { topic: payload.topic, mentionIds },
+    );
+
+    await pineProducer.addToPineconeQueue({
+      content: payload.content,
+      topic: [normalizeTopic(payload.topic) ?? "not"],
+      postId: post.id || 0,
+      userId: payload.userId,
+    });
+
     return post;
   }
 

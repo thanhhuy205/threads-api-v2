@@ -1,5 +1,9 @@
 import prisma from "@/config/prisma";
 import { baseLogger } from "@/middlewares/logger";
+import type {
+  CreateCirclePostPayload,
+  CreatePostPayload,
+} from "@/modules/post/interfaces/create-post-payload";
 import {
   postFeedSelect,
   postSelectRepository,
@@ -22,13 +26,10 @@ export type PostRecord = {
   createdAt: string;
 };
 
-type CreatePostPayload = CreatePostDto & {
-  userId: string;
-  media?: {
-    id: number;
-    key: string;
-    url: string;
-  }[];
+type RepositoryCreatePostPayload = (CreatePostPayload | CreateCirclePostPayload) & {
+  type?: PostType;
+  replyPermission?: ReplyPermission;
+  visibility?: VisibilityPost;
 };
 
 type CreateRepostPayload = CreatePostDto & {
@@ -127,10 +128,14 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
       : undefined;
   }
 
-  private baseData(payload: CreatePostPayload, userSnapshot: UserSnapshot) {
+  private baseData(
+    payload: RepositoryCreatePostPayload,
+    userSnapshot: UserSnapshot,
+  ) {
     return {
       content: payload.content,
       userId: payload.userId,
+      type: payload.type ?? PostType.POST,
       replyPermission: payload.replyPermission ?? ReplyPermission.EVERYONE,
       visibility: payload.visibility ?? VisibilityPost.PUBLIC,
       userSnapshot,
@@ -138,7 +143,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
     };
   }
   async create(
-    payload: CreatePostPayload,
+    payload: RepositoryCreatePostPayload,
     userSnapshot: UserSnapshot,
     tx: Prisma.TransactionClient = prisma,
   ): Promise<PostRecord> {
@@ -161,7 +166,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
   }
 
   async createReply(
-    payload: CreatePostPayload,
+    payload: RepositoryCreatePostPayload,
     parentPublicId: string,
     userSnapshot: UserSnapshot,
     tx: Prisma.TransactionClient = prisma,
@@ -214,7 +219,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
   }
 
   async createQuote(
-    payload: CreatePostPayload,
+    payload: RepositoryCreatePostPayload,
     originPublicId: string,
     userSnapshot: UserSnapshot,
     postId: number,

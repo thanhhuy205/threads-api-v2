@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `circle_post_quality_logs` MODIFY `label` ENUM('MASTERPIECE', 'DEEP_TALK', 'SOLID', 'NEUTRAL', 'NOISE', 'TOXIC', 'PENDING') NOT NULL DEFAULT 'PENDING';

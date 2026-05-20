@@ -42,7 +42,7 @@ export const buildNewFeedWhere = ({
             not: PostType.REPLY
         },
         visibility: {
-            notIn: [VisibilityPost.FRIEND, VisibilityPost.PRIVATE]
+            notIn: [VisibilityPost.FRIEND, VisibilityPost.PRIVATE, VisibilityPost.CIRCLE]
         }
     };
 

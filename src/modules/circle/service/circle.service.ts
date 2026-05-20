@@ -1,14 +1,16 @@
-import { NotFoundException } from "@/errors/error";
+import { BadRequestException, NotFoundException } from "@/errors/error";
 import { CreateCircleInput } from "@/modules/circle/interfaces/circle-service.interface";
 import { ResponseInvitationInput } from "@/modules/circle/interfaces/response-invitation.dto";
 import { SendInvitationInput } from "@/modules/circle/interfaces/send-invitation.interface";
 import { circleInvitationRepository } from "@/modules/circle/repository/circle-invation.repository";
+import { postService } from "@/modules/post/service/post.service";
 import { userRestrictionService } from "@/modules/user-restriction/service/user-restriction.service";
 import { redisService } from "@/providers/redis.provider";
 import { buildCursorPagination } from "@/shared/pagination/cursor-pagination";
 import { transactionService } from "@/shared/transaction/transaction.service";
 import {
   CircleInvitationStatus,
+  PostScoreLabel,
   RoleMembership,
   Visibility,
 } from "@prisma/client";
@@ -21,7 +23,7 @@ import {
   SacrificeBodyDto,
 } from "../dto/runtime.dto";
 import { circleMemberRepository } from "../repository/circle-member.repository";
-import { circleRuntimePostRepository } from "../repository/circle-runtime-post.repository";
+import { circlePostQualityLogRepository } from "../repository/circle-post-quality-log.repository";
 import { circleRepository } from "../repository/circle.repository";
 
 class CircleService {
@@ -93,28 +95,52 @@ class CircleService {
     // 3. Check user restriction (if restricted, cannot post)
     await userRestrictionService.checkUserRestriction(userId);
 
-    // 4. Create post in database and quality log entry
-    const post = await transactionService.doInTransaction(async (tx) => {
-      return circleRuntimePostRepository.create(
-        {
-          circleId: circle.id,
-          userId,
-          content: body.content,
-          parentId: body.parentId,
-        },
-        tx,
-      );
+    // 4. Create circle post via shared post pipeline
+    const post = await postService.createCircle({
+      ...body,
+      userId,
     });
 
-    // 5. Enqueue evaluation job
+    if (!post.id) {
+      throw new BadRequestException("Failed to create post");
+    }
+
+    // 5. Keep circle-post mapping + pending quality status
+    const qualityLog = await circlePostQualityLogRepository.create({
+      circleId: circle.id,
+      postId: post.id,
+      score: 0,
+      hpDelta: 0,
+    });
+
+    // 6. Enqueue evaluation job
     await evaluationProducer.enqueueEvaluationPost({
-      postId: post.postId,
+      postId: post.id,
       circlePublicId: publicId,
       userId,
       content: body.content,
+      // topics: post, // You can add topic extraction logic here if needed
     });
 
-    return post;
+    return {
+      postId: post.id,
+      publicId: post.publicId,
+      circleId: circle.id,
+      userId: post.userId,
+      content: post.content,
+      qualityLog: {
+        score: qualityLog.score,
+        label: PostScoreLabel.PENDING,
+        hpDelta: qualityLog.hpDelta,
+        expDelta: qualityLog.expDelta,
+        reason: qualityLog.reason,
+        confidence: qualityLog.confidence,
+        isToxic: qualityLog.isToxic,
+        isSpam: qualityLog.isSpam,
+        createdAt: qualityLog.createdAt,
+      },
+      createdAt: post.createdAt,
+    };
   }
 
   async getCirclePosts(publicId: string, query: CirclePostsQueryDto) {

@@ -1,5 +1,5 @@
 import prisma from "@/config/prisma";
-import { Prisma } from "@prisma/client";
+import { PostScoreLabel, PostType, Prisma } from '@prisma/client';
 
 interface CreateCirclePostInput {
     circleId: number;
@@ -15,8 +15,17 @@ interface CirclePostRecord {
     circleId: number;
     userId: string;
     content: string;
-    judgeStatus: string;
-    qualityScore: number | null;
+    qualityLog: {
+        score: number;
+        label: PostScoreLabel;
+        hpDelta: number;
+        expDelta: number;
+        reason: string | null;
+        confidence: Prisma.Decimal | null;
+        isToxic: boolean;
+        isSpam: boolean;
+        createdAt: Date;
+    };
     createdAt: string;
 }
 
@@ -32,6 +41,7 @@ class CircleRuntimePostRepository {
                 userId: data.userId,
                 parentId: data.parentId ?? null,
                 userSnapshot: data.userSnapshot ?? undefined,
+                PostType: PostType.CIRCLE,
             },
             select: {
                 id: true,
@@ -40,12 +50,13 @@ class CircleRuntimePostRepository {
             },
         });
 
-        // Create quality log entry with pending status (score: 0)
+        // Create quality log entry with pending status (score: 0) 
+        // Pending
         const qualityLog = await tx.circlePostQualityLog.create({
             data: {
                 circleId: data.circleId,
                 postId: post.id,
-                score: 0, // Pending evaluation
+                score: 0,
                 hpDelta: 0,
             },
         });
@@ -56,8 +67,17 @@ class CircleRuntimePostRepository {
             circleId: data.circleId,
             userId: data.userId,
             content: data.content,
-            judgeStatus: "pending",
-            qualityScore: null,
+            qualityLog: {
+                score: qualityLog.score,
+                label: PostScoreLabel.PENDING,
+                hpDelta: qualityLog.hpDelta,
+                expDelta: 0,
+                reason: null,
+                confidence: null,
+                isToxic: false,
+                isSpam: false,
+                createdAt: qualityLog.createdAt,
+            },
             createdAt: post.createdAt.toISOString(),
         };
     }

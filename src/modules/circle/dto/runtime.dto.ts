@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import { VisibilityPost } from '@prisma/client';
+import { CreatePostDto, createPostSchema } from '@/modules/post/dto/post.dto';
 
 export const circlePublicIdParamsSchema = z.object({
     publicId: z.string().min(1, 'Circle public ID is required'),
@@ -20,12 +22,26 @@ export const circlePostsQuerySchema = cursorLimitQuerySchema.extend({
 
 export type CirclePostsQueryDto = z.infer<typeof circlePostsQuerySchema>;
 
-export const createCirclePostRuntimeSchema = z.object({
-    content: z.string().min(1, 'Content is required').max(5000, 'Content must be at most 5000 characters'),
-    parentId: z.coerce.number().int('Parent id must be an integer').positive('Parent id must be a positive number').optional(),
-});
+export const createCirclePostRuntimeSchema = z.preprocess(
+    (value) => {
+        if (!value || typeof value !== 'object') {
+            return value;
+        }
 
-export type CirclePostBodyDto = z.infer<typeof createCirclePostRuntimeSchema>;
+        const payload = value as Record<string, unknown>;
+        if (payload.visibility !== undefined) {
+            return payload;
+        }
+
+        return {
+            ...payload,
+            visibility: VisibilityPost.CIRCLE,
+        };
+    },
+    createPostSchema,
+);
+
+export type CirclePostBodyDto = CreatePostDto;
 
 export const cprBodySchema = z.object({
     targetComments: z.coerce.number().int('Target comments must be an integer').positive('Target comments must be a positive number'),

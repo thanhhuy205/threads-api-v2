@@ -28,6 +28,30 @@ class PineconeService {
         };
     }
 
+    async saveCirclePostEmbeddingToPinecone(input: SavePostEmbeddingInput) {
+        await pineconeIndex.upsert({
+            records: [
+                {
+                    id: `circle_post:${input.postId}`,
+                    values: input.embedding,
+                    metadata: {
+                        postId: input.postId,
+                        userId: input.userId,
+                        content: input.content,
+                        topics: input.topics,
+                        type: PostType.CIRCLE,
+                    },
+                },
+            ],
+            namespace: 'posts',
+        });
+
+        return {
+            id: `circle_post:${input.postId}`,
+            namespace: 'posts',
+        };
+    }
+
     async querySimilarPosts(embedding: number[], topK: number = 10) {
         const queryResponse = await pineconeIndex.query({
             vector: embedding,

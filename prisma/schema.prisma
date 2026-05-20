@@ -17,6 +17,7 @@ enum PostType {
   REPLY
   REPOST
   QUOTE
+  CIRCLE
 }
 
 enum FollowStatus {
@@ -80,6 +81,7 @@ enum VisibilityPost {
   PUBLIC
   FRIEND
   PRIVATE
+  CIRCLE
 }
 
 enum ActionType {
@@ -185,6 +187,7 @@ enum PostScoreLabel {
   NEUTRAL
   NOISE
   TOXIC
+  PENDING
 }
 
 model Role {
@@ -722,7 +725,7 @@ model CirclePostQualityLog {
   postId   Int @map("post_id")
 
   score Int            @default(0) // 0 - 10
-  label PostScoreLabel // Masterpiece | Deep Talk | Solid | Neutral | Noise | Toxic
+  label PostScoreLabel @default(PENDING) // Masterpiece | Deep Talk | Solid | Neutral | Noise | Toxic
 
   hpDelta  Int @default(0) @map("hp_delta") // +5, +3, +1, 0, -1, -3
   expDelta Int @default(0) @map("exp_delta") // +10, +6, +2, 0

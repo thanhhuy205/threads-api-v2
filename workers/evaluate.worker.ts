@@ -1,6 +1,8 @@
 import { aiService } from "@/modules/ai/service/ai.service";
 import { EVALUATION_JOB_NAME, QUEUE_NAME } from "../src/constants/queue";
 import { createWorker } from "../src/providers/bullmq.provider";
+import { pineconeIndex } from "@/providers/pinecone.provider";
+import { mixedBreadService } from '../src/modules/mixed-bread/service/mixed-bread.service';
 
 interface EvaluationPostJob {
     postId: number;
@@ -11,10 +13,17 @@ interface EvaluationPostJob {
 
 const processEvaluationPost = async (job: EvaluationPostJob) => {
     try {
-
+  
         const result = await aiService.scorePostAI(job.content);
-
-        console.log(result);
+        // const embedding = await mixedBreadService.generateEmbedding(job.content, );
+        // await pineconeIndex.saveCirclePostEmbeddingToPinecone({
+        //     postId: job.postId,
+        //     userId: job.userId,
+        //     content: job.content,
+        //     embedding: result.embedding,
+        //     topics: result.topics,
+        // });
+   
         return {
             processed: true,
             postId: job.postId,

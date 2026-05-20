@@ -1,5 +1,5 @@
-import { z } from "zod";
 import { ReplyPermission, VisibilityPost } from "@prisma/client";
+import { z } from "zod";
 
 const mentionSchema = z.object({
   userId: z.string().trim().min(1, "Mention userId is required"),

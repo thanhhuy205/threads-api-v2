@@ -68,23 +68,8 @@ class CircleController {
     }
 
     const { publicId } = req.params;
-    try {
-      const data = await circleService.createCirclePost(publicId, userId, req.body);
-      return res.success(202, "Post accepted for judging", data);
-    } catch (error) {
-      if (error instanceof Error) {
-        if (error.message === "RATE_LIMIT_EXCEEDED") {
-          return res.error(429, "Rate limit exceeded: maximum 5 posts per hour");
-        }
-        if (error.message === "USER_RESTRICTED") {
-          return res.error(403, "You are restricted from posting");
-        }
-        if (error.message === "Circle not found") {
-          return res.error(404, error.message);
-        }
-      }
-      throw error;
-    }
+    const data = await circleService.createCirclePost(publicId, userId, req.body);
+    return res.success(202, "Post accepted for judging", data);
   }
 
   async getCirclePosts(
