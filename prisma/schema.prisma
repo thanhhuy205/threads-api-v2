@@ -119,6 +119,7 @@ enum CircleInvitationStatus {
   PENDING
   ACCEPTED
   REJECTED
+  CANCELLED
 }
 
 enum InvitationRequestStatus {
@@ -767,6 +768,7 @@ model CirclePostQualityLog {
 
 model CircleExpLog {
   id        Int       @id @default(autoincrement())
+  publicId  String    @unique @default(cuid()) @map("public_id")
   userId    String    @map("user_id")
   circleId  Int       @map("circle_id")
   postId    Int?      @map("post_id")

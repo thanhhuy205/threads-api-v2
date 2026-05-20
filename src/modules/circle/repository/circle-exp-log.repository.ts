@@ -19,7 +19,19 @@ type CreatePostQualityExpLogInput = {
   isDelta?: boolean;
 };
 
-class CircleExpLogRepository {
+class CircleExpLogRepository implements ICursorPagination<Prisma.CircleExpLogWhereInput, any> {
+  findAll({ after, take, where }: { after?: string; take?: number; where?: any; }): Promise<any[]> {
+    return prisma.circleExpLog.findMany({
+      where,
+      take: after && take ? take + 1 : take,
+      skip: after ? 1 : 0,
+      cursor: after ? { publicId: after } : undefined,
+      orderBy: {
+        createdAt: "desc",
+        id: "desc",
+      },
+    });
+  }
   async create(
     data: CreateCircleExpLogInput,
     tx: Prisma.TransactionClient = prisma,
@@ -34,6 +46,20 @@ class CircleExpLogRepository {
         isDelta: data.isDelta ?? false,
       },
     });
+  }
+
+  async findExpLogsByCircleId(
+    {
+      circleId,
+      after,
+      take,
+    }: {
+      circleId: number;
+      after?: string;
+      take?: number;
+    }
+  ) {
+    return this.findAll({ after, take, where: { circleId } });
   }
 
   async findMemberJoinLog(

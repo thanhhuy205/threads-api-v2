@@ -50,6 +50,11 @@ circleRouter.get(
     circleController.getCirclePosts,
 );
 circleRouter.post(
+    '/:publicId/join-request',
+    validate(circlePublicIdParamsSchema, 'params'),
+    circleController.sendJoinRequest,
+);
+circleRouter.post(
     '/:publicId/posts/:postPublicId/reply',
     validate(circleReplyParamsSchema, 'params'),
     validate(createCirclePostRuntimeSchema),

@@ -168,5 +168,39 @@ class CircleInvitationRepository implements ICursorPagination<
       },
     });
   }
+
+  async createJoinRequest(circleId: number, userId: string) {
+    return prisma.circleInvitation.create({
+      data: {
+        circleId,
+        userId,
+        status: CircleInvitationStatus.PENDING,
+        inviterId: userId // For join requests, the inviterId can be set to the userId themselves
+      },
+    });
+  }
+  async upsertCircleJoinCancellation(
+    circleId: number,
+    userId: string,
+  ) {
+    return prisma.circleInvitation.upsert({
+      where: {
+        circleId_userId: {
+          circleId,
+          userId,
+        },
+        status: CircleInvitationStatus.PENDING,
+      },
+      update: {
+        status: CircleInvitationStatus.CANCELLED,
+      },
+      create: {
+        circleId,
+        userId,
+        status: CircleInvitationStatus.PENDING,
+        inviterId: userId,
+      },
+    });
+  }
 }
 export const circleInvitationRepository = new CircleInvitationRepository();

@@ -61,26 +61,23 @@ class CircleService {
 
   async getCircleExpLog(publicId: string, query: ExpLogQueryDto) {
 
-    const logs = [
-      {
-        expDelta: 12,
-        reason: "post_quality_done",
-        createdAt: new Date().toISOString(),
-        userId: "user_stub_1",
-      },
-      {
-        expDelta: -4,
-        reason: "energy_drain",
-        createdAt: new Date(Date.now() - 60_000).toISOString(),
-        userId: "system",
-      },
-    ].slice(0, query.take ?? 20);
+    const circle = await circleRepository.findByPublicId(publicId);
+    if (!circle) {
+      throw new NotFoundException(`Circle ${publicId} not found`);
+    }
+    const { take, after } = query;
+    const logs = await circleExpLogRepository.findExpLogsByCircleId({
+      circleId: circle.id,
+      after: after ?? undefined,
+      take: take ?? 20,
+    });
 
-    return {
-      publicId,
-      logs,
-      nextCursor: query.after ? null : "exp_log_cursor_stub",
-    };
+
+    return buildCursorPagination({
+      rows: logs,
+      take: take ?? 20,
+      getAfter: (item) => String(item.id),
+    });
   }
 
   async createCirclePost(
@@ -96,7 +93,7 @@ class CircleService {
 
     // 2. Check rate limit (5 posts/hour per user per circle)
     const rateLimitKey = `circle:post:limit:${userId}:${publicId}:${Math.floor(Date.now() / (60 * 60 * 1000))}`;
-    const postCount = await redisService.incr(rateLimitKey);
+    const postCount = await redisService.incr(rateLimitKey); // count
 
     if (postCount === 1) {
       // Set expiry only on first increment (1 hour)
@@ -639,6 +636,41 @@ class CircleService {
       take,
       getAfter: (item) => String(item.id),
     });
+  }
+  async sendJoinRequest(publicId: string, userId: string) {
+    const circle = await circleRepository.findByPublicId(publicId);
+    if (!circle) {
+      throw new NotFoundException(`Circle ${publicId} not found`);
+    }
+    const existingMember = await circleMemberRepository.findByCircleId(
+      circle.id,
+      userId,
+    );
+    if (existingMember.length > 0) {
+      throw new Error(`User ${userId} is already a member of circle ${publicId}`,);
+    }
+
+    const invitation = await circleInvitationRepository.findInvitationById(
+      circle.id,
+      userId,
+    );
+    if (invitation) {
+      if (invitation.status === CircleInvitationStatus.PENDING) {
+        await circleInvitationRepository.upsertCircleJoinCancellation(
+          circle.id,
+          userId,
+        );
+
+        return {
+          isCancelled: true,
+        }
+      }
+
+    }
+
+
+    await circleInvitationRepository.createJoinRequest(circle.id, userId);
+    return { isCancelled: false };
   }
 }
 export const circleService = new CircleService();
