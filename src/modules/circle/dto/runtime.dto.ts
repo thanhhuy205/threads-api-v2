@@ -20,8 +20,14 @@ export const cursorLimitQuerySchema = z.object({
     after: z.string().trim().min(1, 'Cursor must not be empty').optional(),
 });
 
-export const expLogQuerySchema = cursorLimitQuerySchema;
+export const offsetLimitQuerySchema = z.object({
+    page: z.coerce.number().int('Page must be an integer').positive('Page must be a positive number').optional(),
+    limit: z.coerce.number().int('Limit must be an integer').positive('Limit must be a positive number').max(100, 'Limit must be at most 100').optional(),
+});
+
+export const expLogQuerySchema = offsetLimitQuerySchema;
 export type ExpLogQueryDto = z.infer<typeof expLogQuerySchema>;
+export type OffsetLimitQueryDto = z.infer<typeof offsetLimitQuerySchema>;
 
 export const circlePostsQuerySchema = cursorLimitQuerySchema.extend({
     sort: z.enum(['latest', 'quality']).optional(),

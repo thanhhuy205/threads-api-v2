@@ -2,13 +2,17 @@ import prisma from "@/config/prisma";
 import { PostScoreLabel, PostType, Prisma } from "@prisma/client";
 
 type CreateCirclePostQualityLogInput = {
+  circleMemberId: number;
   circleId: number;
   postId: number;
   score?: number;
   hpDelta?: number;
+  userId: string;
 };
 
 type SaveCirclePostJudgeResultInput = {
+  circleMemberId: number;
+  userId: string;
   circleId: number;
   postId: number;
   score: number;
@@ -156,6 +160,8 @@ class CirclePostQualityLogRepository {
   ) {
     return tx.circlePostQualityLog.create({
       data: {
+        userId: data.userId,
+        circleMemberId: data.circleMemberId,
         circleId: data.circleId,
         postId: data.postId,
         score: data.score,
@@ -191,6 +197,8 @@ class CirclePostQualityLogRepository {
 
     return tx.circlePostQualityLog.create({
       data: {
+        userId: data.userId,
+        circleMemberId: data.circleMemberId,
         circleId: data.circleId,
         postId: data.postId,
         score: data.score,

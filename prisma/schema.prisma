@@ -647,11 +647,12 @@ model Circle {
 }
 
 model CircleMember {
-  id        Int            @id @default(autoincrement())
-  circleId  Int            @map("circle_id")
-  userId    String         @map("user_id")
-  createdAt DateTime       @default(now()) @map("created_at")
-  role      RoleMembership @default(MEMBER)
+  id                 Int                    @id @default(autoincrement())
+  circleId           Int                    @map("circle_id")
+  userId             String                 @map("user_id")
+  createdAt          DateTime               @default(now()) @map("created_at")
+  role               RoleMembership         @default(MEMBER)
+  circlePostQuantity CirclePostQualityLog[]
 
   circle Circle @relation(fields: [circleId], references: [id])
   user   User   @relation(fields: [userId], references: [id])
@@ -736,9 +737,10 @@ model KarmaTransaction {
 }
 
 model CirclePostQualityLog {
-  id       Int @id @default(autoincrement())
-  circleId Int @map("circle_id")
-  postId   Int @map("post_id")
+  id             Int @id @default(autoincrement())
+  circleId       Int @map("circle_id")
+  circleMemberId Int @map("circle_member_id")
+  postId         Int @map("post_id")
 
   score Int            @default(0) // 0 - 10
   label PostScoreLabel @default(PENDING) // Masterpiece | Deep Talk | Solid | Neutral | Noise | Toxic
@@ -754,8 +756,9 @@ model CirclePostQualityLog {
 
   createdAt DateTime @default(now()) @map("created_at")
 
-  circle Circle @relation(fields: [circleId], references: [id])
-  post   Post   @relation(fields: [postId], references: [id])
+  circle       Circle       @relation(fields: [circleId], references: [id])
+  post         Post         @relation(fields: [postId], references: [id])
+  circleMember CircleMember @relation(fields: [circleMemberId], references: [id])
 
   @@index([circleId], map: "idx_circle_post_quality_log_circle_id")
   @@index([postId], map: "idx_circle_post_quality_log_post_id")

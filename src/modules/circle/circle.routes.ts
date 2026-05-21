@@ -12,6 +12,7 @@ import {
     createCirclePostRuntimeSchema,
     cursorLimitQuerySchema,
     expLogQuerySchema,
+    offsetLimitQuerySchema,
     sacrificeBodySchema,
 } from './dto/runtime.dto';
 import { sendInvitationSchema } from './dto/send-invitation.dto';
@@ -33,10 +34,28 @@ circleRouter.get(
     circleController.getCircleEnergy,
 );
 circleRouter.get(
-    '/:publicId/exp-log',
+    '/:publicId/manage/exp-log',
     validate(circlePublicIdParamsSchema, 'params'),
     validate(expLogQuerySchema, 'query'),
     circleController.getCircleExpLog,
+);
+circleRouter.get(
+    '/:publicId/manage/members',
+    validate(circlePublicIdParamsSchema, 'params'),
+    validate(offsetLimitQuerySchema, 'query'),
+    circleController.getManageMembers,
+);
+circleRouter.get(
+    '/:publicId/manage/invitations',
+    validate(circlePublicIdParamsSchema, 'params'),
+    validate(offsetLimitQuerySchema, 'query'),
+    circleController.getManageInvitations,
+);
+circleRouter.get(
+    '/:publicId/manage/join-requests',
+    validate(circlePublicIdParamsSchema, 'params'),
+    validate(offsetLimitQuerySchema, 'query'),
+    circleController.getManageJoinRequests,
 );
 circleRouter.post(
     '/:publicId/posts',

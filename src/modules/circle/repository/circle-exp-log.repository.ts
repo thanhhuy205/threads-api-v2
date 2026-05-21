@@ -1,4 +1,5 @@
 import prisma from "@/config/prisma";
+import { buildPagination } from "@/shared/pagination/pagination";
 import { ExpReason, Prisma } from "@prisma/client";
 
 type CreateCircleExpLogInput = {
@@ -60,6 +61,54 @@ class CircleExpLogRepository implements ICursorPagination<Prisma.CircleExpLogWhe
     }
   ) {
     return this.findAll({ after, take, where: { circleId } });
+  }
+
+  findExpLogsByCircleIdPaginated({
+    circleId,
+    page,
+    limit,
+  }: {
+    circleId: number;
+    page: number;
+    limit: number;
+  }) {
+    const { offset, currentLimit } = buildPagination({ page, limit });
+
+    return prisma.circleExpLog.findMany({
+      where: {
+        circleId,
+      },
+      skip: offset,
+      take: currentLimit,
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      select: {
+        id: true,
+        publicId: true,
+        circleId: true,
+        userId: true,
+        postId: true,
+        expReason: true,
+        expDelta: true,
+        isDelta: true,
+        createdAt: true,
+        updatedAt: true,
+        user: {
+          select: {
+            name: true,
+            username: true,
+            avatar: true,
+          },
+        },
+      },
+    });
+  }
+
+  countExpLogsByCircleId(circleId: number) {
+    return prisma.circleExpLog.count({
+      where: {
+        circleId,
+      },
+    });
   }
 
   async findMemberJoinLog(

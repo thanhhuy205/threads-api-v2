@@ -1,5 +1,6 @@
 import prisma from "@/config/prisma";
 import { buildPagination } from "@/shared/pagination/cursor-pagination";
+import { buildPagination as buildOffsetPagination } from "@/shared/pagination/pagination";
 import { $Enums, CircleMember, Prisma } from "@prisma/client";
 
 class CircleMemberRepository implements ICursorPagination<Prisma.CircleMemberWhereInput, CircleMember> {
@@ -67,7 +68,7 @@ class CircleMemberRepository implements ICursorPagination<Prisma.CircleMemberWhe
         return members;
     }
 
- 
+
 
     async findRoleByCircleId(circleId: number, userId: string): Promise<CircleMember | null> {
         const member = await prisma.circleMember.findFirst({
@@ -93,6 +94,61 @@ class CircleMemberRepository implements ICursorPagination<Prisma.CircleMemberWhe
             },
             select: {
                 circleId: true,
+            },
+        });
+    }
+
+    findMembersByCircleIdPaginated({
+        circleId,
+        page,
+        limit,
+    }: {
+        circleId: number;
+        page: number;
+        limit: number;
+    }) {
+        const { offset, currentLimit } = buildOffsetPagination({ page, limit });
+
+        return prisma.circleMember.findMany({
+            where: {
+                circleId,
+            },
+            skip: offset,
+            take: currentLimit,
+            orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+            select: {
+                id: true,
+                circleId: true,
+                userId: true,
+                createdAt: true,
+                role: true,
+                post: {
+                    select: {
+                        circlePostQualityLogs: {
+                            where: {
+                                circleId,
+                            },
+                            _count: true,
+                        }
+                    }
+                },
+                user: {
+                    select: {
+                        name: true,
+                        username: true,
+                        avatar: true,
+                        bio: true,
+                        status: true
+                    },
+                },
+            },
+        });
+    }
+
+    countMembersByCircleId(circleId: number) {
+        return prisma.circleMember.count({
+            where: {
+                circleId,
             },
         });
     }

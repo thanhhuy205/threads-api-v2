@@ -1,14 +1,16 @@
 import { redisKey } from "@/constants/resolve-key/redis-key";
-import { BadRequestException, NotFoundException } from "@/errors/error";
+import { BadRequestException, ForbiddenException, NotFoundException } from "@/errors/error";
 import { CreateCircleInput } from "@/modules/circle/interfaces/circle-service.interface";
 import { ResponseInvitationInput } from "@/modules/circle/interfaces/response-invitation.dto";
 import { SendInvitationInput } from "@/modules/circle/interfaces/send-invitation.interface";
-import { CIRCLE_ROLE_PERMISSIONS } from "@/modules/circle/permission/circle-permission";
+import { CIRCLE_ROLE_PERMISSIONS, CirclePermission } from "@/modules/circle/permission/circle-permission";
+import { checkCirclePermission } from "@/modules/circle/policy/check-circle-permission";
 import { circleInvitationRepository } from "@/modules/circle/repository/circle-invation.repository";
 import { postService } from "@/modules/post/service/post.service";
 import { userRestrictionService } from "@/modules/user-restriction/service/user-restriction.service";
 import { redisService } from "@/providers/redis.provider";
 import { buildCursorPagination } from "@/shared/pagination/cursor-pagination";
+import { buildPaginationResponse } from "@/shared/pagination/pagination";
 import { transactionService } from "@/shared/transaction/transaction.service";
 import {
   CircleInvitationStatus,
@@ -33,10 +35,36 @@ import { circleMemberRepository } from "../repository/circle-member.repository";
 import { circlePostQualityLogRepository } from "../repository/circle-post-quality-log.repository";
 import { circleRepository } from "../repository/circle.repository";
 
-type CircleVisibilityFilterType = "public" | "private" | "join" | "accepting";
+type CircleVisibilityFilterType = "public" | "private" | "join" | "accepting" | null;
 
 class CircleService {
   private readonly circleListCacheTtlSeconds = 60;
+
+  private async assertCanManageCircle(
+    circlePublicId: string,
+    userId: string,
+    requiredPermission: CirclePermission,
+  ) {
+    const circle = await circleRepository.findByPublicId(circlePublicId);
+    if (!circle) {
+      throw new NotFoundException(`Circle ${circlePublicId} not found`);
+    }
+
+    const member = await circleMemberRepository.findRoleByCircleId(circle.id, userId);
+    if (!member) {
+      throw new ForbiddenException("You do not have permission to access this circle");
+    }
+
+    const userPermissions = CIRCLE_ROLE_PERMISSIONS[member.role] ?? [];
+    const hasPermission = checkCirclePermission(userPermissions, requiredPermission);
+    if (!hasPermission) {
+      throw new ForbiddenException(
+        `You do not have permission: ${requiredPermission}`,
+      );
+    }
+
+    return circle;
+  }
 
   private async getCircleListCacheVersion() {
     const versionRaw = await redisService.get(redisKey.circle.listVersion());
@@ -171,25 +199,31 @@ class CircleService {
     };
   }
 
-  async getCircleExpLog(publicId: string, query: ExpLogQueryDto) {
+  async getCircleExpLog(
+    publicId: string,
+    userId: string,
+    query: ExpLogQueryDto,
+  ) {
+    const circle = await this.assertCanManageCircle(
+      publicId,
+      userId,
+      CirclePermission.START_CPR,
+    );
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 10;
+    const [rows, total] = await Promise.all([
+      circleExpLogRepository.findExpLogsByCircleIdPaginated({
+        circleId: circle.id,
+        page,
+        limit,
+      }),
+      circleExpLogRepository.countExpLogsByCircleId(circle.id),
+    ]);
 
-    const circle = await circleRepository.findByPublicId(publicId);
-    if (!circle) {
-      throw new NotFoundException(`Circle ${publicId} not found`);
-    }
-    const { take, after } = query;
-    const logs = await circleExpLogRepository.findExpLogsByCircleId({
-      circleId: circle.id,
-      after: after ?? undefined,
-      take: take ?? 20,
-    });
-
-
-    return buildCursorPagination({
-      rows: logs,
-      take: take ?? 20,
-      getAfter: (item) => String(item.id),
-    });
+    return {
+      rows,
+      pagination: buildPaginationResponse(total, page, limit),
+    };
   }
 
   async createCirclePost(
@@ -201,6 +235,10 @@ class CircleService {
     const circle = await circleRepository.findByPublicId(publicId);
     if (!circle) {
       throw new NotFoundException("Circle not found");
+    }
+    const member = await circleMemberRepository.findRoleByCircleId(circle.id, userId);
+    if (!member) {
+      throw new ForbiddenException("You are not a member of this circle");
     }
 
     // 2. Check rate limit (5 posts/hour per user per circle)
@@ -215,6 +253,7 @@ class CircleService {
     if (postCount > 5) {
       throw new Error("RATE_LIMIT_EXCEEDED");
     }
+
 
     // 3. Check user restriction (if restricted, cannot post)
     await userRestrictionService.getActiveRestriction(userId);
@@ -234,6 +273,8 @@ class CircleService {
       postId: post.id,
       score: 0,
       hpDelta: 0,
+      userId,
+      circleMemberId: member.id
     });
 
     // 6. Enqueue evaluation job
@@ -321,6 +362,12 @@ class CircleService {
     if (!circle) {
       throw new NotFoundException("Circle not found");
     }
+
+    const member = await circleMemberRepository.findRoleByCircleId(circle.id, userId);
+    if (!member) {
+      throw new ForbiddenException("You are not a member of this circle");
+    }
+
     const parentInCircle =
       await circlePostQualityLogRepository.findByCircleAndPostPublicId(
         circle.id,
@@ -346,6 +393,8 @@ class CircleService {
       postId: post.id,
       score: 0,
       hpDelta: 0,
+      circleMemberId: member.id,
+      userId: userId
     });
 
     await evaluationProducer.enqueueEvaluationPost({
@@ -584,6 +633,98 @@ class CircleService {
       take,
       getAfter: (item) => item.userId,
     });
+  }
+
+  async getManageMembers(
+    publicId: string,
+    userId: string,
+    query: {
+      page: number;
+      limit: number;
+    },
+  ) {
+    const circle = await this.assertCanManageCircle(
+      publicId,
+      userId,
+      CirclePermission.KICK_MEMBER,
+    );
+    const [rows, total] = await Promise.all([
+      circleMemberRepository.findMembersByCircleIdPaginated({
+        circleId: circle.id,
+        page: query.page,
+        limit: query.limit,
+      }),
+      circleMemberRepository.countMembersByCircleId(circle.id),
+    ]);
+
+    return {
+      rows,
+      pagination: buildPaginationResponse(total, query.page, query.limit),
+    };
+  }
+
+  async getManageInvitations(
+    publicId: string,
+    userId: string,
+    query: {
+      page: number;
+      limit: number;
+    },
+  ) {
+    const circle = await this.assertCanManageCircle(
+      publicId,
+      userId,
+      CirclePermission.INVITE_MEMBER,
+    );
+    const [rows, total] = await Promise.all([
+      circleInvitationRepository.findByCircleIdPaginated({
+        circleId: circle.id,
+        page: query.page,
+        limit: query.limit,
+        type: "invitation",
+      }),
+      circleInvitationRepository.countByCircleId({
+        circleId: circle.id,
+        type: "invitation",
+      }),
+    ]);
+
+    return {
+      rows,
+      pagination: buildPaginationResponse(total, query.page, query.limit),
+    };
+  }
+
+  async getManageJoinRequests(
+    publicId: string,
+    userId: string,
+    query: {
+      page: number;
+      limit: number;
+    },
+  ) {
+    const circle = await this.assertCanManageCircle(
+      publicId,
+      userId,
+      CirclePermission.INVITE_MEMBER,
+    );
+    const [rows, total] = await Promise.all([
+      circleInvitationRepository.findByCircleIdPaginated({
+        circleId: circle.id,
+        page: query.page,
+        limit: query.limit,
+        type: "join_request",
+      }),
+      circleInvitationRepository.countByCircleId({
+        circleId: circle.id,
+        type: "join_request",
+      }),
+    ]);
+
+    return {
+      rows,
+      pagination: buildPaginationResponse(total, query.page, query.limit),
+    };
   }
 
   async getCircleDetail(publicId: string, userId: string) {

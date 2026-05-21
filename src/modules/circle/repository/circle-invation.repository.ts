@@ -1,6 +1,7 @@
 import prisma from "@/config/prisma";
 import { SendInvitationInput } from "@/modules/circle/interfaces/send-invitation.interface";
 import { buildPagination } from "@/shared/pagination/cursor-pagination";
+import { buildPagination as buildOffsetPagination } from "@/shared/pagination/pagination";
 import { CircleInvitationStatus, Prisma } from "@prisma/client";
 
 class CircleInvitationRepository implements ICursorPagination<
@@ -201,6 +202,76 @@ class CircleInvitationRepository implements ICursorPagination<
         inviterId: userId,
       },
     });
+  }
+
+  findByCircleIdPaginated({
+    circleId,
+    page,
+    limit,
+    type,
+  }: {
+    circleId: number;
+    page: number;
+    limit: number;
+    type: "invitation" | "join_request";
+  }) {
+    const { offset, currentLimit } = buildOffsetPagination({ page, limit });
+    const where: Prisma.CircleInvitationWhereInput = {
+      circleId,
+      ...(type === "invitation"
+        ? { inviterId: { not: { equals: prisma.circleInvitation.fields.userId } } }
+        : { inviterId: { equals: prisma.circleInvitation.fields.userId } }),
+    };
+
+    return prisma.circleInvitation.findMany({
+      where,
+      skip: offset,
+      take: currentLimit,
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      select: {
+        id: true,
+        circleId: true,
+        userId: true,
+        inviterId: true,
+        status: true,
+        resentCount: true,
+        createdAt: true,
+        updatedAt: true,
+        user: {
+          select: {
+            name: true,
+            username: true,
+            avatar: true,
+            bio: true,
+          },
+        },
+        inviter: {
+          select: {
+            name: true,
+            username: true,
+            avatar: true,
+            bio: true,
+          },
+        },
+      },
+    });
+  }
+
+  countByCircleId({
+    circleId,
+    type,
+  }: {
+    circleId: number;
+    type: "invitation" | "join_request";
+  }) {
+    const where: Prisma.CircleInvitationWhereInput = {
+      circleId,
+      ...(type === "invitation"
+        ? { inviterId: { not: { equals: prisma.circleInvitation.fields.userId } } }
+        : { inviterId: { equals: prisma.circleInvitation.fields.userId } }),
+    };
+
+    return prisma.circleInvitation.count({ where });
   }
 }
 export const circleInvitationRepository = new CircleInvitationRepository();

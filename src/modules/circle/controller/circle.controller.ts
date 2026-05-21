@@ -1,6 +1,7 @@
 import { ResponseInvitationDto } from "@/modules/circle/dto/response-invitation.dto";
 import type { SendInvitationDto } from "@/modules/circle/dto/send-invitation.dto";
-import { getPagination } from "@/shared/pagination/cursor-pagination";
+import { getPagination as getCursorPagination } from "@/shared/pagination/cursor-pagination";
+import { getPagination as getOffsetPagination } from "@/shared/pagination/pagination";
 import type { Request, Response } from "express";
 import {
   CirclePostBodyDto,
@@ -10,13 +11,14 @@ import {
   CircleReplyParamsDto,
   CprBodyDto,
   ExpLogQueryDto,
+  OffsetLimitQueryDto,
   SacrificeBodyDto,
 } from "../dto/runtime.dto";
 import { circleService } from "../service/circle.service";
 
 class CircleController {
   async getCircle(req: Request, res: Response) {
-    const { after: publicId, take } = getPagination(req);
+    const { after: publicId, take } = getCursorPagination(req);
     const visibility =
       typeof req.query.visibility === "string"
         ? req.query.visibility
@@ -40,7 +42,7 @@ class CircleController {
       return res.error(401, "Unauthorized");
     }
 
-    const { after, take } = getPagination(req);
+    const { after, take } = getCursorPagination(req);
     const circles = await circleService.getMyJoinedCircles(
       userId,
       after ?? undefined,
@@ -66,7 +68,7 @@ class CircleController {
   async getMembers(req: Request<CirclePublicIdParamsDto>, res: Response) {
     const { publicId } = req.params;
 
-    const { after: memberId, take } = getPagination(req);
+    const { after: memberId, take } = getCursorPagination(req);
     const members = await circleService.getMembers({
       circlePublicId: publicId,
       memberId: memberId ?? undefined,
@@ -88,13 +90,20 @@ class CircleController {
     req: Request<CirclePublicIdParamsDto, {}, {}, ExpLogQueryDto>,
     res: Response,
   ) {
+    const userId = req.user?.sub;
+    if (!userId) {
+      return res.error(401, "Unauthorized");
+    }
+
     const { publicId } = req.params;
-    const { after, take } = getPagination(req);
-    const data = await circleService.getCircleExpLog(publicId, {
-      after: after ?? undefined,
-      take,
+    const data = await circleService.getCircleExpLog(
+      publicId,
+      userId,
+      req.query_parsed,
+    );
+    return res.success(200, "Circle exp log retrieved successfully", data.rows, {
+      pagination: data.pagination,
     });
-    return res.success(200, "Circle exp log retrieved successfully", data);
   }
 
   async createCirclePost(
@@ -116,7 +125,7 @@ class CircleController {
     res: Response,
   ) {
     const { publicId } = req.params;
-    const { after, take } = getPagination(req);
+    const { after, take } = getCursorPagination(req);
     const data = await circleService.getCirclePosts(publicId, {
       after: after ?? undefined,
       take,
@@ -220,7 +229,7 @@ class CircleController {
     if (!userId) {
       return res.error(401, "Unauthorized");
     }
-    const { after: invitationId, take } = getPagination(req);
+    const { after: invitationId, take } = getCursorPagination(req);
     const circle = await circleService.getRequestInvitation(
       userId,
       invitationId ?? undefined,
@@ -281,6 +290,69 @@ class CircleController {
     const { isCancelled } = await circleService.sendJoinRequest(publicId, userId);
     return res.success(200, isCancelled ? "Join request cancelled successfully" : "Join request sent successfully", {
       isCancelled
+    });
+  }
+
+  async getManageMembers(
+    req: Request<CirclePublicIdParamsDto, {}, {}, OffsetLimitQueryDto>,
+    res: Response,
+  ) {
+    const userId = req.user?.sub;
+    if (!userId) {
+      return res.error(401, "Unauthorized");
+    }
+
+    const { publicId } = req.params;
+    const { currentPage, perPage } = getOffsetPagination(req);
+    const data = await circleService.getManageMembers(publicId, userId, {
+      page: currentPage,
+      limit: perPage,
+    });
+
+    return res.success(200, "Circle members retrieved successfully", data.rows, {
+      pagination: data.pagination,
+    });
+  }
+
+  async getManageInvitations(
+    req: Request<CirclePublicIdParamsDto, {}, {}, OffsetLimitQueryDto>,
+    res: Response,
+  ) {
+    const userId = req.user?.sub;
+    if (!userId) {
+      return res.error(401, "Unauthorized");
+    }
+
+    const { publicId } = req.params;
+    const { currentPage, perPage } = getOffsetPagination(req);
+    const data = await circleService.getManageInvitations(publicId, userId, {
+      page: currentPage,
+      limit: perPage,
+    });
+
+    return res.success(200, "Circle invitations retrieved successfully", data.rows, {
+      pagination: data.pagination,
+    });
+  }
+
+  async getManageJoinRequests(
+    req: Request<CirclePublicIdParamsDto, {}, {}, OffsetLimitQueryDto>,
+    res: Response,
+  ) {
+    const userId = req.user?.sub;
+    if (!userId) {
+      return res.error(401, "Unauthorized");
+    }
+
+    const { publicId } = req.params;
+    const { currentPage, perPage } = getOffsetPagination(req);
+    const data = await circleService.getManageJoinRequests(publicId, userId, {
+      page: currentPage,
+      limit: perPage,
+    });
+
+    return res.success(200, "Circle join requests retrieved successfully", data.rows, {
+      pagination: data.pagination,
     });
   }
 }

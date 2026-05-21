@@ -5,6 +5,7 @@ import {
 } from "@/modules/ai/mapper/nomallize-score";
 import { aiService } from "@/modules/ai/service/ai.service";
 import { circleExpLogRepository } from "@/modules/circle/repository/circle-exp-log.repository";
+import { circleMemberRepository } from "@/modules/circle/repository/circle-member.repository";
 import { circlePostQualityLogRepository } from "@/modules/circle/repository/circle-post-quality-log.repository";
 import { circleRepository } from "@/modules/circle/repository/circle.repository";
 import { EVALUATION_JOB_NAME, QUEUE_NAME } from "../src/constants/queue";
@@ -29,6 +30,10 @@ const processEvaluationPost = async (job: EvaluationPostJob) => {
         if (!circle) {
             throw new Error(`Circle ${job.circlePublicId} not found`);
         }
+        const member = await circleMemberRepository.findRoleByCircleId(circle.id, job.userId);
+        if (!member) {
+            throw new Error(`User ${job.userId} is not a member of circle ${job.circlePublicId}`);
+        }
 
         await Promise.all([
             circleExpLogRepository.upsertPostQualityLog({
@@ -40,6 +45,8 @@ const processEvaluationPost = async (job: EvaluationPostJob) => {
                 isDelta: false,
             }),
             circlePostQualityLogRepository.saveJudgeResult({
+                circleMemberId: member.id,
+                userId: job.userId,
                 circleId: circle.id,
                 postId: job.postId,
                 score: formatResult.score,
@@ -53,14 +60,6 @@ const processEvaluationPost = async (job: EvaluationPostJob) => {
             }),
         ]);
 
-        // const embedding = await mixedBreadService.generateEmbedding(job.content, );
-        // await pineconeIndex.saveCirclePostEmbeddingToPinecone({
-        //     postId: job.postId,
-        //     userId: job.userId,
-        //     content: job.content,
-        //     embedding: result.embedding,
-        //     topics: result.topics,
-        // });
 
         return {
             processed: true,
