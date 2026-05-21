@@ -1,4 +1,4 @@
-import { SavePostEmbeddingInput } from '@/modules/pinecone/dto/embedding-input.request.dto';
+import { SaveCirclePostEmbeddingInput, SavePostEmbeddingInput } from '@/modules/pinecone/dto/embedding-input.request.dto';
 import { pineconeIndex } from '@/providers/pinecone.provider';
 import { PostType } from '@prisma/client';
 
@@ -28,7 +28,7 @@ class PineconeService {
         };
     }
 
-    async saveCirclePostEmbeddingToPinecone(input: SavePostEmbeddingInput) {
+    async saveCirclePostEmbeddingToPinecone(input: SaveCirclePostEmbeddingInput) {
         await pineconeIndex.upsert({
             records: [
                 {
@@ -36,6 +36,7 @@ class PineconeService {
                     values: input.embedding,
                     metadata: {
                         postId: input.postId,
+                        circlePostId: input.postId,
                         userId: input.userId,
                         content: input.content,
                         topics: input.topics,

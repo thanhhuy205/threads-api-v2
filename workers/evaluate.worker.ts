@@ -8,6 +8,9 @@ import { circleExpLogRepository } from "@/modules/circle/repository/circle-exp-l
 import { circleMemberRepository } from "@/modules/circle/repository/circle-member.repository";
 import { circlePostQualityLogRepository } from "@/modules/circle/repository/circle-post-quality-log.repository";
 import { circleRepository } from "@/modules/circle/repository/circle.repository";
+import { mixedBreadService } from "@/modules/mixed-bread/service/mixed-bread.service";
+import { pineconeService } from "@/modules/pinecone/service/pinecone.service";
+import { pineconeIndex } from "@/providers/pinecone.provider";
 import { EVALUATION_JOB_NAME, QUEUE_NAME } from "../src/constants/queue";
 import { createWorker } from "../src/providers/bullmq.provider";
 
@@ -20,12 +23,6 @@ interface EvaluationPostJob {
 
 const processEvaluationPost = async (job: EvaluationPostJob) => {
     try {
-
-        const result = await aiService.scorePostAI(job.content);
-        const formatResult = mapScoreToReward(result);
-        const expReason = mapPostLabelToExpReason(formatResult.label);
-        const qualityLabel = mapPostLabelToQualityLabel(formatResult.label);
-
         const circle = await circleRepository.findByPublicId(job.circlePublicId);
         if (!circle) {
             throw new Error(`Circle ${job.circlePublicId} not found`);
@@ -34,6 +31,61 @@ const processEvaluationPost = async (job: EvaluationPostJob) => {
         if (!member) {
             throw new Error(`User ${job.userId} is not a member of circle ${job.circlePublicId}`);
         }
+
+        const embedding = await mixedBreadService.generateEmbedding(job.content, [circle.name]);
+        // khác nhóm nhưng đang giống nội dung với nhau
+        // cùng nhóm và cùng user nhưng đang giống nội dung với nhau
+        // cùng nhóm nhưng khác user đang giống nội dung với nhau
+        const [sameCircle, sameUserInCircle, sameUser] = await Promise.all([
+            pineconeIndex.query({
+                vector: embedding,
+                topK: 1,
+                includeMetadata: true,
+                namespace: 'posts',
+                filter: {
+                    circleId: circle.id,
+                },
+            }),
+            pineconeIndex.query({
+                vector: embedding,
+                topK: 1,
+                includeMetadata: true,
+                namespace: 'posts',
+                filter: {
+                    circleId: circle.id,
+                    userId: job.userId,
+                },
+            }),
+            pineconeIndex.query({
+                vector: embedding,
+                topK: 1,
+                includeMetadata: true,
+                namespace: 'posts',
+                filter: {
+                    userId: job.userId,
+                },
+            }),
+
+        ]);
+
+        const matches = sameCircle.matches ?? [];
+        const bestMatch = matches[0];
+
+        if (bestMatch && bestMatch.score && bestMatch.score > 0.9) {
+            console.log(`Post ${job.postId} is very similar to a previous post with id ${bestMatch.id} and score ${bestMatch.score}`);
+            return {
+                processed: false,
+                postId: job.postId,
+            };
+        }
+
+        const result = await aiService.scorePostAI(job.content);
+
+        const formatResult = mapScoreToReward(result);
+        const expReason = mapPostLabelToExpReason(formatResult.label);
+        const qualityLabel = mapPostLabelToQualityLabel(formatResult.label);
+
+
 
         await Promise.all([
             circleExpLogRepository.upsertPostQualityLog({
@@ -57,6 +109,14 @@ const processEvaluationPost = async (job: EvaluationPostJob) => {
                 confidence: formatResult.confidence,
                 isToxic: formatResult.isToxic,
                 isSpam: formatResult.isSpam,
+            }),
+            pineconeService.saveCirclePostEmbeddingToPinecone({
+                postId: job.postId,
+                circleId: circle.id,
+                userId: job.userId,
+                content: job.content,
+                topics: [circle.name],
+                embedding, // You can choose to generate an embedding for the post content if needed
             }),
         ]);
 

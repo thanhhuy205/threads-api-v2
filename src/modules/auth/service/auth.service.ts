@@ -309,15 +309,31 @@ class AuthService {
   }
 
   async me(userId: string): Promise<AuthMeResponseDto | null> {
+    const cacheKey = redisKey.auth.me(userId);
+    const cached = await redisService.get(cacheKey);
+    if (cached) {
+      try {
+        return JSON.parse(cached) as AuthMeResponseDto;
+      } catch {
+        // Ignore malformed cache and rebuild from the database.
+      }
+    }
+
     const user = await userRepository.findById(userId);
     if (!user) {
       return null;
     }
 
-    return authResponse.toResponse({
+    const response = authResponse.toResponse({
       type: "me",
       user,
     });
+
+    await redisService.set(cacheKey, JSON.stringify(response), {
+      EX: 30,
+    });
+
+    return response;
   }
 
   async logout(accessToken: string, payload: LogoutDto): Promise<void> {

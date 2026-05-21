@@ -75,7 +75,6 @@ enum ReportStatus {
 enum Visibility {
   PUBLIC
   PRIVATE
-  CIRCLE
 }
 
 enum VisibilityPost {

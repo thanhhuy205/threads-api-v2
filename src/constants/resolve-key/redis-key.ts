@@ -36,6 +36,7 @@ export const redisKey = {
   auth: {
     accessTokenBlacklist: (token: string) =>
       `${ACCESS_TOKEN_BLACKLIST_PREFIX}${token}`,
+    me: (userId: string) => `auth:me:${userId}`,
   },
   accessControl: {
     userPermission: (userId: string) =>

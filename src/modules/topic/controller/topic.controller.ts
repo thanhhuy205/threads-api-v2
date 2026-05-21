@@ -1,5 +1,6 @@
+import { getPagination } from "@/shared/pagination/cursor-pagination";
 import { Request, Response } from "express";
-import type { CreateTopicDto, TopicNameParamsDto } from "../dto/request/topic.request";
+import type { CreateTopicDto, SearchTopicQueryDto } from "../dto/request/topic.request";
 import { topicService } from "../service/topic.service";
 
 class TopicController {
@@ -8,8 +9,14 @@ class TopicController {
     return res.success(200, "Topics retrieved", topics);
   }
 
-  async getByName(req: Request<TopicNameParamsDto>, res: Response) {
-    const topic = await topicService.findByName(req.params.name);
+  async getByName(req: Request<{}, {}, {}, SearchTopicQueryDto>, res: Response) {
+    const { after, take } = getPagination(req);
+    const { q } = req.query;
+    const topic = await topicService.searchByName({
+      q,
+      take,
+      after: after ?? undefined,
+    });
 
     if (!topic) {
       return res.error(404, "Topic not found");

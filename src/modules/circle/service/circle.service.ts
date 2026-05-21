@@ -35,7 +35,7 @@ import { circleMemberRepository } from "../repository/circle-member.repository";
 import { circlePostQualityLogRepository } from "../repository/circle-post-quality-log.repository";
 import { circleRepository } from "../repository/circle.repository";
 
-type CircleVisibilityFilterType = "public" | "private" | "join" | "accepting" | null;
+type CircleVisibilityFilterType = "public" | "private" | "accepting" | "join" | null;
 
 class CircleService {
   private readonly circleListCacheTtlSeconds = 60;
@@ -86,22 +86,15 @@ class CircleService {
     const normalized = visibility.trim().toLowerCase();
     if (normalized === "public") return "public";
     if (normalized === "private") return "private";
-    if (normalized === "join") return "join";
-    if (normalized === "accepting") return "accepting";
 
     return null;
   }
 
   private getCircleWhereByVisibilityType(
     visibilityType?: CircleVisibilityFilterType,
-    userId?: string,
   ): Prisma.CircleWhereInput {
     if (!visibilityType) {
-      return {
-        visibility: {
-          not: Visibility.CIRCLE,
-        },
-      };
+      return {};
     }
 
     if (visibilityType === "public") {
@@ -112,23 +105,8 @@ class CircleService {
       return { visibility: Visibility.PRIVATE };
     }
 
-    if (visibilityType === "join") {
-      return {
-        circleMembers: {
-          some: {
-            userId,
-          },
-        },
-      };
-    }
-
     return {
-      circleInvitations: {
-        some: {
-          userId,
-          status: CircleInvitationStatus.PENDING,
-        },
-      },
+      visibility: Visibility.PRIVATE,
     };
   }
 
@@ -565,23 +543,12 @@ class CircleService {
       });
     }
 
-    if (
-      (visibilityType === "join" || visibilityType === "accepting") &&
-      !userId
-    ) {
-      return buildCursorPagination({
-        rows: [],
-        take,
-        getAfter: () => "",
-      });
-    }
-
     if (visibilityType !== undefined) {
       return this.buildCircleListResponse({
         publicId,
         take,
         userId,
-        where: this.getCircleWhereByVisibilityType(visibilityType, userId),
+        where: this.getCircleWhereByVisibilityType(visibilityType),
       });
     }
 
@@ -605,7 +572,7 @@ class CircleService {
       publicId,
       take,
       userId,
-      where: this.getCircleWhereByVisibilityType(undefined, userId),
+      where: this.getCircleWhereByVisibilityType(undefined),
     });
 
     await redisService.set(cacheKey, JSON.stringify(result), {

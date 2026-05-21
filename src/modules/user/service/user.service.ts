@@ -1,3 +1,4 @@
+import { baseLogger } from "@/middlewares/logger";
 import { userRepository } from "@/modules/user/repository/user.repository";
 import {
   buildCursorPagination,
@@ -9,6 +10,7 @@ import type { UserUsernameItem } from "../repository/user.repository";
 
 type GetNetworkUsernamesInput = {
   userId: string;
+  query: string;
   after?: string;
   take: number;
 };
@@ -104,11 +106,15 @@ class UserService {
 
   async getNetworkUsernames({
     userId,
+    query,
     after,
     take,
   }: GetNetworkUsernamesInput): Promise<GetNetworkUsernamesResult> {
+    baseLogger.info(`Getting network usernames for user ${userId} with query "${query}", after "${after}", take ${take}`
+    );
     const usernames = await userRepository.findNetworkUsernames({
       userId,
+      query: query.toLowerCase().trim(),
       after,
       take,
     });

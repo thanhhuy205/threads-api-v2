@@ -1,5 +1,6 @@
 import { redisKey } from "@/constants/resolve-key/redis-key";
 import { redisService } from "@/providers/redis.provider";
+import { buildCursorPagination } from "@/shared/pagination/cursor-pagination";
 import { topicRepository } from "../repository/topic.repository";
 
 class TopicService {
@@ -9,8 +10,24 @@ class TopicService {
     return name.trim().replace(/\s+/g, " ").toLowerCase();
   }
 
-  async findByName(name: string) {
-    return topicRepository.findByName(this.normalizeTopicName(name));
+  async searchByName({
+    q,
+    take, after,
+  }: {
+    q: string;
+    take: number;
+    after?: string;
+  }) {
+    const normalizedName = this.normalizeTopicName(q);
+    const topic = await topicRepository.searchByName(normalizedName, after ?? undefined);
+
+    return buildCursorPagination(
+      {
+        rows: topic,
+        take: take,
+        getAfter: (item) => (item as { name: string }).name
+      }
+    )
   }
 
   async listNames() {

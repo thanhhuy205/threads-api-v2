@@ -1,5 +1,6 @@
 import { AUTH_MESSAGE, USER_MESSAGE } from "@/constants/message";
 import { NotFoundException } from "@/errors/error";
+import { baseLogger } from "@/middlewares/logger";
 import { jwtService } from "@/modules/jwt/service/jwt.service";
 import { followerService } from "@/modules/user/service/follower.service";
 import { friendService } from "@/modules/user/service/friend.service";
@@ -10,7 +11,7 @@ import type { FollowersQueryDto } from "../dto/request/followers.query.dto";
 import {
   FriendRequestDto
 } from "../dto/request/friend-id.params.dto";
-import type { UsernameParamsDto } from "../dto/request/username.params.dto";
+import type { UserNameMentionQueryDto, UsernameParamsDto } from "../dto/request/username.params.dto";
 
 class UserController {
   async getFollower(
@@ -158,7 +159,7 @@ class UserController {
   }
 
   async getUsernames(
-    req: Request<{}, {}, {}, FollowersQueryDto>,
+    req: Request<{}, {}, {}, UserNameMentionQueryDto>,
     res: Response,
   ) {
     const userId = req.user?.sub;
@@ -167,8 +168,13 @@ class UserController {
     }
 
     const { after, take } = getPagination(req);
+
+    const query = req.query_parsed.q?.trim() || undefined;
+    baseLogger.info(`Received request to get usernames with query "${query}", after "${after}", take ${take}`);
+
     const { rows, pagination } = await userService.getNetworkUsernames({
       userId,
+      query,
       after: after ?? undefined,
       take,
     });

@@ -15,6 +15,39 @@ export const topicSwaggerSchemas = {
         },
         required: ['name', 'count'],
     },
+    TopicSearchPagination: {
+        type: 'object',
+        properties: {
+            take: {
+                type: 'integer',
+                example: 10,
+            },
+            after: {
+                type: ['string', 'null'],
+                example: 'nestjs',
+            },
+            hasMore: {
+                type: 'boolean',
+                example: true,
+            },
+        },
+        required: ['take', 'after', 'hasMore'],
+    },
+    TopicSearchData: {
+        type: 'object',
+        properties: {
+            rows: {
+                type: 'array',
+                items: {
+                    $ref: '#/components/schemas/TopicItem',
+                },
+            },
+            pagination: {
+                $ref: '#/components/schemas/TopicSearchPagination',
+            },
+        },
+        required: ['rows', 'pagination'],
+    },
     TopicNamesResponse: {
         type: 'object',
         properties: {
@@ -32,6 +65,23 @@ export const topicSwaggerSchemas = {
                     type: 'string',
                     example: 'nestjs',
                 },
+            },
+        },
+        required: ['success', 'message', 'data'],
+    },
+    TopicSearchResponse: {
+        type: 'object',
+        properties: {
+            success: {
+                type: 'boolean',
+                example: true,
+            },
+            message: {
+                type: 'string',
+                example: 'Topic retrieved',
+            },
+            data: {
+                $ref: '#/components/schemas/TopicSearchData',
             },
         },
         required: ['success', 'message', 'data'],
@@ -81,6 +131,52 @@ export const topicSwaggerSchemas = {
         required: ['success', 'message', 'data'],
     },
 };
+
+const topicNamePathParameter = [
+    {
+        name: 'name',
+        in: 'path',
+        required: true,
+        schema: {
+            type: 'string',
+            example: 'nestjs',
+        },
+        description: 'Topic path segment used by the current route',
+    },
+];
+
+const topicSearchQueryParameters = [
+    {
+        name: 'q',
+        in: 'query',
+        required: true,
+        schema: {
+            type: 'string',
+            example: 'nestjs',
+        },
+        description: 'Topic search keyword',
+    },
+    {
+        name: 'after',
+        in: 'query',
+        required: false,
+        schema: {
+            type: 'string',
+            example: 'nestjs',
+        },
+        description: 'Cursor from previous response pagination.after',
+    },
+    {
+        name: 'take',
+        in: 'query',
+        required: false,
+        schema: {
+            type: 'integer',
+            example: 10,
+        },
+        description: 'Number of items to return',
+    },
+];
 
 export const topicSwaggerPaths = {
     '/topic': {
@@ -133,18 +229,10 @@ export const topicSwaggerPaths = {
     '/topic/{name}': {
         get: {
             tags: ['Topic'],
-            summary: 'Get topic by name',
+            summary: 'Search topic by name',
             parameters: [
-                {
-                    name: 'name',
-                    in: 'path',
-                    required: true,
-                    schema: {
-                        type: 'string',
-                        example: 'nestjs',
-                    },
-                    description: 'Topic name',
-                },
+                ...topicNamePathParameter,
+                ...topicSearchQueryParameters,
             ],
             responses: {
                 200: {
@@ -152,7 +240,7 @@ export const topicSwaggerPaths = {
                     content: {
                         'application/json': {
                             schema: {
-                                $ref: '#/components/schemas/TopicByNameResponse',
+                                $ref: '#/components/schemas/TopicSearchResponse',
                             },
                         },
                     },

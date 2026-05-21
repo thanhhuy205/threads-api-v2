@@ -5,26 +5,35 @@ export type TopicRecord = {
   count: number;
 };
 
-class TopicRepository {
-  async findByName(name: string): Promise<TopicRecord | null> {
-    const topic = await prisma.topic.findUnique({
+class TopicRepository implements ICursorPagination<{ q: string }, TopicRecord> {
+  findAll({ after, take, where }: { after?: string; take?: number; where?: { q: string; } | undefined; }): Promise<TopicRecord[]> {
+    return prisma.topic.findMany({
       where: {
-        name,
+        name: {
+          contains: where?.q,
+        },
       },
+      orderBy: {
+        count: "desc",
+      },
+      cursor: after
+        ? {
+          name: after,
+        }
+        : undefined,
+      skip: after ? 1 : 0,
+      take,
       select: {
         name: true,
         count: true,
       },
     });
-
-    if (!topic) {
-      return null;
-    }
-
-    return {
-      name: topic.name,
-      count: topic.count,
-    };
+  }
+  async searchByName(q: string, after?: string) {
+    return this.findAll({
+      where: { q },
+      after,
+    });
   }
 
   async listNames(): Promise<string[]> {

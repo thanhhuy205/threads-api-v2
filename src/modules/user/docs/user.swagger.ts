@@ -334,6 +334,20 @@ const followersPaginationQueryParameters = [
     },
 ];
 
+const userMentionQueryParameters = [
+    {
+        name: 'q',
+        in: 'query',
+        required: true,
+        schema: {
+            type: 'string',
+            example: 'john',
+        },
+        description: 'Username search keyword',
+    },
+    ...followersPaginationQueryParameters,
+];
+
 export const userSwaggerPaths = {
     '/me/followers': {
         get: {
@@ -521,6 +535,29 @@ export const userSwaggerPaths = {
             responses: {
                 200: {
                     description: USER_MESSAGE.FRIEND_REQUEST_SENT,
+                },
+            },
+        },
+    },
+    '/users/mention': {
+        get: {
+            tags: ['User'],
+            summary: 'Search usernames for mentions',
+            security: bearerAuthSecurity,
+            parameters: userMentionQueryParameters,
+            responses: {
+                200: {
+                    description: 'Usernames retrieved',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                $ref: '#/components/schemas/UserUsernamesPaginatedResponse',
+                            },
+                        },
+                    },
+                },
+                401: {
+                    description: AUTH_MESSAGE.TOKEN_INVALID,
                 },
             },
         },
