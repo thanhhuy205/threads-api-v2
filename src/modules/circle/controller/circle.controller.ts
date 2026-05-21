@@ -124,9 +124,13 @@ class CircleController {
     req: Request<CirclePublicIdParamsDto, {}, {}, CirclePostsQueryDto>,
     res: Response,
   ) {
+    const userId = req.user?.sub;
+    if (!userId) {
+      return res.error(401, "Unauthorized");
+    }
     const { publicId } = req.params;
     const { after, take } = getCursorPagination(req);
-    const data = await circleService.getCirclePosts(publicId, {
+    const data = await circleService.getCirclePosts(publicId, userId, {
       after: after ?? undefined,
       take,
     });
@@ -156,10 +160,15 @@ class CircleController {
     req: Request<CircleReplyParamsDto, {}, {}, CircleRepliesQueryDto>,
     res: Response,
   ) {
+    const userId = req.user?.sub;
+    if (!userId) {
+      return res.error(401, "Unauthorized");
+    }
     const { publicId, postPublicId } = req.params;
     const data = await circleService.getCircleReplies(
       publicId,
       postPublicId,
+      userId,
       req.query_parsed,
     );
     return res.paginate(data);

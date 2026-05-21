@@ -307,12 +307,19 @@ class CircleService {
     };
   }
 
-  async getCirclePosts(publicId: string, query: CirclePostsQueryDto) {
+  async getCirclePosts(publicId: string, userId: string, query: CirclePostsQueryDto) {
     const circle = await circleRepository.findByPublicId(publicId);
     if (!circle) {
       throw new NotFoundException(`Circle ${publicId} not found`);
     }
-
+    const role = await circleMemberRepository.findRoleByCircleId(circle.id, userId);
+    if (circle.visibility === Visibility.PRIVATE && !role) {
+      return buildCursorPagination({
+        rows: [],
+        take: query.take ?? 20,
+        getAfter: () => "",
+      });
+    }
     const take = query.take ?? 20;
     const sort = query.sort ?? "latest";
     const logs = await circlePostQualityLogRepository.findCirclePosts({
@@ -428,12 +435,17 @@ class CircleService {
   async getCircleReplies(
     publicId: string,
     postPublicId: string,
+    userId: string,
     query: CircleRepliesQueryDto,
   ) {
+
     const circle = await circleRepository.findByPublicId(publicId);
     if (!circle) {
       throw new NotFoundException(`Circle ${publicId} not found`);
     }
+
+
+
     const parentInCircle =
       await circlePostQualityLogRepository.findByCircleAndPostPublicId(
         circle.id,
@@ -736,10 +748,6 @@ class CircleService {
 
     const role = await circleMemberRepository.findRoleByCircleId(circle.id, userId);
 
-    if (!role) {
-      throw new NotFoundException(`Circle ${publicId} not found`);
-    }
-
     const energy = circle.circleEnergies[0] ?? {
       current: 500,
       max: 1000,
@@ -755,6 +763,7 @@ class CircleService {
       visibility: circle.visibility,
       memberCount: circle._count.circleMembers,
       energy,
+      isJoined: !!role,
       isAdmin: role ? (role.role === RoleMembership.ADMIN || role.role === RoleMembership.OWNER) : false,
       permission: CIRCLE_ROLE_PERMISSIONS[role?.role ?? RoleMembership.MEMBER] || [],
       createdAt: circle.createdAt,

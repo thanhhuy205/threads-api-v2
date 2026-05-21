@@ -122,15 +122,10 @@ class CircleMemberRepository implements ICursorPagination<Prisma.CircleMemberWhe
                 userId: true,
                 createdAt: true,
                 role: true,
-                post: {
+                _count: {
                     select: {
-                        circlePostQualityLogs: {
-                            where: {
-                                circleId,
-                            },
-                            _count: true,
-                        }
-                    }
+                        circlePostQuantity: true,
+                    },
                 },
                 user: {
                     select: {
