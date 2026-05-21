@@ -32,7 +32,7 @@ class DeltaProducer {
             {},
             {
                 jobId: DELTA_HP_JOB_NAME.DECREASE_HP,
-                repeat: { every: 5_000 },
+                repeat: { every: 3_600_000 },
                 attempts: 1,
             },
         );

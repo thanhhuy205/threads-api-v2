@@ -28,9 +28,17 @@ import {
     adminSwaggerSchemas,
 } from '../modules/admin/docs/admin.swagger';
 import {
+    aiSwaggerPaths,
+    aiSwaggerSchemas,
+} from '../modules/ai/docs/ai.swagger';
+import {
     circleSwaggerPaths,
     circleSwaggerSchemas,
 } from '../modules/circle/docs/circle.swagger';
+import {
+    internalSwaggerPaths,
+    internalSwaggerSchemas,
+} from '../modules/internal/docs/internal.swagger';
 import {
     jwtSwaggerSchemas,
 } from '../modules/jwt/docs/jwt.swagger';
@@ -39,13 +47,33 @@ import {
     messageGroupSwaggerSchemas,
 } from '../modules/message-group/docs/message-group.swagger';
 import {
+    museumSwaggerPaths,
+    museumSwaggerSchemas,
+} from '../modules/museum/docs/museum.swagger';
+import {
     notificationSwaggerPaths,
     notificationSwaggerSchemas,
 } from '../modules/notification-group/docs/notification.swagger';
 import {
+    pusherSwaggerPaths,
+    pusherSwaggerSchemas,
+} from '../modules/pusher/docs/pusher.swagger';
+import {
+    questSwaggerPaths,
+    questSwaggerSchemas,
+} from '../modules/quest/docs/quest.swagger';
+import {
+    searchSwaggerPaths,
+    searchSwaggerSchemas,
+} from '../modules/search/docs/search.swagger';
+import {
     topicSwaggerPaths,
     topicSwaggerSchemas,
 } from '../modules/topic/docs/topic.swagger';
+import {
+    webhooksSwaggerPaths,
+    webhooksSwaggerSchemas,
+} from '../modules/webhooks/docs/webhooks.swagger';
 
 export const swaggerDocument = {
     openapi: '3.0.0',
@@ -104,6 +132,34 @@ export const swaggerDocument = {
             name: 'Topic',
             description: 'Topic APIs',
         },
+        {
+            name: 'AI',
+            description: 'AI assistance APIs',
+        },
+        {
+            name: 'Quest',
+            description: 'Quest and reward APIs',
+        },
+        {
+            name: 'Museum',
+            description: 'Museum archive APIs',
+        },
+        {
+            name: 'Internal',
+            description: 'Internal processing APIs',
+        },
+        {
+            name: 'Search',
+            description: 'Search APIs',
+        },
+        {
+            name: 'Pusher',
+            description: 'Realtime authorization APIs',
+        },
+        {
+            name: 'Webhooks',
+            description: 'Webhook receiver APIs',
+        },
     ],
 
     paths: {
@@ -117,6 +173,13 @@ export const swaggerDocument = {
         ...adminSwaggerPaths,
         ...messageGroupSwaggerPaths,
         ...topicSwaggerPaths,
+        ...aiSwaggerPaths,
+        ...questSwaggerPaths,
+        ...museumSwaggerPaths,
+        ...internalSwaggerPaths,
+        ...searchSwaggerPaths,
+        ...pusherSwaggerPaths,
+        ...webhooksSwaggerPaths,
     },
 
     components: {
@@ -132,6 +195,13 @@ export const swaggerDocument = {
             ...adminSwaggerSchemas,
             ...messageGroupSwaggerSchemas,
             ...topicSwaggerSchemas,
+            ...aiSwaggerSchemas,
+            ...questSwaggerSchemas,
+            ...museumSwaggerSchemas,
+            ...internalSwaggerSchemas,
+            ...searchSwaggerSchemas,
+            ...pusherSwaggerSchemas,
+            ...webhooksSwaggerSchemas,
         },
 
         securitySchemes: {

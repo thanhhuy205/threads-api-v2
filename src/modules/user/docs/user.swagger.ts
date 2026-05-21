@@ -222,6 +222,66 @@ export const userSwaggerSchemas = {
         },
         required: ['success', 'message', 'data'],
     },
+    UserKarmaTransactionItem: {
+        type: 'object',
+        properties: {
+            delta: { type: 'integer', example: 20 },
+            reason: { type: 'string', example: 'QUEST_REWARD' },
+            circleId: { type: ['integer', 'null'], example: null },
+            createdAt: { type: 'string', format: 'date-time' },
+        },
+    },
+    UserKarmaData: {
+        type: 'object',
+        properties: {
+            userId: { type: 'string', example: 'user_123' },
+            balance: { type: 'integer', example: 320 },
+            transactions: {
+                type: 'array',
+                items: { $ref: '#/components/schemas/UserKarmaTransactionItem' },
+            },
+            restriction: { type: ['object', 'null'], example: null },
+        },
+        required: ['userId', 'balance', 'transactions', 'restriction'],
+    },
+    UserKarmaSuccessResponse: {
+        type: 'object',
+        properties: {
+            success: { type: 'boolean', example: true },
+            message: { type: 'string', example: 'User karma retrieved successfully' },
+            data: { $ref: '#/components/schemas/UserKarmaData' },
+        },
+        required: ['success', 'message', 'data'],
+    },
+    UserBadgeItem: {
+        type: 'object',
+        properties: {
+            type: { type: 'string', example: 'SACRIFICE_HERO' },
+            circleId: { type: 'integer', example: 1 },
+            circleName: { type: 'string', example: 'Skeleton Circle' },
+            createdAt: { type: 'string', format: 'date-time' },
+        },
+    },
+    UserBadgesData: {
+        type: 'object',
+        properties: {
+            userId: { type: 'string', example: 'user_123' },
+            badges: {
+                type: 'array',
+                items: { $ref: '#/components/schemas/UserBadgeItem' },
+            },
+        },
+        required: ['userId', 'badges'],
+    },
+    UserBadgesSuccessResponse: {
+        type: 'object',
+        properties: {
+            success: { type: 'boolean', example: true },
+            message: { type: 'string', example: 'User badges retrieved successfully' },
+            data: { $ref: '#/components/schemas/UserBadgesData' },
+        },
+        required: ['success', 'message', 'data'],
+    },
 
 };
 
@@ -484,6 +544,46 @@ export const userSwaggerPaths = {
                 },
                 404: {
                     description: 'User not found',
+                },
+            },
+        },
+    },
+    '/users/me/karma': {
+        get: {
+            tags: ['User'],
+            summary: 'Get current user karma summary',
+            security: bearerAuthSecurity,
+            responses: {
+                200: {
+                    description: 'User karma retrieved successfully',
+                    content: {
+                        'application/json': {
+                            schema: { $ref: '#/components/schemas/UserKarmaSuccessResponse' },
+                        },
+                    },
+                },
+                401: {
+                    description: AUTH_MESSAGE.TOKEN_INVALID,
+                },
+            },
+        },
+    },
+    '/users/me/badges': {
+        get: {
+            tags: ['User'],
+            summary: 'Get current user badges',
+            security: bearerAuthSecurity,
+            responses: {
+                200: {
+                    description: 'User badges retrieved successfully',
+                    content: {
+                        'application/json': {
+                            schema: { $ref: '#/components/schemas/UserBadgesSuccessResponse' },
+                        },
+                    },
+                },
+                401: {
+                    description: AUTH_MESSAGE.TOKEN_INVALID,
                 },
             },
         },
