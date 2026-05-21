@@ -14,6 +14,7 @@ import {
   CircleInvitationStatus,
   ExpReason,
   PostScoreLabel,
+  Prisma,
   RoleMembership,
   Visibility,
 } from "@prisma/client";
@@ -32,6 +33,8 @@ import { circleMemberRepository } from "../repository/circle-member.repository";
 import { circlePostQualityLogRepository } from "../repository/circle-post-quality-log.repository";
 import { circleRepository } from "../repository/circle.repository";
 
+type CircleVisibilityFilterType = "public" | "private" | "join" | "accepting";
+
 class CircleService {
   private readonly circleListCacheTtlSeconds = 60;
 
@@ -43,6 +46,114 @@ class CircleService {
 
   private async bumpCircleListCacheVersion() {
     await redisService.incr(redisKey.circle.listVersion());
+  }
+
+  private normalizeCircleVisibilityFilter(
+    visibility?: string,
+  ): CircleVisibilityFilterType | null | undefined {
+    if (visibility === undefined) {
+      return undefined;
+    }
+
+    const normalized = visibility.trim().toLowerCase();
+    if (normalized === "public") return "public";
+    if (normalized === "private") return "private";
+    if (normalized === "join") return "join";
+    if (normalized === "accepting") return "accepting";
+
+    return null;
+  }
+
+  private getCircleWhereByVisibilityType(
+    visibilityType?: CircleVisibilityFilterType,
+    userId?: string,
+  ): Prisma.CircleWhereInput {
+    if (!visibilityType) {
+      return {
+        visibility: {
+          not: Visibility.CIRCLE,
+        },
+      };
+    }
+
+    if (visibilityType === "public") {
+      return { visibility: Visibility.PUBLIC };
+    }
+
+    if (visibilityType === "private") {
+      return { visibility: Visibility.PRIVATE };
+    }
+
+    if (visibilityType === "join") {
+      return {
+        circleMembers: {
+          some: {
+            userId,
+          },
+        },
+      };
+    }
+
+    return {
+      circleInvitations: {
+        some: {
+          userId,
+          status: CircleInvitationStatus.PENDING,
+        },
+      },
+    };
+  }
+
+  private async buildCircleListResponse({
+    publicId,
+    take,
+    userId,
+    where,
+  }: {
+    publicId?: string;
+    take: number;
+    userId?: string;
+    where: Prisma.CircleWhereInput;
+  }) {
+    const circles = await circleRepository.findCircles({
+      after: publicId,
+      take,
+      where,
+    });
+
+    const circleIds = circles.map((circle) => circle.id);
+    let pendingCircleIdSet = new Set<number>();
+    let joinedCircleIdSet = new Set<number>();
+
+    if (userId && circleIds.length) {
+      const [pendingInvitations, memberships] = await Promise.all([
+        circleInvitationRepository.findPendingInvitationsByCircleIds(
+          circleIds,
+          userId,
+        ),
+        circleMemberRepository.findMembershipsByCircleIds(circleIds, userId),
+      ]);
+
+      pendingCircleIdSet = new Set(
+        pendingInvitations.map((invitation) => invitation.circleId),
+      );
+      joinedCircleIdSet = new Set(
+        memberships.map((membership) => membership.circleId),
+      );
+    }
+
+    const rows = circles.map((circle) =>
+      mapCircleWithJoinStatus(circle, {
+        pendingCircleIdSet,
+        joinedCircleIdSet,
+      }),
+    );
+
+    return buildCursorPagination({
+      rows,
+      take,
+      getAfter: (item) => item.publicId,
+    });
   }
 
   async getCircleEnergy(publicId: string) {
@@ -349,7 +460,42 @@ class CircleService {
     };
   }
 
-  async getCircle(publicId?: string, take: number = 10, userId?: string) {
+  async getCircle(
+    publicId?: string,
+    take: number = 10,
+    userId?: string,
+    visibility?: string,
+  ) {
+    const visibilityType = this.normalizeCircleVisibilityFilter(visibility);
+
+    if (visibility !== undefined && visibilityType === null) {
+      return buildCursorPagination({
+        rows: [],
+        take,
+        getAfter: () => "",
+      });
+    }
+
+    if (
+      (visibilityType === "join" || visibilityType === "accepting") &&
+      !userId
+    ) {
+      return buildCursorPagination({
+        rows: [],
+        take,
+        getAfter: () => "",
+      });
+    }
+
+    if (visibilityType !== undefined) {
+      return this.buildCircleListResponse({
+        publicId,
+        take,
+        userId,
+        where: this.getCircleWhereByVisibilityType(visibilityType, userId),
+      });
+    }
+
     const cacheVersion = await this.getCircleListCacheVersion();
     const cacheKey = redisKey.circle.list(
       cacheVersion,
@@ -366,49 +512,11 @@ class CircleService {
         // Ignore malformed cache and fall through to DB query.
       }
     }
-
-    const circles = await circleRepository.findCircles({
-      after: publicId,
+    const result = await this.buildCircleListResponse({
+      publicId,
       take,
-      where: {
-        visibility: {
-          not: Visibility.CIRCLE,
-        },
-      },
-    });
-
-    const circleIds = circles.map((circle) => circle.id);
-    let pendingCircleIdSet = new Set<number>();
-    let joinedCircleIdSet = new Set<number>();
-
-    if (userId && circleIds.length) {
-      const [pendingInvitations, memberships] = await Promise.all([
-        circleInvitationRepository.findPendingInvitationsByCircleIds(
-          circleIds,
-          userId,
-        ),
-        circleMemberRepository.findMembershipsByCircleIds(circleIds, userId),
-      ]);
-
-      pendingCircleIdSet = new Set(
-        pendingInvitations.map((invitation) => invitation.circleId),
-      );
-      joinedCircleIdSet = new Set(
-        memberships.map((membership) => membership.circleId),
-      );
-    }
-
-    const rows = circles.map((circle) =>
-      mapCircleWithJoinStatus(circle, {
-        pendingCircleIdSet,
-        joinedCircleIdSet,
-      }),
-    );
-
-    const result = buildCursorPagination({
-      rows,
-      take,
-      getAfter: (item) => item.publicId,
+      userId,
+      where: this.getCircleWhereByVisibilityType(undefined, userId),
     });
 
     await redisService.set(cacheKey, JSON.stringify(result), {
@@ -416,6 +524,39 @@ class CircleService {
     });
 
     return result;
+  }
+
+  async getMyJoinedCircles(
+    userId: string,
+    publicId?: string,
+    take: number = 10,
+  ) {
+    const circles = await circleRepository.findCircles({
+      after: publicId,
+      take,
+      where: {
+        circleMembers: {
+          some: {
+            userId,
+          },
+        },
+      },
+    });
+
+    const pendingCircleIdSet = new Set<number>();
+    const joinedCircleIdSet = new Set(circles.map((circle) => circle.id));
+    const rows = circles.map((circle) =>
+      mapCircleWithJoinStatus(circle, {
+        pendingCircleIdSet,
+        joinedCircleIdSet,
+      }),
+    );
+
+    return buildCursorPagination({
+      rows,
+      take,
+      getAfter: (item) => item.publicId,
+    });
   }
 
   async getMembers({

@@ -17,6 +17,10 @@ import { circleService } from "../service/circle.service";
 class CircleController {
   async getCircle(req: Request, res: Response) {
     const { after: publicId, take } = getPagination(req);
+    const visibility =
+      typeof req.query.visibility === "string"
+        ? req.query.visibility
+        : undefined;
     const userId = req.user?.sub;
     if (!userId) {
       return res.error(401, "Unauthorized");
@@ -25,8 +29,25 @@ class CircleController {
       publicId ?? undefined,
       take,
       userId,
+      visibility,
     );
     return res.paginate(circle);
+  }
+
+  async getMyJoinedCircles(req: Request, res: Response) {
+    const userId = req.user?.sub;
+    if (!userId) {
+      return res.error(401, "Unauthorized");
+    }
+
+    const { after, take } = getPagination(req);
+    const circles = await circleService.getMyJoinedCircles(
+      userId,
+      after ?? undefined,
+      take,
+    );
+
+    return res.paginate(circles);
   }
 
   async getCircleDetail(

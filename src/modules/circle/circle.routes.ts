@@ -21,6 +21,7 @@ const circleRouter = Router();
 circleRouter.use(authorization);
 
 circleRouter.get('/', circleController.getCircle);
+circleRouter.get('/me-join', circleController.getMyJoinedCircles);
 circleRouter.get('/request-invitation', circleController.getRequestInvitation);
 circleRouter.post('/', validate(createCircleSchema), circleController.createCircle);
 circleRouter.post('/send-invitation', validate(sendInvitationSchema), circleController.sendInvitation);
