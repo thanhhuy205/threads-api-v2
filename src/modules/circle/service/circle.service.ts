@@ -3,6 +3,7 @@ import { BadRequestException, NotFoundException } from "@/errors/error";
 import { CreateCircleInput } from "@/modules/circle/interfaces/circle-service.interface";
 import { ResponseInvitationInput } from "@/modules/circle/interfaces/response-invitation.dto";
 import { SendInvitationInput } from "@/modules/circle/interfaces/send-invitation.interface";
+import { CIRCLE_ROLE_PERMISSIONS } from "@/modules/circle/permission/circle-permission";
 import { circleInvitationRepository } from "@/modules/circle/repository/circle-invation.repository";
 import { postService } from "@/modules/post/service/post.service";
 import { userRestrictionService } from "@/modules/user-restriction/service/user-restriction.service";
@@ -444,10 +445,16 @@ class CircleService {
     });
   }
 
-  async getCircleDetail(publicId: string) {
+  async getCircleDetail(publicId: string, userId: string) {
     const circle = await circleRepository.findByPublicId(publicId);
 
     if (!circle) {
+      throw new NotFoundException(`Circle ${publicId} not found`);
+    }
+
+    const role = await circleMemberRepository.findRoleByCircleId(circle.id, userId);
+
+    if (!role) {
       throw new NotFoundException(`Circle ${publicId} not found`);
     }
 
@@ -466,6 +473,8 @@ class CircleService {
       visibility: circle.visibility,
       memberCount: circle._count.circleMembers,
       energy,
+      isAdmin: role ? (role.role === RoleMembership.ADMIN || role.role === RoleMembership.OWNER) : false,
+      permission: CIRCLE_ROLE_PERMISSIONS[role?.role ?? RoleMembership.MEMBER] || [],
       createdAt: circle.createdAt,
       updatedAt: circle.updatedAt,
     };

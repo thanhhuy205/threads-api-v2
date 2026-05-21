@@ -86,7 +86,7 @@ class CircleRepository implements ICursorPagination<
         circleMembers: {
           create: {
             userId: data.createById,
-            role: RoleMembership.ADMIN,
+            role: RoleMembership.OWNER,
           },
         },
         circleEnergies: {

@@ -66,6 +66,9 @@ class CircleMemberRepository implements ICursorPagination<Prisma.CircleMemberWhe
         });
         return members;
     }
+
+ 
+
     async findRoleByCircleId(circleId: number, userId: string): Promise<CircleMember | null> {
         const member = await prisma.circleMember.findFirst({
             where: {
