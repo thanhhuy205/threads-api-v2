@@ -226,6 +226,34 @@ class CircleService {
     };
   }
 
+  async getAllCirclePostQualityLog(
+    publicId: string,
+    userId: string,
+    query: ExpLogQueryDto,
+  ) {
+    const circle = await this.assertCanManageCircle(
+      publicId,
+      userId,
+      CirclePermission.START_CPR,
+    );
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 10;
+
+    const [rows, total] = await Promise.all([
+      circlePostQualityLogRepository.findByCircleIdPaginated({
+        circleId: circle.id,
+        page,
+        limit,
+      }),
+      circlePostQualityLogRepository.countByCircleId(circle.id),
+    ]);
+
+    return {
+      rows,
+      pagination: buildPaginationResponse(total, page, limit),
+    };
+  }
+
   async createCirclePost(
     publicId: string,
     userId: string,
@@ -971,6 +999,20 @@ class CircleService {
 
     await circleInvitationRepository.createJoinRequest(circle.id, userId);
     return { isCancelled: false };
+  }
+
+  async countCircles() {
+    return await circleRepository.count();
+  }
+
+  async findBatchCircles({
+    take,
+    skip,
+  }: {
+    take: number;
+    skip: number;
+  }) {
+    return await circleRepository.findBatch(take, skip);
   }
 }
 export const circleService = new CircleService();

@@ -40,6 +40,12 @@ circleRouter.get(
     circleController.getCircleExpLog,
 );
 circleRouter.get(
+    '/:publicId/manage/post-quality-log',
+    validate(circlePublicIdParamsSchema, 'params'),
+    validate(offsetLimitQuerySchema, 'query'),
+    circleController.getAllCirclePostQualityLog,
+);
+circleRouter.get(
     '/:publicId/manage/members',
     validate(circlePublicIdParamsSchema, 'params'),
     validate(offsetLimitQuerySchema, 'query'),

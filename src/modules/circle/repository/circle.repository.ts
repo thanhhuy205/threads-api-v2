@@ -161,6 +161,18 @@ class CircleRepository implements ICursorPagination<
       },
     });
   }
+
+  async count(where?: Prisma.CircleWhereInput) {
+    return prisma.circle.count({ where });
+  }
+
+  async findBatch(take: number, skip: number) {
+    return prisma.circle.findMany({
+      skip,
+      take,
+      orderBy: { id: "asc" },
+    })
+  }
 }
 
 export const circleRepository = new CircleRepository();

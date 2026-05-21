@@ -1,4 +1,5 @@
 import prisma from "@/config/prisma";
+import { buildPagination } from "@/shared/pagination/pagination";
 import { PostScoreLabel, PostType, Prisma } from "@prisma/client";
 
 type CreateCirclePostQualityLogInput = {
@@ -26,6 +27,64 @@ type SaveCirclePostJudgeResultInput = {
 };
 
 class CirclePostQualityLogRepository {
+  findByCircleIdPaginated({
+    circleId,
+    page,
+    limit,
+  }: {
+    circleId: number;
+    page: number;
+    limit: number;
+  }) {
+    const { offset, currentLimit } = buildPagination({ page, limit });
+
+    return prisma.circlePostQualityLog.findMany({
+      where: {
+        circleId,
+      },
+      skip: offset,
+      take: currentLimit,
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      select: {
+        id: true,
+        circleId: true,
+        circleMemberId: true,
+        postId: true,
+        score: true,
+        label: true,
+        hpDelta: true,
+        expDelta: true,
+        reason: true,
+        confidence: true,
+        createdAt: true,
+        circleMember: {
+          select: {
+            id: true,
+            userId: true,
+            role: true,
+            createdAt: true,
+            user: {
+              select: {
+                name: true,
+                username: true,
+                avatar: true,
+                bio: true,
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  countByCircleId(circleId: number) {
+    return prisma.circlePostQualityLog.count({
+      where: {
+        circleId,
+      },
+    });
+  }
+
   async findByCircleAndPostPublicId(circleId: number, postPublicId: string) {
     return prisma.circlePostQualityLog.findFirst({
       where: {
@@ -160,7 +219,6 @@ class CirclePostQualityLogRepository {
   ) {
     return tx.circlePostQualityLog.create({
       data: {
-        userId: data.userId,
         circleMemberId: data.circleMemberId,
         circleId: data.circleId,
         postId: data.postId,

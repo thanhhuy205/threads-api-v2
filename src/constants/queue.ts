@@ -8,6 +8,7 @@ export const QUEUE_NAME = {
   LIKED_ADD_QUEUE: "likes_add",
   LIKED_REMOVE_QUEUE: "likes_remove",
   EVALUATION_QUEUE: "evaluation_queue",
+  DELTA_HP_QUEUE: "delta_hp_queue",
 };
 
 
@@ -19,6 +20,7 @@ export const WORKER_NAME = {
   NOTIFICATION_WORKER: "notification_worker",
   AUTO_REMOVE_BAN_WORKER: "auto_remove_ban_worker",
   EVALUATE_WORKER: "evaluate_worker",
+  DELTA_HP_WORKER: "delta_hp_worker",
 };
 
 export const PINECONE_JOB_NAME = {
@@ -27,6 +29,11 @@ export const PINECONE_JOB_NAME = {
 export const EMAIL_JOB_NAME = {
   SEND_VERIFICATION_EMAIL: "send_verification_email",
   SEND_FORGOT_PASSWORD_EMAIL: "send_forgot_password_email",
+};
+
+export const DELTA_HP_JOB_NAME = {
+  INCREASE_HP: "increase_hp",
+  DECREASE_HP: "decrease_hp",
 };
 
 export const BLOOM_JOB_NAME = {

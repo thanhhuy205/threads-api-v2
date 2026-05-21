@@ -106,6 +106,35 @@ class CircleController {
     });
   }
 
+  async getAllCirclePostQualityLog(
+    req: Request<CirclePublicIdParamsDto, {}, {}, ExpLogQueryDto>,
+    res: Response,
+  ) {
+    const userId = req.user?.sub;
+    if (!userId) {
+      return res.error(401, "Unauthorized");
+    }
+
+    const { publicId } = req.params;
+    const { currentPage, perPage } = getOffsetPagination(req);
+    const data = await circleService.getAllCirclePostQualityLog(
+      publicId,
+      userId,
+      {
+        page: currentPage,
+        limit: perPage,
+      },
+    );
+    return res.success(
+      200,
+      "Circle post quality logs retrieved successfully",
+      data.rows,
+      {
+        pagination: data.pagination,
+      },
+    );
+  }
+
   async createCirclePost(
     req: Request<CirclePublicIdParamsDto, {}, CirclePostBodyDto>,
     res: Response,

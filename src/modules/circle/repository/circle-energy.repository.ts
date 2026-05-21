@@ -22,6 +22,23 @@ class CircleEnergyRepository {
       },
     });
   }
+
+  async decreaseEnergy(ids: number[]) {
+    return await prisma.$executeRaw`
+     UPDATE circle_energy
+     SET current = GREATEST(
+      0,
+      current - CASE
+        WHEN level <= 1 THEN 10
+        WHEN level = 2 THEN 9
+        WHEN level = 3 THEN 8
+        WHEN level = 4 THEN 7
+        WHEN level = 5 THEN 6
+      END
+    )
+    WHERE circle_id IN (${Prisma.join(ids)})
+    `
+  }
 }
 
 export const circleEnergyRepository = new CircleEnergyRepository();
