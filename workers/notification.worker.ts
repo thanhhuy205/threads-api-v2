@@ -47,6 +47,11 @@ const toPendingCommentNotificationMeta = (
   return meta as PendingCommentNotificationRedisMeta;
 };
 
+type PushNotificationPayload = {
+  message: string;
+  avatar: string;
+};
+
 class NotificationWorker {
   private readonly worker = createWorker(QUEUE_NAME.NOTIFICATION_QUEUE, async (job) => {
     switch (job.name) {
@@ -139,7 +144,10 @@ class NotificationWorker {
         actors,
       });
 
-      await this.sendPushNotification(recipientId, message);
+      await this.sendPushNotification(recipientId, {
+        message,
+        avatar: meta.username,
+      });
 
       await redisService.del([redisKey, `${redisKey}:actors`]);
       await redisService.zRem(NOTIFICATION_JOB_KEY.BATCH_SYNC_NOTIFICATION, redisKey);
@@ -160,7 +168,7 @@ class NotificationWorker {
     console.log(notificationSave)
   }
 
-  async sendPushNotification(recipientId: string, message: string) {
+  async sendPushNotification(recipientId: string, message: PushNotificationPayload) {
     console.log(`Sending push notification to user ${recipientId}: ${message}`);
     await pusher.trigger(`private-user-notification-${recipientId}`, "new-notifications", {
       recipientId,

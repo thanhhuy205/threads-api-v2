@@ -133,11 +133,17 @@ class NotificationRepository
                 originPost: {
                     select: {
                         publicId: true,
+                        content: true,
                     }
                 },
                 targetPost: {
                     select: {
                         publicId: true,
+                        content: true,
+                        likesCount: true,
+                        repliesCount: true,
+                        repostsCountAndQuoteCount: true,
+                        replyPermission: true,
                     }
                 }
             },

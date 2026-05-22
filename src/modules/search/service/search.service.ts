@@ -3,6 +3,10 @@ class SearchService {
     // TODO: implement logic to search user by name, posts by content, hashtag
     return [];
   }
+
+  async searchUsers(query: string) {
+    
+  }
 }
 
 export const searchService = new SearchService();

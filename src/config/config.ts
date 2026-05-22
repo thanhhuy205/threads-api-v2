@@ -1,5 +1,6 @@
 import { cloudflareConfig } from '@/config/cloudflare';
 import { databaseConfig } from '@/config/database';
+import { elasticSearchConfig } from '@/config/elasticsearch';
 import { jwtConfig } from '@/config/jwt';
 import { mixedbreadAIConfig } from '@/config/mixedbread-ai';
 import { muxConfig } from '@/config/mux';
@@ -31,7 +32,7 @@ const envSchema = z.object({
     ...pusherConfig.shape,
     ...muxConfig.shape,
     ...openRouterConfig.shape,
-
+    ...elasticSearchConfig.shape,
 });
 
 const parsedEnv = envSchema.safeParse(process.env);

@@ -506,6 +506,7 @@ class PostService {
     baseLogger.info("Created reply post, adding notification group");
     await notificationService.handleNewComment(
       {
+        replyContent: payload.content,
         actorId: payload.userId,
         recipientId: existPost.userId,
         targetPostId: post.publicId,
@@ -552,14 +553,15 @@ class PostService {
     );
 
     baseLogger.info("Created circle reply post, adding notification group");
-    await notificationService.handleNewComment({
-      actorId: payload.userId,
-      recipientId: existPost.userId,
-      targetPostId: post.publicId,
-      originPostId: existPost.publicId,
-      postOwnerId: existPost.userId,
-      username: snapshot.username,
-    });
+    // await notificationService.handleNewComment({
+
+    //   actorId: payload.userId,
+    //   recipientId: existPost.userId,
+    //   targetPostId: post.publicId,
+    //   originPostId: existPost.publicId,
+    //   postOwnerId: existPost.userId,
+    //   username: snapshot.username,
+    // });
 
     await this.bumpPostListCacheVersion();
     return {

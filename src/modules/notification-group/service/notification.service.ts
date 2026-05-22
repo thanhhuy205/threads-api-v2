@@ -1,5 +1,6 @@
 import { NOTIFICATION_JOB_KEY } from "@/constants/queue";
 import { baseLogger } from "@/middlewares/logger";
+import { ReplyNotification } from "@/modules/notification-group/events/notification.events";
 import type {
   CreateNotificationGroupInput,
   FindAllNotificationGroupsInput,
@@ -57,14 +58,16 @@ class NotificationService {
   }
 
 
-  async handleNewComment({ actorId, recipientId, targetPostId, username, originPostId, postOwnerId }: {
-    actorId: string;
-    recipientId: string;
-    targetPostId: string;
-    originPostId: string;
-    username: string;
-    postOwnerId: string;
-  }) {
+  async handleNewComment(relyNotification: ReplyNotification) {
+    const {
+      actorId,
+      recipientId,
+      targetPostId,
+      originPostId,
+      username,
+      postOwnerId,
+    } = relyNotification;
+
     const isOwner = recipientId === postOwnerId;
     // Nếu là chủ groupKey thì đặt tên là post , còn nếu không đặt tên là thread để phân biệt với comment của post
     const groupKey: PendingCommentNotificationGroupKey = isOwner
@@ -87,8 +90,8 @@ class NotificationService {
       targetPostId,
       isOwner: isOwner ? "true" : "false",
       lastActorId: actorId,
-      username: username, // tạm thời để trống, sẽ lấy tên khi xử lý batch
       updatedAt: String(Date.now()),
+      username
     };
     pipeline.hSet(redisKey, payload);
 
