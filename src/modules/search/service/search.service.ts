@@ -111,7 +111,7 @@ class SearchService {
       return buildCursorPagination({
         rows: [],
         take,
-        getAfter: (item) => item.publicId,
+        getAfter: (item) => ""
       });
     }
 
@@ -125,12 +125,12 @@ class SearchService {
       select: postFeedSelect,
     });
 
-    const rows = this.reorderByKeys(posts, publicIds, (item) => item.publicId);
+    const rows = this.reorderByKeys(posts, publicIds, (item) => item?.publicId);
 
     return buildCursorPagination({
       rows,
       take,
-      getAfter: (item) => item.publicId,
+      getAfter: (item) => item?.publicId,
     });
   }
 
@@ -152,7 +152,7 @@ class SearchService {
       return buildCursorPagination({
         rows: [],
         take,
-        getAfter: (item) => item.username,
+        getAfter: (item) => "",
       });
     }
 
@@ -205,7 +205,7 @@ class SearchService {
       return buildCursorPagination({
         rows: [],
         take,
-        getAfter: (item) => item.name,
+        getAfter: (item) => "",
       });
     }
 

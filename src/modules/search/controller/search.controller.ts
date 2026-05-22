@@ -7,7 +7,7 @@ import { searchService } from "@/modules/search/service/search.service";
 import type { Request, Response } from "express";
 
 class SearchController {
-  async searchPost(req: Request<{}, {}, {}, SearchPostsQueryDto>, res: Response) {
+  async searchPost(req: Request<{}, {}, {}, {}>, res: Response) {
     const { q, after, take, serp_type } = req.query_parsed as SearchPostsQueryDto;
     const { rows, pagination } = await searchService.searchPost({
       q,
@@ -21,7 +21,7 @@ class SearchController {
     });
   }
 
-  async searchUsername(req: Request<{}, {}, {}, SearchUsernameQueryDto>, res: Response) {
+  async searchUsername(req: Request<{}, {}, {}, {}>, res: Response) {
     const { q, after, take } = req.query_parsed as SearchUsernameQueryDto;
     const { rows, pagination } = await searchService.searchUsername({ q, after, take });
     return res.paginate({
@@ -30,7 +30,7 @@ class SearchController {
     });
   }
 
-  async searchTopic(req: Request<{}, {}, {}, SearchTopicQueryDto>, res: Response) {
+  async searchTopic(req: Request<{}, {}, {}, {}>, res: Response) {
     const { q, after, take } = req.query_parsed as SearchTopicQueryDto;
     const { rows, pagination } = await searchService.searchTopic({ q, after, take });
     return res.paginate({
