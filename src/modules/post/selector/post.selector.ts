@@ -44,6 +44,7 @@ export const postSelectRepository = {
   id: true,
   publicId: true,
   content: true,
+  contentJson: true,
   userId: true,
   visibility: true,
   createdAt: true,

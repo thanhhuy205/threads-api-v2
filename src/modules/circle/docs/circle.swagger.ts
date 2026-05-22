@@ -183,6 +183,12 @@ export const circleSwaggerSchemas = {
         type: 'object',
         properties: {
             content: { type: 'string', example: 'This is my circle post about deep thinking and personal growth', maxLength: 5000 },
+            contentJson: {
+                type: 'object',
+                nullable: true,
+                additionalProperties: true,
+                example: { type: 'doc', blocks: [{ type: 'paragraph', text: 'This is my circle post' }] },
+            },
             parentId: { type: 'integer', example: 101, nullable: true },
         },
         required: ['content'],
@@ -192,6 +198,12 @@ export const circleSwaggerSchemas = {
         properties: {
             postId: { type: 'number', example: 1001 },
             content: { type: 'string', example: 'This is my circle post' },
+            contentJson: {
+                type: 'object',
+                nullable: true,
+                additionalProperties: true,
+                example: { type: 'doc', blocks: [{ type: 'paragraph', text: 'This is my circle post' }] },
+            },
             qualityScore: { type: 'number', format: 'float', example: 0.91 },
             judgeStatus: { type: 'string', enum: ['pending', 'done', 'failed'], example: 'done' },
             createdAt: { type: 'string', format: 'date-time' },
@@ -304,6 +316,24 @@ export const circleSwaggerPaths = {
                 200: {
                     description: 'Circle invitations retrieved',
                     content: { 'application/json': { schema: { $ref: '#/components/schemas/RequestInvitationResponse' } } },
+                },
+                401: { description: COMMON_MESSAGE.UNAUTHORIZED },
+            },
+        },
+    },
+    '/circle/me/owner-circle': {
+        get: {
+            tags: ['Circle'],
+            summary: 'Get circles where current user is ADMIN or OWNER',
+            security: bearerAuthSecurity,
+            parameters: [
+                { name: 'after', in: 'query', schema: { type: 'string', example: 'cuid_string_here' } },
+                { name: 'take', in: 'query', schema: { type: 'number', example: 10 } },
+            ],
+            responses: {
+                200: {
+                    description: 'Owner/admin circles retrieved',
+                    content: { 'application/json': { schema: { $ref: '#/components/schemas/CircleListResponse' } } },
                 },
                 401: { description: COMMON_MESSAGE.UNAUTHORIZED },
             },

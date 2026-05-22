@@ -403,8 +403,10 @@ model Post {
   id       Int    @id @default(autoincrement())
   publicId String @unique @default(cuid()) @map("public_id")
 
-  userId     String         @map("user_id")
-  content    String         @db.Text
+  userId      String @map("user_id")
+  content     String @db.Text
+  contentJson Json?  @map("content_json")
+
   type       PostType       @default(POST)
   visibility VisibilityPost @default(PUBLIC)
 
@@ -862,7 +864,7 @@ model CircleInvitation {
   circleId    Int                    @map("circle_id")
   userId      String                 @map("user_id")
   inviterId   String                 @map("inviter_id")
-  resentCount Int                    @default(0) @map("resent_count")
+  resentCount Int                    @default(0) @map("resent_count") // tối đa 5 lần
   status      CircleInvitationStatus @default(PENDING)
   createdAt   DateTime               @default(now()) @map("created_at")
   updatedAt   DateTime               @updatedAt @map("updated_at")

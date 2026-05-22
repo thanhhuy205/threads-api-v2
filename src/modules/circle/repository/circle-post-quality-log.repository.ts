@@ -203,6 +203,7 @@ class CirclePostQualityLogRepository {
             publicId: true,
             userId: true,
             content: true,
+            contentJson: true,
             createdAt: true,
             visibility: true,
             replyPermission: true,

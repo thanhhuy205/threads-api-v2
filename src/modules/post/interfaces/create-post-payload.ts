@@ -7,6 +7,7 @@ export type CreatePostPayload = CreatePostDto & {
 
 export type CreateCirclePostPayload = Omit<CreatePostDto, "visibility" | "replyPermission"> & {
     userId: string;
+    contentJson?: unknown;
     type?: PostType;
     visibility?: VisibilityPost;
     replyPermission?: ReplyPermission;

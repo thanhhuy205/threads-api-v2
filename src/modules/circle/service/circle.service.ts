@@ -25,6 +25,7 @@ import {
   CirclePostBodyDto,
   CirclePostsQueryDto,
   CircleRepliesQueryDto,
+  CircleReplyBodyDto,
   CprBodyDto,
   ExpLogQueryDto,
   SacrificeBodyDto,
@@ -298,6 +299,7 @@ class CircleService {
       circleId: circle.id,
       userId: post.userId,
       content: post.content,
+      contentJson: post.contentJson,
       qualityLog: {
         score: qualityLog.score,
         label: PostScoreLabel.PENDING,
@@ -347,6 +349,7 @@ class CircleService {
         publicId: item.post.publicId,
         userId: item.post.userId,
         content: item.post.content,
+        contentJson: item.post.contentJson,
         createdAt: item.post.createdAt,
         userSnapshot: item.post.userSnapshot,
         qualityLog: {
@@ -369,7 +372,7 @@ class CircleService {
     publicId: string,
     postPublicId: string,
     userId: string,
-    body: CirclePostBodyDto,
+    body: CircleReplyBodyDto,
   ) {
     const circle = await circleRepository.findByPublicId(publicId);
     if (!circle) {
@@ -594,6 +597,42 @@ class CircleService {
         circleMembers: {
           some: {
             userId,
+          },
+        },
+      },
+    });
+
+    const pendingCircleIdSet = new Set<number>();
+    const joinedCircleIdSet = new Set(circles.map((circle) => circle.id));
+    const rows = circles.map((circle) =>
+      mapCircleWithJoinStatus(circle, {
+        pendingCircleIdSet,
+        joinedCircleIdSet,
+      }),
+    );
+
+    return buildCursorPagination({
+      rows,
+      take,
+      getAfter: (item) => item.publicId,
+    });
+  }
+
+  async getMyOwnerCircles(
+    userId: string,
+    publicId?: string,
+    take: number = 10,
+  ) {
+    const circles = await circleRepository.findCircles({
+      after: publicId,
+      take,
+      where: {
+        circleMembers: {
+          some: {
+            userId,
+            role: {
+              in: [RoleMembership.ADMIN, RoleMembership.OWNER],
+            },
           },
         },
       },

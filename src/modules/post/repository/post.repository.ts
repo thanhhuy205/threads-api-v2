@@ -21,12 +21,14 @@ export type PostRecord = {
   id?: number;
   publicId: string;
   content: string;
+  contentJson?: Prisma.JsonValue;
   userId: string;
   visibility: VisibilityPost;
   createdAt: string;
 };
 
 type RepositoryCreatePostPayload = (CreatePostPayload | CreateCirclePostPayload) & {
+  contentJson?: unknown;
   type?: PostType;
   replyPermission?: ReplyPermission;
   visibility?: VisibilityPost;
@@ -128,12 +130,21 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
       : undefined;
   }
 
+  private resolveContentJson(contentJson?: unknown): Prisma.InputJsonValue | undefined {
+    if (contentJson === undefined) {
+      return undefined;
+    }
+
+    return contentJson as Prisma.InputJsonValue;
+  }
+
   private baseData(
     payload: RepositoryCreatePostPayload,
     userSnapshot: UserSnapshot,
   ) {
     return {
       content: payload.content,
+      contentJson: this.resolveContentJson(payload.contentJson),
       userId: payload.userId,
       type: payload.type ?? PostType.POST,
       replyPermission: payload.replyPermission ?? ReplyPermission.EVERYONE,
@@ -159,6 +170,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
       id: post.id,
       publicId: post.publicId,
       content: post.content,
+      contentJson: post.contentJson,
       userId: post.userId,
       visibility: post.visibility,
       createdAt: post.createdAt.toISOString(),
@@ -184,6 +196,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
       id: post.id,
       publicId: post.publicId,
       content: post.content!,
+      contentJson: post.contentJson,
       userId: post.userId,
       visibility: post.visibility,
       createdAt: post.createdAt.toISOString(),
@@ -209,6 +222,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
       id: post.id,
       publicId: post.publicId,
       content: post.content!,
+      contentJson: post.contentJson,
       userId: post.userId,
       visibility: post.visibility,
       createdAt: post.createdAt.toISOString(),
@@ -237,6 +251,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
       id: post.id,
       publicId: post.publicId,
       content: post.content,
+      contentJson: post.contentJson,
       userId: post.userId,
       visibility: post.visibility,
       createdAt: post.createdAt.toISOString(),
@@ -265,6 +280,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
       id: post.id,
       publicId: post.publicId,
       content: post.content!,
+      contentJson: post.contentJson,
       userId: post.userId,
       visibility: post.visibility,
       createdAt: post.createdAt.toISOString(),

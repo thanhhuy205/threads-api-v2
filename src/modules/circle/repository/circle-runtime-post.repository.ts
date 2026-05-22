@@ -14,6 +14,7 @@ interface CirclePostRecord {
     circleId: number;
     userId: string;
     content: string;
+    contentJson: Prisma.JsonValue | null;
     qualityLog: {
         score: number;
         label: PostScoreLabel;

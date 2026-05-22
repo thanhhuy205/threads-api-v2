@@ -37,7 +37,32 @@ export const circlePostsQuerySchema = cursorLimitQuerySchema.extend({
 export type CirclePostsQueryDto = z.infer<typeof circlePostsQuerySchema>;
 export type CircleRepliesQueryDto = z.infer<typeof cursorLimitQuerySchema>;
 
+const createCirclePostSchema = createPostSchema.and(
+    z.object({
+        contentJson: z.unknown().optional(),
+    }),
+);
+
 export const createCirclePostRuntimeSchema = z.preprocess(
+    (value) => {
+        if (!value || typeof value !== 'object') {
+            return value;
+        }
+
+        const payload = value as Record<string, unknown>;
+        if (payload.visibility !== undefined) {
+            return payload;
+        }
+
+        return {
+            ...payload,
+            visibility: VisibilityPost.CIRCLE,
+        };
+    },
+    createCirclePostSchema,
+);
+
+export const createCircleReplyRuntimeSchema = z.preprocess(
     (value) => {
         if (!value || typeof value !== 'object') {
             return value;
@@ -56,7 +81,8 @@ export const createCirclePostRuntimeSchema = z.preprocess(
     createPostSchema,
 );
 
-export type CirclePostBodyDto = CreatePostDto;
+export type CirclePostBodyDto = z.infer<typeof createCirclePostRuntimeSchema>;
+export type CircleReplyBodyDto = CreatePostDto;
 
 export const cprBodySchema = z.object({
     targetComments: z.coerce.number().int('Target comments must be an integer').positive('Target comments must be a positive number'),

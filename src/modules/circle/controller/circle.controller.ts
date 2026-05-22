@@ -8,6 +8,7 @@ import {
   CirclePostsQueryDto,
   CirclePublicIdParamsDto,
   CircleRepliesQueryDto,
+  CircleReplyBodyDto,
   CircleReplyParamsDto,
   CprBodyDto,
   ExpLogQueryDto,
@@ -44,6 +45,22 @@ class CircleController {
 
     const { after, take } = getCursorPagination(req);
     const circles = await circleService.getMyJoinedCircles(
+      userId,
+      after ?? undefined,
+      take,
+    );
+
+    return res.paginate(circles);
+  }
+
+  async getMyOwnerCircles(req: Request, res: Response) {
+    const userId = req.user?.sub;
+    if (!userId) {
+      return res.error(401, "Unauthorized");
+    }
+
+    const { after, take } = getCursorPagination(req);
+    const circles = await circleService.getMyOwnerCircles(
       userId,
       after ?? undefined,
       take,
@@ -167,7 +184,7 @@ class CircleController {
   }
 
   async createCircleReply(
-    req: Request<CircleReplyParamsDto, {}, CirclePostBodyDto>,
+    req: Request<CircleReplyParamsDto, {}, CircleReplyBodyDto>,
     res: Response,
   ) {
     const userId = req.user?.sub;
