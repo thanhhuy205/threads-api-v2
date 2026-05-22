@@ -1,17 +1,42 @@
+import type {
+  SearchPostsQueryDto,
+  SearchTopicQueryDto,
+  SearchUsernameQueryDto,
+} from "@/modules/search/dto/search.dto";
 import { searchService } from "@/modules/search/service/search.service";
 import type { Request, Response } from "express";
 
 class SearchController {
-  async search(req: Request, res: Response) {
-    const { q, type } = req.query;
-    const result = await searchService.searchAll(q as string, type as string);
-    return res.success(200, "Search results", result);
+  async searchPost(req: Request<{}, {}, {}, SearchPostsQueryDto>, res: Response) {
+    const { q, after, take, serp_type } = req.query_parsed as SearchPostsQueryDto;
+    const { rows, pagination } = await searchService.searchPost({
+      q,
+      after,
+      take,
+      serpType: serp_type,
+    });
+    return res.paginate({
+      rows,
+      pagination,
+    });
   }
 
-  async searchUsers(req: Request, res: Response) {
-    const { q } = req.query;
-    const result = await searchService.searchUsers(q as string);
-    return res.success(200, "User search results", result);
+  async searchUsername(req: Request<{}, {}, {}, SearchUsernameQueryDto>, res: Response) {
+    const { q, after, take } = req.query_parsed as SearchUsernameQueryDto;
+    const { rows, pagination } = await searchService.searchUsername({ q, after, take });
+    return res.paginate({
+      rows,
+      pagination,
+    });
+  }
+
+  async searchTopic(req: Request<{}, {}, {}, SearchTopicQueryDto>, res: Response) {
+    const { q, after, take } = req.query_parsed as SearchTopicQueryDto;
+    const { rows, pagination } = await searchService.searchTopic({ q, after, take });
+    return res.paginate({
+      rows,
+      pagination,
+    });
   }
 }
 export const searchController = new SearchController();

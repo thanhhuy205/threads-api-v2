@@ -21,7 +21,8 @@
         "queue": "tsx queues/index.ts",
         "start:prod": "node dist/src/server.js",
         "start:worker": "node dist/workers/index.js",
-        "all:workers:queues": "npm run worker && npm run queue"
+        "all:workers:queues": "npm run worker && npm run queue",
+        "elastic:seed": "tsx scripts"
     },
     "prisma": {
         "seed": "tsx prisma/seed.ts"
@@ -29,7 +30,7 @@
     "dependencies": {
         "@aws-sdk/client-s3": "^3.1041.0",
         "@aws-sdk/lib-storage": "^3.1041.0",
-        "@elastic/elasticsearch": "^9.4.1",
+        "@elastic/elasticsearch": "^7.13.0",
         "@mixedbread-ai/sdk": "^2.2.11",
         "@mux/mux-node": "^14.0.1",
         "@openrouter/ai-sdk-provider": "^2.9.0",
