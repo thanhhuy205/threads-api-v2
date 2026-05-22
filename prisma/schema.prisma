@@ -308,6 +308,7 @@ model User {
   karmaTransactions   KarmaTransaction[]
   userQuestLogs       UserQuestLog[]
   reports             Report[]             @relation("UserReports")
+  postMentions        PostMention[]
 
   @@index([deletedAt], map: "idx_users_deleted_at")
   @@index([bannedUntil], map: "idx_users_banned_until")
@@ -484,6 +485,7 @@ model PostMention {
   createdAt DateTime @default(now()) @map("created_at")
 
   post Post @relation(fields: [postId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
   @@unique([postId, userId], map: "uq_post_mentions_post_user")
   @@index([postId], map: "idx_post_mentions_post_id")

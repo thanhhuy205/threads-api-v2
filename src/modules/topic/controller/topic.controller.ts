@@ -8,21 +8,16 @@ class TopicController {
     const topics = await topicService.listNames();
     return res.success(200, "Topics retrieved", topics);
   }
-  // nên có id để tối ưu
   async getByName(req: Request<{}, {}, {}, SearchTopicQueryDto>, res: Response) {
     const { after, take } = getPagination(req);
     const { q } = req.query;
-    const topic = await topicService.searchByName({
+    const { rows, pagination } = await topicService.searchByName({
       q,
       take,
       after: after ?? undefined,
     });
 
-    if (!topic) {
-      return res.error(404, "Topic not found");
-    }
-
-    return res.paginate({ rows: topic, pagination: topic.pagination });
+    return res.paginate({ rows, pagination });
   }
 
   async create(req: Request<{}, {}, CreateTopicDto>, res: Response) {

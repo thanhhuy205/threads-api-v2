@@ -20,11 +20,16 @@ export type PostFeedItem = Prisma.PostGetPayload<{
   isFollowedByAuthor?: boolean;
 };
 
-export type PostFeedResponse = Omit<PostFeedItem, "likes"> & {
+export type PostFeedResponse = Omit<PostFeedItem, "likes" | "topicsPosts" | "mentions"> & {
   isLikedByAuth: boolean;
   isRepostByAuth: boolean;
   isFollowingAuthor: boolean;
   isFollowedByAuthor: boolean;
+  topics: string[];
+  mentions: {
+    userId: string;
+    username: string;
+  }[];
 };
 export type UserSnapshot = {
   id: string;
@@ -61,6 +66,11 @@ export class PostMapper {
     baseLogger.info(
       `Mapping post with id ${post.publicId} to feed response for user ${userId}. Post derivatives: ${JSON.stringify(post.derivatives)}, Likes: ${JSON.stringify(post.likes)}`,
     );
+    const topics: string[] =
+      post?.topicsPosts
+        ?.map((tp) => tp.topic?.name)
+        .filter((name): name is string => !!name) ?? [];
+
     return {
       userId: post.userId,
       createdAt: post.createdAt,
@@ -75,12 +85,16 @@ export class PostMapper {
       likesCount: post.likesCount,
       repliesCount: post.repliesCount,
       repostsCountAndQuoteCount: post.repostsCountAndQuoteCount,
+      topics: topics,
       isGhost: post.isGhost,
       origin: post.origin,
       viewsCount: post.viewsCount,
       parent: post.parent,
       media: post.media,
-      mentions: post.mentions,
+      mentions: post.mentions.map(m => ({
+        userId: m.userId,
+        username: m.user.username,
+      })),
       isLikedByAuth: Boolean(userId && post.likes?.length),
       isRepostByAuth: Boolean(
         userId && post.derivatives && post.derivatives.length > 0,

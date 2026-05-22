@@ -19,23 +19,25 @@ export const postFeedSelect = Prisma.validator<Prisma.PostSelect>()({
   isGhost: true,
   createdAt: true,
   media: true,
-  mentions: true,
-});
-
-const postOriginSelect = Prisma.validator<Prisma.PostSelect>()({
-  userId: true,
-  content: true,
-  visibility: true,
-  parentId: true,
-  originPostId: true,
-  rootPostId: true,
-  userSnapshot: true,
-  replyPermission: true,
-  likesCount: true,
-  repliesCount: true,
-  repostsCountAndQuoteCount: true,
-  viewsCount: true,
-  isPinned: false,
+  mentions: {
+    select: {
+      userId: true,
+      user: {
+        select: {
+          username: true,
+        }
+      }
+    },
+  },
+  topicsPosts: {
+    select: {
+      topic: {
+        select: {
+          name: true,
+        },
+      }
+    }
+  }
 });
 
 export const postSelectRepository = {
