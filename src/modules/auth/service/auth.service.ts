@@ -11,6 +11,7 @@ import {
 import { hasherToken } from "@/modules/auth/util/hasher-token";
 import { bloomProducer } from "@/modules/job/bloom/producer/bloom.producer";
 import { emailProducer } from "@/modules/job/email/producer/email.producer";
+import { elasticProducer } from "@/modules/job/elastic-search/producer/elastic.producer";
 import { TokenPairResponse } from "@/modules/jwt/dto/response/token-pair.response";
 import { jwtService } from "@/modules/jwt/service/jwt.service";
 import { userRepository } from "@/modules/user/repository/user.repository";
@@ -70,6 +71,15 @@ class AuthService {
       bloomProducer.addUserNameAndEmailToBloom({
         email: user.email,
         userName: user.username,
+      }),
+      elasticProducer.addUserToElasticQueue({
+        userId: user.id,
+        username: user.username,
+        name: user.name,
+        bio: user.bio,
+        avatar: user.avatar,
+        isVerified: Boolean(user.verifiedAt),
+        createdAt: user.createdAt.toISOString(),
       }),
     ]);
 

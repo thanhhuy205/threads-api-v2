@@ -6,6 +6,7 @@ import {
   NotFoundException,
 } from "@/errors/error";
 import { baseLogger } from "@/middlewares/logger";
+import { elasticProducer } from "@/modules/job/elastic-search/producer/elastic.producer";
 import { pineProducer } from "@/modules/job/pine-vector/producer/pine.producer";
 import { mixedBreadService } from "@/modules/mixed-bread/service/mixed-bread.service";
 import { notificationService } from "@/modules/notification-group/service/notification.service";
@@ -433,6 +434,7 @@ class PostService {
   async create(payload: CreatePostPayload) {
     const snapshot = await this.resolveUser(payload.userId);
     const options = this.resolvePostOptions(payload);
+    const normalizedTopic = normalizeTopic(payload.topic);
     //Validate mentions
     const mentionIds = await this.validateMentions(payload.mentions);
 
@@ -444,9 +446,19 @@ class PostService {
 
     await pineProducer.addToPineconeQueue({
       content: payload.content,
-      topic: [normalizeTopic(payload.topic) ?? "not"],
+      topic: [normalizedTopic ?? "not"],
       postId: post.id || 0,
       userId: payload.userId,
+    });
+    await elasticProducer.addPostToElasticQueue({
+      postId: post.id || 0,
+      publicId: post.publicId,
+      userId: payload.userId,
+      content: post.content ?? payload.content,
+      authorUsername: snapshot.username,
+      authorName: snapshot.name,
+      topic: normalizedTopic,
+      createdAt: post.createdAt,
     });
     await this.bumpPostListCacheVersion();
     return post;
@@ -487,6 +499,7 @@ class PostService {
 
   async reply(publicId: string, payload: CreatePostDto & { userId: string }) {
     const snapshot = await this.resolveUser(payload.userId);
+    const normalizedTopic = normalizeTopic(payload.topic);
     const mentionIds = await this.validateMentions(payload.mentions);
     const options = this.resolvePostOptions(payload);
     const existPost = await postRepository.findByPublicId(publicId);
@@ -504,8 +517,8 @@ class PostService {
       { topic: payload.topic, mentionIds },
     );
     baseLogger.info("Created reply post, adding notification group");
-    await notificationService.handleNewComment(
-      {
+    await Promise.all([
+      notificationService.handleNewComment({
         replyContent: payload.content,
         actorId: payload.userId,
         recipientId: existPost.userId,
@@ -513,10 +526,19 @@ class PostService {
         originPostId: existPost.publicId,
         postOwnerId: existPost.userId,
         username: snapshot.username,
-      },
-    );
-
-    await this.bumpPostListCacheVersion();
+      }),
+      elasticProducer.addPostToElasticQueue({
+        postId: post.id || 0,
+        publicId: post.publicId,
+        userId: payload.userId,
+        content: post.content ?? payload.content,
+        authorUsername: snapshot.username,
+        authorName: snapshot.name,
+        topic: normalizedTopic,
+        createdAt: post.createdAt,
+      }),
+      this.bumpPostListCacheVersion(),
+    ]);
     return {
       publicId: post.publicId,
       content: post.content!,
@@ -598,6 +620,7 @@ class PostService {
   async quote(publicId: string, payload: CreatePostDto & { userId: string }) {
     const snapshot = await this.resolveUser(payload.userId);
     const originPost = await this.resolveOriginPost(publicId);
+    const normalizedTopic = normalizeTopic(payload.topic);
     const mentionIds = await this.validateMentions(payload.mentions);
     const options = this.resolvePostOptions(payload);
 
@@ -612,6 +635,17 @@ class PostService {
         ),
       { topic: payload.topic, mentionIds },
     );
+
+    await elasticProducer.addPostToElasticQueue({
+      postId: post.id || 0,
+      publicId: post.publicId,
+      userId: payload.userId,
+      content: post.content ?? payload.content,
+      authorUsername: snapshot.username,
+      authorName: snapshot.name,
+      topic: normalizedTopic,
+      createdAt: post.createdAt,
+    });
 
     await this.bumpPostListCacheVersion();
     return {

@@ -9,7 +9,9 @@ const authSessionUserSelect = {
   name: true,
   bio: true,
   avatar: true,
+  verifiedAt: true,
   status: true,
+  createdAt: true,
   password: true,
 } as const;
 
