@@ -10,6 +10,8 @@ const adminAuthUserSelect = {
   avatar: true,
   status: true,
   password: true,
+  createdAt: true,
+  verifiedAt: true,
   userRoles: {
     select: {
       role: {
