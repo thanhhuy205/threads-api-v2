@@ -1,6 +1,5 @@
 import { EVALUATION_JOB_NAME, QUEUE_NAME } from '@/constants/queue';
 import { createQueue } from '@/providers/bullmq.provider';
-import { ReportTargetType } from '@prisma/client';
 
 interface EvaluationPostPayload {
     postId: number;

@@ -167,6 +167,22 @@ export const circleSwaggerSchemas = {
         },
         required: ['success', 'message'],
     },
+    RespondJoinRequestRequest: {
+        type: 'object',
+        properties: {
+            userId: { type: 'string', example: 'user_xin_vao_nhom' },
+            isAccept: { type: 'boolean', example: true },
+        },
+        required: ['userId', 'isAccept'],
+    },
+    RespondJoinRequestResponse: {
+        type: 'object',
+        properties: {
+            success: { type: 'boolean', example: true },
+            message: { type: 'string', example: 'Join request accept for user user_xin_vao_nhom to join circle circle_public_id' },
+        },
+        required: ['success', 'message'],
+    },
     RequestInvitationResponse: {
         type: 'object',
         properties: {
@@ -349,6 +365,31 @@ export const circleSwaggerPaths = {
                 200: { description: 'Invitation response recorded', content: { 'application/json': { schema: { $ref: '#/components/schemas/ResponseInvitationResponse' } } } },
                 400: { description: COMMON_MESSAGE.BAD_REQUEST },
                 401: { description: COMMON_MESSAGE.UNAUTHORIZED },
+            },
+        },
+    },
+    '/circle/{publicId}/manage/join-request/respond': {
+        post: {
+            tags: ['Circle'],
+            summary: 'Accept or reject a circle join request',
+            description: 'Admin/owner endpoint for approving a user who requested to join a circle. Requires ACCEPT_USE_JOIN permission. Accepting a request creates a JOIN_CIRCLE user action log.',
+            security: bearerAuthSecurity,
+            parameters: [
+                { name: 'publicId', in: 'path', required: true, schema: { type: 'string' }, description: 'Circle public ID' },
+            ],
+            requestBody: {
+                required: true,
+                content: { 'application/json': { schema: { $ref: '#/components/schemas/RespondJoinRequestRequest' } } },
+            },
+            responses: {
+                200: {
+                    description: 'Join request response recorded',
+                    content: { 'application/json': { schema: { $ref: '#/components/schemas/RespondJoinRequestResponse' } } },
+                },
+                400: { description: COMMON_MESSAGE.BAD_REQUEST },
+                401: { description: COMMON_MESSAGE.UNAUTHORIZED },
+                403: { description: 'Requires ACCEPT_USE_JOIN permission' },
+                404: { description: COMMON_MESSAGE.NOT_FOUND },
             },
         },
     },

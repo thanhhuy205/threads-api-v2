@@ -1,5 +1,8 @@
 import { SendInvitationEmailDto } from "@/modules/circle/dto/admin-circle.dto";
-import { ResponseInvitationDto } from "@/modules/circle/dto/response-invitation.dto";
+import {
+  RespondJoinRequestDto,
+  ResponseInvitationDto,
+} from "@/modules/circle/dto/response-invitation.dto";
 import type { SendInvitationDto } from "@/modules/circle/dto/send-invitation.dto";
 import { getPagination as getCursorPagination } from "@/shared/pagination/cursor-pagination";
 import { getPagination as getOffsetPagination } from "@/shared/pagination/pagination";
@@ -458,6 +461,28 @@ class CircleController {
     const { publicId } = req.params;
     const data = await circleService.getUserQuantityPostInCircle(publicId, userId);
     return res.success(200, "User quantity post in circle retrieved successfully", data);
+  }
+
+  async respondJoinRequest(
+    req: Request<CirclePublicIdParamsDto, {}, RespondJoinRequestDto>,
+    res: Response,
+  ) {
+    const adminId = req.user?.sub;
+    if (!adminId) {
+      return res.error(401, "Unauthorized");
+    }
+    const { publicId } = req.params;
+    const { isAccept, userId } = req.body;
+    await circleService.respondJoinRequest({
+      publicId,
+      adminId,
+      userId,
+      isAccept,
+    });
+    return res.success(
+      200,
+      `Join request ${isAccept ? 'accept' : 'reject'} for user ${userId} to join circle ${publicId}`,
+    );
   }
 }
 

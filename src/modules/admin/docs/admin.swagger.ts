@@ -144,8 +144,30 @@ export const adminSwaggerSchemas = {
             description: { type: 'string', example: 'Binh luan 3 lan trong ngay' },
             karmaReward: { type: 'integer', example: 1 },
             requirement: { type: 'integer', example: 3 },
+            action: { type: 'string', example: 'POST_CREATED' },
         },
-        required: ['code', 'description', 'karmaReward', 'requirement'],
+        required: ['code', 'description', 'karmaReward', 'requirement', 'action'],
+    },
+    AdminDailyQuestActionOption: {
+        type: 'object',
+        properties: {
+            value: { type: 'string', example: 'POST_CREATED' },
+            label: { type: 'string', example: 'Đăng bài' },
+            unit: { type: 'string', example: 'bài' },
+        },
+        required: ['value', 'label', 'unit'],
+    },
+    AdminDailyQuestActionsResponse: {
+        type: 'object',
+        properties: {
+            success: { type: 'boolean', example: true },
+            message: { type: 'string', example: 'Daily quest actions retrieved successfully' },
+            data: {
+                type: 'array',
+                items: { $ref: '#/components/schemas/AdminDailyQuestActionOption' },
+            },
+        },
+        required: ['success', 'message', 'data'],
     },
     AdminDailyQuestItem: {
         type: 'object',
@@ -155,11 +177,12 @@ export const adminSwaggerSchemas = {
             description: { type: 'string', example: 'Binh luan 3 lan trong ngay' },
             karmaReward: { type: 'integer', example: 1 },
             requirement: { type: 'integer', example: 3 },
+            action: { type: 'string', example: 'POST_CREATED' },
             isActive: { type: 'boolean', example: true },
             createById: { type: 'string', example: 'clyzz4pba0000v9d0m3f6x2a1' },
             createdAt: { type: 'string', format: 'date-time' },
         },
-        required: ['id', 'code', 'description', 'karmaReward', 'requirement', 'isActive', 'createById', 'createdAt'],
+        required: ['id', 'code', 'description', 'karmaReward', 'requirement', 'action', 'isActive', 'createById', 'createdAt'],
     },
     AdminDailyQuestCreateResponse: {
         type: 'object',
@@ -345,6 +368,22 @@ export const adminSwaggerPaths = {
                 200: {
                     description: 'Daily quests retrieved successfully',
                     content: { 'application/json': { schema: { $ref: '#/components/schemas/AdminDailyQuestListResponse' } } },
+                },
+                401: { description: COMMON_MESSAGE.UNAUTHORIZED },
+                403: { description: COMMON_MESSAGE.FORBIDDEN },
+            },
+        },
+    },
+    '/admin/daily-quests/actions': {
+        get: {
+            tags: ['Admin'],
+            summary: 'List daily quest action options',
+            description: 'Returns action metadata from the ActionType enum. This endpoint does not query the database.',
+            security: bearerAuthSecurity,
+            responses: {
+                200: {
+                    description: 'Daily quest actions retrieved successfully',
+                    content: { 'application/json': { schema: { $ref: '#/components/schemas/AdminDailyQuestActionsResponse' } } },
                 },
                 401: { description: COMMON_MESSAGE.UNAUTHORIZED },
                 403: { description: COMMON_MESSAGE.FORBIDDEN },

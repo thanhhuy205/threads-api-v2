@@ -7,6 +7,12 @@ import type { DisableDailyQuestParamsDto } from "./dto/request/disable-daily-que
 import type { ListDailyQuestsQueryDto } from "./dto/request/list-daily-quests.query.dto";
 
 class DailyQuestController {
+  listDailyQuestActions = async (_req: Request, res: Response) => {
+    const result = dailyQuestService.getDailyQuestActions();
+
+    return res.success(200, "Daily quest actions retrieved successfully", result);
+  };
+
   createDailyQuest = async (
     req: Request<{}, {}, CreateDailyQuestRequestDto>,
     res: Response,

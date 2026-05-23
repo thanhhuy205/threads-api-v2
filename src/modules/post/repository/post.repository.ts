@@ -333,6 +333,20 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
     });
   }
 
+  async findDeleteTargetByPublicId(publicId: string) {
+    return prisma.post.findFirst({
+      where: {
+        publicId,
+        isDeleted: false,
+      },
+      select: {
+        publicId: true,
+        userId: true,
+        type: true,
+      },
+    });
+  }
+
   async updateByPublicId(
     publicId: string,
     payload: UpdatePostDto,

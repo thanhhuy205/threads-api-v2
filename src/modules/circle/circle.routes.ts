@@ -1,6 +1,9 @@
 import { authorization } from '@/middlewares/auth';
 import { validate } from '@/middlewares/validate';
-import { responseInvitationSchema } from '@/modules/circle/dto/response-invitation.dto';
+import {
+    respondJoinRequestSchema,
+    responseInvitationSchema,
+} from '@/modules/circle/dto/response-invitation.dto';
 import { Router } from 'express';
 import { circleController } from './controller/circle.controller';
 import { sendInvitationEmailSchema } from './dto/admin-circle.dto';
@@ -73,6 +76,14 @@ circleRouter.get(
     validate(offsetLimitQuerySchema, 'query'),
     circleController.getManageJoinRequests,
 );
+
+circleRouter.post(
+    '/:publicId/manage/join-request/respond',
+    validate(circlePublicIdParamsSchema, 'params'),
+    validate(respondJoinRequestSchema),
+    circleController.respondJoinRequest,
+);
+
 
 circleRouter.post("/:publicId/send-invitation/manage",
     validate(sendInvitationEmailSchema),

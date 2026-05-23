@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Daily Quest Actions & UserActionLog</title>
+<style>
+:root{--ivory:#FAF9F5;--slate:#141413;--clay:#D97757;--oat:#E3DACC;--olive:#788C5D;--rust:#B04A3F;--gray-100:#F0EEE6;--gray-300:#D1CFC5;--gray-500:#87867F;--gray-700:#3D3D3A;--white:#FFFFFF;--green-50:#EAF3DE;--green-600:#3B6D11;--amber-50:#FAEEDA;--amber-600:#854F0B;--blue-50:#E6F1FB;--blue-800:#0C447C;--serif:ui-serif,Georgia,serif;--sans:system-ui,-apple-system,sans-serif;--mono:ui-monospace,"SF Mono",Menlo,monospace;--border:1.5px solid var(--gray-300);--radius:12px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--ivory);color:var(--slate);font-family:var(--sans);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;padding:56px 24px 120px}
+.page{max-width:920px;margin:0 auto}
+header{margin-bottom:44px}
+.header-top{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:8px}
+h1{font-family:var(--serif);font-weight:500;font-size:38px;letter-spacing:-0.01em}
+.pill{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--gray-500);background:var(--gray-100);border:var(--border);border-radius:999px;padding:5px 11px}
+.meta{color:var(--gray-500);font-size:14px}
+.meta code{font-family:var(--mono);font-size:13px;color:var(--gray-700)}
+section{margin-bottom:52px}
+h2{font-family:var(--serif);font-weight:500;font-size:24px;letter-spacing:-0.01em;margin-bottom:6px}
+.rule{border:none;border-top:1px solid var(--gray-300);margin-bottom:24px}
+.overview-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px}
+.ov-card{background:var(--white);border:var(--border);border-radius:var(--radius);padding:18px 20px}
+.ov-num{font-family:var(--serif);font-size:34px;font-weight:500;line-height:1;margin-bottom:6px}
+.ov-label{font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:var(--gray-500)}
+.ov-note{font-family:var(--mono);font-size:11px;margin-top:6px;color:var(--gray-500)}
+.note-box{background:var(--oat);border-radius:var(--radius);padding:20px 22px}
+.note-item{display:flex;gap:14px;align-items:baseline;padding:8px 0;border-bottom:1px solid rgba(20,20,19,.08)}
+.note-item:last-child{border-bottom:none}
+.note-tag{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:0.04em;color:var(--gray-700);background:var(--ivory);border-radius:4px;padding:3px 7px;flex-shrink:0}
+.note-body{font-size:14px;color:var(--gray-700)}
+.flow-panel{background:var(--white);border:var(--border);border-radius:var(--radius);padding:28px 24px 20px;overflow-x:auto}
+.flow-panel svg{display:block;width:100%;height:auto}
+.flow-note{font-size:12px;color:var(--gray-500);margin-top:10px}
+.step-table{width:100%;border-collapse:separate;border-spacing:0;background:var(--white);border:var(--border);border-radius:var(--radius);overflow:hidden}
+.step-table thead th{text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--gray-500);background:var(--gray-100);padding:12px 16px;border-bottom:1px solid var(--gray-300)}
+.step-table tbody td{padding:13px 16px;border-bottom:1px solid var(--gray-100);font-size:14px;vertical-align:top}
+.step-table tbody tr:last-child td{border-bottom:none}
+.step-table tbody tr:hover{background:var(--ivory)}
+.step-num{font-family:var(--mono);font-size:12px;color:var(--gray-500)}
+.step-name{font-weight:500;margin-bottom:2px}
+.step-desc{font-size:13px;color:var(--gray-500)}
+.badge{display:inline-block;font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:0.04em;padding:3px 8px;border-radius:5px;white-space:nowrap}
+.badge-done{background:var(--green-50);color:var(--green-600)}
+.badge-note{background:var(--blue-50);color:var(--blue-800)}
+.badge-todo{background:#FDE8E8;color:#991B1B}
+.diff-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:700px){.diff-grid{grid-template-columns:1fr}}
+.diff-card{background:var(--white);border:var(--border);border-radius:var(--radius);overflow:hidden}
+.diff-card-head{font-size:12px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:var(--gray-500);background:var(--gray-100);padding:10px 14px;border-bottom:1px solid var(--gray-300)}
+.diff-row{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid var(--gray-100);font-size:13px}
+.diff-row:last-child{border-bottom:none}
+.diff-dot{width:7px;height:7px;border-radius:2px;flex-shrink:0;margin-top:5px}
+.diff-dot.done{background:var(--olive)}
+.diff-dot.todo{background:var(--rust)}
+code{font-family:var(--mono);font-size:12px;background:var(--gray-100);padding:1px 5px;border-radius:4px;color:var(--gray-700)}
+footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--gray-300);font-family:var(--mono);font-size:12px;color:var(--gray-500)}
+</style>
+</head>
+<body>
+<div class="page">
+
+<header>
+  <div class="header-top">
+    <h1>Daily Quest Actions & UserActionLog</h1>
+    <span class="pill">admin / quest / action-log</span>
+  </div>
+  <div class="meta">
+    Endpoints: <code>GET /api/v1/admin/daily-quests/actions</code> · <code>POST /api/v1/admin/daily-quests</code> &nbsp;·&nbsp;
+    Table: <code>daily_quests</code> · <code>user_action_logs</code>
+  </div>
+</header>
+
+<section>
+  <div class="overview-strip">
+    <div class="ov-card"><div class="ov-num">13</div><div class="ov-label">Action options</div><div class="ov-note">from ActionType enum</div></div>
+    <div class="ov-card"><div class="ov-num">0</div><div class="ov-label">DB query</div><div class="ov-note">metadata API only maps enum</div></div>
+    <div class="ov-card"><div class="ov-num">1</div><div class="ov-label">Tracking table</div><div class="ov-note">user_action_logs</div></div>
+    <div class="ov-card"><div class="ov-num">JOIN</div><div class="ov-label">Circle approval</div><div class="ov-note">logs JOIN_CIRCLE on accept</div></div>
+  </div>
+</section>
+
+<section>
+  <h2>User Perspective</h2>
+  <hr class="rule">
+  <div class="note-box">
+    <div class="note-item"><span class="note-tag">Admin</span><div class="note-body">Khi tạo daily quest, UI gọi <code>GET /admin/daily-quests/actions</code> để lấy danh sách action gồm <code>value</code>, <code>label</code> và <code>unit</code>. API này không gọi database.</div></div>
+    <div class="note-item"><span class="note-tag">Quest</span><div class="note-body">Daily quest dùng <code>action</code> và <code>requirement</code> để mô tả mục tiêu, ví dụ action <code>POST_CREATED</code> với requirement <code>3</code> nghĩa là cần đăng 3 bài.</div></div>
+    <div class="note-item"><span class="note-tag">Tracking</span><div class="note-body">Các hành động user thực hiện được ghi vào <code>UserActionLog</code> với <code>userId</code>, <code>type</code>, <code>targetId</code>, <code>metadata</code> và <code>createdAt</code> để phục vụ tính tiến độ quest sau này.</div></div>
+  </div>
+</section>
+
+<section>
+  <h2>Flow Diagram</h2>
+  <hr class="rule">
+  <div class="flow-panel">
+    <svg viewBox="0 0 860 250" role="img" aria-label="Daily quest action and user action log flow">
+      <defs><marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+      <rect x="24" y="34" width="178" height="42" rx="8" fill="#F0EEE6" stroke="#D1CFC5" stroke-width="1.5"/>
+      <text x="113" y="59" text-anchor="middle" font-family="system-ui" font-size="12" fill="#141413">Admin Create Quest UI</text>
+      <line x1="202" y1="55" x2="286" y2="55" stroke="#87867F" stroke-width="1.5" marker-end="url(#arr)"/>
+      <rect x="286" y="34" width="206" height="42" rx="8" fill="#FFFFFF" stroke="#D97757" stroke-width="1.5"/>
+      <text x="389" y="52" text-anchor="middle" font-family="system-ui" font-size="12" fill="#141413">GET actions</text>
+      <text x="389" y="67" text-anchor="middle" font-family="system-ui" font-size="11" fill="#87867F">ActionType to label/unit</text>
+      <line x1="492" y1="55" x2="576" y2="55" stroke="#87867F" stroke-width="1.5" marker-end="url(#arr)"/>
+      <rect x="576" y="34" width="236" height="42" rx="8" fill="#EAF3DE" stroke="#3B6D11" stroke-width="1.5"/>
+      <text x="694" y="52" text-anchor="middle" font-family="system-ui" font-size="12" fill="#141413">POST daily quest</text>
+      <text x="694" y="67" text-anchor="middle" font-family="system-ui" font-size="11" fill="#3B6D11">action + requirement</text>
+
+      <rect x="24" y="148" width="178" height="42" rx="8" fill="#E6F1FB" stroke="#0C447C" stroke-width="1.5"/>
+      <text x="113" y="173" text-anchor="middle" font-family="system-ui" font-size="12" fill="#0C447C">User performs action</text>
+      <line x1="202" y1="169" x2="286" y2="169" stroke="#87867F" stroke-width="1.5" marker-end="url(#arr)"/>
+      <rect x="286" y="148" width="206" height="42" rx="8" fill="#FFFFFF" stroke="#D97757" stroke-width="1.5"/>
+      <text x="389" y="166" text-anchor="middle" font-family="system-ui" font-size="12" fill="#141413">UserActionLogService</text>
+      <text x="389" y="181" text-anchor="middle" font-family="system-ui" font-size="11" fill="#87867F">generic + typed methods</text>
+      <line x1="492" y1="169" x2="576" y2="169" stroke="#87867F" stroke-width="1.5" marker-end="url(#arr)"/>
+      <rect x="576" y="148" width="236" height="42" rx="8" fill="#EAF3DE" stroke="#3B6D11" stroke-width="1.5"/>
+      <text x="694" y="166" text-anchor="middle" font-family="system-ui" font-size="12" fill="#141413">Insert user_action_logs</text>
+      <text x="694" y="181" text-anchor="middle" font-family="system-ui" font-size="11" fill="#3B6D11">userId + type + metadata</text>
+    </svg>
+    <p class="flow-note">Daily quest định nghĩa action cần đạt; UserActionLog ghi nhận hành động thực tế để layer tính tiến độ có dữ liệu truy vấn.</p>
+  </div>
+</section>
+
+<section>
+  <h2>API Detail</h2>
+  <hr class="rule">
+  <table class="step-table">
+    <thead>
+      <tr>
+        <th style="width:48px">#</th>
+        <th style="width:260px">API / Module</th>
+        <th>Ghi chú nghiệp vụ</th>
+        <th style="width:90px">Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="step-num">01</span></td>
+        <td><div class="step-name">GET /admin/daily-quests/actions</div><div class="step-desc">Admin daily quest action options</div></td>
+        <td>Trả danh sách action từ enum <code>ActionType</code>, mỗi item có dạng <code>{ value, label, unit }</code>. Không query DB.</td>
+        <td><span class="badge badge-done">done</span></td>
+      </tr>
+      <tr>
+        <td><span class="step-num">02</span></td>
+        <td><div class="step-name">POST /admin/daily-quests</div><div class="step-desc">Create daily quest</div></td>
+        <td>Body nhận thêm <code>action</code>. <code>targetCount</code> đã bỏ, số lượng mục tiêu dùng <code>requirement</code>.</td>
+        <td><span class="badge badge-done">done</span></td>
+      </tr>
+      <tr>
+        <td><span class="step-num">03</span></td>
+        <td><div class="step-name">UserActionLog module</div><div class="step-desc">Repository + service</div></td>
+        <td>Có <code>logAction</code> generic và method rõ nghĩa cho từng action: post, quote, share, like, follow, invite, join circle, leave circle.</td>
+        <td><span class="badge badge-done">done</span></td>
+      </tr>
+      <tr>
+        <td><span class="step-num">04</span></td>
+        <td><div class="step-name">POST /circle/{publicId}/manage/join-request/respond</div><div class="step-desc">Approve/reject join request</div></td>
+        <td>Yêu cầu quyền <code>ACCEPT_USE_JOIN</code>. Khi admin/owner accept thành công, hệ thống tạo log <code>JOIN_CIRCLE</code> cho user được duyệt, metadata có <code>approvedById</code> và <code>source: "JOIN_REQUEST"</code>.</td>
+        <td><span class="badge badge-note">noted</span></td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>Action Mapping</h2>
+  <hr class="rule">
+  <table class="step-table">
+    <thead>
+      <tr>
+        <th style="width:260px">Action</th>
+        <th style="width:180px">Label</th>
+        <th style="width:110px">Unit</th>
+        <th>Source flow</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td><code>POST_CREATED</code></td><td>Đăng bài</td><td>bài</td><td>Post thường và circle post.</td></tr>
+      <tr><td><code>POST_DELETED</code></td><td>Xoá bài</td><td>bài</td><td>Soft delete post thường.</td></tr>
+      <tr><td><code>LIKE_CREATED</code></td><td>Thích bài</td><td>lượt</td><td>Chỉ ghi khi Redis <code>sAdd</code> trả <code>1</code>.</td></tr>
+      <tr><td><code>FOLLOW_FOLLOWING_CREATED</code></td><td>Theo dõi người dùng</td><td>người</td><td>Ghi cho actor khi follow mới hoặc follow lại.</td></tr>
+      <tr><td><code>FLOW_FOLLOWER_CREATED</code></td><td>Có người theo dõi</td><td>người</td><td>Ghi cho target user khi có follower mới.</td></tr>
+      <tr><td><code>QUOTE_CREATED</code></td><td>Quote bài</td><td>bài</td><td>Create quote post.</td></tr>
+      <tr><td><code>QUOTE_DELETED</code></td><td>Xoá quote</td><td>bài</td><td>Delete post type <code>QUOTE</code>.</td></tr>
+      <tr><td><code>SHARE_CREATED</code></td><td>Chia sẻ bài</td><td>lượt</td><td>Create repost/share.</td></tr>
+      <tr><td><code>SHARE_DELETED</code></td><td>Xoá chia sẻ</td><td>lượt</td><td>Delete post type <code>REPOST</code>.</td></tr>
+      <tr><td><code>INVITE_SENT</code></td><td>Gửi lời mời</td><td>lời mời</td><td>Circle invitation flows.</td></tr>
+      <tr><td><code>INVITE_ACCEPTED</code></td><td>Chấp nhận lời mời</td><td>lời mời</td><td>User accept circle invitation.</td></tr>
+      <tr><td><code>JOIN_CIRCLE</code></td><td>Được duyệt vào nhóm</td><td>nhóm</td><td>Admin/owner accept join request.</td></tr>
+      <tr><td><code>LEAVE_CIRCLE</code></td><td>Rời nhóm</td><td>nhóm</td><td>Service method đã có, chưa wire vì chưa có leave circle flow.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>Implementation Progress</h2>
+  <hr class="rule">
+  <div class="diff-grid">
+    <div class="diff-card">
+      <div class="diff-card-head">Done</div>
+      <div class="diff-row"><div class="diff-dot done"></div><div>DailyQuest lưu <code>action_enum</code>, create/list trả <code>action</code> và không dùng <code>targetCount</code>.</div></div>
+      <div class="diff-row"><div class="diff-dot done"></div><div>Admin action API map từ enum sang <code>value</code>, <code>label</code>, <code>unit</code>.</div></div>
+      <div class="diff-row"><div class="diff-dot done"></div><div><code>UserActionLog</code> có repository/service và đã wire vào post, like, follow, invitation, approve join request.</div></div>
+      <div class="diff-row"><div class="diff-dot done"></div><div>Swagger admin/circle đã có schema, path docs và note permission/log.</div></div>
+    </div>
+    <div class="diff-card">
+      <div class="diff-card-head">Pending environment</div>
+      <div class="diff-row"><div class="diff-dot todo"></div><div>Chạy <code>prisma generate</code>, <code>prisma validate</code> và <code>npm run typecheck</code> trên môi trường không bị giới hạn WSL1/Node.</div></div>
+      <div class="diff-row"><div class="diff-dot todo"></div><div>Layer tính tiến độ daily quest theo <code>user_action_logs</code> có thể triển khai sau khi chốt rule reset/ngày và timezone.</div></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Design Notes</h2>
+  <hr class="rule">
+  <div class="note-box">
+    <div class="note-item"><span class="note-tag">Data</span><div class="note-body"><code>requirement</code> là số lượng action cần đạt. <code>targetCount</code> không còn nằm trong <code>DailyQuest</code>.</div></div>
+    <div class="note-item"><span class="note-tag">Enum</span><div class="note-body"><code>FLOW_FOLLOWER_CREATED</code> được giữ nguyên theo enum hiện có để tránh đổi contract. Nếu muốn sửa typo thành <code>FOLLOW_FOLLOWER_CREATED</code>, cần migration riêng.</div></div>
+    <div class="note-item"><span class="note-tag">Transaction</span><div class="note-body">Các method log nhận optional <code>tx</code> để ghi cùng transaction khi flow chính cần đảm bảo atomic side effect.</div></div>
+    <div class="note-item"><span class="note-tag">Risk</span><div class="note-body">Hiện log insert nằm trong flow chính; nếu database ghi log lỗi thì request nghiệp vụ có thể fail. Có thể tách async queue nếu muốn ưu tiên độ bền UX hơn tính atomic.</div></div>
+  </div>
+</section>
+
+<footer>Feature note · Daily Quest Actions & UserActionLog · Threads API v2 · Created: 2026-05-23</footer>
+</div>
+</body>
+</html>

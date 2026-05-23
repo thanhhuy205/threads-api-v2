@@ -28,6 +28,7 @@ import type { GetPostWithUser } from "@/modules/post/interfaces/get-post-with-us
 import type { NewsFeedPayload } from "@/modules/post/interfaces/news-feed-payload";
 import { PostMapper } from "@/modules/post/mapper/post.mapper";
 import { reportService } from "@/modules/report/service/report.service";
+import { userActionLogService } from "@/modules/user-action-log/service/user-action-log.service";
 import { followerService } from "@/modules/user/service/follower.service";
 import { userService } from "@/modules/user/service/user.service";
 import { redisService } from "@/providers/redis.provider";
@@ -37,6 +38,7 @@ import {
 } from "@/shared/pagination/cursor-pagination";
 import { transactionService } from "@/shared/transaction/transaction.service";
 import {
+  ActionType,
   PostType,
   Prisma,
   ReplyPermission,
@@ -468,6 +470,14 @@ class PostService {
       topic: normalizedTopic,
       createdAt: post.createdAt,
     });
+    await userActionLogService.logPostCreated({
+      userId: payload.userId,
+      targetId: post.publicId,
+      metadata: {
+        postId: post.id ?? null,
+        source: "POST",
+      },
+    });
     await this.bumpPostListCacheVersion();
     return post;
   }
@@ -501,6 +511,14 @@ class PostService {
       userId: payload.userId,
     });
 
+    await userActionLogService.logPostCreated({
+      userId: payload.userId,
+      targetId: post.publicId,
+      metadata: {
+        postId: post.id ?? null,
+        source: "CIRCLE_POST",
+      },
+    });
     await this.bumpPostListCacheVersion();
     return post;
   }
@@ -615,6 +633,14 @@ class PostService {
       originPost.id,
     );
 
+    await userActionLogService.logShareCreated({
+      userId,
+      targetId: post.publicId,
+      metadata: {
+        originPublicId: payload.publicId,
+        originPostId: originPost.id,
+      },
+    });
     await this.bumpPostListCacheVersion();
     return {
       publicId: post.publicId,
@@ -655,6 +681,14 @@ class PostService {
       createdAt: post.createdAt,
     });
 
+    await userActionLogService.logQuoteCreated({
+      userId: payload.userId,
+      targetId: post.publicId,
+      metadata: {
+        originPublicId: publicId,
+        originPostId: originPost.id,
+      },
+    });
     await this.bumpPostListCacheVersion();
     return {
       publicId: post.publicId,
@@ -718,6 +752,18 @@ class PostService {
     return;
   }
 
+  private resolveDeleteActionType(postType: PostType): ActionType {
+    if (postType === PostType.QUOTE) {
+      return ActionType.QUOTE_DELETED;
+    }
+
+    if (postType === PostType.REPOST) {
+      return ActionType.SHARE_DELETED;
+    }
+
+    return ActionType.POST_DELETED;
+  }
+
   // Kỉ thuật lạ l cập nhập like theo pop
   async like(
     publicId: string,
@@ -745,6 +791,13 @@ class PostService {
             userId,
           }),
         );
+        await userActionLogService.logLikeCreated({
+          userId,
+          targetId: publicId,
+          metadata: {
+            postPublicId: publicId,
+          },
+        });
       }
     } else {
       const removed = await redisService.sRem(likeKey, userId);
@@ -767,7 +820,7 @@ class PostService {
   }
 
   async delete(publicId: string, userId: string): Promise<void> {
-    const post = await postRepository.findByPublicId(publicId);
+    const post = await postRepository.findDeleteTargetByPublicId(publicId);
 
     if (!post) {
       throw new NotFoundException("Post not found");
@@ -778,6 +831,14 @@ class PostService {
     }
 
     await postRepository.softDeleteByPublicId(publicId);
+    await userActionLogService.logAction({
+      userId,
+      type: this.resolveDeleteActionType(post.type),
+      targetId: publicId,
+      metadata: {
+        postType: post.type,
+      },
+    });
     await this.bumpPostListCacheVersion();
   }
 

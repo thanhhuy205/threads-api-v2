@@ -11,6 +11,7 @@ import { circleInvitationRepository } from "@/modules/circle/repository/circle-i
 import { circleJoinRequestRepository } from "@/modules/circle/repository/circle-join.repository";
 import { emailProducer } from "@/modules/job/email/producer/email.producer";
 import { postService } from "@/modules/post/service/post.service";
+import { userActionLogService } from "@/modules/user-action-log/service/user-action-log.service";
 import { userRestrictionService } from "@/modules/user-restriction/service/user-restriction.service";
 import { userService } from "@/modules/user/service/user.service";
 import { redisService } from "@/providers/redis.provider";
@@ -28,11 +29,11 @@ import {
 import crypto from "crypto";
 import { evaluationProducer } from "../../job/evaluation-post/producer/evaluation.producer";
 import {
-  CircleStatsQueryDto,
   CirclePostBodyDto,
   CirclePostsQueryDto,
   CircleRepliesQueryDto,
   CircleReplyBodyDto,
+  CircleStatsQueryDto,
   CprBodyDto,
   ExpLogQueryDto,
   SacrificeBodyDto,
@@ -777,7 +778,7 @@ class CircleService {
     const circle = await this.assertCanManageCircle(
       publicId,
       userId,
-      CirclePermission.INVITE_MEMBER,
+      CirclePermission.ACCEPT_USE_JOIN,
     );
     const [rows, total] = await Promise.all([
       circleInvitationRepository.findByCircleIdPaginated({
@@ -916,7 +917,7 @@ class CircleService {
     }
 
     const invitation = await transactionService.doInTransaction(async (tx) => {
-      return await circleInvitationRepository.upsert(
+      const result = await circleInvitationRepository.upsert(
         {
           circleId: data.circleId,
           userId: data.userId,
@@ -924,6 +925,18 @@ class CircleService {
         },
         tx,
       );
+
+      await userActionLogService.logInviteSent({
+        userId: data.inviterId,
+        targetId: String(data.circleId),
+        metadata: {
+          circleId: data.circleId,
+          invitedUserId: data.userId,
+        },
+        tx,
+      });
+
+      return result;
     });
 
     await this.bumpCircleListCacheVersion();
@@ -980,6 +993,16 @@ class CircleService {
       await circleExpLogService.grantMemberJoinExpIfFirstTime({
         circleId: data.circleId,
         userId: data.userId,
+        tx,
+      });
+
+      await userActionLogService.logInviteAccepted({
+        userId: data.userId,
+        targetId: String(data.circleId),
+        metadata: {
+          circleId: data.circleId,
+          source: "INVITATION",
+        },
         tx,
       });
 
@@ -1140,6 +1163,19 @@ class CircleService {
         },
         tx,
       );
+
+      await userActionLogService.logInviteSent({
+        userId: inviterId,
+        targetId: circlePublicId,
+        metadata: {
+          circleId: circle.id,
+          email: normalizedEmail,
+          invitedUserId: user?.id ?? null,
+          role,
+          source: "ADMIN_INVITATION",
+        },
+        tx,
+      });
     });
 
     await emailProducer.sendInvitationEmail({
@@ -1157,6 +1193,95 @@ class CircleService {
     };
   }
 
+  async respondJoinRequest(
+    {
+      publicId,
+      adminId,
+      userId: targetUserId,
+      isAccept,
+    }: { publicId: string; adminId: string; userId: string; isAccept: boolean },
+  ) {
+    const circle = await circleRepository.findByPublicId(publicId);
+    if (!circle) {
+      throw new NotFoundException(`Circle ${publicId} not found`);
+    }
+
+    const userRole = await circleMemberRepository.findRoleByCircleId(
+      circle.id,
+      adminId,
+    );
+    if (!userRole) {
+      throw new ForbiddenException(
+        `User ${adminId} is not a member of circle ${publicId}`,
+      );
+    }
+
+    const hasPermission = checkCirclePermission(
+      CIRCLE_ROLE_PERMISSIONS[userRole.role] ?? [],
+      CirclePermission.ACCEPT_USE_JOIN,
+    );
+
+    if (!hasPermission) {
+      throw new ForbiddenException(
+        `User ${adminId} does not have permission to manage join requests in circle ${publicId}`,
+      );
+    }
+
+    await transactionService.doInTransaction(async (tx) => {
+      const joinRequest =
+        await circleJoinRequestRepository.findPendingRequestByCircleIdAndUserId(
+          circle.id,
+          targetUserId,
+          tx,
+        );
+
+      if (!joinRequest) {
+        throw new NotFoundException(
+          `No pending join request found for user ${targetUserId} in circle ${publicId}`,
+        );
+      }
+
+      if (joinRequest.status !== RequestStatus.PENDING) {
+        throw new BadRequestException(
+          `Join request is not pending for user ${targetUserId} in circle ${publicId}`,
+        );
+      }
+
+      if (isAccept) {
+        await circleJoinRequestRepository.updateStatus(
+          joinRequest.id,
+          RequestStatus.ACCEPTED,
+          tx,
+        );
+        await circleMemberRepository.create(
+          {
+            circleId: circle.id,
+            userId: targetUserId,
+          },
+          tx,
+        );
+        await userActionLogService.logJoinCircle({
+          userId: targetUserId,
+          targetId: publicId,
+          metadata: {
+            circleId: circle.id,
+            approvedById: adminId,
+            source: "JOIN_REQUEST",
+          },
+          tx,
+        });
+      } else {
+        await circleJoinRequestRepository.updateStatus(
+          joinRequest.id,
+          RequestStatus.REJECTED,
+          tx,
+        );
+      }
+    });
+
+    await this.bumpCircleListCacheVersion();
+  }
+
   async countCircles() {
     return await circleRepository.count();
   }
@@ -1170,6 +1295,7 @@ class CircleService {
   }) {
     return await circleRepository.findBatch(take, skip);
   }
+
 
   async getUserQuantityPostInCircle(publicId: string, userId: string) {
     const circle = await circleRepository.findByPublicId(publicId);

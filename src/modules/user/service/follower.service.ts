@@ -1,4 +1,5 @@
 import { NotFoundException } from "@/errors/error";
+import { userActionLogService } from "@/modules/user-action-log/service/user-action-log.service";
 import { followRepository } from "@/modules/user/repository/follow.repository";
 import { userRepository } from "@/modules/user/repository/user.repository";
 import {
@@ -20,6 +21,25 @@ type GetUsersPaginationResult = {
 };
 
 class FollowerService {
+  private async logFollowCreated(userId: string, targetUserId: string) {
+    await Promise.all([
+      userActionLogService.logFollowingCreated({
+        userId,
+        targetId: targetUserId,
+        metadata: {
+          targetUserId,
+        },
+      }),
+      userActionLogService.logFollowerCreated({
+        userId: targetUserId,
+        targetId: userId,
+        metadata: {
+          followerId: userId,
+        },
+      }),
+    ]);
+  }
+
   async getFollower({
     userId,
     after,
@@ -122,12 +142,14 @@ class FollowerService {
     } else if (existingFollow && !existingFollow.isFollowing) {
       await followRepository.updateStatusByFollowId(existingFollow.id, true);
       await userRepository.incrementFollowersCount(targetUserId);
+      await this.logFollowCreated(userId, targetUserId);
       return {
         isFollowing: true,
       };
     }
     const follow = await followRepository.create(userId, targetUserId);
     await userRepository.incrementFollowersCount(targetUserId);
+    await this.logFollowCreated(userId, targetUserId);
     return {
       isFollowing: follow.isFollowing,
     };
@@ -135,4 +157,3 @@ class FollowerService {
 }
 
 export const followerService = new FollowerService();
-

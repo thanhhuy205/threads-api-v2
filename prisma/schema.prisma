@@ -89,13 +89,16 @@ enum ActionType {
   POST_CREATED
   POST_DELETED
   LIKE_CREATED
-  DISLIKE_CREATED
   FLOW_FOLLOWER_CREATED
   FOLLOW_FOLLOWING_CREATED
   QUOTE_CREATED
   QUOTE_DELETED
   SHARE_CREATED
   SHARE_DELETED
+  INVITE_SENT
+  INVITE_ACCEPTED
+  JOIN_CIRCLE
+  LEAVE_CIRCLE
 }
 
 enum InteractionType {
@@ -313,6 +316,7 @@ model User {
   postMentions        PostMention[]
   circleJoinRequests  CircleJoinRequest[]
   dailyQuests         DailyQuest[]
+  userActionLogs      UserActionLog[]
 
   @@index([deletedAt], map: "idx_users_deleted_at")
   @@index([bannedUntil], map: "idx_users_banned_until")
@@ -333,7 +337,7 @@ model Report {
   adminNote     String?          @map("admin_note") @db.Text
   createdAt     DateTime         @default(now()) @map("created_at")
 
-  reporter User @relation("UserReports", fields: [reporterId], references: [id]) 
+  reporter User @relation("UserReports", fields: [reporterId], references: [id])
 
   @@index([reporterId], map: "idx_reports_reporter_id")
   @@index([targetType, targetId], map: "idx_reports_target")
@@ -677,14 +681,15 @@ model CircleMember {
 }
 
 model DailyQuest {
-  id          Int      @id @default(autoincrement())
-  code        String   @unique // "COMMENT_3", "POST_1", "REACT_5"
-  description String   @db.VarChar(255)
+  id          Int        @id @default(autoincrement())
+  code        String     @unique // "COMMENT_3", "POST_1", "REACT_5"
+  description String     @db.VarChar(255)
   karmaReward Int // thường là 1, nhiệm vụ khó hơn là 2
   requirement Int // số lần cần hoàn thành
-  isActive    Boolean  @default(true)
-  createById  String   @map("create_by_id")
-  createdAt   DateTime @default(now()) @map("created_at")
+  isActive    Boolean    @default(true)
+  action      ActionType @map("action_enum")
+  createById  String     @map("create_by_id")
+  createdAt   DateTime   @default(now()) @map("created_at")
 
   user          User           @relation(fields: [createById], references: [id])
   userQuestLogs UserQuestLog[]
@@ -707,6 +712,22 @@ model UserQuestLog {
 
   @@unique([userId, questId, date])
   @@map("user_quest_logs")
+}
+
+model UserActionLog {
+  id        Int        @id @default(autoincrement())
+  userId    String     @map("user_id")
+  type      ActionType @map("type_enum")
+  targetId  String?
+  metadata  Json?
+  createdAt DateTime   @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId], map: "idx_user_action_logs_user_id")
+  @@index([type], map: "idx_user_action_logs_type")
+  @@index([createdAt], map: "idx_user_action_logs_created_at")
+  @@map("user_action_logs")
 }
 
 model CircleEnergy {

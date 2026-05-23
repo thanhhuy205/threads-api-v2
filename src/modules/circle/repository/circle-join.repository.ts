@@ -82,8 +82,23 @@ class CircleJoinRequestRepository implements ICursorPagination<
                 status: RequestStatus.PENDING,
             },
         });
-
     }
+
+
+    async findPendingRequestByCircleIdAndUserId(
+        circleId: number,
+        userId: string,
+        tx: Prisma.TransactionClient = prisma,
+    ) {
+        return tx.circleJoinRequest.findFirst({
+            where: {
+                circleId,
+                userId,
+                status: RequestStatus.PENDING,
+            },
+        });
+    }
+
 
     findByCircleIdPaginated({
         circleId,

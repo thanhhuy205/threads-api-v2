@@ -7,4 +7,13 @@ export const responseInvitationSchema = z.object({
     }),
 });
 
+export const respondJoinRequestSchema = z.object({
+    userId: z.string({
+        required_error: 'User ID is required',
+        invalid_type_error: 'User ID must be a string',
+    }).trim().min(1),
+    isAccept: z.boolean({ required_error: 'isAccept is required', invalid_type_error: 'isAccept must be a boolean' }),
+});
+
+export type RespondJoinRequestDto = z.infer<typeof respondJoinRequestSchema>;
 export type ResponseInvitationDto = z.infer<typeof responseInvitationSchema>;

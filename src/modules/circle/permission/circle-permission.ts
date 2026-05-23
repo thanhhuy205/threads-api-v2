@@ -3,6 +3,7 @@ import { RoleMembership } from "@prisma/client";
 export enum CirclePermission {
     MANAGE = 'manage_super',
     INVITE_MEMBER = 'invite_member',
+    ACCEPT_USE_JOIN = 'accept_use_join',
     KICK_MEMBER = 'kick_member',
     EDIT_CIRCLE = 'edit_circle',
     DELETE_CIRCLE = 'delete_circle',
@@ -17,6 +18,7 @@ export const CIRCLE_ROLE_PERMISSIONS: Record<RoleMembership, CirclePermission[]>
     [RoleMembership.OWNER]: [
         CirclePermission.MANAGE,
         CirclePermission.INVITE_MEMBER,
+        CirclePermission.ACCEPT_USE_JOIN,
         CirclePermission.KICK_MEMBER,
         CirclePermission.EDIT_CIRCLE,
         CirclePermission.DELETE_CIRCLE,
@@ -28,6 +30,7 @@ export const CIRCLE_ROLE_PERMISSIONS: Record<RoleMembership, CirclePermission[]>
     ],
     [RoleMembership.ADMIN]: [
         CirclePermission.INVITE_MEMBER,
+        CirclePermission.ACCEPT_USE_JOIN,
         CirclePermission.KICK_MEMBER,
         CirclePermission.START_CPR,
         CirclePermission.POST,

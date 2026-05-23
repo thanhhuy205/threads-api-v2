@@ -49,6 +49,12 @@ adminRouter.post(
 );
 
 adminRouter.get(
+  "/daily-quests/actions",
+  checkRole(UserRoleType.ADMIN),
+  dailyQuestController.listDailyQuestActions,
+);
+
+adminRouter.get(
   "/daily-quests",
   checkRole(UserRoleType.ADMIN),
   dailyQuestController.listDailyQuests,
