@@ -36,6 +36,7 @@ export const ELASTIC_JOB_NAME = {
 export const EMAIL_JOB_NAME = {
   SEND_VERIFICATION_EMAIL: "send_verification_email",
   SEND_FORGOT_PASSWORD_EMAIL: "send_forgot_password_email",
+  SEND_INVITATION_EMAIL: "send_invitation_email",
 };
 
 export const DELTA_HP_JOB_NAME = {

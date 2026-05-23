@@ -2,12 +2,16 @@ import { redisKey } from "@/constants/resolve-key/redis-key";
 import { BadRequestException, ForbiddenException, NotFoundException } from "@/errors/error";
 import { CreateCircleInput } from "@/modules/circle/interfaces/circle-service.interface";
 import { ResponseInvitationInput } from "@/modules/circle/interfaces/response-invitation.dto";
+import { SendInvitationEmailAdminInterface } from "@/modules/circle/interfaces/send-invitation-admin.interface";
 import { SendInvitationInput } from "@/modules/circle/interfaces/send-invitation.interface";
+import { hasherToken } from "@/modules/auth/util/hasher-token";
 import { CIRCLE_ROLE_PERMISSIONS, CirclePermission } from "@/modules/circle/permission/circle-permission";
 import { checkCirclePermission } from "@/modules/circle/policy/check-circle-permission";
 import { circleInvitationRepository } from "@/modules/circle/repository/circle-invation.repository";
+import { emailProducer } from "@/modules/job/email/producer/email.producer";
 import { postService } from "@/modules/post/service/post.service";
 import { userRestrictionService } from "@/modules/user-restriction/service/user-restriction.service";
+import { userService } from "@/modules/user/service/user.service";
 import { redisService } from "@/providers/redis.provider";
 import { buildCursorPagination } from "@/shared/pagination/cursor-pagination";
 import { buildPaginationResponse } from "@/shared/pagination/pagination";
@@ -35,6 +39,7 @@ import { circleExpLogRepository } from "../repository/circle-exp-log.repository"
 import { circleMemberRepository } from "../repository/circle-member.repository";
 import { circlePostQualityLogRepository } from "../repository/circle-post-quality-log.repository";
 import { circleRepository } from "../repository/circle.repository";
+import crypto from "crypto";
 
 type CircleVisibilityFilterType = "public" | "private" | "accepting" | "join" | null;
 
@@ -1005,6 +1010,114 @@ class CircleService {
 
     await circleInvitationRepository.createJoinRequest(circle.id, userId);
     return { isCancelled: false };
+  }
+
+  async sendInvitationByAdmin({
+    circlePublicId,
+    email,
+    inviterId,
+    role,
+    description,
+  }: SendInvitationEmailAdminInterface) {
+    const circle = await circleRepository.findByPublicId(circlePublicId);
+    if (!circle) {
+      throw new NotFoundException(`Circle with id ${circlePublicId} not found`);
+    }
+
+    const inviterRole = await circleMemberRepository.findRoleByCircleId(
+      circle.id,
+      inviterId,
+    );
+    if (!inviterRole) {
+      throw new ForbiddenException("You are not a member of this circle");
+    }
+    if (inviterRole.role === RoleMembership.MEMBER) {
+      throw new ForbiddenException("Only admin or owner can send invitation");
+    }
+    if (
+      inviterRole.role === RoleMembership.ADMIN &&
+      role !== RoleMembership.MEMBER
+    ) {
+      throw new ForbiddenException("Admin can only invite member role");
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const user = await userService.findUserByEmail(normalizedEmail);
+    if (user?.id === inviterId) {
+      throw new BadRequestException("You cannot invite yourself");
+    }
+
+    if (user) {
+      const existingMember = await circleMemberRepository.findByCircleId(
+        circle.id,
+        user.id,
+      );
+      if (existingMember.length > 0) {
+        throw new BadRequestException(
+          `User ${user.id} is already a member of circle ${circlePublicId}`,
+        );
+      }
+    }
+
+    let existingInvitation = user
+      ? await circleInvitationRepository.findInvitationByUserId(
+        circle.id,
+        user.id,
+      )
+      : null;
+    if (!existingInvitation) {
+      existingInvitation = await circleInvitationRepository.findInvitationByEmail(
+        circle.id,
+        normalizedEmail,
+      );
+    }
+
+    const invitationResendLimit = 3;
+    if (existingInvitation) {
+      if (existingInvitation.resentCount >= invitationResendLimit) {
+        throw new BadRequestException(
+          `Email ${normalizedEmail} has already been invited to join circle ${circlePublicId} multiple times`,
+        );
+      }
+      if (existingInvitation.status === CircleInvitationStatus.ACCEPTED) {
+        throw new BadRequestException(
+          `Email ${normalizedEmail} has already accepted the invitation to join circle ${circlePublicId}`,
+        );
+      }
+    }
+
+    const token = crypto.randomBytes(32).toString("hex");
+    const tokenHash = hasherToken(token);
+    await transactionService.doInTransaction(async (tx) => {
+      await circleInvitationRepository.upsertAdminInvitation(
+        {
+          existingInvitationId: existingInvitation?.id,
+          circleId: circle.id,
+          userId: user?.id,
+          email: normalizedEmail,
+          inviterId,
+          isUser: Boolean(user),
+          role,
+          description,
+          tokenHash,
+        },
+        tx,
+      );
+    });
+
+    await emailProducer.sendInvitationEmail({
+      email: normalizedEmail,
+      token,
+      username: user?.username ?? normalizedEmail.split("@")[0],
+    });
+
+    await this.bumpCircleListCacheVersion();
+    return {
+      email: normalizedEmail,
+      role,
+      isUser: Boolean(user),
+      circlePublicId,
+    };
   }
 
   async countCircles() {

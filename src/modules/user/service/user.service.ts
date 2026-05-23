@@ -125,6 +125,10 @@ class UserService {
       getAfter: (item) => item.username,
     });
   }
+
+  async findUserByEmail(email: string) {
+    return userRepository.findByEmail(email);
+  }
 }
 
 export const userService = new UserService();

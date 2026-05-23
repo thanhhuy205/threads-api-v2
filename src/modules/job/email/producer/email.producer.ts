@@ -20,6 +20,12 @@ class EmailProducer {
             ...payload,
         });
     }
+
+    async sendInvitationEmail(payload: { email: string; token: string, username: string }) {
+        await this.queue.add(EMAIL_JOB_NAME.SEND_INVITATION_EMAIL, {
+            ...payload,
+        });
+    }
 }
 
 export const emailProducer = new EmailProducer();

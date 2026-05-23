@@ -862,7 +862,11 @@ model CircleSoulStone {
 model CircleInvitation {
   id          Int                    @id @default(autoincrement())
   circleId    Int                    @map("circle_id")
-  userId      String                 @map("user_id")
+  userId      String?                @map("user_id")
+  email       String?                @map("email") @db.VarChar(255)
+  role        RoleMembership?        @default(MEMBER)
+  isUser      Boolean                @default(true) @map("is_user") // true nếu invitation dành cho user đã có tài khoản, false nếu chỉ dựa trên email
+  tokenHash   String?                @unique @db.VarChar(100)
   inviterId   String                 @map("inviter_id")
   resentCount Int                    @default(0) @map("resent_count") // tối đa 5 lần
   status      CircleInvitationStatus @default(PENDING)
@@ -870,7 +874,7 @@ model CircleInvitation {
   updatedAt   DateTime               @updatedAt @map("updated_at")
 
   circle  Circle @relation(fields: [circleId], references: [id])
-  user    User   @relation("CircleInvitationUser", fields: [userId], references: [id])
+  user    User?  @relation("CircleInvitationUser", fields: [userId], references: [id])
   inviter User   @relation("CircleInvitationInviter", fields: [inviterId], references: [id])
 
   @@unique([circleId, userId], map: "uq_circle_invitations_circle_user")

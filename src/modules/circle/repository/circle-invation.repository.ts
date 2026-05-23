@@ -2,7 +2,7 @@ import prisma from "@/config/prisma";
 import { SendInvitationInput } from "@/modules/circle/interfaces/send-invitation.interface";
 import { buildPagination } from "@/shared/pagination/cursor-pagination";
 import { buildPagination as buildOffsetPagination } from "@/shared/pagination/pagination";
-import { CircleInvitationStatus, Prisma } from "@prisma/client";
+import { CircleInvitationStatus, Prisma, RoleMembership } from "@prisma/client";
 
 class CircleInvitationRepository implements ICursorPagination<
   Prisma.CircleInvitationWhereInput,
@@ -273,5 +273,92 @@ class CircleInvitationRepository implements ICursorPagination<
 
     return prisma.circleInvitation.count({ where });
   }
+
+  async findInvitationByEmail(circleId: number, email: string) {
+    return prisma.circleInvitation.findFirst({
+      where: {
+        circleId,
+        email,
+      },
+      orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
+      select: {
+        id: true,
+        circleId: true,
+        userId: true,
+        email: true,
+        status: true,
+        resentCount: true,
+      },
+    });
+  }
+
+  async findInvitationByUserId(circleId: number, userId: string) {
+    return prisma.circleInvitation.findFirst({
+      where: {
+        circleId,
+        userId,
+      },
+      orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
+      select: {
+        id: true,
+        circleId: true,
+        userId: true,
+        email: true,
+        status: true,
+        resentCount: true,
+      },
+    });
+  }
+
+  async upsertAdminInvitation(
+    payload: {
+      existingInvitationId?: number;
+      circleId: number;
+      userId?: string;
+      email: string;
+      inviterId: string;
+      isUser: boolean;
+      role: RoleMembership;
+      description?: string;
+      tokenHash: string;
+    },
+    tx: Prisma.TransactionClient = prisma,
+  ) {
+    if (payload.existingInvitationId) {
+      return tx.circleInvitation.update({
+        where: {
+          id: payload.existingInvitationId,
+        },
+        data: {
+          userId: payload.userId,
+          email: payload.email,
+          inviterId: payload.inviterId,
+          isUser: payload.isUser,
+          role: payload.role,
+          description: payload.description,
+          tokenHash: payload.tokenHash,
+          status: CircleInvitationStatus.PENDING,
+          resentCount: {
+            increment: 1,
+          },
+        },
+      });
+    }
+
+    return tx.circleInvitation.create({
+      data: {
+        circleId: payload.circleId,
+        userId: payload.userId,
+        email: payload.email,
+        inviterId: payload.inviterId,
+        isUser: payload.isUser,
+        role: payload.role,
+        description: payload.description,
+        tokenHash: payload.tokenHash,
+        status: CircleInvitationStatus.PENDING,
+      },
+    });
+  }
 }
+
 export const circleInvitationRepository = new CircleInvitationRepository();

@@ -1,3 +1,4 @@
+import { SendInvitationEmailDto } from "@/modules/circle/dto/admin-circle.dto";
 import { ResponseInvitationDto } from "@/modules/circle/dto/response-invitation.dto";
 import type { SendInvitationDto } from "@/modules/circle/dto/send-invitation.dto";
 import { getPagination as getCursorPagination } from "@/shared/pagination/cursor-pagination";
@@ -409,6 +410,32 @@ class CircleController {
     return res.success(200, "Circle join requests retrieved successfully", data.rows, {
       pagination: data.pagination,
     });
+  }
+
+
+  async sendInvitationByAdmin(
+    req: Request<CirclePublicIdParamsDto, {}, SendInvitationEmailDto, {}>,
+    res: Response,
+  ) {
+    const userId = req.user?.sub;
+    if (!userId) {
+      return res.error(401, "Unauthorized");
+    }
+    const { publicId } = req.params;
+    const { email, role, description } = req.body;
+    await circleService.sendInvitationByAdmin({
+      circlePublicId: publicId,
+      email,
+      inviterId: userId,
+      role,
+      description,
+    });
+
+    return res.success(
+      200,
+      `Invitation sent to ${email} for circle ${publicId} with role ${role}`,
+    );
+
   }
 }
 

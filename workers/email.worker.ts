@@ -13,6 +13,9 @@ class EmailWorker {
                 return this.sendVerificationEmail(job.data);
             case EMAIL_JOB_NAME.SEND_FORGOT_PASSWORD_EMAIL:
                 return this.sendForgotPasswordEmail(job.data);
+
+            case EMAIL_JOB_NAME.SEND_INVITATION_EMAIL:
+                return this.sendInvitationEmail(job.data);
             default:
                 throw new Error(`Unknown job name: ${job.name}`);
         }
@@ -48,6 +51,21 @@ class EmailWorker {
         );
         await nodemailerService.sendMail(data.email, 'Reset your password', html, {});
         baseLogger.info(`Sent forgot password email to: ${data.email}`);
+    }
+
+    async sendInvitationEmail(data: { email: string; token: string, username: string }) {
+        const invitationLink = `${configService.FRONTEND_URL}/join-group?token=${data.token}`;
+        const html = await ejs.renderFile(
+            path.join(process.cwd(), './template/invitation-email.ejs'),
+            {
+                appName: 'Threads',
+                invitationUrl: invitationLink,
+                username: data.username,
+                currentYear: new Date().getFullYear(),
+            }
+        );
+        await nodemailerService.sendMail(data.email, 'You are invited to join Threads', html, {});
+        baseLogger.info(`Sent invitation email to: ${data.email}`);
     }
 };
 

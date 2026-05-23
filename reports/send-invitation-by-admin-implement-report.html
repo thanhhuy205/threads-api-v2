@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Implement Report - sendInvitationByAdmin</title>
+  <style>
+    :root {
+      --bg: #f7f8fa;
+      --panel: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --ok: #0f766e;
+      --warn: #b45309;
+      --border: #e5e7eb;
+      --accent: #0ea5e9;
+    }
+    body {
+      margin: 0;
+      padding: 24px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.5;
+    }
+    .wrap {
+      max-width: 980px;
+      margin: 0 auto;
+      display: grid;
+      gap: 16px;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+    }
+    h1, h2 {
+      margin: 0 0 10px;
+    }
+    h1 {
+      font-size: 24px;
+    }
+    h2 {
+      font-size: 18px;
+    }
+    .meta {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+    .item {
+      margin: 8px 0;
+    }
+    .done {
+      color: var(--ok);
+      font-weight: 700;
+    }
+    .warn {
+      color: var(--warn);
+      font-weight: 700;
+    }
+    code {
+      background: #f3f4f6;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      padding: 1px 6px;
+      font-size: 13px;
+    }
+    pre {
+      margin: 0;
+      padding: 12px;
+      overflow: auto;
+      background: #0b1020;
+      color: #e2e8f0;
+      border-radius: 10px;
+      font-size: 13px;
+      border: 1px solid #1f2937;
+    }
+    .grid {
+      display: grid;
+      gap: 12px;
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="card">
+      <h1>Implement Report: sendInvitationByAdmin</h1>
+      <div class="meta">Module: Circle • Endpoint: <code>POST /circle/:publicId/send-invitation/manage</code></div>
+      <div class="item"><span class="done">DONE</span> - Đã implement đầy đủ route/controller/service/repository cho luồng mời bằng email từ admin/owner.</div>
+      <div class="item"><span class="warn">NOTE</span> - Không chạy được <code>npm run typecheck</code> trên môi trường hiện tại vì lỗi WSL1/Node runtime.</div>
+    </section>
+
+    <section class="card grid">
+      <h2>1) Checklist Implement (Completed)</h2>
+      <div class="item">[x] Route admin-invite dùng đúng schema <code>sendInvitationEmailSchema</code>.</div>
+      <div class="item">[x] Controller <code>sendInvitationByAdmin</code> gọi service thật, không còn biến undefined.</div>
+      <div class="item">[x] Interface role đồng bộ <code>RoleMembership</code>.</div>
+      <div class="item">[x] Service check quyền mời: OWNER mời mọi role, ADMIN chỉ mời MEMBER.</div>
+      <div class="item">[x] Service check user tồn tại theo email để set <code>isUser</code>.</div>
+      <div class="item">[x] Chặn self-invite và chặn mời user đã là member circle.</div>
+      <div class="item">[x] Resend policy: cho PENDING/REJECTED/CANCELLED, chặn ACCEPTED, limit resend = 3.</div>
+      <div class="item">[x] Mỗi lần gửi tạo token mới, hash vào <code>tokenHash</code>.</div>
+      <div class="item">[x] Enqueue email qua <code>emailProducer.sendInvitationEmail</code>.</div>
+      <div class="item">[x] Repository hỗ trợ lookup theo <code>email</code>/<code>userId</code> và upsert invitation admin.</div>
+    </section>
+
+    <section class="card grid">
+      <h2>2) Files Updated</h2>
+      <div class="item"><code>src/modules/circle/circle.routes.ts</code></div>
+      <div class="item"><code>src/modules/circle/controller/circle.controller.ts</code></div>
+      <div class="item"><code>src/modules/circle/service/circle.service.ts</code></div>
+      <div class="item"><code>src/modules/circle/repository/circle-invation.repository.ts</code></div>
+      <div class="item"><code>src/modules/circle/interfaces/send-invitation-admin.interface.ts</code></div>
+    </section>
+
+    <section class="card grid">
+      <h2>3) Luồng Module (Implemented)</h2>
+      <pre>Client
+  -> Auth + Validate (publicId, email, role, description)
+  -> CircleController.sendInvitationByAdmin
+  -> CircleService.sendInvitationByAdmin
+      1. Find circle by publicId
+      2. Check inviter membership/role
+      3. Permission rule:
+         - OWNER: invite OWNER/ADMIN/MEMBER
+         - ADMIN: invite MEMBER only
+      4. Normalize email -> find user by email
+      5. Guard:
+         - self invite => reject
+         - user already member => reject
+      6. Find existing invitation:
+         - by userId (if user exists)
+         - fallback by email
+      7. Resend policy:
+         - ACCEPTED => reject
+         - resentCount >= 3 => reject
+         - others => allow resend
+      8. Generate raw token + tokenHash
+      9. Upsert invitation (status=PENDING, resentCount++, role, isUser, description)
+     10. Queue invitation email (email, token, username)
+     11. Return success response
+</pre>
+    </section>
+
+    <section class="card grid">
+      <h2>4) API Result (Controller)</h2>
+      <pre>{
+  "success": true,
+  "message": "Invitation sent to {email} for circle {publicId} with role {role}"
+}</pre>
+    </section>
+  </main>
+</body>
+</html>
