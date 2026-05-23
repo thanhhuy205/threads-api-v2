@@ -205,8 +205,13 @@ export const postSwaggerSchemas = {
                 maxLength: 1000,
                 example: 'Spam content',
             },
+            type: {
+                type: 'string',
+                enum: ['post', 'user', 'circle'],
+                example: 'post',
+            },
         },
-        required: ['reason'],
+        required: ['reason', 'type'],
     },
 };
 
@@ -308,6 +313,17 @@ const publicIdParameters = [
     },
     ...cursorPaginationQueryParameters,
 ];
+
+const reportTargetIdParameter = {
+    name: 'publicId',
+    in: 'path',
+    required: true,
+    schema: {
+        type: 'string',
+        example: 'post_abc123xyz789',
+    },
+    description: 'Target identifier. type=post/circle => post publicId, type=user => user id.',
+};
 
 const usernameParameters = [
     {
@@ -899,9 +915,9 @@ export const postSwaggerPaths = {
     '/posts/{publicId}/report': {
         post: {
             tags: ['Post'],
-            summary: 'Report a post',
+            summary: 'Report a target (post/user/circle post)',
             security: bearerAuthSecurity,
-            parameters: [publicIdParameters[0]],
+            parameters: [reportTargetIdParameter],
             requestBody: {
                 required: true,
                 content: {

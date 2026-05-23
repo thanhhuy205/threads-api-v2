@@ -73,4 +73,5 @@ export const BLOOM_KEY = {
 
 export const EVALUATION_JOB_NAME = {
   EVALUATION_POST: "evaluation-post",
+  EVALUATION_REPORT: "evaluation-report",
 };

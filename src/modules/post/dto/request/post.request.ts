@@ -1,4 +1,5 @@
 import { NewFeedType } from '@/modules/post/enum';
+import { ReportTargetType } from '@prisma/client';
 import { z } from 'zod';
 
 export const cursorPaginationQuerySchema = z.object({
@@ -35,7 +36,12 @@ export const usernameParamsSchema = z.object({
 export type UsernameParamsDto = z.infer<typeof usernameParamsSchema>;
 
 export const reportSchema = z.object({
-    reason: z.string().min(1, 'Report reason is required').max(1000, 'Report reason must be at most 1000 characters'),
+    reason: z.string().trim().min(1, 'Report reason is required').max(1000, 'Report reason must be at most 1000 characters'),
+    type: z.enum(['post', 'user', 'circle']).transform((value) => {
+        if (value === 'post') return ReportTargetType.POST;
+        if (value === 'user') return ReportTargetType.USER;
+        return ReportTargetType.CIRCLE;
+    }),
 });
 
 export type ReportDto = z.infer<typeof reportSchema>;

@@ -7,6 +7,7 @@ import {
 } from "@/errors/error";
 import { baseLogger } from "@/middlewares/logger";
 import { elasticProducer } from "@/modules/job/elastic-search/producer/elastic.producer";
+import { evaluationProducer } from "@/modules/job/evaluation-post/producer/evaluation.producer";
 import { pineProducer } from "@/modules/job/pine-vector/producer/pine.producer";
 import { mixedBreadService } from "@/modules/mixed-bread/service/mixed-bread.service";
 import { notificationService } from "@/modules/notification-group/service/notification.service";
@@ -26,6 +27,7 @@ import type { GetPostWithPublicId } from "@/modules/post/interfaces/get-post-wit
 import type { GetPostWithUser } from "@/modules/post/interfaces/get-post-with-user";
 import type { NewsFeedPayload } from "@/modules/post/interfaces/news-feed-payload";
 import { PostMapper } from "@/modules/post/mapper/post.mapper";
+import { reportService } from "@/modules/report/service/report.service";
 import { followerService } from "@/modules/user/service/follower.service";
 import { userService } from "@/modules/user/service/user.service";
 import { redisService } from "@/providers/redis.provider";
@@ -38,6 +40,8 @@ import {
   PostType,
   Prisma,
   ReplyPermission,
+  ReportStatus,
+  ReportTargetType,
   VisibilityPost,
 } from "@prisma/client";
 import { CreatePostDto, UpdatePostDto } from "../dto/post.dto";
@@ -47,6 +51,10 @@ import { topicsPostRepository } from "../repository/topics-post.repository";
 
 class PostService {
   private readonly postListCacheTtlSeconds = 60;
+  private readonly circlePostTypes = new Set<PostType>([
+    PostType.CIRCLE,
+    PostType.CIRCLE_REPLY,
+  ]);
 
   async getJudgeStatus(postId: number) {
     return {
@@ -795,10 +803,71 @@ class PostService {
 
   async report(
     publicId: string,
-    payload: { reason: string; userId: string },
+    payload: {
+      reason: string;
+      type: ReportTargetType;
+      reporterId: string;
+    },
   ): Promise<void> {
-    // stub: no-op
-    return;
+    if (payload.type === ReportTargetType.USER) {
+      const targetUser = await userService.findByUserId(publicId);
+      if (!targetUser) {
+        throw new NotFoundException("User not found");
+      }
+
+      if (targetUser.id === payload.reporterId) {
+        throw new ForbiddenException("Users cannot report themselves");
+      }
+
+      await reportService.create({
+        reporterId: payload.reporterId,
+        targetType: ReportTargetType.USER,
+        targetId: targetUser.id,
+        reason: payload.reason,
+        status: ReportStatus.PENDING,
+      });
+      return;
+    }
+
+    const targetPost = await postRepository.findReportTargetByPublicId(publicId);
+    if (!targetPost) {
+      throw new NotFoundException("Post not found");
+    }
+
+    if (targetPost.userId === payload.reporterId) {
+      throw new ForbiddenException("Users cannot report their own posts");
+    }
+
+    const isCirclePost = this.circlePostTypes.has(targetPost.type);
+    if (payload.type === ReportTargetType.POST && isCirclePost) {
+      throw new BadRequestException(
+        "type post only supports non-circle posts",
+      );
+    }
+
+    if (payload.type === ReportTargetType.CIRCLE && !isCirclePost) {
+      throw new BadRequestException(
+        "type circle only supports circle posts",
+      );
+    }
+
+    const report = await reportService.create({
+      reporterId: payload.reporterId,
+      targetType: payload.type,
+      targetId: targetPost.publicId,
+      reason: payload.reason,
+      status: ReportStatus.PENDING,
+    });
+
+    await evaluationProducer.enqueueEvaluationReport({
+      reportId: report.id,
+      type: payload.type,
+      targetPublicId: targetPost.publicId,
+      targetContent: targetPost.content,
+      reason: payload.reason,
+      reporterId: payload.reporterId,
+      reportedUserId: targetPost.userId,
+    });
   }
 }
 

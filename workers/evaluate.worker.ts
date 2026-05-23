@@ -10,7 +10,12 @@ import { circleExpLogService } from "@/modules/circle/service/circle-exp-log.ser
 import { circlePostQualityLogService } from "@/modules/circle/service/circle-post-quality-log.service";
 import { mixedBreadService } from "@/modules/mixed-bread/service/mixed-bread.service";
 import { pineconeService } from "@/modules/pinecone/service/pinecone.service";
+import { postRepository } from "@/modules/post/repository/post.repository";
+import { reportRepository } from "@/modules/report/repository/report.repository";
+import { redisKey } from "@/constants/resolve-key/redis-key";
+import { redisService } from "@/providers/redis.provider";
 import { pineconeIndex } from "@/providers/pinecone.provider";
+import { ReportTargetType } from "@prisma/client";
 import { EVALUATION_JOB_NAME, QUEUE_NAME } from "../src/constants/queue";
 import { createWorker } from "../src/providers/bullmq.provider";
 
@@ -19,6 +24,16 @@ interface EvaluationPostJob {
     circlePublicId: string;
     userId: string;
     content: string;
+}
+
+interface EvaluationReportJob {
+    reportId: string;
+    type: ReportTargetType.POST | ReportTargetType.CIRCLE;
+    targetPublicId: string;
+    targetContent: string;
+    reason: string;
+    reporterId: string;
+    reportedUserId: string;
 }
 
 const processEvaluationPost = async (job: EvaluationPostJob) => {
@@ -135,12 +150,59 @@ const processEvaluationPost = async (job: EvaluationPostJob) => {
     }
 };
 
+const processEvaluationReport = async (job: EvaluationReportJob) => {
+    try {
+        const report = await reportRepository.findById(job.reportId);
+        if (!report) {
+            throw new Error(`Report ${job.reportId} not found`);
+        }
+
+        const result = await aiService.evaluateReportAI({
+            content: job.targetContent,
+            reason: job.reason,
+            targetType: job.type,
+        });
+
+        const normalizedConfidence = Number(
+            Math.max(0, Math.min(1, result.confidence)).toFixed(2),
+        );
+
+        await reportRepository.updateById(job.reportId, {
+            assistantNote: result.assistantNote,
+            confidence: normalizedConfidence,
+        });
+
+        if (
+            normalizedConfidence >= 0.96 &&
+            [ReportTargetType.POST, ReportTargetType.CIRCLE].includes(job.type)
+        ) {
+            await postRepository.updateIsHidden(job.targetPublicId, true);
+            await redisService.incr(redisKey.post.listVersion());
+        }
+
+        return {
+            processed: true,
+            reportId: job.reportId,
+            confidence: normalizedConfidence,
+            hidden: normalizedConfidence >= 0.96,
+        };
+    } catch (error) {
+        console.error(
+            `[EVALUATE] Error processing report ${job.reportId}:`,
+            error,
+        );
+        throw error;
+    }
+};
+
 export const evaluateWorker = createWorker(
     QUEUE_NAME.EVALUATION_QUEUE,
     async (job) => {
         switch (job.name) {
             case EVALUATION_JOB_NAME.EVALUATION_POST:
                 return processEvaluationPost(job.data);
+            case EVALUATION_JOB_NAME.EVALUATION_REPORT:
+                return processEvaluationReport(job.data);
             default:
                 console.warn(`Unknown job name: ${job.name}`);
                 return null;

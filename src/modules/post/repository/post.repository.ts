@@ -58,7 +58,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
     );
     return prisma.post.findMany({
       where: {
-        AND: [{ isDeleted: false }, where ?? {}],
+        AND: [{ isDeleted: false }, { isHidden: false }, where ?? {}],
       },
       orderBy: sortOrder,
       take: after ? take + 1 : take,
@@ -318,6 +318,21 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
     });
   }
 
+  async findReportTargetByPublicId(publicId: string) {
+    return prisma.post.findFirst({
+      where: {
+        publicId,
+        isDeleted: false,
+      },
+      select: {
+        publicId: true,
+        userId: true,
+        content: true,
+        type: true,
+      },
+    });
+  }
+
   async updateByPublicId(
     publicId: string,
     payload: UpdatePostDto,
@@ -360,6 +375,13 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
     await prisma.post.update({
       where: { publicId },
       data: { isGhost },
+    });
+  }
+
+  async updateIsHidden(publicId: string, isHidden: boolean): Promise<void> {
+    await prisma.post.update({
+      where: { publicId },
+      data: { isHidden },
     });
   }
 

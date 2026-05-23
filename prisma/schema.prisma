@@ -64,6 +64,7 @@ enum UserStatus {
 enum ReportTargetType {
   POST
   USER
+  CIRCLE
 }
 
 enum ReportStatus {
@@ -320,16 +321,19 @@ model User {
 }
 
 model Report {
-  id         String           @id @default(cuid())
-  reporterId String           @map("reporter_id")
-  targetType ReportTargetType @map("target_type")
-  targetId   String           @map("target_id") @db.VarChar(255)
-  reason     String           @db.Text
-  status     ReportStatus     @default(PENDING)
-  adminNote  String?          @map("admin_note") @db.Text
-  createdAt  DateTime         @default(now()) @map("created_at")
+  id            String           @id @default(cuid())
+  reporterId    String           @map("reporter_id")
+  targetType    ReportTargetType @map("target_type")
+  targetId      String           @map("target_id") @db.VarChar(255)
+  reason        String           @db.Text
+  status        ReportStatus     @default(PENDING)
+  assistantNote String?          @map("assistant_note") @db.Text
+  confidence    Decimal?         @db.Decimal(3, 2) // 0.00 - 1.00, chỉ số này do hệ thống tự động đánh giá dựa trên nội dung report 
+  // và lịch sử của người báo cáo, giúp admin ưu tiên xử lý những report có độ tin cậy cao
+  adminNote     String?          @map("admin_note") @db.Text
+  createdAt     DateTime         @default(now()) @map("created_at")
 
-  reporter User @relation("UserReports", fields: [reporterId], references: [id])
+  reporter User @relation("UserReports", fields: [reporterId], references: [id]) 
 
   @@index([reporterId], map: "idx_reports_reporter_id")
   @@index([targetType, targetId], map: "idx_reports_target")
@@ -449,6 +453,8 @@ model Post {
 
   root   Post?  @relation("PostRoot", fields: [rootPostId], references: [id])
   thread Post[] @relation("PostRoot")
+
+  isHidden Boolean @default(false) @map("is_hidden") // bot ẩn bài viết khỏi feed, chỉ hiển thị khi truy cập trực tiếp, dùng cho trường hợp bài viết bị report nhiều lần hoặc vi phạm chính sách nhưng chưa đến mức xóa hoàn toàn
 
   media                   PostMedia[]
   mentions                PostMention[]

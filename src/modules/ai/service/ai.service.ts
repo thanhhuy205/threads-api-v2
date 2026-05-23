@@ -1,5 +1,9 @@
-import { POST_SCORING_SYSTEM_PROMPT } from "@/modules/ai/promt/system.promt";
+import {
+  POST_SCORING_SYSTEM_PROMPT,
+  REPORT_EVALUATION_SYSTEM_PROMPT,
+} from "@/modules/ai/promt/system.promt";
 import { openrouter } from "@/providers/openrouter.provider";
+import { ReportTargetType } from "@prisma/client";
 class AiService {
   async moderateContent(content: string) {
     // TODO: AI Content Moderation - detect toxic/spam, put in admin queue or auto hide
@@ -119,6 +123,75 @@ class AiService {
 
 
     return parsed
+  }
+
+  async evaluateReportAI(input: {
+    content: string;
+    reason: string;
+    targetType: ReportTargetType.POST | ReportTargetType.CIRCLE;
+  }) {
+    const response = await openrouter.chat.send({
+      chatRequest: {
+        models: [
+          "openai/gpt-oss-120b:free",
+          "qwen/qwen3-235b-a22b:free",
+          "deepseek/deepseek-chat-v3-0324:free",
+        ],
+        messages: [
+          {
+            role: "system",
+            content: REPORT_EVALUATION_SYSTEM_PROMPT,
+          },
+          {
+            role: "user",
+            content: `
+            Evaluate report credibility.
+
+            Target type: ${input.targetType}
+            Report reason: ${input.reason}
+            Target content:
+            ${input.content}
+`,
+          },
+        ],
+        responseFormat: {
+          type: "json_schema",
+          jsonSchema: {
+            name: "report_evaluation_result",
+            strict: true,
+            schema: {
+              type: "object",
+              properties: {
+                assistantNote: {
+                  type: "string",
+                },
+                confidence: {
+                  type: "number",
+                  minimum: 0,
+                  maximum: 1,
+                },
+              },
+              required: ["assistantNote", "confidence"],
+              additionalProperties: false,
+            },
+          },
+        },
+        stream: false,
+        temperature: 0.1,
+      },
+    });
+
+    const rawContent = response.choices[0]?.message?.content;
+    if (!rawContent) {
+      throw new Error("AI report evaluation response is empty");
+    }
+
+    const parsed = JSON.parse(rawContent) as {
+      assistantNote: string;
+      confidence: number;
+    };
+
+    return parsed;
   }
 }
 

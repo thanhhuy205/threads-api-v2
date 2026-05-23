@@ -334,7 +334,10 @@ class PostController {
       return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
     }
 
-    await postService.report(req.params.publicId, { ...req.body, userId });
+    await postService.report(req.params.publicId, {
+      ...req.body,
+      reporterId: userId,
+    });
     return res.success(200, POST_MESSAGE.RETRIEVED, { reported: true });
   }
 

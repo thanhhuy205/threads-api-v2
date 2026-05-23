@@ -351,13 +351,13 @@ export const adminSwaggerPaths = {
             },
         },
     },
-    '/admin/daily-quests/{id}/disable': {
+    '/admin/daily-quests/{code}/disable': {
         patch: {
             tags: ['Admin'],
             summary: 'Disable daily quest',
             security: bearerAuthSecurity,
             parameters: [
-                { name: 'id', in: 'path', required: true, schema: { type: 'integer', example: 1 } },
+                { name: 'code', in: 'path', required: true, schema: { type: 'string', example: 'COMMENT_3' } },
             ],
             responses: {
                 200: {
