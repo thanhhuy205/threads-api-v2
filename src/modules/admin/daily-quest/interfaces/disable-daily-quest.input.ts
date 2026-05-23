@@ -1,3 +1,3 @@
 export interface DisableDailyQuestInput {
-  id: number;
+  code: string;
 }

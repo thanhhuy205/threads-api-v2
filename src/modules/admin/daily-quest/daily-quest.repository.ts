@@ -20,8 +20,7 @@ type AdminDailyQuestRow = Prisma.DailyQuestGetPayload<{
 }>;
 
 class DailyQuestRepository
-  implements IPagination<Prisma.DailyQuestWhereInput, AdminDailyQuestRow>
-{
+  implements IPagination<Prisma.DailyQuestWhereInput, AdminDailyQuestRow> {
   findAll({
     page,
     limit,
@@ -91,10 +90,10 @@ class DailyQuestRepository
     });
   }
 
-  async disableDailyQuest(id: number) {
+  async disableDailyQuest(code: string) {
     return prisma.dailyQuest.update({
       where: {
-        id,
+        code,
       },
       data: {
         isActive: false,

@@ -1,10 +1,10 @@
 import { UnauthorizedException } from "@/errors/error";
 import { getPagination } from "@/shared/pagination/pagination";
 import { Request, Response } from "express";
+import { dailyQuestService } from "./daily-quest.service";
 import type { CreateDailyQuestRequestDto } from "./dto/request/create-daily-quest.request.dto";
 import type { DisableDailyQuestParamsDto } from "./dto/request/disable-daily-quest.params.dto";
 import type { ListDailyQuestsQueryDto } from "./dto/request/list-daily-quests.query.dto";
-import { dailyQuestService } from "./daily-quest.service";
 
 class DailyQuestController {
   createDailyQuest = async (
@@ -44,7 +44,7 @@ class DailyQuestController {
     res: Response,
   ) => {
     const result = await dailyQuestService.disableDailyQuest({
-      id: req.params.id,
+      code: (req.params.code),
     });
 
     return res.success(200, "Daily quest disabled successfully", result);

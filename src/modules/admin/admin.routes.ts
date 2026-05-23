@@ -55,7 +55,7 @@ adminRouter.get(
 );
 
 adminRouter.patch(
-  "/daily-quests/:id/disable",
+  "/daily-quests/:code/disable",
   checkRole(UserRoleType.ADMIN),
   validate(disableDailyQuestParamsSchema, "params"),
   dailyQuestController.disableDailyQuest,

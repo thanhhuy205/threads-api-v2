@@ -1,8 +1,8 @@
 import { buildPaginationResponse } from "@/shared/pagination/pagination";
-import type { CreateDailyQuestInput } from "./interfaces/create-daily-quest.input";
 import { dailyQuestRepository } from "./daily-quest.repository";
-import type { GetAdminDailyQuestsInput } from "./interfaces/get-admin-daily-quests.input";
+import type { CreateDailyQuestInput } from "./interfaces/create-daily-quest.input";
 import type { DisableDailyQuestInput } from "./interfaces/disable-daily-quest.input";
+import type { GetAdminDailyQuestsInput } from "./interfaces/get-admin-daily-quests.input";
 
 class DailyQuestService {
   async createDailyQuest(input: CreateDailyQuestInput) {
@@ -22,8 +22,7 @@ class DailyQuestService {
   }
 
   async disableDailyQuest(input: DisableDailyQuestInput) {
-    return dailyQuestRepository.disableDailyQuest(input.id);
+    return dailyQuestRepository.disableDailyQuest(input.code);
   }
 }
-
 export const dailyQuestService = new DailyQuestService();

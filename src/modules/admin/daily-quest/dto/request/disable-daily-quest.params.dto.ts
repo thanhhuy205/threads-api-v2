@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const disableDailyQuestParamsSchema = z.object({
-  id: z.coerce.number().int("Daily quest id must be an integer").positive("Daily quest id must be a positive number"),
+  code: z.coerce.string().trim().min(1).max(191),
 });
 
 export type DisableDailyQuestParamsDto = z.infer<typeof disableDailyQuestParamsSchema>;
