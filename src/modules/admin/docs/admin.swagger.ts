@@ -109,6 +109,74 @@ export const adminSwaggerSchemas = {
             data: { type: 'object' },
         },
     },
+    AdminReportTargetPost: {
+        type: 'object',
+        nullable: true,
+        properties: {
+            publicId: { type: 'string', example: 'post_123' },
+            userId: { type: 'string', example: 'user_123' },
+            content: { type: 'string', example: 'Reported post content' },
+            type: { type: 'string', example: 'POST' },
+            visibility: { type: 'string', example: 'PUBLIC' },
+            isDeleted: { type: 'boolean', example: false },
+            isHidden: { type: 'boolean', example: false },
+            createdAt: { type: 'string', format: 'date-time' },
+        },
+    },
+    AdminReportTargetUser: {
+        type: 'object',
+        nullable: true,
+        properties: {
+            id: { type: 'string', example: 'user_456' },
+            username: { type: 'string', example: 'reported_user' },
+            name: { type: ['string', 'null'], example: 'Reported User' },
+            avatar: { type: ['string', 'null'], example: null },
+            email: { type: 'string', example: 'reported@example.com' },
+            status: { type: 'string', example: 'ACTIVE' },
+            createdAt: { type: 'string', format: 'date-time' },
+        },
+    },
+    AdminReportReporter: {
+        type: 'object',
+        properties: {
+            id: { type: 'string', example: 'user_123' },
+            username: { type: 'string', example: 'reporter' },
+            name: { type: ['string', 'null'], example: 'Reporter' },
+            avatar: { type: ['string', 'null'], example: null },
+            email: { type: 'string', example: 'reporter@example.com' },
+        },
+    },
+    AdminReportItem: {
+        type: 'object',
+        properties: {
+            id: { type: 'string', example: 'cm_report_123' },
+            reporterId: { type: 'string', example: 'user_123' },
+            reporter: { $ref: '#/components/schemas/AdminReportReporter' },
+            targetType: { type: 'string', enum: ['POST', 'USER', 'CIRCLE'], example: 'POST' },
+            targetId: { type: 'string', example: 'post_123' },
+            reason: { type: 'string', example: 'Spam content' },
+            status: { type: 'string', enum: ['PENDING', 'RESOLVED', 'DISMISSED'], example: 'PENDING' },
+            assistantNote: { type: ['string', 'null'], example: 'Potential spam' },
+            confidence: { type: ['number', 'null'], example: 0.82 },
+            adminNote: { type: ['string', 'null'], example: null },
+            createdAt: { type: 'string', format: 'date-time' },
+            post: { $ref: '#/components/schemas/AdminReportTargetPost' },
+            targetUser: { $ref: '#/components/schemas/AdminReportTargetUser' },
+        },
+    },
+    AdminReportListResponse: {
+        type: 'object',
+        properties: {
+            success: { type: 'boolean', example: true },
+            message: { type: 'string', example: 'Reports retrieved successfully' },
+            data: {
+                type: 'array',
+                items: { $ref: '#/components/schemas/AdminReportItem' },
+            },
+            pagination: { $ref: '#/components/schemas/AdminOffsetPagination' },
+        },
+        required: ['success', 'message', 'data', 'pagination'],
+    },
     AdminTrendingHashtagsResponse: {
         type: 'object',
         properties: {
@@ -274,6 +342,32 @@ export const adminSwaggerPaths = {
                     description: 'User banned successfully',
                     content: { 'application/json': { schema: { $ref: '#/components/schemas/AdminBanUserResponse' } } },
                 },
+                401: { description: COMMON_MESSAGE.UNAUTHORIZED },
+                403: { description: COMMON_MESSAGE.FORBIDDEN },
+            },
+        },
+    },
+    '/admin/reports': {
+        get: {
+            tags: ['Admin'],
+            summary: 'List reports for admin',
+            description: 'List reports by target type. type defaults to post. For type post or circle, target data is returned in post. For type user, target data is returned in targetUser.',
+            security: bearerAuthSecurity,
+            parameters: [
+                { name: 'page', in: 'query', schema: { type: 'number', example: 1 } },
+                { name: 'limit', in: 'query', schema: { type: 'number', example: 10 } },
+                {
+                    name: 'type',
+                    in: 'query',
+                    schema: { type: 'string', enum: ['post', 'user', 'circle'], default: 'post' },
+                },
+            ],
+            responses: {
+                200: {
+                    description: 'Reports retrieved successfully',
+                    content: { 'application/json': { schema: { $ref: '#/components/schemas/AdminReportListResponse' } } },
+                },
+                400: { description: COMMON_MESSAGE.VALIDATION_FAILED },
                 401: { description: COMMON_MESSAGE.UNAUTHORIZED },
                 403: { description: COMMON_MESSAGE.FORBIDDEN },
             },

@@ -9,6 +9,7 @@ import { dailyQuestController } from "./daily-quest/daily-quest.controller";
 import { validate } from "@/middlewares/validate";
 import { createDailyQuestRequestSchema } from "./daily-quest/dto/request/create-daily-quest.request.dto";
 import { disableDailyQuestParamsSchema } from "./daily-quest/dto/request/disable-daily-quest.params.dto";
+import { listReportsQuerySchema } from "./report-management/dto/request/list-reports.query.dto";
 
 const adminRouter = Router();
 
@@ -21,6 +22,13 @@ adminRouter.patch(
   "/users/:userId/ban",
   checkRole(UserRoleType.ADMIN),
   userManagementController.banUser,
+);
+
+adminRouter.get(
+  "/reports",
+  checkRole(UserRoleType.ADMIN),
+  validate(listReportsQuerySchema, "query"),
+  reportManagementController.listReports,
 );
 
 adminRouter.patch(
