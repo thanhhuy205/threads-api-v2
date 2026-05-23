@@ -208,19 +208,15 @@ class CircleInvitationRepository implements ICursorPagination<
     circleId,
     page,
     limit,
-    type,
   }: {
     circleId: number;
     page: number;
     limit: number;
-    type: "invitation" | "join_request";
   }) {
     const { offset, currentLimit } = buildOffsetPagination({ page, limit });
     const where: Prisma.CircleInvitationWhereInput = {
       circleId,
-      ...(type === "invitation"
-        ? { inviterId: { not: { equals: prisma.circleInvitation.fields.userId } } }
-        : { inviterId: { equals: prisma.circleInvitation.fields.userId } }),
+      inviterId: { not: { equals: prisma.circleInvitation.fields.userId } },
     };
 
     return prisma.circleInvitation.findMany({
@@ -257,18 +253,23 @@ class CircleInvitationRepository implements ICursorPagination<
     });
   }
 
-  countByCircleId({
-    circleId,
-    type,
-  }: {
-    circleId: number;
-    type: "invitation" | "join_request";
-  }) {
+  countByCircleId(circleId: number) {
     const where: Prisma.CircleInvitationWhereInput = {
       circleId,
-      ...(type === "invitation"
-        ? { inviterId: { not: { equals: prisma.circleInvitation.fields.userId } } }
-        : { inviterId: { equals: prisma.circleInvitation.fields.userId } }),
+      inviterId: { not: { equals: prisma.circleInvitation.fields.userId } },
+    };
+
+    return prisma.circleInvitation.count({ where });
+  }
+
+  countPendingInvitationsByCircleIdWithinRange(circleId: number, from: Date) {
+    const where: Prisma.CircleInvitationWhereInput = {
+      circleId,
+      status: CircleInvitationStatus.PENDING,
+      inviterId: { not: { equals: prisma.circleInvitation.fields.userId } },
+      createdAt: {
+        gte: from,
+      },
     };
 
     return prisma.circleInvitation.count({ where });

@@ -11,6 +11,7 @@ import {
   CircleRepliesQueryDto,
   CircleReplyBodyDto,
   CircleReplyParamsDto,
+  CircleStatsQueryDto,
   CprBodyDto,
   ExpLogQueryDto,
   OffsetLimitQueryDto,
@@ -259,11 +260,19 @@ class CircleController {
   }
 
   async getCircleStats(
-    req: Request<CirclePublicIdParamsDto>,
+    req: Request<CirclePublicIdParamsDto, {}, {}, CircleStatsQueryDto>,
     res: Response,
   ) {
+    const userId = req.user?.sub;
+    if (!userId) {
+      return res.error(401, "Unauthorized");
+    }
     const { publicId } = req.params;
-    const data = await circleService.getCircleStats(publicId);
+    const data = await circleService.getCircleStats(
+      publicId,
+      userId,
+      req.query_parsed.type,
+    );
     return res.success(200, "Circle stats retrieved successfully", data);
   }
 

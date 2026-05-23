@@ -147,6 +147,17 @@ class CircleMemberRepository implements ICursorPagination<Prisma.CircleMemberWhe
             },
         });
     }
+
+    countMembersByCircleIdWithinRange(circleId: number, from: Date) {
+        return prisma.circleMember.count({
+            where: {
+                circleId,
+                createdAt: {
+                    gte: from,
+                },
+            },
+        });
+    }
 }
 
 export const circleMemberRepository = new CircleMemberRepository();

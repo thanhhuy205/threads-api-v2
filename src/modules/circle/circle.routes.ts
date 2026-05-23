@@ -9,6 +9,7 @@ import {
     circlePostsQuerySchema,
     circlePublicIdParamsSchema,
     circleReplyParamsSchema,
+    circleStatsQuerySchema,
     cprBodySchema,
     createCirclePostRuntimeSchema,
     createCircleReplyRuntimeSchema,
@@ -126,6 +127,7 @@ circleRouter.post(
 circleRouter.get(
     '/:publicId/stats',
     validate(circlePublicIdParamsSchema, 'params'),
+    validate(circleStatsQuerySchema, 'query'),
     circleController.getCircleStats,
 );
 

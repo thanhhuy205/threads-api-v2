@@ -311,6 +311,7 @@ model User {
   reports             Report[]             @relation("UserReports")
   postMentions        PostMention[]
   circleJoinRequests  CircleJoinRequest[]
+  dailyQuests         DailyQuest[]
 
   @@index([deletedAt], map: "idx_users_deleted_at")
   @@index([bannedUntil], map: "idx_users_banned_until")
@@ -670,12 +671,16 @@ model CircleMember {
 }
 
 model DailyQuest {
-  id            Int            @id @default(autoincrement())
-  code          String         @unique // "COMMENT_3", "POST_1", "REACT_5"
-  description   String         @db.VarChar(255)
-  karmaReward   Int // thường là 1, nhiệm vụ khó hơn là 2
-  requirement   Int // số lần cần hoàn thành
-  isActive      Boolean        @default(true)
+  id          Int      @id @default(autoincrement())
+  code        String   @unique // "COMMENT_3", "POST_1", "REACT_5"
+  description String   @db.VarChar(255)
+  karmaReward Int // thường là 1, nhiệm vụ khó hơn là 2
+  requirement Int // số lần cần hoàn thành
+  isActive    Boolean  @default(true)
+  createById  String   @map("create_by_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user          User           @relation(fields: [createById], references: [id])
   userQuestLogs UserQuestLog[]
 
   @@map("daily_quests")

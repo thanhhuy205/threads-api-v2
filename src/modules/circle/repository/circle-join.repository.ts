@@ -1,5 +1,6 @@
 import prisma from "@/config/prisma";
 import { buildPagination } from "@/shared/pagination/cursor-pagination";
+import { buildPagination as buildOffsetPagination } from "@/shared/pagination/pagination";
 import { Prisma, RequestStatus } from "@prisma/client";
 
 class CircleJoinRequestRepository implements ICursorPagination<
@@ -82,6 +83,63 @@ class CircleJoinRequestRepository implements ICursorPagination<
             },
         });
 
+    }
+
+    findByCircleIdPaginated({
+        circleId,
+        page,
+        limit,
+    }: {
+        circleId: number;
+        page: number;
+        limit: number;
+    }) {
+        const { offset, currentLimit } = buildOffsetPagination({ page, limit });
+
+        return prisma.circleJoinRequest.findMany({
+            where: {
+                circleId,
+            },
+            skip: offset,
+            take: currentLimit,
+            orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+            select: {
+                id: true,
+                circleId: true,
+                userId: true,
+                status: true,
+                reason: true,
+                createdAt: true,
+                user: {
+                    select: {
+                        name: true,
+                        username: true,
+                        avatar: true,
+                        bio: true,
+                    },
+                },
+            },
+        });
+    }
+
+    countByCircleId(circleId: number) {
+        return prisma.circleJoinRequest.count({
+            where: {
+                circleId,
+            },
+        });
+    }
+
+    countPendingByCircleIdWithinRange(circleId: number, from: Date) {
+        return prisma.circleJoinRequest.count({
+            where: {
+                circleId,
+                status: RequestStatus.PENDING,
+                createdAt: {
+                    gte: from,
+                },
+            },
+        });
     }
 
 }

@@ -111,6 +111,24 @@ class CircleExpLogRepository implements ICursorPagination<Prisma.CircleExpLogWhe
     });
   }
 
+  aggregateDeltaByCircleIdWithinRange(circleId: number, from: Date) {
+    return prisma.circleExpLog.aggregate({
+      where: {
+        circleId,
+        isDelta: true,
+        createdAt: {
+          gte: from,
+        },
+      },
+      _count: {
+        id: true,
+      },
+      _sum: {
+        expDelta: true,
+      },
+    });
+  }
+
   async findMemberJoinLog(
     circleId: number,
     userId: string,

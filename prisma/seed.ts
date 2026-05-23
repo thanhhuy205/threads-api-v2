@@ -1128,3 +1128,488 @@
 //         process.exit(1);
 //     })
 //     .finally(() => prisma.$disconnect());
+
+
+// prisma/seed-join-requests.ts
+// Seed: CircleJoinRequest — 100 xin tham gia mỗi circle
+// Chạy: npx ts-node prisma/seed-join-requests.ts
+
+// import { PrismaMariaDb } from "@prisma/adapter-mariadb";
+// import { PrismaClient, RequestStatus, UserStatus } from "@prisma/client";
+// import dotenv from "dotenv";
+// dotenv.config();
+
+// // ─── Prisma setup ─────────────────────────────────────────────────────────────
+
+// const adapter = new PrismaMariaDb({
+//     port: Number(process.env.DB_PORT) || 3306,
+//     host: process.env.DB_HOST || "localhost",
+//     user: process.env.DB_USER || "root",
+//     password: process.env.DB_PASSWORD || "password",
+//     database: process.env.DB_NAME || "threads_api",
+// });
+
+// const prisma = new PrismaClient({ adapter } as any);
+
+// // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+// function pick<T>(arr: T[]): T {
+//     return arr[Math.floor(Math.random() * arr.length)];
+// }
+
+// function shuffled<T>(arr: T[]): T[] {
+//     return [...arr].sort(() => Math.random() - 0.5);
+// }
+
+// function randomDate(daysAgo: number): Date {
+//     return new Date(Date.now() - Math.random() * daysAgo * 86_400_000);
+// }
+
+// // ─────────────────────────────────────────────────────────────────────────────
+// // Lý do xin tham gia — thực tế, đa dạng
+// // ─────────────────────────────────────────────────────────────────────────────
+
+// const REASONS: (string | null)[] = [
+//     // Có lý do cụ thể
+//     "Mình đang học lập trình và muốn tìm cộng đồng để hỏi han, chia sẻ kinh nghiệm.",
+//     "Mình là frontend dev 2 năm kinh nghiệm, muốn kết nối với anh em cùng ngành.",
+//     "Mình thấy nhóm này rất phù hợp với sở thích của mình, xin được tham gia ạ.",
+//     "Bạn bè giới thiệu nhóm này, nghe có vẻ rất hay, muốn vào xem thử.",
+//     "Mình đang tìm kiếm cơ hội học hỏi từ những người có kinh nghiệm hơn.",
+//     "Mình làm việc liên quan đến chủ đề này và muốn mở rộng network.",
+//     "Mình mới chuyển ngành, muốn được mentor và định hướng thêm.",
+//     "Đang trong quá trình tự học, cần một cộng đồng để có động lực tiếp tục.",
+//     "Mình có thể đóng góp kiến thức về phần backend nếu được vào nhóm.",
+//     "Thấy các bài viết trong nhóm rất chất lượng, muốn được là một phần của cộng đồng.",
+//     "Mình đang làm side project liên quan, muốn tìm collaborator hoặc feedback.",
+//     "Senior mình recommend nhóm này khi mình hỏi về resource học tập.",
+//     "Mình từng là lurker, giờ muốn contribute nhiều hơn nên xin join chính thức.",
+//     "Nhóm này active và helpful, mình muốn học hỏi từ các thảo luận ở đây.",
+//     "Mình là sinh viên năm 4 IT, đang cần chuẩn bị cho internship và full-time job.",
+//     "Mình có 5 năm kinh nghiệm và muốn chia sẻ lại với cộng đồng.",
+//     "Mình đang research về lĩnh vực này cho luận văn tốt nghiệp.",
+//     "Muốn tìm team để tham gia hackathon sắp tới, nhóm này có vẻ phù hợp.",
+//     "Mình vừa chuyển từ Hà Nội vào HCM, muốn kết nối với dev community ở đây.",
+//     "Nhìn qua các post thấy community rất lành mạnh và tích cực, muốn được tham gia.",
+//     // Không có lý do (null) — chiếm 30%
+//     null, null, null, null, null, null,
+// ];
+
+// // ─────────────────────────────────────────────────────────────────────────────
+// // STATUS WEIGHTS — phân phối thực tế
+// // PENDING nhiều nhất vì đây là queue chưa xử lý
+// // ─────────────────────────────────────────────────────────────────────────────
+
+// const STATUS_WEIGHTS: { status: RequestStatus; weight: number }[] = [
+//     { status: RequestStatus.PENDING, weight: 55 },
+//     { status: RequestStatus.ACCEPTED, weight: 25 },
+//     { status: RequestStatus.REJECTED, weight: 12 },
+//     { status: RequestStatus.CANCELLED, weight: 8 },
+// ];
+
+// function pickWeightedStatus(): RequestStatus {
+//     const total = STATUS_WEIGHTS.reduce((s, w) => s + w.weight, 0);
+//     let r = Math.random() * total;
+//     for (const { status, weight } of STATUS_WEIGHTS) {
+//         r -= weight;
+//         if (r <= 0) return status;
+//     }
+//     return RequestStatus.PENDING;
+// }
+
+// // ─────────────────────────────────────────────────────────────────────────────
+// // MAIN SEED
+// // ─────────────────────────────────────────────────────────────────────────────
+
+// async function seedJoinRequests(requestsPerCircle: number) {
+//     console.log(`\n🚪 Seed ${requestsPerCircle} join requests / circle...`);
+
+//     // Load circles
+//     const circles = await prisma.circle.findMany({
+//         select: {
+//             id: true,
+//             name: true,
+//             circleMembers: { select: { userId: true } },
+//         },
+//     });
+//     console.log(`   → ${circles.length} circles`);
+
+//     // Load users pool
+//     const allUsers = await prisma.user.findMany({
+//         where: { deletedAt: null, status: UserStatus.ACTIVE },
+//         select: { id: true },
+//     });
+//     console.log(`   → ${allUsers.length} users trong pool`);
+
+//     let totalCreated = 0;
+//     let totalSkipped = 0;
+
+//     for (const [ci, circle] of circles.entries()) {
+//         // Users đã là member → không xin join nữa
+//         const memberIds = new Set(circle.circleMembers.map(m => m.userId));
+
+//         // Load join requests đã có của circle này → tránh duplicate (userId + circleId)
+//         const existing = await prisma.circleJoinRequest.findMany({
+//             where: { circleId: circle.id },
+//             select: { userId: true },
+//         });
+//         const alreadyRequested = new Set(existing.map(r => r.userId));
+
+//         // Eligible: chưa là member + chưa request
+//         const eligible = shuffled(
+//             allUsers.filter(u => !memberIds.has(u.id) && !alreadyRequested.has(u.id))
+//         ).slice(0, requestsPerCircle);
+
+//         if (eligible.length === 0) {
+//             console.log(`   ${String(ci + 1).padStart(3)}/${circles.length}  "${circle.name}" — không có eligible user, skip`);
+//             continue;
+//         }
+
+//         // Batch insert
+//         const data = eligible.map(u => ({
+//             userId: u.id,
+//             circleId: circle.id,
+//             status: pickWeightedStatus(),
+//             reason: pick(REASONS),
+//             createdAt: randomDate(90),
+//         }));
+
+//         await prisma.circleJoinRequest.createMany({
+//             data,
+//             skipDuplicates: true,
+//         });
+
+//         totalCreated += data.length;
+//         const skipped = requestsPerCircle - data.length;
+//         totalSkipped += skipped;
+
+//         console.log(
+//             `   ${String(ci + 1).padStart(3)}/${circles.length}` +
+//             `  "${circle.name.slice(0, 30).padEnd(30)}"` +
+//             `  ✅ ${data.length} tạo` +
+//             (skipped > 0 ? `  ⏭️  ${skipped} skip` : "")
+//         );
+//     }
+
+//     // ── Thống kê status ───────────────────────────────────────────────────────
+//     const stats = await prisma.circleJoinRequest.groupBy({
+//         by: ["status"],
+//         _count: { id: true },
+//         orderBy: { _count: { id: "desc" } },
+//     });
+
+//     console.log(`
+//    📊 Phân phối status:`);
+//     for (const s of stats) {
+//         const bar = "█".repeat(Math.min(30, Math.round(s._count.id / 20)));
+//         console.log(`      ${s.status.padEnd(10)}: ${String(s._count.id).padStart(6)}  ${bar}`);
+//     }
+
+//     console.log(`\n   ✅ Tổng tạo: ${totalCreated} | ⏭️  Skip: ${totalSkipped}`);
+// }
+
+// // ─────────────────────────────────────────────────────────────────────────────
+
+// async function main() {
+//     console.log("🌱 ===== SEED CIRCLE JOIN REQUESTS =====");
+
+//     await seedJoinRequests(100);
+
+//     const [total, pending, accepted, rejected, cancelled] = await Promise.all([
+//         prisma.circleJoinRequest.count(),
+//         prisma.circleJoinRequest.count({ where: { status: RequestStatus.PENDING } }),
+//         prisma.circleJoinRequest.count({ where: { status: RequestStatus.ACCEPTED } }),
+//         prisma.circleJoinRequest.count({ where: { status: RequestStatus.REJECTED } }),
+//         prisma.circleJoinRequest.count({ where: { status: RequestStatus.CANCELLED } }),
+//     ]);
+
+//     console.log(`
+// 🎉 ===== DONE =====
+//    🚪 Tổng join requests : ${total}
+//       ⏳ PENDING          : ${pending}
+//       ✅ ACCEPTED         : ${accepted}
+//       ❌ REJECTED         : ${rejected}
+//       🚫 CANCELLED        : ${cancelled}
+// ===================`);
+// }
+
+// main()
+//     .catch(e => { console.error("❌ Seed thất bại:", e); process.exit(1); })
+//     .finally(() => prisma.$disconnect());
+// prisma/seed-join-requests-topup.ts
+// Top-up: đảm bảo mỗi circle có ÍT NHẤT 100 join requests
+// Chỉ tạo thêm phần còn thiếu — không đụng đến data cũ
+// Chạy: npx ts-node prisma/seed-join-requests-topup.ts
+
+// import { PrismaMariaDb } from "@prisma/adapter-mariadb";
+// import { PrismaClient, RequestStatus, UserStatus } from "@prisma/client";
+// import dotenv from "dotenv";
+// dotenv.config();
+
+// // ─── Prisma setup ─────────────────────────────────────────────────────────────
+
+// const adapter = new PrismaMariaDb({
+//     port: Number(process.env.DB_PORT) || 3306,
+//     host: process.env.DB_HOST || "localhost",
+//     user: process.env.DB_USER || "root",
+//     password: process.env.DB_PASSWORD || "password",
+//     database: process.env.DB_NAME || "threads_api",
+// });
+
+// const prisma = new PrismaClient({ adapter } as any);
+
+// // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+// function pick<T>(arr: T[]): T {
+//     return arr[Math.floor(Math.random() * arr.length)];
+// }
+
+// function shuffled<T>(arr: T[]): T[] {
+//     return [...arr].sort(() => Math.random() - 0.5);
+// }
+
+// function randomDate(daysAgo: number): Date {
+//     return new Date(Date.now() - Math.random() * daysAgo * 86_400_000);
+// }
+
+// // ─────────────────────────────────────────────────────────────────────────────
+// // Lý do xin tham gia
+// // ─────────────────────────────────────────────────────────────────────────────
+
+// const REASONS: (string | null)[] = [
+//     "Mình đang học lập trình và muốn tìm cộng đồng để hỏi han, chia sẻ kinh nghiệm.",
+//     "Mình là frontend dev 2 năm kinh nghiệm, muốn kết nối với anh em cùng ngành.",
+//     "Mình thấy nhóm này rất phù hợp với sở thích của mình, xin được tham gia ạ.",
+//     "Bạn bè giới thiệu nhóm này, nghe có vẻ rất hay, muốn vào xem thử.",
+//     "Mình đang tìm kiếm cơ hội học hỏi từ những người có kinh nghiệm hơn.",
+//     "Mình làm việc liên quan đến chủ đề này và muốn mở rộng network.",
+//     "Mình mới chuyển ngành, muốn được mentor và định hướng thêm.",
+//     "Đang trong quá trình tự học, cần một cộng đồng để có động lực tiếp tục.",
+//     "Mình có thể đóng góp kiến thức về phần backend nếu được vào nhóm.",
+//     "Thấy các bài viết trong nhóm rất chất lượng, muốn được là một phần của cộng đồng.",
+//     "Mình đang làm side project liên quan, muốn tìm collaborator hoặc feedback.",
+//     "Senior mình recommend nhóm này khi mình hỏi về resource học tập.",
+//     "Mình từng là lurker, giờ muốn contribute nhiều hơn nên xin join chính thức.",
+//     "Nhóm này active và helpful, mình muốn học hỏi từ các thảo luận ở đây.",
+//     "Mình là sinh viên năm 4 IT, đang cần chuẩn bị cho internship và full-time job.",
+//     "Mình có 5 năm kinh nghiệm và muốn chia sẻ lại với cộng đồng.",
+//     "Mình đang research về lĩnh vực này cho luận văn tốt nghiệp.",
+//     "Muốn tìm team để tham gia hackathon sắp tới, nhóm này có vẻ phù hợp.",
+//     "Mình vừa chuyển từ Hà Nội vào HCM, muốn kết nối với dev community ở đây.",
+//     "Nhìn qua các post thấy community rất lành mạnh và tích cực, muốn được tham gia.",
+//     null, null, null, null, null, null,
+// ];
+
+// // ─────────────────────────────────────────────────────────────────────────────
+// // Status weights — PENDING nhiều nhất
+// // ─────────────────────────────────────────────────────────────────────────────
+
+// const STATUS_WEIGHTS: { status: RequestStatus; weight: number }[] = [
+//     { status: RequestStatus.PENDING, weight: 55 },
+//     { status: RequestStatus.ACCEPTED, weight: 25 },
+//     { status: RequestStatus.REJECTED, weight: 12 },
+//     { status: RequestStatus.CANCELLED, weight: 8 },
+// ];
+
+// function pickWeightedStatus(): RequestStatus {
+//     const total = STATUS_WEIGHTS.reduce((s, w) => s + w.weight, 0);
+//     let r = Math.random() * total;
+//     for (const { status, weight } of STATUS_WEIGHTS) {
+//         r -= weight;
+//         if (r <= 0) return status;
+//     }
+//     return RequestStatus.PENDING;
+// }
+
+// // ─────────────────────────────────────────────────────────────────────────────
+// // TOP-UP SEED
+// // ─────────────────────────────────────────────────────────────────────────────
+
+// async function topUpJoinRequests(minRequestsPerCircle: number) {
+//     console.log(`\n🚪 Top-up: đảm bảo mỗi circle có ít nhất ${minRequestsPerCircle} join requests...\n`);
+
+//     // Load toàn bộ circles kèm member list
+//     const circles = await prisma.circle.findMany({
+//         select: {
+//             id: true,
+//             name: true,
+//             circleMembers: { select: { userId: true } },
+//         },
+//     });
+//     console.log(`   → ${circles.length} circles`);
+
+//     // Load toàn bộ users active
+//     const allUsers = await prisma.user.findMany({
+//         where: { deletedAt: null, status: UserStatus.ACTIVE },
+//         select: { id: true },
+//     });
+//     console.log(`   → ${allUsers.length} active users trong pool\n`);
+
+//     let totalCreated = 0;
+//     let totalSkipped = 0;   // circles đã đủ, không cần thêm
+//     let totalShortage = 0;   // circles không đủ user eligible
+
+//     // Thống kê trước để hiển thị
+//     const circleStats: Array<{
+//         name: string;
+//         existing: number;
+//         needed: number;
+//         eligible: number;
+//         created: number;
+//         warning?: string;
+//     }> = [];
+
+//     for (const [ci, circle] of circles.entries()) {
+//         const prefix = `   ${String(ci + 1).padStart(3)}/${circles.length}`;
+//         const shortName = circle.name.slice(0, 28).padEnd(28);
+
+//         // ── 1. Đếm request đã có ────────────────────────────────────────────
+//         const existingCount = await prisma.circleJoinRequest.count({
+//             where: { circleId: circle.id },
+//         });
+
+//         const needed = minRequestsPerCircle - existingCount;
+
+//         if (needed <= 0) {
+//             console.log(`${prefix}  "${shortName}"  ✅ đã có ${existingCount} (>= ${minRequestsPerCircle}), skip`);
+//             totalSkipped++;
+//             circleStats.push({ name: circle.name, existing: existingCount, needed: 0, eligible: 0, created: 0 });
+//             continue;
+//         }
+
+//         // ── 2. Xác định user eligible ────────────────────────────────────────
+//         // Loại: đã là member, hoặc đã có request (bất kỳ status)
+//         const memberIds = new Set(circle.circleMembers.map(m => m.userId));
+
+//         const alreadyRequestedRows = await prisma.circleJoinRequest.findMany({
+//             where: { circleId: circle.id },
+//             select: { userId: true },
+//         });
+//         const alreadyRequestedIds = new Set(alreadyRequestedRows.map(r => r.userId));
+
+//         const eligible = shuffled(
+//             allUsers.filter(u =>
+//                 !memberIds.has(u.id) && !alreadyRequestedIds.has(u.id)
+//             )
+//         ).slice(0, needed);
+
+//         if (eligible.length === 0) {
+//             console.log(`${prefix}  "${shortName}"  ⚠️  cần ${needed} nhưng 0 user eligible`);
+//             totalShortage++;
+//             circleStats.push({
+//                 name: circle.name, existing: existingCount,
+//                 needed, eligible: 0, created: 0,
+//                 warning: `không đủ user (pool đã cạn)`,
+//             });
+//             continue;
+//         }
+
+//         // ── 3. Batch insert ──────────────────────────────────────────────────
+//         const data = eligible.map(u => ({
+//             userId: u.id,
+//             circleId: circle.id,
+//             status: pickWeightedStatus(),
+//             reason: pick(REASONS),
+//             createdAt: randomDate(90),
+//         }));
+
+//         await prisma.circleJoinRequest.createMany({
+//             data,
+//             skipDuplicates: true,  // guard extra safety
+//         });
+
+//         const created = data.length;
+//         totalCreated += created;
+
+//         const warning = created < needed
+//             ? `⚠️  chỉ tạo được ${created}/${needed} (không đủ user)`
+//             : "";
+
+//         console.log(
+//             `${prefix}  "${shortName}"` +
+//             `  [có sẵn: ${String(existingCount).padStart(4)}]` +
+//             `  [cần thêm: ${String(needed).padStart(3)}]` +
+//             `  [tạo: ${String(created).padStart(3)}]` +
+//             (warning ? `  ${warning}` : "  ✅")
+//         );
+
+//         circleStats.push({
+//             name: circle.name, existing: existingCount,
+//             needed, eligible: eligible.length,
+//             created,
+//             warning: created < needed ? "không đủ user" : undefined,
+//         });
+//     }
+
+//     // ── Summary ───────────────────────────────────────────────────────────────
+//     const circlesAtTarget = circleStats.filter(s => (s.existing + s.created) >= minRequestsPerCircle).length;
+//     const circlesBelowTarget = circleStats.filter(s => (s.existing + s.created) < minRequestsPerCircle).length;
+
+//     console.log(`
+//    ─────────────────────────────────────
+//    📊 Kết quả top-up:
+//       ✅ Tạo thêm        : ${totalCreated} requests
+//       ⏭️  Skip (đã đủ)   : ${totalSkipped} circles
+//       ⚠️  Không đủ user  : ${totalShortage} circles
+   
+//    🎯 Đạt target (≥ ${minRequestsPerCircle}):
+//       ✅ Đạt             : ${circlesAtTarget} circles
+//       ❌ Chưa đạt        : ${circlesBelowTarget} circles`);
+
+//     if (circlesBelowTarget > 0) {
+//         console.log(`\n   ⚠️  Các circle chưa đạt target (pool user đã cạn):`);
+//         circleStats
+//             .filter(s => (s.existing + s.created) < minRequestsPerCircle)
+//             .forEach(s => {
+//                 console.log(`      - "${s.name}": ${s.existing + s.created}/${minRequestsPerCircle} (${s.warning})`);
+//             });
+//         console.log(`\n   💡 Gợi ý: tăng số lượng user trong DB hoặc giảm minRequestsPerCircle.`);
+//     }
+// }
+
+// // ─────────────────────────────────────────────────────────────────────────────
+
+// async function main() {
+//     console.log("🌱 ===== TOP-UP CIRCLE JOIN REQUESTS =====");
+
+//     // ── Snapshot trước khi chạy ────────────────────────────────────────────
+//     const beforeTotal = await prisma.circleJoinRequest.count();
+//     console.log(`\n   📷 Hiện tại: ${beforeTotal} join requests trong DB`);
+
+//     await topUpJoinRequests(100);
+
+//     // ── Final stats ────────────────────────────────────────────────────────
+//     const [total, pending, accepted, rejected, cancelled] = await Promise.all([
+//         prisma.circleJoinRequest.count(),
+//         prisma.circleJoinRequest.count({ where: { status: RequestStatus.PENDING } }),
+//         prisma.circleJoinRequest.count({ where: { status: RequestStatus.ACCEPTED } }),
+//         prisma.circleJoinRequest.count({ where: { status: RequestStatus.REJECTED } }),
+//         prisma.circleJoinRequest.count({ where: { status: RequestStatus.CANCELLED } }),
+//     ]);
+
+//     // Distribution bar chart
+//     const stats = await prisma.circleJoinRequest.groupBy({
+//         by: ["status"],
+//         _count: { id: true },
+//         orderBy: { _count: { id: "desc" } },
+//     });
+
+//     console.log(`\n   📊 Phân phối status sau top-up:`);
+//     for (const s of stats) {
+//         const bar = "█".repeat(Math.min(30, Math.round(s._count.id / 20)));
+//         console.log(`      ${s.status.padEnd(10)}: ${String(s._count.id).padStart(6)}  ${bar}`);
+//     }
+
+//     console.log(`
+// 🎉 ===== DONE =====
+//    🚪 Tổng join requests : ${total}  (+${total - beforeTotal} mới)
+//       ⏳ PENDING          : ${pending}
+//       ✅ ACCEPTED         : ${accepted}
+//       ❌ REJECTED         : ${rejected}
+//       🚫 CANCELLED        : ${cancelled}
+// ===================`);
+// }
+
+// main()
+//     .catch(e => { console.error("❌ Top-up thất bại:", e); process.exit(1); })
+//     .finally(() => prisma.$disconnect());

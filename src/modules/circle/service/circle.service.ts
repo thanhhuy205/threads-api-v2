@@ -28,6 +28,7 @@ import {
 import crypto from "crypto";
 import { evaluationProducer } from "../../job/evaluation-post/producer/evaluation.producer";
 import {
+  CircleStatsQueryDto,
   CirclePostBodyDto,
   CirclePostsQueryDto,
   CircleRepliesQueryDto,
@@ -522,18 +523,67 @@ class CircleService {
     };
   }
 
-  async getCircleStats(publicId: string) {
+  async getCircleStats(
+    publicId: string,
+    userId: string,
+    type?: CircleStatsQueryDto["type"],
+  ) {
+    const circle = await circleRepository.findByPublicId(publicId);
+    if (!circle) {
+      throw new NotFoundException(`Circle ${publicId} not found`);
+    }
+
+    const member = await circleMemberRepository.findRoleByCircleId(circle.id, userId);
+    if (!member) {
+      throw new ForbiddenException("You do not have permission to access this circle");
+    }
+
+    const userPermissions = CIRCLE_ROLE_PERMISSIONS[member.role] ?? [];
+    const hasStatisticsPermission = checkCirclePermission(
+      userPermissions,
+      CirclePermission.STATISTICS,
+    );
+    if (!hasStatisticsPermission) {
+      throw new ForbiddenException(
+        `You do not have permission: ${CirclePermission.STATISTICS}`,
+      );
+    }
+
+    if (member.role !== RoleMembership.OWNER) {
+      throw new ForbiddenException("Only owner can access this resource");
+    }
+
+    const selectedType = type ?? "7days";
+    const dayByType: Record<NonNullable<CircleStatsQueryDto["type"]>, number> = {
+      "7days": 7,
+      "30days": 30,
+      "90days": 90,
+    };
+
+    const to = new Date();
+    const from = new Date(to);
+    from.setDate(to.getDate() - dayByType[selectedType]);
+
+    const [membersTotal, joinRequestsTotal, invitationsTotal, expLogAgg] =
+      await Promise.all([
+        circleMemberRepository.countMembersByCircleIdWithinRange(circle.id, from),
+        circleJoinRequestRepository.countPendingByCircleIdWithinRange(circle.id, from),
+        circleInvitationRepository.countPendingInvitationsByCircleIdWithinRange(circle.id, from),
+        circleExpLogRepository.aggregateDeltaByCircleIdWithinRange(circle.id, from),
+      ]);
+
     return {
       circlePublicId: publicId,
-      totalPosts: 120,
-      deepTalkCount: 45,
-      averageScore: 0.82,
-      topContributors: [
-        { userId: "user_stub_1", totalPosts: 17, karmaSpent: 60 },
-        { userId: "user_stub_2", totalPosts: 12, karmaSpent: 20 },
-      ],
-      cprCount: 2,
-      sacrificeCount: 9,
+      type: selectedType,
+      range: {
+        from: from.toISOString(),
+        to: to.toISOString(),
+      },
+      membersTotal,
+      joinRequestsTotal,
+      invitationsTotal,
+      expLogsTotal: expLogAgg._count.id,
+      expDeltaSum: expLogAgg._sum.expDelta ?? 0,
     };
   }
 
@@ -734,12 +784,8 @@ class CircleService {
         circleId: circle.id,
         page: query.page,
         limit: query.limit,
-        type: "invitation",
       }),
-      circleInvitationRepository.countByCircleId({
-        circleId: circle.id,
-        type: "invitation",
-      }),
+      circleInvitationRepository.countByCircleId(circle.id),
     ]);
 
     return {
@@ -762,16 +808,12 @@ class CircleService {
       CirclePermission.INVITE_MEMBER,
     );
     const [rows, total] = await Promise.all([
-      circleInvitationRepository.findByCircleIdPaginated({
+      circleJoinRequestRepository.findByCircleIdPaginated({
         circleId: circle.id,
         page: query.page,
         limit: query.limit,
-        type: "join_request",
       }),
-      circleInvitationRepository.countByCircleId({
-        circleId: circle.id,
-        type: "join_request",
-      }),
+      circleJoinRequestRepository.countByCircleId(circle.id),
     ]);
 
     return {

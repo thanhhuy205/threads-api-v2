@@ -29,6 +29,12 @@ export const expLogQuerySchema = offsetLimitQuerySchema;
 export type ExpLogQueryDto = z.infer<typeof expLogQuerySchema>;
 export type OffsetLimitQueryDto = z.infer<typeof offsetLimitQuerySchema>;
 
+export const circleStatsQuerySchema = z.object({
+    type: z.enum(['7days', '30days', '90days']).optional(),
+});
+
+export type CircleStatsQueryDto = z.infer<typeof circleStatsQuerySchema>;
+
 export const circlePostsQuerySchema = cursorLimitQuerySchema.extend({
     sort: z.enum(['latest', 'quality']).optional(),
     take: z.coerce.number().int('Take must be an integer').positive('Take must be a positive number').max(100, 'Take must be at most 100').optional(),
