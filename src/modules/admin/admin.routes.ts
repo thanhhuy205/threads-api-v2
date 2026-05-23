@@ -5,6 +5,10 @@ import { hashtagTrendingController } from "./hashtag-trending/hashtag-trending.c
 import { statisticsController } from "./statistics/statistics.controller";
 import { checkRole } from "../access-control/middleware";
 import { UserRoleType } from "@prisma/client";
+import { dailyQuestController } from "./daily-quest/daily-quest.controller";
+import { validate } from "@/middlewares/validate";
+import { createDailyQuestRequestSchema } from "./daily-quest/dto/request/create-daily-quest.request.dto";
+import { disableDailyQuestParamsSchema } from "./daily-quest/dto/request/disable-daily-quest.params.dto";
 
 const adminRouter = Router();
 
@@ -35,6 +39,26 @@ adminRouter.get(
   "/stats",
   checkRole(UserRoleType.ADMIN),
   statisticsController.getOverview,
+);
+
+adminRouter.post(
+  "/daily-quests",
+  checkRole(UserRoleType.ADMIN),
+  validate(createDailyQuestRequestSchema),
+  dailyQuestController.createDailyQuest,
+);
+
+adminRouter.get(
+  "/daily-quests",
+  checkRole(UserRoleType.ADMIN),
+  dailyQuestController.listDailyQuests,
+);
+
+adminRouter.patch(
+  "/daily-quests/:id/disable",
+  checkRole(UserRoleType.ADMIN),
+  validate(disableDailyQuestParamsSchema, "params"),
+  dailyQuestController.disableDailyQuest,
 );
 
 export default adminRouter;

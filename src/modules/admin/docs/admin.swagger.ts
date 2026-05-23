@@ -137,6 +137,61 @@ export const adminSwaggerSchemas = {
             data: { type: 'object' },
         },
     },
+    AdminDailyQuestCreateRequest: {
+        type: 'object',
+        properties: {
+            code: { type: 'string', example: 'COMMENT_3' },
+            description: { type: 'string', example: 'Binh luan 3 lan trong ngay' },
+            karmaReward: { type: 'integer', example: 1 },
+            requirement: { type: 'integer', example: 3 },
+        },
+        required: ['code', 'description', 'karmaReward', 'requirement'],
+    },
+    AdminDailyQuestItem: {
+        type: 'object',
+        properties: {
+            id: { type: 'integer', example: 1 },
+            code: { type: 'string', example: 'COMMENT_3' },
+            description: { type: 'string', example: 'Binh luan 3 lan trong ngay' },
+            karmaReward: { type: 'integer', example: 1 },
+            requirement: { type: 'integer', example: 3 },
+            isActive: { type: 'boolean', example: true },
+            createById: { type: 'string', example: 'clyzz4pba0000v9d0m3f6x2a1' },
+            createdAt: { type: 'string', format: 'date-time' },
+        },
+        required: ['id', 'code', 'description', 'karmaReward', 'requirement', 'isActive', 'createById', 'createdAt'],
+    },
+    AdminDailyQuestCreateResponse: {
+        type: 'object',
+        properties: {
+            success: { type: 'boolean', example: true },
+            message: { type: 'string', example: 'Daily quest created successfully' },
+            data: { $ref: '#/components/schemas/AdminDailyQuestItem' },
+        },
+        required: ['success', 'message', 'data'],
+    },
+    AdminDailyQuestListResponse: {
+        type: 'object',
+        properties: {
+            success: { type: 'boolean', example: true },
+            message: { type: 'string', example: 'Daily quests retrieved successfully' },
+            data: {
+                type: 'array',
+                items: { $ref: '#/components/schemas/AdminDailyQuestItem' },
+            },
+            pagination: { $ref: '#/components/schemas/AdminOffsetPagination' },
+        },
+        required: ['success', 'message', 'data', 'pagination'],
+    },
+    AdminDailyQuestDisableResponse: {
+        type: 'object',
+        properties: {
+            success: { type: 'boolean', example: true },
+            message: { type: 'string', example: 'Daily quest disabled successfully' },
+            data: { $ref: '#/components/schemas/AdminDailyQuestItem' },
+        },
+        required: ['success', 'message', 'data'],
+    },
 };
 
 export const adminSwaggerPaths = {
@@ -250,6 +305,64 @@ export const adminSwaggerPaths = {
                 200: {
                     description: 'Statistics retrieved',
                     content: { 'application/json': { schema: { $ref: '#/components/schemas/AdminStatisticsResponse' } } },
+                },
+                401: { description: COMMON_MESSAGE.UNAUTHORIZED },
+                403: { description: COMMON_MESSAGE.FORBIDDEN },
+            },
+        },
+    },
+    '/admin/daily-quests': {
+        post: {
+            tags: ['Admin'],
+            summary: 'Create daily quest',
+            security: bearerAuthSecurity,
+            requestBody: {
+                required: true,
+                content: {
+                    'application/json': {
+                        schema: { $ref: '#/components/schemas/AdminDailyQuestCreateRequest' },
+                    },
+                },
+            },
+            responses: {
+                201: {
+                    description: 'Daily quest created successfully',
+                    content: { 'application/json': { schema: { $ref: '#/components/schemas/AdminDailyQuestCreateResponse' } } },
+                },
+                401: { description: COMMON_MESSAGE.UNAUTHORIZED },
+                403: { description: COMMON_MESSAGE.FORBIDDEN },
+            },
+        },
+        get: {
+            tags: ['Admin'],
+            summary: 'List active daily quests',
+            security: bearerAuthSecurity,
+            parameters: [
+                { name: 'page', in: 'query', schema: { type: 'number', example: 1 } },
+                { name: 'limit', in: 'query', schema: { type: 'number', example: 10 } },
+            ],
+            responses: {
+                200: {
+                    description: 'Daily quests retrieved successfully',
+                    content: { 'application/json': { schema: { $ref: '#/components/schemas/AdminDailyQuestListResponse' } } },
+                },
+                401: { description: COMMON_MESSAGE.UNAUTHORIZED },
+                403: { description: COMMON_MESSAGE.FORBIDDEN },
+            },
+        },
+    },
+    '/admin/daily-quests/{id}/disable': {
+        patch: {
+            tags: ['Admin'],
+            summary: 'Disable daily quest',
+            security: bearerAuthSecurity,
+            parameters: [
+                { name: 'id', in: 'path', required: true, schema: { type: 'integer', example: 1 } },
+            ],
+            responses: {
+                200: {
+                    description: 'Daily quest disabled successfully',
+                    content: { 'application/json': { schema: { $ref: '#/components/schemas/AdminDailyQuestDisableResponse' } } },
                 },
                 401: { description: COMMON_MESSAGE.UNAUTHORIZED },
                 403: { description: COMMON_MESSAGE.FORBIDDEN },
