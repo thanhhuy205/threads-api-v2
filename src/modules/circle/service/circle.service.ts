@@ -1,13 +1,14 @@
 import { redisKey } from "@/constants/resolve-key/redis-key";
 import { BadRequestException, ForbiddenException, NotFoundException } from "@/errors/error";
+import { hasherToken } from "@/modules/auth/util/hasher-token";
 import { CreateCircleInput } from "@/modules/circle/interfaces/circle-service.interface";
 import { ResponseInvitationInput } from "@/modules/circle/interfaces/response-invitation.dto";
 import { SendInvitationEmailAdminInterface } from "@/modules/circle/interfaces/send-invitation-admin.interface";
 import { SendInvitationInput } from "@/modules/circle/interfaces/send-invitation.interface";
-import { hasherToken } from "@/modules/auth/util/hasher-token";
 import { CIRCLE_ROLE_PERMISSIONS, CirclePermission } from "@/modules/circle/permission/circle-permission";
 import { checkCirclePermission } from "@/modules/circle/policy/check-circle-permission";
 import { circleInvitationRepository } from "@/modules/circle/repository/circle-invation.repository";
+import { circleJoinRequestRepository } from "@/modules/circle/repository/circle-join.repository";
 import { emailProducer } from "@/modules/job/email/producer/email.producer";
 import { postService } from "@/modules/post/service/post.service";
 import { userRestrictionService } from "@/modules/user-restriction/service/user-restriction.service";
@@ -18,12 +19,13 @@ import { buildPaginationResponse } from "@/shared/pagination/pagination";
 import { transactionService } from "@/shared/transaction/transaction.service";
 import {
   CircleInvitationStatus,
-  ExpReason,
   PostScoreLabel,
   Prisma,
+  RequestStatus,
   RoleMembership,
   Visibility,
 } from "@prisma/client";
+import crypto from "crypto";
 import { evaluationProducer } from "../../job/evaluation-post/producer/evaluation.producer";
 import {
   CirclePostBodyDto,
@@ -39,7 +41,7 @@ import { circleExpLogRepository } from "../repository/circle-exp-log.repository"
 import { circleMemberRepository } from "../repository/circle-member.repository";
 import { circlePostQualityLogRepository } from "../repository/circle-post-quality-log.repository";
 import { circleRepository } from "../repository/circle.repository";
-import crypto from "crypto";
+import { circleExpLogService } from "./circle-exp-log.service";
 
 type CircleVisibilityFilterType = "public" | "private" | "accepting" | "join" | null;
 
@@ -133,13 +135,13 @@ class CircleService {
       where,
     });
 
-    const circleIds = circles.map((circle) => circle.id);
+    const circleIds = circles.map((circle) => circle.id as number);
     let pendingCircleIdSet = new Set<number>();
     let joinedCircleIdSet = new Set<number>();
 
     if (userId && circleIds.length) {
       const [pendingInvitations, memberships] = await Promise.all([
-        circleInvitationRepository.findPendingInvitationsByCircleIds(
+        circleJoinRequestRepository.findPendingRequestByCircleId(
           circleIds,
           userId,
         ),
@@ -933,24 +935,11 @@ class CircleService {
         tx,
       );
 
-      const existingJoinLog = await circleExpLogRepository.findMemberJoinLog(
-        data.circleId,
-        data.userId,
+      await circleExpLogService.grantMemberJoinExpIfFirstTime({
+        circleId: data.circleId,
+        userId: data.userId,
         tx,
-      );
-
-      if (!existingJoinLog) {
-        await circleExpLogRepository.create(
-          {
-            userId: data.userId,
-            circleId: data.circleId,
-            expReason: ExpReason.MEMBER_JOIN,
-            expDelta: 5,
-            isDelta: false,
-          },
-          tx,
-        );
-      }
+      });
 
       return member;
     });
@@ -976,6 +965,7 @@ class CircleService {
       getAfter: (item) => String(item.id),
     });
   }
+
   async sendJoinRequest(publicId: string, userId: string) {
     const circle = await circleRepository.findByPublicId(publicId);
     if (!circle) {
@@ -989,15 +979,15 @@ class CircleService {
       throw new Error(`User ${userId} is already a member of circle ${publicId}`,);
     }
 
-    const invitation = await circleInvitationRepository.findInvitationById(
+    const invitation = await circleJoinRequestRepository.findJoinRequestByCircleIdAndUserId(
       circle.id,
       userId,
     );
     if (invitation) {
       if (invitation.status === CircleInvitationStatus.PENDING) {
-        await circleInvitationRepository.upsertCircleJoinCancellation(
-          circle.id,
-          userId,
+        await circleJoinRequestRepository.updateStatus(
+          invitation.id,
+          RequestStatus.CANCELLED,
         );
 
         return {
@@ -1008,7 +998,12 @@ class CircleService {
     }
 
 
-    await circleInvitationRepository.createJoinRequest(circle.id, userId);
+    await circleJoinRequestRepository.create({
+      circleId: circle.id,
+      userId,
+      reason: "User requested to join the circle",
+    });
+
     return { isCancelled: false };
   }
 
@@ -1132,6 +1127,30 @@ class CircleService {
     skip: number;
   }) {
     return await circleRepository.findBatch(take, skip);
+  }
+
+  async getUserQuantityPostInCircle(publicId: string, userId: string) {
+    const circle = await circleRepository.findByPublicId(publicId);
+    if (!circle) {
+      throw new NotFoundException(`Circle ${publicId} not found`);
+    }
+
+    const member = await circleMemberRepository.findRoleByCircleId(circle.id, userId);
+    if (!member) {
+      throw new ForbiddenException(`User ${userId} is not a member of circle ${publicId}`);
+    }
+
+    if (member.role !== RoleMembership.OWNER) {
+      throw new ForbiddenException(`Only owner can access this resource`);
+    }
+
+
+
+    // const quantity = await circlePostQualityLogRepository.countUserInCircle(circle.id);
+    return {
+      // circlePublicId: publicId,
+      // userQuantity: quantity,
+    }
   }
 }
 export const circleService = new CircleService();

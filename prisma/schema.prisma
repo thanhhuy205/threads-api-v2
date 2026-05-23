@@ -121,10 +121,11 @@ enum CircleInvitationStatus {
   CANCELLED
 }
 
-enum InvitationRequestStatus {
+enum RequestStatus {
   PENDING
   ACCEPTED
   REJECTED
+  CANCELLED
 }
 
 enum PostMediaType {
@@ -309,6 +310,7 @@ model User {
   userQuestLogs       UserQuestLog[]
   reports             Report[]             @relation("UserReports")
   postMentions        PostMention[]
+  circleJoinRequests  CircleJoinRequest[]
 
   @@index([deletedAt], map: "idx_users_deleted_at")
   @@index([bannedUntil], map: "idx_users_banned_until")
@@ -644,6 +646,7 @@ model Circle {
   cprSessions           CprSession[]
   circleExpLogs         CircleExpLog[]
   heroBadges            HeroBadge[]
+  circleJoinRequests    CircleJoinRequest[]
 
   @@index([createById], map: "idx_circles_created_by")
   @@map("circles")
@@ -882,6 +885,20 @@ model CircleInvitation {
   @@index([userId], map: "idx_circle_invitations_user_id")
   @@index([inviterId], map: "idx_circle_invitations_inviter_id")
   @@map("circle_invitations")
+}
+
+model CircleJoinRequest {
+  id        Int           @id @default(autoincrement())
+  userId    String        @map("user_id")
+  circleId  Int
+  status    RequestStatus @default(PENDING)
+  reason    String?       @db.VarChar(255)
+  createdAt DateTime      @default(now())
+
+  circle Circle @relation(fields: [circleId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@map("circle_join_requests")
 }
 
 model AntiSpam {

@@ -271,6 +271,30 @@ class CirclePostQualityLogRepository {
       },
     });
   }
+
+  async findMemberPostQualityLog(circleId: number) {
+    return prisma.circlePostQualityLog.findMany({
+      where: {
+        circleId,
+      },
+      select: {
+        circleMember: {
+          select: {
+            userId: true,
+            postQualityLogs: {
+              where: {
+                circleId,
+              },
+              select: {
+                hpDelta: true,
+                expDelta: true,
+              },
+            },
+          }
+        },
+      },
+    });
+  }
 }
 
 export const circlePostQualityLogRepository =

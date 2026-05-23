@@ -37,6 +37,12 @@ circleRouter.get(
     circleController.getCircleEnergy,
 );
 circleRouter.get(
+    '/:publicId/user-quantity-post',
+    validate(circlePublicIdParamsSchema, 'params'),
+    circleController.getUserQuantityPostInCircle,
+);
+
+circleRouter.get(
     '/:publicId/manage/exp-log',
     validate(circlePublicIdParamsSchema, 'params'),
     validate(expLogQuerySchema, 'query'),

@@ -683,3 +683,448 @@
 // main()
 //     .catch((e) => { console.error("❌ Seed thất bại:", e); process.exit(1); })
 //     .finally(() => prisma.$disconnect());
+
+
+// prisma/seed-users-invitations.ts
+// Seed: 500 users người Việt + mỗi circle 100 lời mời (CircleInvitation) đa dạng status
+// Chạy: npx ts-node prisma/seed-users-invitations.ts
+
+// import { PrismaMariaDb } from "@prisma/adapter-mariadb";
+// import {
+//     CircleInvitationStatus,
+//     PrismaClient,
+//     RoleMembership,
+//     UserStatus,
+// } from "@prisma/client";
+// import bcrypt from "bcrypt";
+// import dotenv from "dotenv";
+// dotenv.config();
+
+// // ─── Prisma setup ─────────────────────────────────────────────────────────────
+
+// const adapter = new PrismaMariaDb({
+//     port: Number(process.env.DB_PORT) || 3306,
+//     host: process.env.DB_HOST || "localhost",
+//     user: process.env.DB_USER || "root",
+//     password: process.env.DB_PASSWORD || "password",
+//     database: process.env.DB_NAME || "threads_api",
+// });
+
+// const prisma = new PrismaClient({ adapter } as any);
+
+// // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+// function pick<T>(arr: T[]): T {
+//     return arr[Math.floor(Math.random() * arr.length)];
+// }
+
+// function rand(min: number, max: number) {
+//     return Math.floor(Math.random() * (max - min + 1)) + min;
+// }
+
+// function randomDate(daysAgo: number): Date {
+//     return new Date(Date.now() - Math.random() * daysAgo * 86_400_000);
+// }
+
+// function shuffled<T>(arr: T[]): T[] {
+//     return [...arr].sort(() => Math.random() - 0.5);
+// }
+
+// // ─────────────────────────────────────────────────────────────────────────────
+// // 1. DATA CHO USER VIỆT NAM
+// // ─────────────────────────────────────────────────────────────────────────────
+
+// const HO_LIST = [
+//     "Nguyễn", "Trần", "Lê", "Phạm", "Hoàng", "Huỳnh", "Phan", "Vũ", "Võ",
+//     "Đặng", "Bùi", "Đỗ", "Hồ", "Ngô", "Dương", "Lý", "Đinh", "Tô", "Trương",
+//     "Mai", "Hà", "Cao", "Đoàn", "Vương", "Điền", "Lưu", "Thái", "Tăng",
+//     "Trịnh", "Châu", "Quách", "Khổng", "Nghiêm", "Giang", "Tạ", "Mạc",
+// ];
+
+// const TEN_NAM = [
+//     "An", "Bình", "Cường", "Dũng", "Đạt", "Hải", "Hiếu", "Hùng", "Khoa",
+//     "Khôi", "Lâm", "Long", "Minh", "Nam", "Nghĩa", "Nhân", "Phong", "Quân",
+//     "Quang", "Sơn", "Tài", "Thắng", "Thiện", "Toàn", "Trí", "Trọng", "Tuấn",
+//     "Tú", "Việt", "Vũ", "Đức", "Khang", "Kiên", "Mạnh", "Phúc", "Sang",
+//     "Thành", "Tiến", "Tùng", "Uy", "Vinh", "Xuân", "Duy", "Gia", "Hào",
+//     "Khánh", "Liêm", "Lực", "Nhật", "Trường",
+// ];
+
+// const TEN_NU = [
+//     "Anh", "Chi", "Diệu", "Giang", "Hà", "Hằng", "Hoa", "Hương", "Lan",
+//     "Liên", "Linh", "Mai", "My", "Ngân", "Nhi", "Nhung", "Phương", "Tâm",
+//     "Thảo", "Thu", "Thư", "Thủy", "Trang", "Trinh", "Uyên", "Vân", "Xuân",
+//     "Yến", "Ánh", "Châu", "Duyên", "Hạnh", "Hiền", "Huệ", "Khanh", "Loan",
+//     "Lụa", "Ngọc", "Như", "Phúc", "Quỳnh", "Thanh", "Thiên", "Trâm",
+//     "Tuyết", "Vy", "Xuyên",
+// ];
+
+// const TEN_DEM_NAM = [
+//     "Văn", "Hữu", "Đức", "Minh", "Quốc", "Thành", "Anh", "Ngọc", "Công",
+//     "Bảo", "Gia", "Hoài", "Hùng", "Khắc", "Mạnh", "Nhật", "Phước", "Sĩ",
+//     "Tấn", "Thiện", "Trung", "Tuấn", "Việt", "Xuân", "Đình", "Khánh",
+// ];
+
+// const TEN_DEM_NU = [
+//     "Thị", "Ngọc", "Thu", "Thanh", "Kim", "Bích", "Lan", "Phương", "Mỹ",
+//     "Hà", "Bảo", "Diệu", "Hồng", "Minh", "Như", "Tuyết", "Yến",
+// ];
+
+// const BIO_TEMPLATES: Array<(name: string) => string> = [
+//     (n) => `Xin chào, mình là ${n} 👋 Đam mê công nghệ và cà phê ☕`,
+//     (n) => `${n} | Sống chậm lại, nghĩ nhiều hơn 🌿`,
+//     (n) => `Mình là ${n}. Thích đọc sách, nghe nhạc và đi café 📚🎵`,
+//     (_) => `Developer ban ngày ☀️ Gamer ban đêm 🎮`,
+//     (n) => `${n} đây! Yêu Việt Nam 🇻🇳 | Foodie | Travel lover ✈️`,
+//     (_) => `"Sống là để trải nghiệm" – Đang học cách tận hưởng từng khoảnh khắc 🌸`,
+//     (n) => `Hi, tôi là ${n}. Đang xây dựng điều gì đó nhỏ nhưng có ý nghĩa 🛠️`,
+//     (_) => `Thiết kế | Sáng tạo | Cà phê không đường ☕🎨`,
+//     (n) => `${n} | Sinh viên năm 3 | Mê AI và Machine Learning 🤖`,
+//     (_) => `Photographer 📸 | Hà Nội → Sài Gòn → Đà Nẵng`,
+//     (n) => `Chào bạn! Mình là ${n}, thích chia sẻ kiến thức và học hỏi mỗi ngày 💡`,
+//     (_) => `Lập trình viên fullstack. Yêu OSS. Hay than vãn về deadline 😅`,
+//     (n) => `${n} | Marketing & Content Creator 📱 | HCM City`,
+//     (_) => `Đang trên hành trình tìm bản thân 🗺️ | Mỗi ngày một điều mới`,
+//     (n) => `${n} – Bác sĩ tương lai 🩺 | Yêu động vật 🐾`,
+//     (_) => `Trader | Investor | "Tiền không mua được hạnh phúc nhưng mua được bình yên" 😌`,
+//     (n) => `Xin chào! Tôi là ${n}. Đang cố không lướt MXH quá nhiều… 📵`,
+//     (_) => `Giáo viên tiếng Anh 🇬🇧 | Mê du lịch bụi | Đã đặt chân 15 tỉnh thành`,
+//     (n) => `${n} | UI/UX Designer | Figma addict 🎯`,
+//     (_) => `Coder by day, dreamer by night ✨ | Uống trà sữa để tồn tại 🧋`,
+//     (n) => `${n} | Backend Engineer | Coffee addict ☕ | Vim user 🤓`,
+//     (_) => `Sinh viên IT năm cuối. Đang tìm kiếm cơ hội thực tập nghiêm túc 🔍`,
+//     (n) => `${n} | Product Manager | Đang xây sản phẩm cho người Việt 🇻🇳`,
+//     (_) => `Freelance designer. Remote work từ Đà Lạt 🌸 | Open for projects`,
+//     (n) => `${n} | Data Analyst | Excel đến Python | Đam mê số liệu 📊`,
+//     (_) => `Mình là kỹ sư nhưng mê nấu ăn hơn code. Paradox. 🍳`,
+//     (n) => `${n} | Startup founder | Failed twice, still going 💪`,
+//     (_) => `DevOps engineer. K8s, Docker, Terraform. Sống bằng yaml 😅`,
+//     (n) => `${n} | Content creator | Tech, food & travel 🎬`,
+//     (_) => `Giáo viên toán chuyển sang làm dev. Tư duy logic là lợi thế 🧮`,
+// ];
+
+// // ─────────────────────────────────────────────────────────────────────────────
+
+// function slugify(str: string): string {
+//     return str
+//         .normalize("NFD")
+//         .replace(/[\u0300-\u036f]/g, "")
+//         .replace(/đ/g, "d")
+//         .replace(/Đ/g, "D")
+//         .replace(/[^a-zA-Z0-9]/g, "")
+//         .toLowerCase();
+// }
+
+// interface GeneratedUser {
+//     email: string;
+//     username: string;
+//     password: string;
+//     name: string;
+//     bio: string;
+//     avatar: string | null;
+//     status: UserStatus;
+//     isPrivate: boolean;
+//     followersCount: number;
+//     followingCount: number;
+//     postsCount: number;
+//     verifiedAt: Date | null;
+// }
+
+// function generateUser(index: number, salt: number = 0): GeneratedUser {
+//     const isNam = Math.random() < 0.52;
+//     const ho = pick(HO_LIST);
+//     const tenDem = isNam ? pick(TEN_DEM_NAM) : pick(TEN_DEM_NU);
+//     const ten = isNam ? pick(TEN_NAM) : pick(TEN_NU);
+//     const fullName = `${ho} ${tenDem} ${ten}`;
+//     const baseSlug = slugify(fullName);
+//     // Đảm bảo unique bằng cách thêm index + salt
+//     const suffix = String(index + salt * 10000 + 1).padStart(4, "0");
+//     const username = `${baseSlug}${suffix}`;
+//     return {
+//         email: `${username}@gmail.com`,
+//         username,
+//         password: "",
+//         name: fullName,
+//         bio: pick(BIO_TEMPLATES)(ten),
+//         avatar: null,
+//         status: UserStatus.ACTIVE,
+//         isPrivate: Math.random() < 0.08,
+//         followersCount: rand(0, 3000),
+//         followingCount: rand(0, 800),
+//         postsCount: rand(0, 300),
+//         verifiedAt: Math.random() < 0.25
+//             ? new Date(Date.now() - Math.random() * 1.5e10)
+//             : null,
+//     };
+// }
+
+// // ─────────────────────────────────────────────────────────────────────────────
+// // SEED 500 USERS
+// // ─────────────────────────────────────────────────────────────────────────────
+
+// async function seedUsers(targetCount: number, hashedPassword: string) {
+//     console.log(`\n👤 [1/2] Seed ${targetCount} users người Việt...`);
+
+//     // Load usernames/emails đã có để tránh trùng
+//     console.log("   📋 Đang load existing users để check duplicate...");
+//     const existingUsers = await prisma.user.findMany({
+//         select: { username: true, email: true },
+//     });
+//     const usedUsernames = new Set(existingUsers.map(u => u.username));
+//     const usedEmails = new Set(existingUsers.map(u => u.email));
+//     console.log(`   → ${usedUsernames.size} users hiện có`);
+
+//     const toCreate: GeneratedUser[] = [];
+//     let attempt = 0;
+
+//     while (toCreate.length < targetCount) {
+//         const user = generateUser(toCreate.length, attempt);
+
+//         if (usedUsernames.has(user.username) || usedEmails.has(user.email)) {
+//             attempt++;
+//             continue;
+//         }
+
+//         usedUsernames.add(user.username);
+//         usedEmails.add(user.email);
+//         toCreate.push({ ...user, password: hashedPassword });
+//     }
+
+//     // Batch insert theo chunk 50
+//     const CHUNK = 50;
+//     let created = 0;
+//     for (let i = 0; i < toCreate.length; i += CHUNK) {
+//         const chunk = toCreate.slice(i, i + CHUNK);
+//         await prisma.user.createMany({
+//             data: chunk.map(u => ({
+//                 email: u.email,
+//                 username: u.username,
+//                 password: u.password,
+//                 name: u.name,
+//                 bio: u.bio,
+//                 avatar: u.avatar,
+//                 status: u.status,
+//                 isPrivate: u.isPrivate,
+//                 followersCount: u.followersCount,
+//                 followingCount: u.followingCount,
+//                 postsCount: u.postsCount,
+//                 verifiedAt: u.verifiedAt,
+//             })),
+//             skipDuplicates: true,
+//         });
+//         created += chunk.length;
+//         process.stdout.write(`\r   → ${created}/${targetCount} users`);
+//     }
+
+//     console.log(`\n   ✅ Đã tạo ${created} users mới`);
+// }
+
+// // ─────────────────────────────────────────────────────────────────────────────
+// // SEED CIRCLE INVITATIONS
+// // ─────────────────────────────────────────────────────────────────────────────
+
+// // Phân phối status thực tế giống app production:
+// // - 50% PENDING (chờ xử lý)
+// // - 25% ACCEPTED (đã vào)
+// // - 15% REJECTED (từ chối)
+// // - 10% CANCELLED (đã hủy)
+// const STATUS_WEIGHTS: { status: CircleInvitationStatus; weight: number }[] = [
+//     { status: CircleInvitationStatus.PENDING, weight: 50 },
+//     { status: CircleInvitationStatus.ACCEPTED, weight: 25 },
+//     { status: CircleInvitationStatus.REJECTED, weight: 15 },
+//     { status: CircleInvitationStatus.CANCELLED, weight: 10 },
+// ];
+
+// function pickWeightedStatus(): CircleInvitationStatus {
+//     const total = STATUS_WEIGHTS.reduce((s, w) => s + w.weight, 0);
+//     let r = Math.random() * total;
+//     for (const { status, weight } of STATUS_WEIGHTS) {
+//         r -= weight;
+//         if (r <= 0) return status;
+//     }
+//     return CircleInvitationStatus.PENDING;
+// }
+
+// function generateTokenHash(circleId: number, userId: string, i: number): string {
+//     // Fake token hash — đủ unique để không bị conflict unique constraint
+//     return `tok_c${circleId}_u${userId.slice(0, 8)}_${i}_${Date.now()}_${rand(1000, 9999)}`;
+// }
+
+// async function seedCircleInvitations(invitationsPerCircle: number) {
+//     console.log(`\n📨 [2/2] Seed ${invitationsPerCircle} lời mời/circle...`);
+
+//     // Load tất cả circles
+//     const circles = await prisma.circle.findMany({
+//         select: {
+//             id: true,
+//             publicId: true,
+//             createById: true,
+//             circleMembers: { select: { userId: true, role: true } },
+//         },
+//     });
+
+//     console.log(`   → Tìm thấy ${circles.length} circles`);
+
+//     // Load pool users để pick invitee
+//     // Lấy nhiều users để có đủ cho tất cả circles
+//     const allUsers = await prisma.user.findMany({
+//         where: { deletedAt: null, status: UserStatus.ACTIVE },
+//         select: { id: true },
+//         orderBy: { createdAt: "desc" }, // ưu tiên user mới seed
+//     });
+
+//     console.log(`   → Pool: ${allUsers.length} users`);
+
+//     if (allUsers.length < invitationsPerCircle + 5) {
+//         console.warn("   ⚠️  Không đủ users trong pool. Seed users trước.");
+//     }
+
+//     let totalCreated = 0;
+//     let totalSkipped = 0;
+
+//     for (const [ci, circle] of circles.entries()) {
+//         // Danh sách userId đã là thành viên của circle
+//         const memberIds = new Set(circle.circleMembers.map(m => m.userId));
+
+//         // Admins trong circle (người có thể invite)
+//         const adminIds = circle.circleMembers
+//             .filter(m => m.role === RoleMembership.ADMIN || m.role === RoleMembership.OWNER)
+//             .map(m => m.userId);
+
+//         // Fallback: nếu không có admin thì dùng creator
+//         const inviterPool = adminIds.length > 0 ? adminIds : [circle.createById];
+
+//         // Users chưa là thành viên → eligible để invite
+//         const eligibleUsers = allUsers.filter(u => !memberIds.has(u.id));
+
+//         if (eligibleUsers.length < invitationsPerCircle) {
+//             console.warn(`   ⚠️  Circle #${circle.id}: chỉ có ${eligibleUsers.length} eligible users`);
+//         }
+
+//         // Shuffle và lấy đủ số lượng
+//         const targets = shuffled(eligibleUsers).slice(0, invitationsPerCircle);
+
+//         // Load invitations đã có để skip duplicate
+//         const existingInvites = await prisma.circleInvitation.findMany({
+//             where: { circleId: circle.id },
+//             select: { userId: true },
+//         });
+//         const alreadyInvited = new Set(existingInvites.map(i => i.userId));
+
+//         const toInsert = targets.filter(u => !alreadyInvited.has(u.id));
+
+//         let batchCreated = 0;
+//         let batchSkipped = targets.length - toInsert.length;
+
+//         // Insert từng cái vì tokenHash cần unique + createdAt khác nhau
+//         for (let i = 0; i < toInsert.length; i++) {
+//             const invitee = toInsert[i];
+//             const inviterId = pick(inviterPool);
+//             const status = pickWeightedStatus();
+//             const createdAt = randomDate(60);
+
+//             // resentCount: chỉ có với PENDING
+//             const resentCount = status === CircleInvitationStatus.PENDING
+//                 ? rand(0, 3)
+//                 : 0;
+
+//             // Role: 90% MEMBER, 10% ADMIN
+//             const role = Math.random() < 0.1
+//                 ? RoleMembership.ADMIN
+//                 : RoleMembership.MEMBER;
+
+//             try {
+//                 await prisma.circleInvitation.create({
+//                     data: {
+//                         circleId: circle.id,
+//                         userId: invitee.id,
+//                         inviterId,
+//                         status,
+//                         role,
+//                         isUser: true,
+//                         tokenHash: generateTokenHash(circle.id, invitee.id, i),
+//                         resentCount,
+//                         createdAt,
+//                         updatedAt: createdAt,
+//                     },
+//                 });
+//                 batchCreated++;
+//                 totalCreated++;
+//             } catch {
+//                 // unique constraint hoặc lỗi khác → skip
+//                 batchSkipped++;
+//                 totalSkipped++;
+//             }
+//         }
+
+//         const pad = String(ci + 1).padStart(3, " ");
+//         console.log(
+//             `   ${pad}/${circles.length}  Circle #${circle.id}` +
+//             ` → ✅ ${batchCreated} lời mời | ⏭️  ${batchSkipped} skip`
+//         );
+//     }
+
+//     console.log(`\n   ✅ Tổng lời mời tạo: ${totalCreated} | Skip: ${totalSkipped}`);
+
+//     // Thống kê theo status
+//     const stats = await prisma.circleInvitation.groupBy({
+//         by: ["status"],
+//         _count: { id: true },
+//     });
+//     console.log("\n   📊 Phân phối status:");
+//     for (const s of stats) {
+//         const bar = "█".repeat(Math.round(s._count.id / 100));
+//         console.log(`      ${s.status.padEnd(10)}: ${String(s._count.id).padStart(6)} ${bar}`);
+//     }
+// }
+
+// // ─────────────────────────────────────────────────────────────────────────────
+// // MAIN
+// // ─────────────────────────────────────────────────────────────────────────────
+
+// async function main() {
+//     console.log("🌱 ===== SEED USERS + INVITATIONS =====\n");
+
+//     // Hash password một lần dùng chung
+//     console.log("🔑 Hashing password...");
+//     const hashedPassword = await bcrypt.hash("12345678", 10);
+
+//     // ── 1. Seed 500 users ──────────────────────────────────────────────────────
+//     await seedUsers(500, hashedPassword);
+
+//     // ── 2. Seed invitations ────────────────────────────────────────────────────
+//     await seedCircleInvitations(100);
+
+//     // ── Summary ───────────────────────────────────────────────────────────────
+//     const [totalUsers, totalCircles, totalInvitations, totalMembers] = await Promise.all([
+//         prisma.user.count(),
+//         prisma.circle.count(),
+//         prisma.circleInvitation.count(),
+//         prisma.circleMember.count(),
+//     ]);
+
+//     const pendingInvites = await prisma.circleInvitation.count({
+//         where: { status: CircleInvitationStatus.PENDING },
+//     });
+//     const acceptedInvites = await prisma.circleInvitation.count({
+//         where: { status: CircleInvitationStatus.ACCEPTED },
+//     });
+
+//     console.log(`
+// 🎉 ===== SEED HOÀN THÀNH =====
+//    👤 Tổng users          : ${totalUsers}
+//    ⭕ Circles             : ${totalCircles}
+//    📨 Tổng invitations    : ${totalInvitations}
+//       → ⏳ Pending        : ${pendingInvites}
+//       → ✅ Accepted       : ${acceptedInvites}
+//       → ❌ Rejected/Cancel: ${totalInvitations - pendingInvites - acceptedInvites}
+//    👥 Circle members      : ${totalMembers}
+// ================================`);
+// }
+
+// main()
+//     .catch(e => {
+//         console.error("\n❌ Seed thất bại:", e);
+//         process.exit(1);
+//     })
+//     .finally(() => prisma.$disconnect());

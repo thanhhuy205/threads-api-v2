@@ -437,6 +437,19 @@ class CircleController {
     );
 
   }
+
+  async getUserQuantityPostInCircle(
+    req: Request<CirclePublicIdParamsDto>,
+    res: Response,
+  ) {
+    const userId = req.user?.sub;
+    if (!userId) {
+      return res.error(401, "Unauthorized");
+    }
+    const { publicId } = req.params;
+    const data = await circleService.getUserQuantityPostInCircle(publicId, userId);
+    return res.success(200, "User quantity post in circle retrieved successfully", data);
+  }
 }
 
 export const circleController = new CircleController();

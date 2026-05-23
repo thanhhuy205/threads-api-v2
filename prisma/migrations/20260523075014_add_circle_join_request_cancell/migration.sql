@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `circle_join_requests` MODIFY `status` ENUM('PENDING', 'ACCEPTED', 'REJECTED', 'CANCELLED') NOT NULL DEFAULT 'PENDING';

@@ -4,10 +4,10 @@ import {
     mapScoreToReward,
 } from "@/modules/ai/mapper/nomallize-score";
 import { aiService } from "@/modules/ai/service/ai.service";
-import { circleExpLogRepository } from "@/modules/circle/repository/circle-exp-log.repository";
 import { circleMemberRepository } from "@/modules/circle/repository/circle-member.repository";
-import { circlePostQualityLogRepository } from "@/modules/circle/repository/circle-post-quality-log.repository";
 import { circleRepository } from "@/modules/circle/repository/circle.repository";
+import { circleExpLogService } from "@/modules/circle/service/circle-exp-log.service";
+import { circlePostQualityLogService } from "@/modules/circle/service/circle-post-quality-log.service";
 import { mixedBreadService } from "@/modules/mixed-bread/service/mixed-bread.service";
 import { pineconeService } from "@/modules/pinecone/service/pinecone.service";
 import { pineconeIndex } from "@/providers/pinecone.provider";
@@ -88,7 +88,7 @@ const processEvaluationPost = async (job: EvaluationPostJob) => {
 
 
         await Promise.all([
-            circleExpLogRepository.upsertPostQualityLog({
+            circleExpLogService.upsertPostQualityLog({
                 userId: job.userId,
                 circleId: circle.id,
                 postId: job.postId,
@@ -96,7 +96,7 @@ const processEvaluationPost = async (job: EvaluationPostJob) => {
                 expDelta: formatResult.expDelta,
                 isDelta: false,
             }),
-            circlePostQualityLogRepository.saveJudgeResult({
+            circlePostQualityLogService.saveJudgeResult({
                 circleMemberId: member.id,
                 userId: job.userId,
                 circleId: circle.id,
