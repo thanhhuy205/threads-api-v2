@@ -20,7 +20,7 @@ class QuestController {
             return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
         }
 
-        const data = await questService.claimQuest(userId, req.params.questId);
+        const data = await questService.claimQuest(userId, req.params.code);
         return res.success(200, 'Quest claimed successfully', data);
     }
 }

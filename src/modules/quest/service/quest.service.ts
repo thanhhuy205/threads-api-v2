@@ -1,6 +1,7 @@
 import { userKarmaRepository } from "@/modules/circle/repository/user-karma.repository";
 import { userActionLogRepository } from "@/modules/user-action-log/repository/user-action-log.repository";
 import { transactionService } from "@/shared/transaction/transaction.service";
+import { Prisma } from "@prisma/client";
 import { ActiveDailyQuest, questRepository } from "../repository/quest.repository";
 import { userQuestLogRepository } from "../repository/user-quest-log.repository";
 
@@ -112,6 +113,7 @@ class QuestService {
           ),
         ),
       );
+      const karma = await this.getOrCreateTotalKarma(userId, tx);
 
       return {
         userId,
@@ -128,17 +130,20 @@ class QuestService {
           claimedAt: log.claimedAt ? log.claimedAt.toISOString() : null,
           karmaReward: log.quest.karmaReward,
         })),
+
+        totalCompleted: logsWithRecountedProgress.filter((log) => log.completed).length,
+        totalKarma: karma,
       };
     });
   }
 
-  async claimQuest(userId: string, questId: number) {
+  async claimQuest(userId: string, codeQuest: string) {
     const cycleWindow = this.resolveDailyCycleWindow(new Date());
 
-    await transactionService.doInTransaction(async (tx) => {
+    const totalKarma = await transactionService.doInTransaction(async (tx) => {
       const log = await userQuestLogRepository.findLogByUserQuestAndDate(
         userId,
-        questId,
+        codeQuest,
         cycleWindow.cycleDate,
         tx,
       );
@@ -157,16 +162,39 @@ class QuestService {
 
       const result = await userQuestLogRepository.claimQuest(log.id, tx);
 
-      return userKarmaRepository.create({ userId: userId, karma: result.karmaReward }, tx);
-    }
-    );
+      return userKarmaRepository.incrementKarma(userId, result.quest.karmaReward, tx);
+    });
 
     return {
       userId,
-      questId,
-      karmaEarned: 20,
-      newTotal: 340,
+      totalKarma,
     };
+  }
+
+  private async getOrCreateTotalKarma(
+    userId: string,
+    tx: Prisma.TransactionClient,
+  ) {
+    const existingKarma = await userKarmaRepository.getTotalKarmaByUserId(userId, tx);
+    if (existingKarma !== null) {
+      return existingKarma;
+    }
+
+    try {
+      return await userKarmaRepository.createDefaultKarmaByUserId(userId, tx);
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError
+        && error.code === "P2002"
+      ) {
+        const retryKarma = await userKarmaRepository.getTotalKarmaByUserId(userId, tx);
+        if (retryKarma !== null) {
+          return retryKarma;
+        }
+      }
+
+      throw error;
+    }
   }
 
   private pickRandomQuests(quests: ActiveDailyQuest[], take: number) {

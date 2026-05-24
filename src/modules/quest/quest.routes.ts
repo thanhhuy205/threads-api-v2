@@ -9,6 +9,6 @@ const questRouter = Router();
 questRouter.use(authorization);
 
 questRouter.get('/daily', questController.getDailyQuests);
-questRouter.post('/:questId/claim', validate(claimQuestParamsSchema, 'params'), questController.claimQuest);
+questRouter.post('/:code/claim', validate(claimQuestParamsSchema, 'params'), questController.claimQuest);
 
 export default questRouter;

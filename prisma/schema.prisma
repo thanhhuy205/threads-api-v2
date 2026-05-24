@@ -305,7 +305,7 @@ model User {
   friendRequests      FriendRequest[]      @relation("FriendRequestSender")
   receivedRequests    FriendRequest[]      @relation("FriendRequestReceiver")
   userRoles           UserRole[]
-  userKarmas          UserKarma[]
+  userKarma           UserKarma?
   userRestrictions    UserRestriction[]
   messages            Message[]
   circleExpLogs       CircleExpLog[]
@@ -834,14 +834,13 @@ model CircleExpLog {
 
 model UserKarma {
   id        Int      @id @default(autoincrement())
-  userId    String   @map("user_id")
+  userId    String   @unique(map: "uq_user_karma_user_id") @map("user_id")
   karma     Int      @default(1) @map("karma") // default 1 , 1 karma = 5hp cho bất kì nhóm nào 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   user User @relation(fields: [userId], references: [id])
 
-  @@index([userId], map: "idx_user_karma_user_id")
   @@map("user_karma")
 }
 

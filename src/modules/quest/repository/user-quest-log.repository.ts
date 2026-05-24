@@ -103,14 +103,17 @@ class UserQuestLogRepository {
 
   findLogByUserQuestAndDate(
     userId: string,
-    questId: number,
+    codeQuest: string,
     date: Date,
     tx: QuestLogDbClient = prisma,
   ) {
     return tx.userQuestLog.findFirst({
       where: {
         userId,
-        questId,
+        quest: {
+          code: codeQuest,
+        },
+        completed: true,
         date: {
           gte: new Date(date.getFullYear(), date.getMonth(), date.getDate()),
         },
@@ -129,8 +132,12 @@ class UserQuestLogRepository {
       },
       select: {
         id: true,
-        karmaReward: true,
         completed: true,
+        quest: {
+          select: {
+            karmaReward: true,
+          },
+        },
       },
     });
   }

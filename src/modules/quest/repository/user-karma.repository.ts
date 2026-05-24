@@ -1,15 +1,2 @@
-import prisma from "@/config/prisma";
-import { Prisma } from "@prisma/client";
-
-class UserKarmaRepository {
-    async create(userId: string, karma: number, tx: Prisma.TransactionClient = prisma) {
-        return tx.userKarma.create({
-            data: {
-                userId,
-                karma,
-            },
-        });
-    }
-}
-
-export const userKarmaRepository = new UserKarmaRepository();
+// Deprecated local alias. Use the shared circle user-karma repository implementation.
+export { userKarmaRepository } from "@/modules/circle/repository/user-karma.repository";
