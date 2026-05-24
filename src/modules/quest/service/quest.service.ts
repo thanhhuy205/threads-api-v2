@@ -1,7 +1,8 @@
+import { userKarmaRepository } from "@/modules/circle/repository/user-karma.repository";
+import { userActionLogRepository } from "@/modules/user-action-log/repository/user-action-log.repository";
 import { transactionService } from "@/shared/transaction/transaction.service";
 import { ActiveDailyQuest, questRepository } from "../repository/quest.repository";
 import { userQuestLogRepository } from "../repository/user-quest-log.repository";
-import { userActionLogRepository } from "@/modules/user-action-log/repository/user-action-log.repository";
 
 const DAILY_QUEST_LIMIT = 3;
 const DAILY_RESET_HOUR_UTC7 = 7;
@@ -73,6 +74,7 @@ class QuestService {
         dailyLogs.map((log) => [log.id, { progress: log.progress, completed: log.completed }]),
       );
 
+      // Lấy ra nhiệm vụ trong ngày bởi map, rồi lấy action xem có dủ so với requirement không, nếu có thì update lại progress và completed
       const logsWithRecountedProgress = dailyLogs.map((log) => {
         const progress = actionCounts.get(log.quest.action) ?? 0;
         const completed = progress >= log.quest.requirement;
@@ -131,6 +133,34 @@ class QuestService {
   }
 
   async claimQuest(userId: string, questId: number) {
+    const cycleWindow = this.resolveDailyCycleWindow(new Date());
+
+    await transactionService.doInTransaction(async (tx) => {
+      const log = await userQuestLogRepository.findLogByUserQuestAndDate(
+        userId,
+        questId,
+        cycleWindow.cycleDate,
+        tx,
+      );
+
+      if (!log) {
+        throw new Error('Quest log not found for the user and quest');
+      }
+
+      if (log.claimedAt) {
+        throw new Error('Quest already claimed');
+      }
+
+      if (!log.completed) {
+        throw new Error('Quest not completed yet');
+      }
+
+      const result = await userQuestLogRepository.claimQuest(log.id, tx);
+
+      return userKarmaRepository.create({ userId: userId, karma: result.karmaReward }, tx);
+    }
+    );
+
     return {
       userId,
       questId,

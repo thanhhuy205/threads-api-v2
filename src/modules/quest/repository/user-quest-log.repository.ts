@@ -100,6 +100,40 @@ class UserQuestLogRepository {
       },
     });
   }
+
+  findLogByUserQuestAndDate(
+    userId: string,
+    questId: number,
+    date: Date,
+    tx: QuestLogDbClient = prisma,
+  ) {
+    return tx.userQuestLog.findFirst({
+      where: {
+        userId,
+        questId,
+        date: {
+          gte: new Date(date.getFullYear(), date.getMonth(), date.getDate()),
+        },
+      },
+      select: userQuestLogSelect,
+    });
+  }
+
+  claimQuest(questLogId: number, tx: QuestLogDbClient = prisma) {
+    return tx.userQuestLog.update({
+      where: {
+        id: questLogId,
+      },
+      data: {
+        claimedAt: new Date(),
+      },
+      select: {
+        id: true,
+        karmaReward: true,
+        completed: true,
+      },
+    });
+  }
 }
 
 export const userQuestLogRepository = new UserQuestLogRepository();

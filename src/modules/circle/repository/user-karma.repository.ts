@@ -9,12 +9,15 @@ type CreateUserKarmaInput = {
 class UserKarmaRepository {
   async create(
     data: CreateUserKarmaInput,
-    tx: Prisma.TransactionClient = prisma,
+    tx: Prisma.TransactionClient | typeof prisma = prisma,
   ) {
     return tx.userKarma.create({
       data: {
         userId: data.userId,
         karma: data.karma,
+      },
+      select: {
+        karma: true,
       },
     });
   }
