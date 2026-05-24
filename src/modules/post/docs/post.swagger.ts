@@ -213,6 +213,70 @@ export const postSwaggerSchemas = {
         },
         required: ['reason', 'type'],
     },
+    ReportSubmission: {
+        type: 'object',
+        properties: {
+            id: {
+                type: 'string',
+                example: 'cm_report_123',
+            },
+            targetType: {
+                type: 'string',
+                enum: ['POST', 'USER', 'CIRCLE'],
+                example: 'POST',
+            },
+            targetId: {
+                type: 'string',
+                example: 'post_abc123',
+            },
+            reason: {
+                type: 'string',
+                example: 'Spam content',
+            },
+            status: {
+                type: 'string',
+                enum: ['PENDING', 'RESOLVED', 'DISMISSED'],
+                example: 'PENDING',
+            },
+            createdAt: {
+                type: 'string',
+                format: 'date-time',
+                example: '2026-05-01T00:00:00.000Z',
+            },
+            evaluationQueued: {
+                type: 'boolean',
+                example: true,
+            },
+        },
+        required: ['id', 'targetType', 'targetId', 'reason', 'status', 'createdAt', 'evaluationQueued'],
+    },
+    ReportPostResponse: {
+        type: 'object',
+        properties: {
+            success: {
+                type: 'boolean',
+                example: true,
+            },
+            message: {
+                type: 'string',
+                example: POST_MESSAGE.RETRIEVED,
+            },
+            data: {
+                type: 'object',
+                properties: {
+                    reported: {
+                        type: 'boolean',
+                        example: true,
+                    },
+                    report: {
+                        $ref: '#/components/schemas/ReportSubmission',
+                    },
+                },
+                required: ['reported', 'report'],
+            },
+        },
+        required: ['success', 'message', 'data'],
+    },
 };
 
 const cursorPaginationQueryParameters = [
@@ -934,13 +998,22 @@ export const postSwaggerPaths = {
                     content: {
                         'application/json': {
                             schema: {
-                                $ref: '#/components/schemas/PostActionFlagResponse',
+                                $ref: '#/components/schemas/ReportPostResponse',
                             },
                             example: {
                                 success: true,
                                 message: POST_MESSAGE.RETRIEVED,
                                 data: {
                                     reported: true,
+                                    report: {
+                                        id: 'cm_report_123',
+                                        targetType: 'POST',
+                                        targetId: 'post_abc123',
+                                        reason: 'Spam content',
+                                        status: 'PENDING',
+                                        createdAt: '2026-05-01T00:00:00.000Z',
+                                        evaluationQueued: true,
+                                    },
                                 },
                             },
                         },

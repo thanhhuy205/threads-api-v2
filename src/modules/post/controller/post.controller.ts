@@ -334,11 +334,14 @@ class PostController {
       return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
     }
 
-    await postService.report(req.params.publicId, {
+    const report = await postService.report(req.params.publicId, {
       ...req.body,
       reporterId: userId,
     });
-    return res.success(200, POST_MESSAGE.RETRIEVED, { reported: true });
+    return res.success(200, POST_MESSAGE.RETRIEVED, {
+      reported: true,
+      report,
+    });
   }
 
   async deletePost(req: Request<PublicIdParamsDto>, res: Response) {

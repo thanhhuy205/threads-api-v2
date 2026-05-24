@@ -51,6 +51,16 @@ import { normalizeTopic } from "../helper/nomalize.hepler";
 import { PostRecord, postRepository } from "../repository/post.repository";
 import { topicsPostRepository } from "../repository/topics-post.repository";
 
+type ReportSubmissionResult = {
+  id: string;
+  targetType: ReportTargetType;
+  targetId: string;
+  reason: string;
+  status: ReportStatus;
+  createdAt: Date;
+  evaluationQueued: boolean;
+};
+
 class PostService {
   private readonly postListCacheTtlSeconds = 60;
   private readonly circlePostTypes = new Set<PostType>([
@@ -869,7 +879,7 @@ class PostService {
       type: ReportTargetType;
       reporterId: string;
     },
-  ): Promise<void> {
+  ): Promise<ReportSubmissionResult> {
     if (payload.type === ReportTargetType.USER) {
       const targetUser = await userService.findByUserId(publicId);
       if (!targetUser) {
@@ -880,14 +890,23 @@ class PostService {
         throw new ForbiddenException("Users cannot report themselves");
       }
 
-      await reportService.create({
+      const report = await reportService.create({
         reporterId: payload.reporterId,
         targetType: ReportTargetType.USER,
         targetId: targetUser.id,
         reason: payload.reason,
         status: ReportStatus.PENDING,
       });
-      return;
+
+      return {
+        id: report.id,
+        targetType: report.targetType,
+        targetId: report.targetId,
+        reason: report.reason,
+        status: report.status,
+        createdAt: report.createdAt,
+        evaluationQueued: false,
+      };
     }
 
     const targetPost = await postRepository.findReportTargetByPublicId(publicId);
@@ -929,6 +948,16 @@ class PostService {
       reporterId: payload.reporterId,
       reportedUserId: targetPost.userId,
     });
+
+    return {
+      id: report.id,
+      targetType: report.targetType,
+      targetId: report.targetId,
+      reason: report.reason,
+      status: report.status,
+      createdAt: report.createdAt,
+      evaluationQueued: true,
+    };
   }
 }
 
