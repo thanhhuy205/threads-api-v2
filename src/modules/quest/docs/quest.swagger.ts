@@ -6,13 +6,14 @@ export const questSwaggerSchemas = {
     QuestItem: {
         type: 'object',
         properties: {
-            id: { type: 'integer', example: 1 },
             code: { type: 'string', example: 'DAILY_POST' },
             description: { type: 'string', example: 'Dang 1 bai chat luong trong ngay' },
+            action: { type: 'string', example: 'POST_CREATED' },
             karmaReward: { type: 'integer', example: 10 },
             requirement: { type: 'integer', example: 1 },
             progress: { type: 'integer', example: 0 },
             completed: { type: 'boolean', example: false },
+            claimed: { type: 'boolean', example: false },
             claimedAt: { type: ['string', 'null'], format: 'date-time', example: null },
         },
     },
@@ -20,12 +21,22 @@ export const questSwaggerSchemas = {
         type: 'object',
         properties: {
             userId: { type: 'string', example: 'user_123' },
+            cycleStartAt: {
+                type: 'string',
+                format: 'date-time',
+                example: '2026-05-24T00:00:00.000Z',
+            },
+            cycleEndAt: {
+                type: 'string',
+                format: 'date-time',
+                example: '2026-05-25T00:00:00.000Z',
+            },
             quests: {
                 type: 'array',
                 items: { $ref: '#/components/schemas/QuestItem' },
             },
         },
-        required: ['userId', 'quests'],
+        required: ['userId', 'cycleStartAt', 'cycleEndAt', 'quests'],
     },
     DailyQuestResponse: {
         type: 'object',

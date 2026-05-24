@@ -10,7 +10,7 @@ interface EvaluationPostPayload {
 
 interface EvaluationReportPayload {
     reportId: string;
-    type: ReportTargetType.POST | ReportTargetType.CIRCLE;
+    type: "POST" | "CIRCLE";
     targetPublicId: string;
     targetContent: string;
     reason: string;

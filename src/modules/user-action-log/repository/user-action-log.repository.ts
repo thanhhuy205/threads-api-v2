@@ -1,6 +1,8 @@
 import prisma from "@/config/prisma";
 import { ActionType, Prisma } from "@prisma/client";
 
+type UserActionLogDbClient = Prisma.TransactionClient | typeof prisma;
+
 export type CreateUserActionLogInput = {
   userId: string;
   type: ActionType;
@@ -20,7 +22,7 @@ const userActionLogSelect = {
 class UserActionLogRepository {
   create(
     input: CreateUserActionLogInput,
-    tx: Prisma.TransactionClient = prisma,
+    tx: UserActionLogDbClient = prisma,
   ) {
     return tx.userActionLog.create({
       data: {
@@ -31,6 +33,40 @@ class UserActionLogRepository {
       },
       select: userActionLogSelect,
     });
+  }
+
+  async countByTypeInWindow(
+    {
+      userId,
+      startAt,
+      endAt,
+    }: {
+      userId: string;
+      startAt: Date;
+      endAt: Date;
+    },
+    tx: UserActionLogDbClient = prisma,
+  ) {
+    const grouped = await tx.userActionLog.groupBy({
+      by: ["type"],
+      where: {
+        userId,
+        createdAt: {
+          gte: startAt,
+          lt: endAt,
+        },
+      },
+      _count: {
+        _all: true,
+      },
+    });
+
+    const counts = new Map<ActionType, number>();
+    for (const row of grouped) {
+      counts.set(row.type, row._count._all);
+    }
+
+    return counts;
   }
 }
 

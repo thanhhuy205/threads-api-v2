@@ -6,7 +6,7 @@ import { reportManagementService } from "./report-management.service";
 
 class ReportManagementController {
   listReports = async (
-    req: Request<{}, {}, {}, ListReportsQueryDto>,
+    req: Request<{}, {}, {}, {}>,
     res: Response,
   ) => {
     const { currentPage, perPage } = getPagination(req);
