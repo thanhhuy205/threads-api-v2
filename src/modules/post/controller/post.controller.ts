@@ -257,30 +257,14 @@ class PostController {
     });
   }
 
-  async repostPost(
-    req: Request<PublicIdParamsDto, {}, CreatePostDto>,
-    res: Response,
-  ) {
+  async repostPost(req: Request<PublicIdParamsDto>, res: Response) {
     const userId = req.user?.sub;
 
     if (!userId) {
       return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
     }
 
-    const originPost = await postService.getById(req.params.publicId);
-
-    if (!originPost) {
-      return res.error(404, "Origin post not found");
-    }
-    const repost = await postService.repost(
-      {
-        publicId: req.params.publicId,
-        content: req.body.content ?? "",
-        replyPermission: req.body.replyPermission,
-        visibility: req.body.visibility,
-      },
-      userId,
-    );
+    const repost = await postService.repost(req.params.publicId, userId);
 
     return res.success(201, POST_MESSAGE.CREATED, repost);
   }

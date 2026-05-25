@@ -116,7 +116,7 @@ class PostService {
   }
 
   private async resolveOriginPost(publicId: string) {
-    const post = await postRepository.findByPublicId(publicId);
+    const post = await postRepository.findOriginReferenceByPublicId(publicId);
     if (!post) throw new NotFoundException("Origin post not found");
     return post;
   }
@@ -608,24 +608,17 @@ class PostService {
       (tx) =>
         postRepository.createReply(
           { ...payload, ...options },
-          publicId,
+          {
+            id: existPost.id,
+            publicId: existPost.publicId,
+          },
           snapshot,
           tx,
         ),
       { topic: payload.topic, mentionIds },
     );
     baseLogger.info("Created reply post, adding notification group");
-    await Promise.all([
-      notificationService.handleNewComment({
-        replyContent: payload.content,
-        actorId: payload.userId,
-        recipientId: existPost.userId,
-        targetPostId: post.publicId,
-        originPostId: existPost.publicId,
-        postOwnerId: existPost.userId,
-        username: snapshot.username,
-        avatar: snapshot.avatar,
-      }),
+    const notificationTasks: Promise<unknown>[] = [
       this.dispatchMentionNotifications({
         mentionIds,
         actorId: payload.userId,
@@ -636,6 +629,25 @@ class PostService {
         postOwnerId: existPost.userId,
         content: payload.content,
       }),
+    ];
+
+    if (!mentionIds.length) {
+      notificationTasks.push(
+        notificationService.handleNewComment({
+          replyContent: payload.content,
+          actorId: payload.userId,
+          recipientId: existPost.userId,
+          targetPostId: post.publicId,
+          originPostId: existPost.publicId,
+          postOwnerId: existPost.userId,
+          username: snapshot.username,
+          avatar: snapshot.avatar,
+        }),
+      );
+    }
+
+    await Promise.all([
+      ...notificationTasks,
       elasticProducer.addPostToElasticQueue({
         postId: post.id || 0,
         publicId: post.publicId,
@@ -676,7 +688,10 @@ class PostService {
       (tx) =>
         postRepository.createCircleReply(
           { ...payload, ...options },
-          publicId,
+          {
+            id: existPost.id,
+            publicId: existPost.publicId,
+          },
           snapshot,
           tx,
         ),
@@ -704,24 +719,27 @@ class PostService {
     } as PostRecord;
   }
 
-  async repost(payload: CreatePostDto & { publicId: string }, userId: string) {
+  async repost(publicId: string, userId: string) {
     const snapshot = await this.resolveUser(userId);
-    const originPost = await this.resolveOriginPost(payload.publicId);
-    const options = this.resolvePostOptions(payload);
+    const originPost = await this.resolveOriginPost(publicId);
+    const resolvedOriginPostId =
+      originPost.rootPostId ?? originPost.originPostId ?? originPost.id;
+    const resolvedOriginPublicId =
+      originPost.rootPublicId ?? originPost.originPublicId ?? originPost.publicId;
 
     const post = await postRepository.createRepost(
-      { userId, content: payload.content, ...options },
-      payload.publicId,
+      { userId },
+      resolvedOriginPublicId,
       snapshot,
-      originPost.id,
+      resolvedOriginPostId,
     );
 
     await userActionLogService.logShareCreated({
       userId,
       targetId: post.publicId,
       metadata: {
-        originPublicId: payload.publicId,
-        originPostId: originPost.id,
+        originPublicId: resolvedOriginPublicId,
+        originPostId: resolvedOriginPostId,
       },
     });
     await this.bumpPostListCacheVersion();
@@ -740,14 +758,18 @@ class PostService {
     const normalizedTopic = normalizeTopic(payload.topic);
     const mentionIds = await this.validateMentions(payload.mentions);
     const options = this.resolvePostOptions(payload);
+    const resolvedOriginPostId =
+      originPost.rootPostId ?? originPost.originPostId ?? originPost.id;
+    const resolvedOriginPublicId =
+      originPost.rootPublicId ?? originPost.originPublicId ?? originPost.publicId;
 
     const post = await this.createInTransaction(
       (tx) =>
         postRepository.createQuote(
           { ...payload, ...options },
-          publicId,
+          resolvedOriginPublicId,
           snapshot,
-          originPost.id,
+          resolvedOriginPostId,
           tx,
         ),
       { topic: payload.topic, mentionIds },
@@ -768,8 +790,8 @@ class PostService {
         userId: payload.userId,
         targetId: post.publicId,
         metadata: {
-          originPublicId: publicId,
-          originPostId: originPost.id,
+          originPublicId: resolvedOriginPublicId,
+          originPostId: resolvedOriginPostId,
         },
       }),
       this.dispatchMentionNotifications({
@@ -778,7 +800,7 @@ class PostService {
         username: snapshot.username,
         avatar: snapshot.avatar,
         targetPostId: post.publicId,
-        originPostId: originPost.publicId,
+        originPostId: resolvedOriginPublicId,
         postOwnerId: originPost.userId,
         content: payload.content,
       }),

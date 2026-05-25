@@ -12,6 +12,10 @@ type PostOriginItem = {
 export type PostFeedItem = Prisma.PostGetPayload<{
   select: typeof postFeedSelect;
 }> & {
+  _count?: {
+    children: number;
+    derivatives: number;
+  };
   likes?: {
     userId: string;
   }[];
@@ -20,11 +24,16 @@ export type PostFeedItem = Prisma.PostGetPayload<{
   isFollowedByAuthor?: boolean;
 };
 
-export type PostFeedResponse = Omit<PostFeedItem, "likes" | "topicsPosts" | "mentions"> & {
+export type PostFeedResponse = Omit<
+  PostFeedItem,
+  "likes" | "topicsPosts" | "mentions" | "_count" | "derivatives"
+> & {
   isLikedByAuth: boolean;
   isRepostByAuth: boolean;
   isFollowingAuthor: boolean;
   isFollowedByAuthor: boolean;
+  repliesCount: number;
+  repostsCountAndQuoteCount: number;
   topics: string[];
   mentions: {
     userId: string;
@@ -71,6 +80,9 @@ export class PostMapper {
         ?.map((tp) => tp.topic?.name)
         .filter((name): name is string => !!name) ?? [];
 
+    const repliesCount = post._count?.children ?? 0;
+    const repostsCountAndQuoteCount = post._count?.derivatives ?? 0;
+
     return {
       userId: post.userId,
       createdAt: post.createdAt,
@@ -83,8 +95,8 @@ export class PostMapper {
       userSnapshot: post.userSnapshot,
       replyPermission: post.replyPermission,
       likesCount: post.likesCount,
-      repliesCount: post.repliesCount,
-      repostsCountAndQuoteCount: post.repostsCountAndQuoteCount,
+      repliesCount,
+      repostsCountAndQuoteCount,
       topics: topics,
       isGhost: post.isGhost,
       origin: post.origin,

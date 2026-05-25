@@ -14,7 +14,7 @@ import {
   ReplyPermission,
   VisibilityPost,
 } from "@prisma/client";
-import { CreatePostDto, UpdatePostDto } from "../dto/post.dto";
+import { UpdatePostDto } from "../dto/post.dto";
 import { UserSnapshot } from "../mapper/post.mapper";
 
 export type PostRecord = {
@@ -34,8 +34,11 @@ type RepositoryCreatePostPayload = (CreatePostPayload | CreateCirclePostPayload)
   visibility?: VisibilityPost;
 };
 
-type CreateRepostPayload = CreatePostDto & {
+type CreateRepostPayload = {
   userId: string;
+  content?: string;
+  replyPermission?: ReplyPermission;
+  visibility?: VisibilityPost;
 };
 
 class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
@@ -70,6 +73,12 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
         : undefined,
       select: {
         ...postFeedSelect,
+        _count: {
+          select: {
+            children: true,
+            derivatives: true,
+          },
+        },
         ...(userId
           ? {
             likes: {
@@ -179,14 +188,15 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
 
   async createReply(
     payload: RepositoryCreatePostPayload,
-    parentPublicId: string,
+    parent: { id: number; publicId: string },
     userSnapshot: UserSnapshot,
     tx: Prisma.TransactionClient = prisma,
   ) {
     const post = await tx.post.create({
       data: {
         ...this.baseData(payload, userSnapshot),
-        parentPublicId,
+        parentId: parent.id,
+        parentPublicId: parent.publicId,
         type: PostType.REPLY,
       },
       select: postSelectRepository,
@@ -205,14 +215,15 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
 
   async createCircleReply(
     payload: RepositoryCreatePostPayload,
-    parentPublicId: string,
+    parent: { id: number; publicId: string },
     userSnapshot: UserSnapshot,
     tx: Prisma.TransactionClient = prisma,
   ) {
     const post = await tx.post.create({
       data: {
         ...this.baseData(payload, userSnapshot),
-        parentPublicId,
+        parentId: parent.id,
+        parentPublicId: parent.publicId,
         type: PostType.CIRCLE_REPLY,
       },
       select: postSelectRepository,
@@ -238,7 +249,14 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
   ) {
     const post = await tx.post.create({
       data: {
-        ...this.baseData(payload, userSnapshot),
+        ...this.baseData(
+          {
+            ...payload,
+            content: payload.content ?? "",
+            visibility: payload.visibility ?? VisibilityPost.PUBLIC,
+          },
+          userSnapshot,
+        ),
         originPublicId: originPublicId,
         isQuote: true,
         type: PostType.REPOST,
@@ -262,7 +280,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
     payload: RepositoryCreatePostPayload,
     originPublicId: string,
     userSnapshot: UserSnapshot,
-    postId: number,
+    originPostId: number,
     tx: Prisma.TransactionClient = prisma,
   ) {
     const post = await tx.post.create({
@@ -270,7 +288,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
         ...this.baseData(payload, userSnapshot),
         isQuote: true,
         type: PostType.QUOTE,
-        originPostId: postId,
+        originPostId,
         originPublicId,
       },
       select: postSelectRepository,
@@ -314,6 +332,21 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
       select: {
         id: true,
         ...postFeedSelect,
+      },
+    });
+  }
+
+  async findOriginReferenceByPublicId(publicId: string) {
+    return prisma.post.findFirst({
+      where: { publicId, isDeleted: false },
+      select: {
+        id: true,
+        publicId: true,
+        userId: true,
+        rootPostId: true,
+        rootPublicId: true,
+        originPostId: true,
+        originPublicId: true,
       },
     });
   }
