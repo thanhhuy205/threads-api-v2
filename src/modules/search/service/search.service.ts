@@ -49,7 +49,7 @@ class SearchService {
     q: string;
     type: "post" | "user" | "topic";
     fields: string[];
-    sortField: "publicId" | "username" | "topicName";
+    sortField: "publicId" | "username.keyword" | "topicName.keyword";
     take: number;
     after?: string;
   }): Promise<TDoc[]> {
@@ -139,7 +139,7 @@ class SearchService {
       q,
       type: "user",
       fields: ["username^3", "name^2", "bio"],
-      sortField: "username",
+      sortField: "username.keyword",
       after,
       take,
     });
@@ -192,7 +192,7 @@ class SearchService {
       q,
       type: "topic",
       fields: ["topicName^3"],
-      sortField: "topicName",
+      sortField: "topicName.keyword",
       after,
       take,
     });

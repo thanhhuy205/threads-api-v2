@@ -176,6 +176,56 @@ class PostService {
     return uniqueMentionIds;
   }
 
+  private async dispatchMentionNotifications({
+    mentionIds,
+    actorId,
+    username,
+    avatar,
+    targetPostId,
+    originPostId,
+    postOwnerId,
+    content,
+  }: {
+    mentionIds: string[];
+    actorId: string;
+    username: string;
+    avatar?: string;
+    targetPostId: string;
+    originPostId: string;
+    postOwnerId: string;
+    content: string;
+  }): Promise<void> {
+    if (!mentionIds.length) return;
+
+    const recipientIds = mentionIds.filter((recipientId) => recipientId !== actorId);
+    if (!recipientIds.length) return;
+
+    const results = await Promise.allSettled(
+      recipientIds.map((recipientId) =>
+        notificationService.handleMention({
+          mentionContent: content,
+          actorId,
+          recipientId,
+          targetPostId,
+          originPostId,
+          username,
+          avatar,
+          postOwnerId,
+        }),
+      ),
+    );
+
+    results.forEach((result, index) => {
+      if (result.status === "fulfilled") return;
+      const recipientId = recipientIds[index];
+      const message =
+        result.reason instanceof Error ? result.reason.message : String(result.reason);
+      baseLogger.error(
+        `[mention-notification] Failed to enqueue mention notification for recipient ${recipientId}: ${message}`,
+      );
+    });
+  }
+
   private async attachPostMeta(
     tx: Prisma.TransactionClient,
     postId: number,
@@ -464,31 +514,43 @@ class PostService {
       { topic: payload.topic, mentionIds },
     );
 
-    await pineProducer.addToPineconeQueue({
-      content: payload.content,
-      topic: [normalizedTopic ?? "not"],
-      postId: post.id || 0,
-      userId: payload.userId,
-    });
-    await elasticProducer.addPostToElasticQueue({
-      postId: post.id || 0,
-      publicId: post.publicId,
-      userId: payload.userId,
-      content: post.content ?? payload.content,
-      authorUsername: snapshot.username,
-      authorName: snapshot.name,
-      topic: normalizedTopic,
-      createdAt: post.createdAt,
-    });
-    await userActionLogService.logPostCreated({
-      userId: payload.userId,
-      targetId: post.publicId,
-      metadata: {
-        postId: post.id ?? null,
-        source: "POST",
-      },
-    });
-    await this.bumpPostListCacheVersion();
+    await Promise.all([
+      pineProducer.addToPineconeQueue({
+        content: payload.content,
+        topic: [normalizedTopic ?? "not"],
+        postId: post.id || 0,
+        userId: payload.userId,
+      }),
+      elasticProducer.addPostToElasticQueue({
+        postId: post.id || 0,
+        publicId: post.publicId,
+        userId: payload.userId,
+        content: post.content ?? payload.content,
+        authorUsername: snapshot.username,
+        authorName: snapshot.name,
+        topic: normalizedTopic,
+        createdAt: post.createdAt,
+      }),
+      userActionLogService.logPostCreated({
+        userId: payload.userId,
+        targetId: post.publicId,
+        metadata: {
+          postId: post.id ?? null,
+          source: "POST",
+        },
+      }),
+      this.dispatchMentionNotifications({
+        mentionIds,
+        actorId: payload.userId,
+        username: snapshot.username,
+        avatar: snapshot.avatar,
+        targetPostId: post.publicId,
+        originPostId: post.publicId,
+        postOwnerId: payload.userId,
+        content: payload.content,
+      }),
+      this.bumpPostListCacheVersion(),
+    ]);
     return post;
   }
 
@@ -562,6 +624,17 @@ class PostService {
         originPostId: existPost.publicId,
         postOwnerId: existPost.userId,
         username: snapshot.username,
+        avatar: snapshot.avatar,
+      }),
+      this.dispatchMentionNotifications({
+        mentionIds,
+        actorId: payload.userId,
+        username: snapshot.username,
+        avatar: snapshot.avatar,
+        targetPostId: post.publicId,
+        originPostId: existPost.publicId,
+        postOwnerId: existPost.userId,
+        content: payload.content,
       }),
       elasticProducer.addPostToElasticQueue({
         postId: post.id || 0,
@@ -680,26 +753,37 @@ class PostService {
       { topic: payload.topic, mentionIds },
     );
 
-    await elasticProducer.addPostToElasticQueue({
-      postId: post.id || 0,
-      publicId: post.publicId,
-      userId: payload.userId,
-      content: post.content ?? payload.content,
-      authorUsername: snapshot.username,
-      authorName: snapshot.name,
-      topic: normalizedTopic,
-      createdAt: post.createdAt,
-    });
-
-    await userActionLogService.logQuoteCreated({
-      userId: payload.userId,
-      targetId: post.publicId,
-      metadata: {
-        originPublicId: publicId,
-        originPostId: originPost.id,
-      },
-    });
-    await this.bumpPostListCacheVersion();
+    await Promise.all([
+      elasticProducer.addPostToElasticQueue({
+        postId: post.id || 0,
+        publicId: post.publicId,
+        userId: payload.userId,
+        content: post.content ?? payload.content,
+        authorUsername: snapshot.username,
+        authorName: snapshot.name,
+        topic: normalizedTopic,
+        createdAt: post.createdAt,
+      }),
+      userActionLogService.logQuoteCreated({
+        userId: payload.userId,
+        targetId: post.publicId,
+        metadata: {
+          originPublicId: publicId,
+          originPostId: originPost.id,
+        },
+      }),
+      this.dispatchMentionNotifications({
+        mentionIds,
+        actorId: payload.userId,
+        username: snapshot.username,
+        avatar: snapshot.avatar,
+        targetPostId: post.publicId,
+        originPostId: originPost.publicId,
+        postOwnerId: originPost.userId,
+        content: payload.content,
+      }),
+      this.bumpPostListCacheVersion(),
+    ]);
     return {
       publicId: post.publicId,
       content: post.content,

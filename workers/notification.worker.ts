@@ -13,10 +13,12 @@ import { baseLogger } from "../src/middlewares/logger";
 import { createWorker } from "../src/providers/bullmq.provider";
 
 const pendingCommentKeyPattern =
-  /^notification:pending:([^:]+):comment:(post|thread):(.+)$/;
+  /^notification:pending:([^:]+):([^:]+):(post|thread):(.+)$/;
 
 const requiredPendingCommentMetaFields = [
+  "key",
   "type",
+  "targetType",
   "groupKey",
   "originPostId",
   "targetPostId",
@@ -50,6 +52,7 @@ const toPendingCommentNotificationMeta = (
 type PushNotificationPayload = {
   message: string;
   avatar: string;
+  originPostId: string;
 };
 
 class NotificationWorker {
@@ -73,6 +76,13 @@ class NotificationWorker {
   }) {
     const { isOwner, count, username } = meta;
     const firstName = username;
+    const isMentionNotification =
+      meta.type === NotificationType.MENTION || meta.key === "mention";
+
+    if (isMentionNotification) {
+      if (actorCount === 1) return `${firstName} đã nhắc đến bạn trong một bài viết`;
+      return `${firstName} và ${actorCount - 1} người khác đã nhắc đến bạn`;
+    }
 
     if (!isOwner) {
       if (actorCount === 1) return `${firstName} đã bình luận trong cuộc trò chuyện bạn tham gia`;
@@ -86,6 +96,10 @@ class NotificationWorker {
 
     return `${firstName} đã bình luận về bài của bạn`;
   }
+
+
+
+
   async batchCommentNotification() {
     const now = Date.now();
 
@@ -146,7 +160,8 @@ class NotificationWorker {
 
       await this.sendPushNotification(recipientId, {
         message,
-        avatar: meta.username,
+        avatar: meta.avatar,
+        originPostId: meta.originPostId,
       });
 
       await redisService.del([redisKey, `${redisKey}:actors`]);
@@ -156,7 +171,7 @@ class NotificationWorker {
       notificationSave.map((item) => ({
         recipientId: item.recipientId,
         type: item.meta.type as NotificationType,
-        targetType: "POST",
+        targetType: item.meta.targetType,
         targetId: item.meta.targetPostId,
         originPostId: item.meta.originPostId,
         actorIds: item.actors,
@@ -168,11 +183,11 @@ class NotificationWorker {
     console.log(notificationSave)
   }
 
-  async sendPushNotification(recipientId: string, message: PushNotificationPayload) {
-    console.log(`Sending push notification to user ${recipientId}: ${message}`);
+  async sendPushNotification(recipientId: string, payload: PushNotificationPayload) {
+    console.log(`Sending push notification to user ${recipientId}: ${JSON.stringify(payload)}`);
     await pusher.trigger(`private-user-notification-${recipientId}`, "new-notifications", {
       recipientId,
-      message,
+      payload,
     });
   }
 

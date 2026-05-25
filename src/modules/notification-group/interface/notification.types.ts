@@ -21,10 +21,12 @@ export type PendingCommentNotificationGroupKey =
     | `thread:${string}`;
 
 export type PendingCommentNotificationRedisKey =
-    `notification:pending:${string}:comment:${PendingCommentNotificationGroupKey}`;
+    `notification:pending:${string}:${string}:${PendingCommentNotificationGroupKey}`;
 
 export type PendingCommentNotificationRedisMeta = {
+    key: string;
     type: NotificationType;
+    targetType: string;
     groupKey: PendingCommentNotificationGroupKey;
     originPostId: string;
     targetPostId: string;
@@ -33,12 +35,27 @@ export type PendingCommentNotificationRedisMeta = {
     updatedAt: string;
     count: string;
     username: string;
+    avatar: string;
 };
 
 export type PendingCommentNotificationRedisPayload = Omit<
     PendingCommentNotificationRedisMeta,
     "count"
 >;
+
+export type EnqueuePendingNotificationInput = {
+    actorId: string;
+    recipientId: string;
+    targetPostId: string;
+    originPostId: string;
+    username: string;
+    avatar?: string;
+    postOwnerId: string;
+    type: NotificationType;
+    targetType: string;
+    key: string;
+    groupKey?: PendingCommentNotificationGroupKey;
+};
 
 export type PendingCommentNotificationBatchItem = {
     redisKey: PendingCommentNotificationRedisKey;

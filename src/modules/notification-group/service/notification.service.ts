@@ -1,8 +1,9 @@
 import { NOTIFICATION_JOB_KEY } from "@/constants/queue";
 import { baseLogger } from "@/middlewares/logger";
-import { ReplyNotification } from "@/modules/notification-group/events/notification.events";
+import { MentionNotification, ReplyNotification } from "@/modules/notification-group/events/notification.events";
 import type {
   CreateNotificationGroupInput,
+  EnqueuePendingNotificationInput,
   FindAllNotificationGroupsInput,
   PendingCommentNotificationGroupKey,
   PendingCommentNotificationRedisKey,
@@ -57,8 +58,21 @@ class NotificationService {
     });
   }
 
+  private resolveGroupKey({
+    isOwner,
+    originPostId,
+    groupKey,
+  }: {
+    isOwner: boolean;
+    originPostId: string;
+    groupKey?: PendingCommentNotificationGroupKey;
+  }): PendingCommentNotificationGroupKey {
+    if (groupKey) return groupKey;
 
-  async handleNewComment(relyNotification: ReplyNotification) {
+    return isOwner ? `post:${originPostId}` : `thread:${originPostId}`;
+  }
+
+  async enqueuePendingNotification(input: EnqueuePendingNotificationInput) {
     const {
       actorId,
       recipientId,
@@ -66,38 +80,48 @@ class NotificationService {
       originPostId,
       username,
       postOwnerId,
-    } = relyNotification;
+      type,
+      targetType,
+      key,
+      groupKey,
+      avatar
+    } = input;
 
     const isOwner = recipientId === postOwnerId;
-    // Nếu là chủ groupKey thì đặt tên là post , còn nếu không đặt tên là thread để phân biệt với comment của post
-    const groupKey: PendingCommentNotificationGroupKey = isOwner
-      ? `post:${targetPostId}`
-      : `thread:${targetPostId}`;
+    if (key.includes(":")) {
+      throw new Error("Notification key must not contain ':'");
+    }
 
-    // Tạo khóa Redis cho nhóm thông báo này
+    const resolvedGroupKey = this.resolveGroupKey({
+      isOwner,
+      originPostId,
+      groupKey,
+    });
+
     const redisKey: PendingCommentNotificationRedisKey =
-      `notification:pending:${recipientId}:comment:${groupKey}`;
+      `notification:pending:${recipientId}:${key}:${resolvedGroupKey}`;
 
-
-    baseLogger.info(`Handling new comment notification for Redis key: ${redisKey}`);
+    baseLogger.info(`Handling pending notification for Redis key: ${redisKey}`);
     const pipeline = redisService.multi();
 
-
     const payload: PendingCommentNotificationRedisPayload = {
-      type: NotificationType.REPLY,
-      groupKey,
+      key,
+      type,
+      targetType,
+      groupKey: resolvedGroupKey,
       originPostId,
       targetPostId,
       isOwner: isOwner ? "true" : "false",
       lastActorId: actorId,
       updatedAt: String(Date.now()),
-      username
+      username,
+      avatar: avatar ?? "",
     };
     pipeline.hSet(redisKey, payload);
 
     pipeline.sAdd(`${redisKey}:actors`, actorId);
-    pipeline.sCard(`${redisKey}:actors`); // đếm số người đã tương tác để cập nhật count
-    pipeline.hIncrBy(redisKey, 'count', 1);
+    pipeline.sCard(`${redisKey}:actors`);
+    pipeline.hIncrBy(redisKey, "count", 1);
 
     pipeline.expire(redisKey, 3600);
 
@@ -106,6 +130,26 @@ class NotificationService {
     await redisService.zAdd(NOTIFICATION_JOB_KEY.BATCH_SYNC_NOTIFICATION, {
       score: Date.now() + 5000,
       value: redisKey,
+    });
+
+    return redisKey;
+  }
+
+  async handleNewComment(relyNotification: ReplyNotification) {
+    return this.enqueuePendingNotification({
+      ...relyNotification,
+      type: NotificationType.REPLY,
+      targetType: "POST",
+      key: "comment",
+    });
+  }
+
+  async handleMention(mentionNotification: MentionNotification) {
+    return this.enqueuePendingNotification({
+      ...mentionNotification,
+      type: NotificationType.MENTION,
+      targetType: "POST",
+      key: "mention",
     });
   }
 

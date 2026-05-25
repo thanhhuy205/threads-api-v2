@@ -23,7 +23,7 @@
 // // ─── Tạo index ────────────────────────────────────────────────────────────────
 // async function createIndex() {
 //     console.log("\n🗂️  Kiểm tra index...");
-//     await elasticSearchClient.indices.delete({ index: "posts" });
+//     await elasticSearchClient.indices.delete({ index: "search" });
 //     const { body: exists } = await elasticSearchClient.indices.exists({ index: INDEX });
 //     if (exists) {
 //         console.log(`   ⏭️  Index "${INDEX}" đã tồn tại`);
@@ -38,7 +38,14 @@
 //                     type: { type: "keyword" }, // "user" | "post" | "topic"
 //                     createdAt: { type: "date" },
 //                     // ── user ──
-//                     username: { type: "text" },
+//                     username: {
+//                         type: "text",
+//                         fields: {
+//                             keyword: {
+//                                 type: "keyword",
+//                             },
+//                         },
+//                     },
 //                     name: { type: "text" },
 //                     bio: { type: "text" },
 //                     avatar: { type: "keyword" },
@@ -47,11 +54,25 @@
 //                     publicId: { type: "keyword" },
 //                     userId: { type: "keyword" },
 //                     content: { type: "text" },
-//                     authorUsername: { type: "text" },
+//                     authorUsername: {
+//                         type: "text",
+//                         fields: {
+//                             keyword: {
+//                                 type: "keyword",
+//                             },
+//                         },
+//                     },
 //                     authorName: { type: "text" },
 //                     authorAvatar: { type: "keyword" },
 //                     // ── topic ──
-//                     topicName: { type: "text" },
+//                     topicName: {
+//                         type: "text",
+//                         fields: {
+//                             keyword: {
+//                                 type: "keyword",
+//                             },
+//                         },
+//                     },
 //                     postCount: { type: "integer" },
 //                 },
 //             },
