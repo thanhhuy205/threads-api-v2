@@ -73,8 +73,12 @@ export const messageGroupSwaggerSchemas = {
         type: "string",
         example: "Hello everyone",
       },
+      clientMessageId: {
+        type: "string",
+        example: "tmp-msg-1716988000000",
+      },
     },
-    required: ["content"],
+    required: ["content", "clientMessageId"],
   },
   MessageGroupMemberUser: {
     type: "object",

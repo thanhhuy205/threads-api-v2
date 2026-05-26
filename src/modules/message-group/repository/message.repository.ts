@@ -31,7 +31,7 @@ class MessageRepository
 
     return prisma.message.findMany({
       where,
-      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       take: currentLimit ? currentLimit + 1 : undefined,
       skip: currentAfter ? 1 : 0,
       cursor: currentAfter ? cursor : undefined,

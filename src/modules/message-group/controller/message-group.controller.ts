@@ -38,6 +38,7 @@ class MessageGroupController {
       req.params.publicId,
       userId,
       req.body.content,
+      req.body.clientMessageId,
     );
 
     return res.success(201, "Message sent successfully", message);

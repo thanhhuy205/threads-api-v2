@@ -86,7 +86,12 @@ class MessageGroupFacadeService {
     return group;
   }
 
-  async sendMessage(groupPublicId: string, senderId: string, content: string) {
+  async sendMessage(
+    groupPublicId: string,
+    senderId: string,
+    content: string,
+    clientMessageId: string,
+  ) {
     const messageGroup = await this.findMessageGroupOrThrow(groupPublicId);
     const sender = await messageMemberService.assertMemberOrThrow(messageGroup.id, senderId);
 
@@ -116,6 +121,7 @@ class MessageGroupFacadeService {
             groupPublicId: messageGroup.publicId,
             message: {
               ...messagePayload,
+              clientMessageId,
               createdAt: messagePayload.createdAt.toISOString(),
             },
           },

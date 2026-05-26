@@ -47,7 +47,6 @@ class MessageService {
       rows: messages,
       take,
       getAfter: (item) => item.publicId,
-      before : true 
     });
   }
 }
