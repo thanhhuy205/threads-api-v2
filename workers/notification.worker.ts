@@ -78,6 +78,13 @@ class NotificationWorker {
     const firstName = username;
     const isMentionNotification =
       meta.type === NotificationType.MENTION || meta.key === "mention";
+    const isMessageNotification =
+      meta.type === NotificationType.MESSAGE || meta.key === "message";
+
+    if (isMessageNotification) {
+      if (actorCount === 1) return `${firstName} đã gửi một tin nhắn mới trong cuộc trò chuyện của bạn`;
+      return `${firstName} đã gửi  ${actorCount - 1} tin nhắn mới tới bạn`;
+    }
 
     if (isMentionNotification) {
       if (actorCount === 1) return `${firstName} đã nhắc đến bạn trong một bài viết`;
@@ -96,8 +103,6 @@ class NotificationWorker {
 
     return `${firstName} đã bình luận về bài của bạn`;
   }
-
-
 
 
   async batchCommentNotification() {
@@ -190,7 +195,6 @@ class NotificationWorker {
       payload,
     });
   }
-
 }
 
 export const notificationWorker = new NotificationWorker();

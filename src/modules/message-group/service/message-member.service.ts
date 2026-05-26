@@ -28,12 +28,20 @@ class MessageMemberService {
     );
   }
 
+  findMembersByGroupId(messageGroupId: number) {
+    return memberMessageGroupRepository.findByGroupId({
+      messageGroupId,
+      take: 10,
+    });
+  }
+
   async assertMemberOrThrow(messageGroupId: number, userId: string) {
     const member = await this.findMemberByGroupAndUser(messageGroupId, userId);
 
     if (!member) {
       throw new ForbiddenException("You are not a member of this message group");
     }
+    return member;
   }
 
   async getMembersByGroupId({

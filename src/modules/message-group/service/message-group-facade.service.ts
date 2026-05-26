@@ -7,6 +7,7 @@ import {
   mapMessageGroupResponse,
   mapMessageResponse,
 } from "@/modules/message-group/mapper/message-group.mapper";
+import { notificationService } from "@/modules/notification-group/service/notification.service";
 import { pusherChannel } from "@/modules/pusher/channel/pusher-channel";
 import { pusherService } from "@/modules/pusher/service/pusher.service";
 import { userService } from "@/modules/user/service/user.service";
@@ -87,7 +88,7 @@ class MessageGroupFacadeService {
 
   async sendMessage(groupPublicId: string, senderId: string, content: string) {
     const messageGroup = await this.findMessageGroupOrThrow(groupPublicId);
-    await messageMemberService.assertMemberOrThrow(messageGroup.id, senderId);
+    const sender = await messageMemberService.assertMemberOrThrow(messageGroup.id, senderId);
 
     const messagePayload = await transactionService.doInTransaction(async (tx) => {
       const message = await messageService.createMessage(
@@ -103,20 +104,32 @@ class MessageGroupFacadeService {
 
       return mapMessageResponse(message);
     });
-
+    const members = await messageMemberService.findMembersByGroupId(messageGroup.id);
+    const recipientIds = members.filter((member) => member.user.id !== senderId);
 
     try {
-      await pusherService.trigger(
-        pusherChannel.privateChat(messageGroup.publicId),
-        PUSHER_EVENT.MESSAGE_NEW,
-        {
-          groupPublicId: messageGroup.publicId,
-          message: {
-            ...messagePayload,
-            createdAt: messagePayload.createdAt.toISOString(),
+      await Promise.all([
+        pusherService.trigger(
+          pusherChannel.privateChat(messageGroup.publicId),
+          PUSHER_EVENT.MESSAGE_NEW,
+          {
+            groupPublicId: messageGroup.publicId,
+            message: {
+              ...messagePayload,
+              createdAt: messagePayload.createdAt.toISOString(),
+            },
           },
-        },
-      );
+        ),
+
+        notificationService.sendMessageNotification({
+          groupPublicId: messageGroup.publicId,
+          senderId,
+          recipientId: recipientIds[0].user.id,
+          content,
+          name: sender.user.username,
+          avatar: sender.user.avatar ?? "",
+        }),
+      ]);
     } catch (error) {
       baseLogger.error("Failed to trigger chat realtime event: %o", JSON.stringify(error));
     }

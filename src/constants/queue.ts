@@ -10,6 +10,7 @@ export const QUEUE_NAME = {
   LIKED_REMOVE_QUEUE: "likes_remove",
   EVALUATION_QUEUE: "evaluation_queue",
   DELTA_HP_QUEUE: "delta_hp_queue",
+  MESSAGE_QUEUE: "message_queue",
 };
 
 
@@ -23,6 +24,7 @@ export const WORKER_NAME = {
   AUTO_REMOVE_BAN_WORKER: "auto_remove_ban_worker",
   EVALUATE_WORKER: "evaluate_worker",
   DELTA_HP_WORKER: "delta_hp_worker",
+  MESSAGE_WORKER: "message_worker",
 };
 
 export const PINECONE_JOB_NAME = {
@@ -60,10 +62,12 @@ export const AUTO_REMOVE_BAN_JOB_NAME = {
 export const NOTIFICATION_JOB_NAME = {
   INIT_SYNC_NOTIFICATION_BATCH: "initSyncNotificationBatch",
   BATCH_SYNC_NOTIFICATION: "batchSyncNotification",
+  REALTIME_CHAT_NOTIFICATION: "realtimeChatNotification",
 };
 
 export const NOTIFICATION_JOB_KEY = {
   BATCH_SYNC_NOTIFICATION: "batch_sync_notification_job",
+  REALTIME_CHAT_NOTIFICATION: "realtime_chat_notification_job",
 }
 
 export const BLOOM_KEY = {

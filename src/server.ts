@@ -59,12 +59,21 @@ const bootstrap = async () => {
     }
 
     try {
+        await notificationProducer.initMessageNotificationJob();
+        console.log('Initialized message notification repeat job');
+    } catch (error) {
+        console.error('Failed to initialize message notification repeat job:', error);
+    }
+
+    try {
         await deltaProducer.initSyncBatchJob();
         console.log('Initialized delta hp repeat job');
     }
     catch (error) {
         console.error('Failed to initialize delta hp repeat job:', error);
     }
+
+
 
     process.on('SIGINT', () => {
         shutdown('SIGINT');
