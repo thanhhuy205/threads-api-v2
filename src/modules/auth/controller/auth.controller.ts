@@ -3,14 +3,12 @@ import { authService } from "@/modules/auth/service/auth.service";
 import { Request, Response } from "express";
 import type { ForgotPasswordDto } from "../dto/request/forgot-password.request.dto";
 import type { LoginDto } from "../dto/request/login.request.dto";
-import type { RefreshTokenDto } from "../dto/request/refresh-token.request.dto";
 import type { RegisterDto } from "../dto/request/register.request.dto";
 import type { ResetPasswordDto } from "../dto/request/reset-password.request.dto";
 import type { UpdateProfileDto } from "../dto/request/update-profile.request.dto";
 import type { ValidateEmailDto } from "../dto/request/validate-email.request.dto";
 import type { ValidateTokenDto } from "../dto/request/validate-token.request.dto";
 import type { ValidateUsernameDto } from "../dto/request/validate-username.request.dto";
-import { LogoutDto } from "../dto/request/logout.request.dto";
 
 class AuthController {
   async register(req: Request<{}, {}, RegisterDto>, res: Response) {
@@ -49,8 +47,11 @@ class AuthController {
     return res.success(200, AUTH_MESSAGE.UPDATE_USER_SUCCESS, result);
   }
 
-  async refreshToken(req: Request<{}, {}, RefreshTokenDto>, res: Response) {
-    const tokenPair = await authService.refreshToken(req.body, {
+  async refreshToken(req: Request<{}, {}, {}>, res: Response) {
+    if (!req.refreshToken) {
+      return res.error(400, AUTH_MESSAGE.INVALID_CREDENTIALS);
+    }
+    const tokenPair = await authService.refreshToken({ refreshToken: req.refreshToken }, {
       ip: req.ip ?? "unknown",
       userAgent: req.headers["user-agent"]?.toString() ?? "unknown",
     });
@@ -116,11 +117,15 @@ class AuthController {
     return res.success(200, AUTH_MESSAGE.GET_ME_SUCCESS, user);
   }
 
-  async logout(req: Request<{}, {}, LogoutDto>, res: Response) {
+  async logout(req: Request<{}, {}, {}>, res: Response) {
     const accessToken = req.accessToken as string;
-    await authService.logout(accessToken, req.body);
+    const refreshToken = req.refreshToken as string;
+    await authService.logout(accessToken, {
+      refreshToken,
+    });
     return res.success(200, AUTH_MESSAGE.LOGOUT_SUCCESS);
   }
 }
+
 
 export const authController = new AuthController();

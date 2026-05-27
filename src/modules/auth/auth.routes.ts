@@ -1,11 +1,10 @@
 import { authorization } from "@/middlewares/auth";
+import { refreshTokenMiddleware } from "@/middlewares/refresh-token";
 import { validate } from "@/middlewares/validate";
+import { authController } from "@/modules/auth/controller/auth.controller";
 import { Router } from "express";
-import { authController } from "./controller/auth.controller";
 import { forgotPasswordSchema } from "./dto/request/forgot-password.request.dto";
 import { loginSchema } from "./dto/request/login.request.dto";
-import { logoutSchema } from "./dto/request/logout.request.dto";
-import { refreshTokenSchema } from "./dto/request/refresh-token.request.dto";
 import { registerSchema } from "./dto/request/register.request.dto";
 import { resetPasswordSchema } from "./dto/request/reset-password.request.dto";
 import { updateProfileSchema } from "./dto/request/update-profile.request.dto";
@@ -30,14 +29,14 @@ authRouter.post(
 );
 authRouter.post(
   "/refresh-token",
-  validate(refreshTokenSchema),
+  refreshTokenMiddleware,
   authController.refreshToken,
 );
 authRouter.get("/me", authorization, authController.me);
 authRouter.post(
   "/logout",
   authorization,
-  validate(logoutSchema),
+  refreshTokenMiddleware,
   authController.logout,
 );
 authRouter.post(

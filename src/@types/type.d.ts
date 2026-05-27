@@ -12,6 +12,7 @@ declare global {
     interface Request {
       user?: JwtPayload;
       accessToken?: string;
+      refreshToken?: string;
       query_parsed?: any;
     }
 
@@ -50,3 +51,4 @@ declare global {
 }
 
 export { };
+
