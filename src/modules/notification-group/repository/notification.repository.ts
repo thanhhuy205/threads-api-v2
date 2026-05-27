@@ -151,6 +151,18 @@ class NotificationRepository
         });
     }
 
+    findUnreadByRecipientId(recipientId: string) {
+        return prisma.notificationGroup.findFirst({
+            where: {
+                recipientId,
+                isRead: false,
+            },
+            select: {
+                id: true,
+            },
+        });
+    }
+
     createMany(
         data: {
             recipientId: string;

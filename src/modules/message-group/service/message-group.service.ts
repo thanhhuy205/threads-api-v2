@@ -63,6 +63,10 @@ class MessageGroupService {
     });
   }
 
+  countUnreadGroupsByUserId(userId: string) {
+    return messageGroupRepository.countUnreadGroupsByUserId(userId);
+  }
+
   async findExistingPrivateGroup(groupPublicId: string, userId: string, tx?: Prisma.TransactionClient) {
     return messageGroupRepository.findUserExistingPrivateGroup(userId, groupPublicId, tx);
   }

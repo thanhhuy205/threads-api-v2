@@ -16,7 +16,15 @@ export const postFeedSelect = Prisma.validator<Prisma.PostSelect>()({
   viewsCount: true,
   isGhost: true,
   createdAt: true,
-  media: true,
+  media: {
+    select: {
+      id: true,
+      url: true,
+      type: true,
+      width: true,
+      height: true,
+    },
+  },
   mentions: {
     select: {
       userId: true,

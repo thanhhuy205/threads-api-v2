@@ -140,6 +140,26 @@ class MessageGroupRepository {
     });
   }
 
+  countUnreadGroupsByUserId(userId: string) {
+    return prisma.messageGroup.count({
+      where: {
+        members: {
+          some: {
+            userId,
+          },
+        },
+        messages: {
+          some: {
+            isRead: false,
+            senderId: {
+              not: userId,
+            },
+          },
+        },
+      },
+    });
+  }
+
 
   findUserExistingPrivateGroup(userId: string, groupPublicId: string, tx: Prisma.TransactionClient = prisma) {
     return tx.messageGroup.findFirst({

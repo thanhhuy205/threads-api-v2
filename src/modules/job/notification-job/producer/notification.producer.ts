@@ -6,6 +6,7 @@ import type { NotificationJobDto } from "../dto/notification.job.dto";
 class NotificationProducer {
   private readonly notificationQueue = createQueue(QUEUE_NAME.NOTIFICATION_QUEUE);
   private readonly messageQueue = createQueue(QUEUE_NAME.MESSAGE_QUEUE);
+  private readonly friendRequestQueue = createQueue(QUEUE_NAME.FRIEND_REQUEST_QUEUE);
   constructor() {
     baseLogger.info("NotificationProducer initialized");
   }
@@ -73,6 +74,40 @@ class NotificationProducer {
       {
         jobId: NOTIFICATION_JOB_NAME.REALTIME_CHAT_NOTIFICATION,
         repeat: { every: 3_000 },
+        attempts: 1,
+      },
+    );
+  }
+
+  async initFriendRequest() {
+    const repeatableJobs = await this.messageQueue.getRepeatableJobs();
+    const messageRepeatable = repeatableJobs.filter(
+      (job) => job.name === NOTIFICATION_JOB_NAME.REALTIME_FRIEND_REQUEST_NOTIFICATION,
+    );
+
+    if (messageRepeatable.length > 0) {
+      await Promise.all(
+        messageRepeatable.map((job) =>
+          this.messageQueue.removeRepeatableByKey(job.key),
+        ),
+      );
+      baseLogger.warn(
+        `Removed ${messageRepeatable.length} existing notification repeat jobs before re-initializing scheduler`,
+      );
+    }
+
+    const payload: NotificationJobDto = {
+      triggeredBy: "scheduler",
+      requestedAt: new Date().toISOString(),
+    };
+
+
+    await this.messageQueue.add(
+      NOTIFICATION_JOB_NAME.REALTIME_FRIEND_REQUEST_NOTIFICATION,
+      payload,
+      {
+        jobId: NOTIFICATION_JOB_NAME.REALTIME_FRIEND_REQUEST_NOTIFICATION,
+        repeat: { every: 60_000 },
         attempts: 1,
       },
     );

@@ -1,3 +1,4 @@
+import { redisKey } from "@/constants/resolve-key/redis-key";
 import {
     mapPostLabelToExpReason,
     mapPostLabelToQualityLabel,
@@ -12,9 +13,8 @@ import { mixedBreadService } from "@/modules/mixed-bread/service/mixed-bread.ser
 import { pineconeService } from "@/modules/pinecone/service/pinecone.service";
 import { postRepository } from "@/modules/post/repository/post.repository";
 import { reportRepository } from "@/modules/report/repository/report.repository";
-import { redisKey } from "@/constants/resolve-key/redis-key";
-import { redisService } from "@/providers/redis.provider";
 import { pineconeIndex } from "@/providers/pinecone.provider";
+import { redisService } from "@/providers/redis.provider";
 import { ReportTargetType } from "@prisma/client";
 import { EVALUATION_JOB_NAME, QUEUE_NAME } from "../src/constants/queue";
 import { createWorker } from "../src/providers/bullmq.provider";
@@ -28,7 +28,7 @@ interface EvaluationPostJob {
 
 interface EvaluationReportJob {
     reportId: string;
-    type: ReportTargetType.POST | ReportTargetType.CIRCLE;
+    type: ReportTargetType;
     targetPublicId: string;
     targetContent: string;
     reason: string;
@@ -174,7 +174,7 @@ const processEvaluationReport = async (job: EvaluationReportJob) => {
 
         if (
             normalizedConfidence >= 0.96 &&
-            [ReportTargetType.POST, ReportTargetType.CIRCLE].includes(job.type)
+            [ReportTargetType.POST, ReportTargetType.CIRCLE].includes(job.type as any)
         ) {
             await postRepository.updateIsHidden(job.targetPublicId, true);
             await redisService.incr(redisKey.post.listVersion());

@@ -3,6 +3,7 @@ import {
   REPORT_EVALUATION_SYSTEM_PROMPT,
 } from "@/modules/ai/promt/system.promt";
 import { openrouter } from "@/providers/openrouter.provider";
+import { ReportTargetType } from "@prisma/client";
 class AiService {
   async moderateContent(content: string) {
     // TODO: AI Content Moderation - detect toxic/spam, put in admin queue or auto hide
@@ -127,7 +128,7 @@ class AiService {
   async evaluateReportAI(input: {
     content: string;
     reason: string;
-    targetType: "POST" | "CIRCLE";
+    targetType: ReportTargetType;
   }) {
     const response = await openrouter.chat.send({
       chatRequest: {

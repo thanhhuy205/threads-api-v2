@@ -58,6 +58,13 @@ class NotificationService {
     });
   }
 
+  async hasUnread(recipientId: string) {
+    const unread = await notificationRepository.findUnreadByRecipientId(
+      recipientId,
+    );
+    return Boolean(unread);
+  }
+
   private resolveGroupKey({
     isOwner,
     originPostId,

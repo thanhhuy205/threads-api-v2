@@ -11,6 +11,7 @@ export const QUEUE_NAME = {
   EVALUATION_QUEUE: "evaluation_queue",
   DELTA_HP_QUEUE: "delta_hp_queue",
   MESSAGE_QUEUE: "message_queue",
+  FRIEND_REQUEST_QUEUE: "friend_request_queue",
 };
 
 
@@ -63,6 +64,7 @@ export const NOTIFICATION_JOB_NAME = {
   INIT_SYNC_NOTIFICATION_BATCH: "initSyncNotificationBatch",
   BATCH_SYNC_NOTIFICATION: "batchSyncNotification",
   REALTIME_CHAT_NOTIFICATION: "realtimeChatNotification",
+  REALTIME_FRIEND_REQUEST_NOTIFICATION: "realtimeFriendRequestNotification",
 };
 
 export const NOTIFICATION_JOB_KEY = {

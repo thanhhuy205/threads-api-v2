@@ -28,6 +28,7 @@ export type PostFeedResponse = Omit<
   PostFeedItem,
   "likes" | "topicsPosts" | "mentions" | "_count" | "derivatives"
 > & {
+  media: Array<Omit<NonNullable<PostFeedItem["media"]>[number], "postId">>;
   isLikedByAuth: boolean;
   isRepostByAuth: boolean;
   isFollowingAuthor: boolean;
@@ -102,7 +103,7 @@ export class PostMapper {
       origin: post.origin,
       viewsCount: post.viewsCount,
       parent: post.parent,
-      media: post.media,
+      media: post.media?.map(({ ...media }) => media) ?? [],
       mentions: post.mentions.map(m => ({
         userId: m.userId,
         username: m.user.username,
