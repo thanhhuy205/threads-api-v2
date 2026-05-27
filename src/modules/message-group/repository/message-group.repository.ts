@@ -20,6 +20,7 @@ const messageGroupSelect = {
           avatar: true,
         },
       },
+      unreadCount: true,
     },
   },
 } satisfies Prisma.MessageGroupSelect;
@@ -146,13 +147,8 @@ class MessageGroupRepository {
         members: {
           some: {
             userId,
-          },
-        },
-        messages: {
-          some: {
-            isRead: false,
-            senderId: {
-              not: userId,
+            unreadCount: {
+              gt: 0,
             },
           },
         },

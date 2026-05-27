@@ -1,8 +1,10 @@
+import { memberMessageGroupRepository } from "@/modules/message-group/repository/member-message-group.repository";
 import { messageRepository } from "@/modules/message-group/repository/message.repository";
 import {
   buildCursorPagination,
   type PaginationResponse,
 } from "@/shared/pagination/cursor-pagination";
+import { transactionService } from "@/shared/transaction/transaction.service";
 import { Prisma } from "@prisma/client";
 
 type MessageListRow = Awaited<
@@ -10,7 +12,7 @@ type MessageListRow = Awaited<
 >[number];
 
 class MessageService {
-  createMessage(
+  async createMessage(
     data: {
       messageGroupId: number;
       senderId: string;
@@ -18,7 +20,19 @@ class MessageService {
     },
     tx?: Prisma.TransactionClient,
   ) {
-    return messageRepository.create(data, tx);
+    const message = await transactionService.doInTransaction(async (tx) => {
+      const result = await messageRepository.create(data, tx);
+
+      await memberMessageGroupRepository.incrementUnreadCountByGroupId(
+        data.messageGroupId,
+        data.senderId,
+        tx,
+      );
+
+      return result;
+    });
+
+    return message;
   }
 
   findMessageByPublicIdAndGroupId(publicId: string, messageGroupId: number) {
@@ -48,6 +62,13 @@ class MessageService {
       take,
       getAfter: (item) => item.publicId,
     });
+  }
+
+  markMessagesRead(messageGroupId: number, recipientId: string) {
+    return memberMessageGroupRepository.updateUnreadCountToZeroByGroupIdAndUserId(
+      messageGroupId,
+      recipientId,
+    )
   }
 }
 

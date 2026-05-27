@@ -109,6 +109,15 @@ class FriendRequestRepository implements ICursorPagination<
     });
   }
 
+  countReceivedPending(receiverId: string) {
+    return prisma.friendRequest.count({
+      where: {
+        receiverId,
+        status: FriendRequestStatus.PENDING,
+      },
+    });
+  }
+
   async upsert(
     senderId: string,
     receiverId: string,

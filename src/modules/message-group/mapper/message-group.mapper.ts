@@ -20,6 +20,7 @@ type MessageGroupMemberUserResponse = {
 type MessageGroupMemberResponse = {
   id: string;
   user: MessageGroupMemberUserResponse;
+  unreadCount?: number;
 };
 
 type MessageGroupResponseInput = {
@@ -43,6 +44,9 @@ export const mapMessageGroupResponse = (
   messageGroup: MessageGroupResponseInput,
   currentUserId: string,
 ) => ({
+  unreadCount:
+    messageGroup.members.find((member) => member.user.id === currentUserId)
+      ?.unreadCount ?? 0,
   publicId: messageGroup.publicId,
   name: messageGroup.name,
   groupType: messageGroup.groupType,
@@ -53,6 +57,7 @@ export const mapMessageGroupResponse = (
     .map((member) => ({
       id: member.id,
       user: member.user,
+      unreadCount: member.unreadCount ?? 0,
     })),
 });
 

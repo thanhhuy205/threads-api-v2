@@ -4,16 +4,19 @@ import { Router } from "express";
 
 const notificationRouter = Router();
 
-notificationRouter.get("/", authorization, notificationController.getNotifications);
+notificationRouter.use(authorization);
+notificationRouter.get("/", notificationController.getNotifications);
 notificationRouter.get(
     "/unread",
-    authorization,
     notificationController.getUnreadStatus,
 );
 notificationRouter.get(
     "/message",
-    authorization,
     notificationController.getUnreadMessageGroups,
+);
+notificationRouter.get(
+    "/friend-request",
+    notificationController.getFriendRequestCount,
 );
 
 export default notificationRouter;

@@ -381,10 +381,11 @@ model MessageGroup {
 }
 
 model MemberMessageGroup {
-  id        String   @id @default(cuid())
-  userId    String   @map("user_id")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  unreadCount Int      @default(0)
 
   messageGroup   MessageGroup? @relation(fields: [messageGroupId], references: [id])
   messageGroupId Int?
@@ -403,7 +404,6 @@ model Message {
   content        String   @db.Text
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
-  isRead         Boolean  @default(false) @map("is_read")
 
   sender       User         @relation(fields: [senderId], references: [id])
   messageGroup MessageGroup @relation("MessageGroupMessages", fields: [messageGroupId], references: [id])

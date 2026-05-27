@@ -8,7 +8,7 @@ import {
   type PaginationResponse,
 } from "@/shared/pagination/cursor-pagination";
 import { transactionService } from "@/shared/transaction/transaction.service";
-import { FriendRequestStatus, GroupType } from "@prisma/client";
+import { FriendRequestStatus } from "@prisma/client";
 import { friendRequestRepository } from "../repository/friend-request.repository";
 
 type FriendRequestResponse = {
@@ -157,6 +157,10 @@ class FriendService {
       take,
       getAfter: (fr) => fr.receiverId,
     });
+  }
+
+  countReceivedFriendRequests(receiverId: string) {
+    return friendRequestRepository.countReceivedPending(receiverId);
   }
 }
 

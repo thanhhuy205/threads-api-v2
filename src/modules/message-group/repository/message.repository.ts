@@ -12,6 +12,7 @@ const messageSelect = {
   senderId: true,
   content: true,
   createdAt: true,
+
 } satisfies Prisma.MessageSelect;
 
 class MessageRepository

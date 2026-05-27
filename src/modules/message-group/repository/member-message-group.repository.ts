@@ -12,6 +12,7 @@ const memberMessageGroupSelect = {
       avatar: true,
     },
   },
+
 } satisfies Prisma.MemberMessageGroupSelect;
 
 class MemberMessageGroupRepository {
@@ -69,6 +70,47 @@ class MemberMessageGroupRepository {
       skip: currentAfter ? 1 : 0,
       cursor: currentAfter ? { id: currentAfter } : undefined,
       select: memberMessageGroupSelect,
+    });
+  }
+
+
+  incrementUnreadCountByGroupId(messageGroupId: number, excludeUserId: string, tx: Prisma.TransactionClient = prisma) {
+    return tx.memberMessageGroup.updateMany({
+      where: {
+        messageGroupId,
+        userId: {
+          not: excludeUserId,
+        },
+      },
+      data: {
+        unreadCount: {
+          increment: 1,
+        },
+      },
+    });
+  }
+
+  updateLastReadAtByGroupIdAndUserId(messageGroupId: number, userId: string, tx: Prisma.TransactionClient = prisma) {
+    return tx.memberMessageGroup.updateMany({
+      where: {
+        messageGroupId,
+        userId,
+      },
+      data: {
+        unreadCount: 0,
+      },
+    });
+  }
+
+  updateUnreadCountToZeroByGroupIdAndUserId(messageGroupId: number, userId: string, tx: Prisma.TransactionClient = prisma) {
+    return tx.memberMessageGroup.updateMany({
+      where: {
+        messageGroupId,
+        userId,
+      },
+      data: {
+        unreadCount: 0,
+      },
     });
   }
 }

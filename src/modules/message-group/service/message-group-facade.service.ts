@@ -175,6 +175,8 @@ class MessageGroupFacadeService {
       take,
     });
 
+    await messageService.markMessagesRead(messageGroup.id, userId);
+
     return {
       ...messages,
       rows: messages.rows.map((message) => mapMessageResponse(message)),
