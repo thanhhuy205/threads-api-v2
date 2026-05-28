@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API — Museum · docs</title>
+  <style>
+    :root { --ivory: #FAF9F5; --slate: #141413; --clay: #D97757; --oat: #E3DACC; --olive: #788C5D; --rust: #B04A3F; --gray-150: #F0EEE6; --gray-300: #D1CFC5; --gray-500: #87867F; --gray-700: #3D3D3A; --serif: ui-serif, Georgia, 'Times New Roman', serif; --sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; --mono: ui-monospace, 'SF Mono', Menlo, Monaco, monospace; --radius: 12px; --border: 1.5px solid var(--gray-300); }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--ivory); color: var(--gray-700); font-family: var(--sans); font-size: 15px; line-height: 1.65; padding: 48px 24px 96px; -webkit-font-smoothing: antialiased; }
+    .page { max-width: 1080px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 40px; }
+    .page.single { max-width: 860px; display: block; }
+    @media (max-width: 960px) { .page { grid-template-columns: 1fr; } aside { position: static; } .stat-grid { grid-template-columns: repeat(2,1fr); } }
+    header { grid-column: 1 / -1; margin-bottom: 8px; } aside { position: sticky; top: 24px; align-self: start; }
+    .eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gray-500); margin-bottom: 10px; }
+    h1 { font-family: var(--serif); font-weight: 500; font-size: 32px; line-height: 1.25; color: var(--slate); margin-bottom: 16px; }
+    h2 { font-family: var(--serif); font-weight: 500; font-size: 22px; color: var(--slate); margin: 40px 0 6px; }
+    h3 { font-family: var(--sans); font-weight: 600; font-size: 13px; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.06em; margin: 22px 0 10px; }
+    h4 { font-size: 13px; color: var(--slate); margin: 18px 0 8px; } p { margin-bottom: 12px; } ul { margin: 10px 0 14px 20px; }
+    .lead { max-width: 760px; font-size: 15.5px; color: var(--gray-700); line-height: 1.7; }
+    code { font-family: var(--mono); font-size: 13px; background: var(--gray-150); padding: 1px 5px; border-radius: 3px; }
+    .panel { border: var(--border); border-radius: var(--radius); background: #fff; padding: 18px 20px; margin-bottom: 20px; }
+    .panel h3 { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--gray-500); margin: 0 0 12px; }
+    table { width: 100%; border-collapse: separate; border-spacing: 0; background: #fff; border: var(--border); border-radius: var(--radius); overflow: hidden; margin: 16px 0; font-size: 14px; }
+    thead th { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--gray-500); background: var(--gray-150); padding: 10px 16px; text-align: left; border-bottom: 1px solid var(--gray-300); }
+    tbody td { padding: 12px 16px; border-bottom: 1px solid var(--gray-150); vertical-align: top; } tbody tr:last-child td { border-bottom: none; } tbody tr:hover { background: var(--ivory); }
+    .step { display: grid; grid-template-columns: 44px 1fr; gap: 18px; padding: 20px 0; border-bottom: 1.5px solid var(--gray-150); }
+    .badge { width: 34px; height: 34px; border-radius: 50%; background: var(--oat); border: 1.5px solid var(--gray-300); display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-weight: 600; color: var(--slate); font-size: 14px; }
+    .step.hot .badge { background: rgba(217,119,87,0.14); border-color: var(--clay); color: var(--clay); } .step.warn .badge { background: rgba(176,74,63,0.10); border-color: var(--rust); color: var(--rust); } .step.ok .badge { background: rgba(120,140,93,0.12); border-color: var(--olive); color: var(--olive); }
+    .step-loc { font-family: var(--mono); font-size: 13px; color: var(--slate); margin-bottom: 6px; }
+    details.snippet { margin-top: 8px; } details.snippet summary { list-style: none; cursor: pointer; font-size: 12.5px; color: var(--gray-500); font-family: var(--mono); display: inline-flex; gap: 6px; padding: 4px 0; } details.snippet summary::-webkit-details-marker { display: none; } details.snippet summary::before { content: "▸"; font-size: 10px; } details.snippet[open] summary::before { transform: rotate(90deg); }
+    pre.code { background: var(--slate); color: #E8E6DC; font-family: var(--mono); font-size: 12.5px; line-height: 1.7; border-radius: 8px; padding: 14px 16px; overflow-x: auto; margin-top: 10px; white-space: pre; }
+    pre.code .dim { color: var(--gray-500); } pre.code .kw { color: #C9B98A; } pre.code .str { color: #A8BC8C; } pre.code .num { color: #9AAFC5; }
+    .callout-warn { border: 1.5px solid var(--clay); border-radius: var(--radius); background: rgba(217,119,87,0.06); padding: 18px 20px; margin: 20px 0; } .callout-warn h3 { font-size: 11px; font-weight: 700; color: var(--clay); margin: 0 0 10px; }
+    .callout-warn ul { list-style: none; padding: 0; margin: 0; } .callout-warn li { position: relative; padding-left: 16px; font-size: 13px; margin-bottom: 8px; } .callout-warn li::before { content: ""; position: absolute; left: 0; top: 7px; width: 5px; height: 5px; background: var(--clay); border-radius: 2px; }
+    .callout-note { border: 1.5px solid var(--olive); border-radius: var(--radius); background: rgba(120,140,93,0.07); padding: 14px 18px; margin: 16px 0; font-size: 13.5px; }
+    .callout-error { border: 1.5px solid var(--rust); border-radius: var(--radius); background: rgba(176,74,63,0.07); padding: 14px 18px; margin: 16px 0; font-size: 13.5px; }
+    .diagram-panel { border: var(--border); border-radius: var(--radius); background: #fff; padding: 24px; overflow-x: auto; margin: 16px 0; } .diagram-caption { font-size: 12.5px; color: var(--gray-500); margin-top: 12px; font-style: italic; }
+    .flow { display: block; width: 100%; height: auto; min-width: 560px; } .flow text { font-family: var(--mono); font-size: 12px; fill: var(--slate); } .flow .sub, .flow .lbl { font-size: 10px; fill: var(--gray-500); }
+    .flow .box { fill: #fff; stroke: var(--gray-300); stroke-width: 1.5; } .flow .box.hot { fill: rgba(217,119,87,0.10); stroke: var(--clay); } .flow .box.ok { fill: rgba(120,140,93,0.12); stroke: var(--olive); } .flow .box.bad { fill: rgba(176,74,63,0.10); stroke: var(--rust); } .flow .box.gray { fill: var(--gray-150); stroke: var(--gray-300); }
+    .flow .arrow { stroke: var(--gray-500); stroke-width: 1.5; fill: none; } .flow .arrow.yes { stroke: var(--olive); } .flow .arrow.no { stroke: var(--rust); stroke-dasharray: 5 4; } .flow .arrow.hot { stroke: var(--clay); stroke-width: 2; }
+    .tag { display: inline-block; font-family: var(--mono); font-size: 11px; background: var(--gray-150); color: var(--gray-700); border: 1px solid var(--gray-300); border-radius: 4px; padding: 2px 8px; margin: 2px; } .tag.clay { background: rgba(217,119,87,0.12); border-color: var(--clay); color: var(--clay); } .tag.olive { background: rgba(120,140,93,0.12); border-color: var(--olive); color: var(--olive); } .tag.rust { background: rgba(176,74,63,0.10); border-color: var(--rust); color: var(--rust); }
+    .breadcrumb { font-family: var(--mono); font-size: 12px; color: var(--gray-500); margin-bottom: 20px; } .breadcrumb a { color: var(--clay); text-decoration: none; } .breadcrumb a:hover { text-decoration: underline; }
+    .key-files { list-style: none; padding: 0; margin: 0; } .key-files li { margin-bottom: 14px; } .key-files .path { font-family: var(--mono); font-size: 12px; color: var(--slate); display: block; margin-bottom: 3px; word-break: break-all; } .key-files .desc { font-size: 12.5px; color: var(--gray-500); line-height: 1.5; }
+    .stat-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin: 26px 0 8px; } .stat-card { background: #fff; border: var(--border); border-radius: var(--radius); padding: 20px 22px; } .stat-card.warn { border-left: 4px solid var(--clay); padding-left: 19px; } .stat-num { font-family: var(--serif); font-size: 40px; font-weight: 500; line-height: 1; color: var(--slate); margin-bottom: 8px; } .stat-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--gray-500); }
+    footer { max-width: 1080px; margin: 64px auto 0; padding-top: 20px; border-top: 1px solid var(--gray-300); font-family: var(--mono); font-size: 12px; color: var(--gray-500); }
+    </style>
+</head>
+<body>
+<div class="page single">
+  <header>
+    <div class="breadcrumb"><a href="../index.html">docs</a> / api / museum</div>
+    <div class="eyebrow">Museum · API Reference</div>
+    <h1>API — Museum</h1>
+    <p class="lead">Tài liệu các endpoint của module <code>museum</code>. Mỗi endpoint có request format, response format, lỗi có thể xảy ra và ví dụ thực tế.</p>
+  </header>
+  <main><h2>Tóm tắt endpoint</h2><table><thead><tr><th>Method</th><th>Path</th><th>Mô tả</th><th>Auth</th><th>Rate limit</th></tr></thead><tbody><tr><td><span class="tag clay">GET</span></td><td><code>/api/v1/museum</code></td><td>Danh sách museum.</td><td>Bearer</td><td>Global apiLimiter; một số flow có Redis/domain limit riêng.</td></tr><tr><td><span class="tag clay">GET</span></td><td><code>/api/v1/museum/:publicId</code></td><td>Chi tiết museum item.</td><td>Bearer</td><td>Global apiLimiter; một số flow có Redis/domain limit riêng.</td></tr></tbody></table>
+        <h2>GET /api/v1/museum</h2><span class="tag clay">GET</span> <span class="tag olive">Auth required</span> <span class="tag ">apiLimiter</span>
+        <p>Endpoint này dùng để danh sách museum. Gọi endpoint này khi client cần thao tác đúng phạm vi module <code>museum</code>.</p>
+        <h3>Request</h3><table><thead><tr><th>Header</th><th>Giá trị</th><th>Bắt buộc</th><th>Mô tả</th></tr></thead><tbody><tr><td>Authorization</td><td>Bearer accessToken</td><td>Có</td><td>JWT access token nếu route protected</td></tr><tr><td>x-refresh-token</td><td>raw refresh token</td><td>Không</td><td>Refresh token header theo middleware</td></tr></tbody></table>
+        <table><thead><tr><th>Parameter</th><th>Kiểu</th><th>Mô tả</th><th>Ví dụ</th></tr></thead><tbody><tr><td>path params</td><td>string</td><td>Các phần :publicId, :username, :code nếu path có</td><td>cm123</td></tr><tr><td>query params</td><td>string/number</td><td>take, after, page, limit hoặc module-specific query</td><td>take=20</td></tr></tbody></table>
+        <table><thead><tr><th>Field</th><th>Kiểu</th><th>Bắt buộc</th><th>Validation</th><th>Mô tả</th><th>Ví dụ giá trị</th></tr></thead><tbody><tr><td>body</td><td>object</td><td>Không</td><td>Theo DTO Zod nếu route có validate()</td><td>Payload nghiệp vụ của endpoint</td><td>{&quot;content&quot;:&quot;Hello&quot;}</td></tr></tbody></table>
+        <div class="callout-note">Ví dụ request<pre class="code">curl -X GET http://localhost:3302/api/v1/museum \
+  -H <span class="str">"Authorization: Bearer ACCESS_TOKEN"</span> \
+  -H <span class="str">"Content-Type: application/json"</span></pre></div>
+        <h3>Response</h3><h4>200/201 — Thành công</h4><table><thead><tr><th>Field</th><th>Kiểu</th><th>Luôn có?</th><th>Mô tả</th></tr></thead><tbody><tr><td>success</td><td>boolean</td><td>Có</td><td>true khi request thành công</td></tr><tr><td>message</td><td>string</td><td>Không</td><td>Một số controller truyền message</td></tr><tr><td>data</td><td>object/array</td><td>Tùy endpoint</td><td>Dữ liệu trả về từ service</td></tr><tr><td>pagination</td><td>object</td><td>Với list</td><td>Cursor/offset pagination</td></tr></tbody></table>
+        <pre class="code">{
+  <span class="str">"success"</span>: true,
+  <span class="str">"data"</span>: {
+    <span class="str">"module"</span>: <span class="str">"museum</span>",
+    <span class="str">"endpoint"</span>: <span class="str">"/api/v1/museum"</span>
+  }
+}</pre>
+        <h4>Lỗi có thể xảy ra</h4><table><thead><tr><th>HTTP Status</th><th>Error Code</th><th>Khi nào xảy ra</th><th>Cách xử lý ở client</th></tr></thead><tbody><tr><td>401</td><td>UNAUTHORIZED</td><td>Unauthorized</td><td>Login lại hoặc refresh token.</td></tr><tr><td>400</td><td>VALIDATION_FAILED</td><td>Validation failed</td><td>Client sửa field sai.</td></tr><tr><td>404</td><td>NOT_FOUND</td><td>Resource not found</td><td>Refresh dữ liệu.</td></tr><tr><td>403</td><td>FORBIDDEN</td><td>Forbidden</td><td>Ẩn action trong UI.</td></tr><tr><td>500</td><td>INTERNAL_SERVER_ERROR</td><td>External dependency fail</td><td>On-call kiểm tra provider/log.</td></tr></tbody></table>
+        <div class="callout-error">Ví dụ lỗi<pre class="code">{
+  <span class="str">"success"</span>: false,
+  <span class="str">"message"</span>: <span class="str">"Validation failed"</span>
+}</pre></div>
+        <h3>Ghi chú</h3><ul><li>Endpoint đi qua global <code>apiLimiter</code>.</li><li>Idempotency không được đảm bảo trừ khi service có upsert/unique constraint riêng.</li><li>Business meaning của museum cần xác nhận từ product.</li></ul>
+        
+        <h2>GET /api/v1/museum/:publicId</h2><span class="tag clay">GET</span> <span class="tag olive">Auth required</span> <span class="tag ">apiLimiter</span>
+        <p>Endpoint này dùng để chi tiết museum item. Gọi endpoint này khi client cần thao tác đúng phạm vi module <code>museum</code>.</p>
+        <h3>Request</h3><table><thead><tr><th>Header</th><th>Giá trị</th><th>Bắt buộc</th><th>Mô tả</th></tr></thead><tbody><tr><td>Authorization</td><td>Bearer accessToken</td><td>Có</td><td>JWT access token nếu route protected</td></tr><tr><td>x-refresh-token</td><td>raw refresh token</td><td>Không</td><td>Refresh token header theo middleware</td></tr></tbody></table>
+        <table><thead><tr><th>Parameter</th><th>Kiểu</th><th>Mô tả</th><th>Ví dụ</th></tr></thead><tbody><tr><td>path params</td><td>string</td><td>Các phần :publicId, :username, :code nếu path có</td><td>cm123</td></tr><tr><td>query params</td><td>string/number</td><td>take, after, page, limit hoặc module-specific query</td><td>take=20</td></tr></tbody></table>
+        <table><thead><tr><th>Field</th><th>Kiểu</th><th>Bắt buộc</th><th>Validation</th><th>Mô tả</th><th>Ví dụ giá trị</th></tr></thead><tbody><tr><td>body</td><td>object</td><td>Không</td><td>Theo DTO Zod nếu route có validate()</td><td>Payload nghiệp vụ của endpoint</td><td>{&quot;content&quot;:&quot;Hello&quot;}</td></tr></tbody></table>
+        <div class="callout-note">Ví dụ request<pre class="code">curl -X GET http://localhost:3302/api/v1/museum/cm_public_123 \
+  -H <span class="str">"Authorization: Bearer ACCESS_TOKEN"</span> \
+  -H <span class="str">"Content-Type: application/json"</span></pre></div>
+        <h3>Response</h3><h4>200/201 — Thành công</h4><table><thead><tr><th>Field</th><th>Kiểu</th><th>Luôn có?</th><th>Mô tả</th></tr></thead><tbody><tr><td>success</td><td>boolean</td><td>Có</td><td>true khi request thành công</td></tr><tr><td>message</td><td>string</td><td>Không</td><td>Một số controller truyền message</td></tr><tr><td>data</td><td>object/array</td><td>Tùy endpoint</td><td>Dữ liệu trả về từ service</td></tr><tr><td>pagination</td><td>object</td><td>Với list</td><td>Cursor/offset pagination</td></tr></tbody></table>
+        <pre class="code">{
+  <span class="str">"success"</span>: true,
+  <span class="str">"data"</span>: {
+    <span class="str">"module"</span>: <span class="str">"museum</span>",
+    <span class="str">"endpoint"</span>: <span class="str">"/api/v1/museum/:publicId"</span>
+  }
+}</pre>
+        <h4>Lỗi có thể xảy ra</h4><table><thead><tr><th>HTTP Status</th><th>Error Code</th><th>Khi nào xảy ra</th><th>Cách xử lý ở client</th></tr></thead><tbody><tr><td>401</td><td>UNAUTHORIZED</td><td>Unauthorized</td><td>Login lại hoặc refresh token.</td></tr><tr><td>400</td><td>VALIDATION_FAILED</td><td>Validation failed</td><td>Client sửa field sai.</td></tr><tr><td>404</td><td>NOT_FOUND</td><td>Resource not found</td><td>Refresh dữ liệu.</td></tr><tr><td>403</td><td>FORBIDDEN</td><td>Forbidden</td><td>Ẩn action trong UI.</td></tr><tr><td>500</td><td>INTERNAL_SERVER_ERROR</td><td>External dependency fail</td><td>On-call kiểm tra provider/log.</td></tr></tbody></table>
+        <div class="callout-error">Ví dụ lỗi<pre class="code">{
+  <span class="str">"success"</span>: false,
+  <span class="str">"message"</span>: <span class="str">"Validation failed"</span>
+}</pre></div>
+        <h3>Ghi chú</h3><ul><li>Endpoint đi qua global <code>apiLimiter</code>.</li><li>Idempotency không được đảm bảo trừ khi service có upsert/unique constraint riêng.</li><li>Business meaning của museum cần xác nhận từ product.</li></ul>
+        </main>
+  
+</div>
+<footer>Cập nhật lần cuối: 2026-05-28 · Module: museum · <a href="../index.html">← Về trang chủ</a></footer>
+<script>
+  var snippets = document.querySelectorAll('details.snippet');
+  snippets.forEach(function(d) {
+    d.addEventListener('toggle', function() {
+      if (!d.open) return;
+      snippets.forEach(function(o) { if (o !== d) o.open = false; });
+    });
+  });
+</script>
+</body>
+</html>

@@ -22,7 +22,7 @@ class CircleEnergyService {
             }, tx);
         }
         const newExp = energy.exp + exp;
-        const newHp = energy.current + hp;
+        const newHp = energy.current + hp;                                                                                                      
         await circleEnergyRepository.updateEnergy(circleId, newExp, newHp, tx);
         return { newExp, newHp };
     }
