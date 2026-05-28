@@ -22,13 +22,13 @@ class EmailWorker {
     })
 
 
-    async sendVerificationEmail(data: { email: string; token: string }) {
-        const verifyLink = `${configService.FRONTEND_URL}/verify-email?token=${data.token}`;
+    async sendVerificationEmail(data: { email: string; token: string, originUrl: string }) {
+        const verifyLink = `${data.originUrl}/verify-email?token=${data.token}`;
         const html = await ejs.renderFile(
             path.join(process.cwd(), './template/verify-email.ejs'),
             {
                 appName: 'Threads',
-                resetUrl: verifyLink,
+                verifyUrl: verifyLink,
                 expiresInMinutes: configService.RESEND_VERIFY_EMAIL_TOKEN_EXPIRES_IN_TEXT,
                 currentYear: new Date().getFullYear(),
             }

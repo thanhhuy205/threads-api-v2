@@ -2,6 +2,8 @@ import configService from "@/config/config";
 import { redisKey } from "@/constants/resolve-key/redis-key";
 import { NotFoundException } from "@/errors/error";
 import { baseLogger } from "@/middlewares/logger";
+import { roleRepository } from "@/modules/access-control/role/repository/role.repository";
+import { userRoleRepository } from "@/modules/access-control/role/repository/user-role.repository";
 import type { SessionMetadata } from "@/modules/auth/interfaces/session-metadata";
 import { verificationRepository } from "@/modules/auth/repository/verification.repository";
 import {
@@ -10,13 +12,13 @@ import {
 } from "@/modules/auth/util/hasher-password";
 import { hasherToken } from "@/modules/auth/util/hasher-token";
 import { bloomProducer } from "@/modules/job/bloom/producer/bloom.producer";
-import { emailProducer } from "@/modules/job/email/producer/email.producer";
 import { elasticProducer } from "@/modules/job/elastic-search/producer/elastic.producer";
+import { emailProducer } from "@/modules/job/email/producer/email.producer";
 import { TokenPairResponse } from "@/modules/jwt/dto/response/token-pair.response";
 import { jwtService } from "@/modules/jwt/service/jwt.service";
 import { userRepository } from "@/modules/user/repository/user.repository";
 import { redisService } from "@/providers/redis.provider";
-import { UserRoleType, UserStatus, VerificationCodeType } from "@prisma/client";
+import { UserRoleType, VerificationCodeType } from "@prisma/client";
 import crypto from "crypto";
 import ms, { StringValue } from "ms";
 import type { ForgotPasswordDto } from "../dto/request/forgot-password.request.dto";
@@ -38,8 +40,6 @@ import type { ForgotPasswordResponseDto } from "../dto/response/forgot-password.
 import type { UpdateProfileDataDto } from "../dto/response/update-profile.response.dto";
 import type { ValidateTokenResponseDto } from "../dto/response/validate-token.response.dto";
 import type { ValidateUserResponseDto } from "../dto/response/validate-user.response.dto";
-import { roleRepository } from "@/modules/access-control/role/repository/role.repository";
-import { userRoleRepository } from "@/modules/access-control/role/repository/user-role.repository";
 import { authRepository } from "../repository/auth.repository";
 
 class AuthService {
@@ -165,10 +165,24 @@ class AuthService {
     });
   }
 
-  async resendVerifyEmail(userId?: string): Promise<void> {
+  async resendVerifyEmail(originUrl: string, userId?: string): Promise<void> {
     const user = await userRepository.findById(userId ?? "");
     if (!user) {
       throw new NotFoundException("User not found");
+    }
+    const verificationRecord = await verificationRepository.findLatestByUserIdAndType(
+      user.id,
+      VerificationCodeType.VERIFY_ACCOUNT,
+    );
+
+    const recentVerificationRecord = verificationRecord ? verificationRecord[0] : null;
+
+    if (recentVerificationRecord && recentVerificationRecord.expiresAt > new Date()) {
+      throw new NotFoundException("A valid verification email has already been sent");
+    }
+
+    if (verificationRecord && verificationRecord.length >= 5) {
+      throw new NotFoundException("You have reached the limit for resending verification email. Please try again later.");
     }
 
     const token = crypto.randomBytes(32).toString("hex");
@@ -179,6 +193,7 @@ class AuthService {
         userName: user.username,
         email: user.email,
         token,
+        originUrl
       }),
       verificationRepository.create({
         userId: user.id,
@@ -204,6 +219,7 @@ class AuthService {
     }
 
     await authRepository.updateVerifiedEmail(verificationRecord.userId);
+    await redisService.del(redisKey.auth.me(verificationRecord.userId));
   }
 
   async validateEmail(

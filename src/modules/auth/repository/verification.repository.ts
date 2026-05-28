@@ -50,6 +50,18 @@ class VerificationRepository {
             },
         });
     }
+
+    async findLatestByUserIdAndType(userId: string, type: VerificationCodeType): Promise<VerificationCodeRecord[] | null> {
+        return prisma.verificationCode.findMany({
+            where: {
+                userId,
+                type,
+            },
+            orderBy: {
+                createdAt: 'desc',
+            },
+        });
+    }
 }
 
 export const verificationRepository = new VerificationRepository();
