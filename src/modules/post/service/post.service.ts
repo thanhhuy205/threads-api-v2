@@ -1040,7 +1040,15 @@ class PostService {
         "type circle only supports circle posts",
       );
     }
+    const existingReport = await reportService.findExistingReport({
+      reporterId: payload.reporterId,
+      targetType: payload.type,
+      targetId: targetPost.publicId,
+    });
 
+    if (existingReport) {
+      throw new BadRequestException("You have already reported this content");
+    }
     const report = await reportService.create({
       reporterId: payload.reporterId,
       targetType: payload.type,

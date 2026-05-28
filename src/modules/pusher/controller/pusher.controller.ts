@@ -45,6 +45,10 @@ class PusherController {
       return res.json(pusherService.authorizeChannel(socketId, channelName));
     }
 
+    if (channelName === pusherChannel.privateReport(userId)) {
+      return res.json(pusherService.authorizeChannel(socketId, channelName));
+    }
+
 
     if (channelName === pusherChannel.privateUser(userId)) {
       return res.json(pusherService.authorizeChannel(socketId, channelName));

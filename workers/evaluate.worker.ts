@@ -13,10 +13,11 @@ import { circlePostQualityLogService } from "@/modules/circle/service/circle-pos
 import { mixedBreadService } from "@/modules/mixed-bread/service/mixed-bread.service";
 import { pineconeService } from "@/modules/pinecone/service/pinecone.service";
 import { postRepository } from "@/modules/post/repository/post.repository";
+import { pusherService } from "@/modules/pusher/service/pusher.service";
 import { reportRepository } from "@/modules/report/repository/report.repository";
 import { pineconeIndex } from "@/providers/pinecone.provider";
 import { redisService } from "@/providers/redis.provider";
-import { ReportTargetType } from "@prisma/client";
+import { ReportStatus, ReportTargetType } from "@prisma/client";
 import { EVALUATION_JOB_NAME, QUEUE_NAME } from "../src/constants/queue";
 import { createWorker } from "../src/providers/bullmq.provider";
 
@@ -172,6 +173,7 @@ const processEvaluationReport = async (job: EvaluationReportJob) => {
             assistantNote: result.assistantNote,
             confidence: normalizedConfidence,
             isDisinformation: result.isDisinformation ?? false,
+            status: ReportStatus.RESOLVED
         });
 
         if (
@@ -181,12 +183,47 @@ const processEvaluationReport = async (job: EvaluationReportJob) => {
         ) {
             await postRepository.updateIsHidden(job.targetPublicId, true);
             await redisService.incr(redisKey.post.listVersion());
+            await pusherService.trigger(`private-report-${job.reporterId}`, 'report-processed', {
+                reportId: job.reportId,
+                targetPublicId: job.targetPublicId,
+                targetType: job.type,
+                message: `${result.assistantNote} và chúng tôi sẽ ẩn nội dung này khỏi những người dùng khác.`,
+                action: 'hide',
+            });
+            return {
+                processed: true,
+                reportId: job.reportId,
+                confidence: normalizedConfidence,
+                hidden: normalizedConfidence >= 0.96,
+            };
         }
 
         if (result.isDisinformation) {
             await postRepository.updateIsDisinformation(job.targetPublicId, true);
             await redisService.incr(redisKey.post.listVersion());
+            await pusherService.trigger(`private-report-${job.reporterId}`, 'report-processed', {
+                reportId: job.reportId,
+                targetPublicId: job.targetPublicId,
+                targetType: job.type,
+                message: `${result.assistantNote} và chúng tôi sẽ đánh dấu nội dung này là thông tin sai lệch.`,
+                action: 'disinformation',
+            });
+            return {
+                processed: true,
+                reportId: job.reportId,
+                confidence: normalizedConfidence,
+                hidden: normalizedConfidence >= 0.96,
+            };
         }
+
+
+        await pusherService.trigger(`private-report-${job.reporterId}`, 'report-processed', {
+            reportId: job.reportId,
+            targetPublicId: job.targetPublicId,
+            targetType: job.type,
+            message: `${result.assistantNote}, cảm ơn bạn đã báo cáo.`,
+            action: 'none',
+        });
 
         return {
             processed: true,

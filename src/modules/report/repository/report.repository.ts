@@ -1,5 +1,6 @@
 import prisma from "@/config/prisma";
 import type { Prisma } from "@prisma/client";
+import { ReportTargetType } from '@prisma/client';
 
 class ReportRepository {
   async create(data: Prisma.ReportUncheckedCreateInput) {
@@ -16,6 +17,20 @@ class ReportRepository {
     return prisma.report.update({
       where: { id: reportId },
       data,
+    });
+  }
+
+  async findExistingReport(params: {
+    reporterId: string;
+    targetType: ReportTargetType;
+    targetId: string;
+  }) {
+    return prisma.report.findFirst({
+      where: {
+        reporterId: params.reporterId,
+        targetType: params.targetType,
+        targetId: params.targetId,
+      },
     });
   }
 }
