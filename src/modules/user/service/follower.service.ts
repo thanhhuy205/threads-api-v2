@@ -61,6 +61,7 @@ class FollowerService {
         followingId: userId,
       },
     });
+    console.log(followerRows);
 
     const { rows, pagination } = buildCursorPagination({
       rows: followerRows,

@@ -43,7 +43,12 @@ export const buildNewFeedWhere = ({
         },
         visibility: {
             notIn: [VisibilityPost.FRIEND, VisibilityPost.PRIVATE, VisibilityPost.CIRCLE]
-        }
+        },
+        ...(userId ? {
+            userId: {
+                not: userId,
+            }
+        } : {})
     };
 
     if (feedType === NewFeedType.FOR_YOU && userId) {
@@ -96,7 +101,6 @@ export const buildNewFeedWhere = ({
     return where;
 
 }
-
 
 
 export const buildRepliesWhere = ({

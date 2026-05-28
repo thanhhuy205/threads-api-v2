@@ -14,6 +14,24 @@ import {
 import type { UserNameMentionQueryDto, UsernameParamsDto } from "../dto/request/username.params.dto";
 
 class UserController {
+  async getMyFollowers(
+    req: Request<{}, {}, {}, FollowersQueryDto>,
+    res: Response,
+  ) {
+    const userId = req.user?.sub;
+    if (!userId) {
+      return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
+    }
+
+    const { after, take } = getPagination(req);
+    const { users, pagination } = await followerService.getFollower({
+      userId,
+      after: after ?? undefined,
+      take,
+    });
+    return res.paginate({ rows: users, pagination });
+  }
+
   async getFollower(
     req: Request<UsernameParamsDto, {}, {}, FollowersQueryDto>,
     res: Response,

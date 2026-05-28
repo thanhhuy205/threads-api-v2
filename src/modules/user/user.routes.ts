@@ -14,7 +14,7 @@ userRouter.use(authorization);
 userRouter.get(
   "/followers",
   validate(followersQuerySchema, "query"),
-  userController.getFollower,
+  userController.getMyFollowers,
 );
 
 userRouter.post(
