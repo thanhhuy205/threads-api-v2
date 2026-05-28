@@ -40,6 +40,7 @@ export type PostFeedResponse = Omit<
     userId: string;
     username: string;
   }[];
+  isDisinformation: boolean;
 };
 export type UserSnapshot = {
   id: string;
@@ -69,6 +70,7 @@ export class PostMapper {
       content: post.content!,
       userId: post.userId ?? userId,
       visibility: post.visibility,
+      isDisinformation: post.isDisinformation,
       createdAt: post.createdAt.toISOString() ?? new Date().toISOString(),
     };
   }
@@ -100,6 +102,7 @@ export class PostMapper {
       repostsCountAndQuoteCount,
       topics: topics,
       isGhost: post.isGhost,
+      isDisinformation: post.isDisinformation,
       origin: post.origin,
       viewsCount: post.viewsCount,
       parent: post.parent,

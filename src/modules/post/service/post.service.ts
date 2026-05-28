@@ -665,6 +665,7 @@ class PostService {
       content: post.content!,
       userId: post.userId,
       visibility: post.visibility,
+      isDisinformation: post.isDisinformation,
       createdAt: post.createdAt,
     } as PostRecord;
   }
@@ -715,6 +716,7 @@ class PostService {
       content: post.content!,
       userId: post.userId,
       visibility: post.visibility,
+      isDisinformation: post.isDisinformation,
       createdAt: post.createdAt,
     } as PostRecord;
   }
@@ -748,6 +750,7 @@ class PostService {
       content: post.content,
       userId: post.userId,
       visibility: post.visibility,
+      isDisinformation: post.isDisinformation,
       createdAt: post.createdAt,
     } as PostRecord;
   }
@@ -811,6 +814,7 @@ class PostService {
       content: post.content,
       userId: payload.userId,
       visibility: post.visibility,
+      isDisinformation: post.isDisinformation,
       createdAt: new Date().toISOString(),
     } as PostRecord;
   }

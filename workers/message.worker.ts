@@ -47,6 +47,15 @@ class MessageWorker {
 
             notificationMessage.push({ ...notificationData } as any);
 
+
+
+            await redisService
+                .multi()
+                .del(messageKey)
+                .zRem(NOTIFICATION_JOB_KEY.REALTIME_CHAT_NOTIFICATION, messageKey)
+                .exec();
+
+
             await this.pusherNotificationMessage({
                 avatar: notificationData.avatar,
                 content: notificationData.content,
@@ -55,12 +64,6 @@ class MessageWorker {
                 recipientId: notificationData.recipientId,
                 name: notificationData.name,
             });
-
-            await redisService
-                .multi()
-                .del(messageKey)
-                .zRem(NOTIFICATION_JOB_KEY.REALTIME_CHAT_NOTIFICATION, messageKey)
-                .exec();
         }
     }
 

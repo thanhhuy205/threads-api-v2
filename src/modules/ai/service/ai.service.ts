@@ -130,6 +130,11 @@ class AiService {
     reason: string;
     targetType: ReportTargetType;
   }) {
+
+    if (!input.reason?.trim()) {
+      throw new Error("Report reason is empty");
+    }
+
     const response = await openrouter.chat.send({
       chatRequest: {
         models: [
@@ -145,12 +150,12 @@ class AiService {
           {
             role: "user",
             content: `
-            Evaluate report credibility.
+          Evaluate report credibility.
 
-            Target type: ${input.targetType}
-            Report reason: ${input.reason}
-            Target content:
-            ${input.content}
+          Target type: ${input.targetType}
+          Report reason: ${input.reason}
+          Target content:
+          ${input?.content}
 `,
           },
         ],
@@ -170,8 +175,11 @@ class AiService {
                   minimum: 0,
                   maximum: 1,
                 },
+                isDisinformation: {
+                  type: "boolean",
+                },
               },
-              required: ["assistantNote", "confidence"],
+              required: ["assistantNote", "confidence", "isDisinformation"],
               additionalProperties: false,
             },
           },
@@ -181,17 +189,38 @@ class AiService {
       },
     });
 
-    const rawContent = response.choices[0]?.message?.content;
-    if (!rawContent) {
+    const choice = response.choices?.[0];
+    const rawContent = choice?.message?.content;
+
+    if (!rawContent || typeof rawContent !== "string") {
+      console.error("[AI_REPORT_EMPTY_RESPONSE]", {
+        finishReason: choice?.finishReason,
+        choice,
+        response,
+        input: {
+          targetType: input.targetType,
+          contentLength: input.content.length,
+          reasonLength: input.reason.length,
+        },
+      });
+
       throw new Error("AI report evaluation response is empty");
     }
 
-    const parsed = JSON.parse(rawContent) as {
-      assistantNote: string;
-      confidence: number;
-    };
+    try {
+      return JSON.parse(rawContent) as {
+        assistantNote: string;
+        confidence: number;
+        isDisinformation: boolean;
+      };
+    } catch (error) {
+      console.error("[AI_REPORT_JSON_PARSE_FAILED]", {
+        rawContent,
+        error,
+      });
 
-    return parsed;
+      throw new Error("AI report evaluation JSON parse failed");
+    }
   }
 }
 

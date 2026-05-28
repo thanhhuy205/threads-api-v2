@@ -7,6 +7,7 @@ import {
 import { aiService } from "@/modules/ai/service/ai.service";
 import { circleMemberRepository } from "@/modules/circle/repository/circle-member.repository";
 import { circleRepository } from "@/modules/circle/repository/circle.repository";
+import { circleEnergyService } from "@/modules/circle/service/circle-enery.service";
 import { circleExpLogService } from "@/modules/circle/service/circle-exp-log.service";
 import { circlePostQualityLogService } from "@/modules/circle/service/circle-post-quality-log.service";
 import { mixedBreadService } from "@/modules/mixed-bread/service/mixed-bread.service";
@@ -135,7 +136,7 @@ const processEvaluationPost = async (job: EvaluationPostJob) => {
             }),
         ]);
 
-
+        await circleEnergyService.addExpAndHp(circle.id, formatResult.expDelta, formatResult.hpDelta);
         return {
             processed: true,
             postId: job.postId,
@@ -170,13 +171,20 @@ const processEvaluationReport = async (job: EvaluationReportJob) => {
         await reportRepository.updateById(job.reportId, {
             assistantNote: result.assistantNote,
             confidence: normalizedConfidence,
+            isDisinformation: result.isDisinformation ?? false,
         });
 
         if (
+            !result.isDisinformation &&
             normalizedConfidence >= 0.96 &&
             [ReportTargetType.POST, ReportTargetType.CIRCLE].includes(job.type as any)
         ) {
             await postRepository.updateIsHidden(job.targetPublicId, true);
+            await redisService.incr(redisKey.post.listVersion());
+        }
+
+        if (result.isDisinformation) {
+            await postRepository.updateIsDisinformation(job.targetPublicId, true);
             await redisService.incr(redisKey.post.listVersion());
         }
 

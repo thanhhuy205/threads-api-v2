@@ -39,6 +39,22 @@ class CircleEnergyRepository {
     WHERE circle_id IN (${Prisma.join(ids)})
     `
   }
+
+  async findByCircleId(circleId: number) {
+    return prisma.circleEnergy.findFirst({
+      where: { circleId },
+    });
+  }
+
+  async updateEnergy(circleId: number, exp: number, hp: number) {
+    return prisma.circleEnergy.updateMany({
+      where: { circleId },
+      data: {
+        exp,
+        current: hp,
+      },
+    });
+  }
 }
 
 export const circleEnergyRepository = new CircleEnergyRepository();

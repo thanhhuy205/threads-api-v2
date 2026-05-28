@@ -39,6 +39,7 @@ import {
   SacrificeBodyDto,
 } from "../dto/runtime.dto";
 import { mapCircleWithJoinStatus } from "../mapper/circle.mapper";
+import { circleEnergyRepository } from "../repository/circle-energy.repository";
 import { circleExpLogRepository } from "../repository/circle-exp-log.repository";
 import { circleMemberRepository } from "../repository/circle-member.repository";
 import { circlePostQualityLogRepository } from "../repository/circle-post-quality-log.repository";
@@ -832,11 +833,22 @@ class CircleService {
 
     const role = await circleMemberRepository.findRoleByCircleId(circle.id, userId);
 
-    const energy = circle.circleEnergies[0] ?? {
-      current: 500,
-      max: 1000,
-      peak: 500,
-      createdAt: circle.createdAt,
+    const energyRecord =
+      circle.circleEnergies[0] ??
+      (await circleEnergyRepository.create({
+        circleId: circle.id,
+        current: 500,
+        max: 500,
+        peak: 500,
+      }));
+
+    const energy = {
+      current: energyRecord.current,
+      max: energyRecord.max,
+      peak: energyRecord.peak,
+      exp: energyRecord.exp,
+      level: energyRecord.level,
+      createdAt: energyRecord.createdAt,
     };
 
     return {

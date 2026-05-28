@@ -24,6 +24,7 @@ export type PostRecord = {
   contentJson?: Prisma.JsonValue;
   userId: string;
   visibility: VisibilityPost;
+  isDisinformation: boolean;
   createdAt: string;
 };
 
@@ -182,6 +183,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
       contentJson: post.contentJson,
       userId: post.userId,
       visibility: post.visibility,
+      isDisinformation: post.isDisinformation,
       createdAt: post.createdAt.toISOString(),
     };
   }
@@ -209,6 +211,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
       contentJson: post.contentJson,
       userId: post.userId,
       visibility: post.visibility,
+      isDisinformation: post.isDisinformation,
       createdAt: post.createdAt.toISOString(),
     };
   }
@@ -236,6 +239,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
       contentJson: post.contentJson,
       userId: post.userId,
       visibility: post.visibility,
+      isDisinformation: post.isDisinformation,
       createdAt: post.createdAt.toISOString(),
     };
   }
@@ -272,6 +276,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
       contentJson: post.contentJson,
       userId: post.userId,
       visibility: post.visibility,
+      isDisinformation: post.isDisinformation,
       createdAt: post.createdAt.toISOString(),
     };
   }
@@ -301,6 +306,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
       contentJson: post.contentJson,
       userId: post.userId,
       visibility: post.visibility,
+      isDisinformation: post.isDisinformation,
       createdAt: post.createdAt.toISOString(),
     };
   }
@@ -314,6 +320,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
         content: true,
         userId: true,
         visibility: true,
+        isDisinformation: true,
         createdAt: true,
       },
     });
@@ -323,6 +330,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
       content: post.content,
       userId: post.userId,
       visibility: post.visibility,
+      isDisinformation: post.isDisinformation,
       createdAt: post.createdAt.toISOString(),
     }));
   }
@@ -395,6 +403,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
         content: true,
         userId: true,
         visibility: true,
+        isDisinformation: true,
         createdAt: true,
       },
     });
@@ -404,6 +413,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
       content: post.content,
       userId: post.userId,
       visibility: post.visibility,
+      isDisinformation: post.isDisinformation,
       createdAt: post.createdAt.toISOString(),
     };
   }
@@ -447,6 +457,13 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
     SET likes_count = GREATEST(likes_count - ${count}, 0)
     WHERE public_id = ${publicId}
   `;
+  }
+
+  async updateIsDisinformation(publicId: string, isDisinformation: boolean): Promise<void> {
+    await prisma.post.update({
+      where: { publicId },
+      data: { isDisinformation },
+    });
   }
 }
 
