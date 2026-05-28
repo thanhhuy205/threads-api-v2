@@ -40,14 +40,22 @@ class CircleEnergyRepository {
     `
   }
 
-  async findByCircleId(circleId: number) {
-    return prisma.circleEnergy.findFirst({
+  async findByCircleId(
+    circleId: number,
+    tx: Prisma.TransactionClient = prisma,
+  ) {
+    return tx.circleEnergy.findFirst({
       where: { circleId },
     });
   }
 
-  async updateEnergy(circleId: number, exp: number, hp: number) {
-    return prisma.circleEnergy.updateMany({
+  async updateEnergy(
+    circleId: number,
+    exp: number,
+    hp: number,
+    tx: Prisma.TransactionClient = prisma,
+  ) {
+    return tx.circleEnergy.updateMany({
       where: { circleId },
       data: {
         exp,

@@ -29,9 +29,7 @@ class AiService {
     const response = await openrouter.chat.send({
       chatRequest: {
         models: [
-          "openai/gpt-oss-120b:free",
-          "qwen/qwen3-235b-a22b:free",
-          "deepseek/deepseek-chat-v3-0324:free",
+          "openrouter/free"
         ],
 
         messages: [
@@ -138,9 +136,7 @@ class AiService {
     const response = await openrouter.chat.send({
       chatRequest: {
         models: [
-          "openai/gpt-oss-120b:free",
-          "qwen/qwen3-235b-a22b:free",
-          "deepseek/deepseek-chat-v3-0324:free",
+          "openrouter/free"
         ],
         messages: [
           {

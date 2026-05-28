@@ -65,6 +65,45 @@ class UserKarmaRepository {
 
     return result.karma;
   }
+
+  async decrementKarma(
+    userId: string,
+    amount: number,
+    tx: UserKarmaDbClient = prisma,
+  ) {
+    if (!Number.isInteger(amount) || amount <= 0) {
+      throw new Error("Karma decrement amount must be a positive integer");
+    }
+
+    const updated = await tx.userKarma.updateMany({
+      where: {
+        userId,
+        karma: {
+          gte: amount,
+        },
+      },
+      data: {
+        karma: {
+          decrement: amount,
+        },
+      },
+    });
+
+    if (updated.count === 0) {
+      return null;
+    }
+
+    const row = await tx.userKarma.findUnique({
+      where: {
+        userId,
+      },
+      select: {
+        karma: true,
+      },
+    });
+
+    return row?.karma ?? null;
+  }
 }
 
 export const userKarmaRepository = new UserKarmaRepository();

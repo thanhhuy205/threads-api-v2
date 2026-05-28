@@ -44,6 +44,8 @@ import { circleExpLogRepository } from "../repository/circle-exp-log.repository"
 import { circleMemberRepository } from "../repository/circle-member.repository";
 import { circlePostQualityLogRepository } from "../repository/circle-post-quality-log.repository";
 import { circleRepository } from "../repository/circle.repository";
+import { userKarmaRepository } from "../repository/user-karma.repository";
+import { circleEnergyService } from "./circle-enery.service";
 import { circleExpLogService } from "./circle-exp-log.service";
 
 type CircleVisibilityFilterType = "public" | "private" | "accepting" | "join" | null;
@@ -514,14 +516,54 @@ class CircleService {
     userId: string,
     body: SacrificeBodyDto,
   ) {
+    const circle = await circleRepository.findByPublicId(publicId);
+    if (!circle) {
+      throw new NotFoundException(`Circle ${publicId} not found`);
+    }
+
+    const member = await circleMemberRepository.findRoleByCircleId(circle.id, userId);
+    if (!member) {
+      throw new ForbiddenException("You are not a member of this circle");
+    }
+
+    const restriction = await userRestrictionService.getActiveRestriction(userId);
+    if (restriction) {
+      throw new ForbiddenException("You are currently restricted");
+    }
+
+    const hpGained = body.karmaAmount * 10;
+
+    const result = await transactionService.doInTransaction(async (tx) => {
+      const currentKarma = await userKarmaRepository.getTotalKarmaByUserId(userId, tx);
+      const availableKarma = currentKarma ?? 0;
+
+      if (availableKarma < body.karmaAmount) {
+        throw new BadRequestException("Insufficient karma");
+      }
+
+      const { newHp } = await circleEnergyService.addExpAndHp(
+        circle.id,
+        0,
+        hpGained,
+        tx,
+      );
+
+      const newKarma = await userKarmaRepository.decrementKarma(
+        userId,
+        body.karmaAmount,
+        tx,
+      );
+
+      if (newKarma === null) {
+        throw new BadRequestException("Insufficient karma");
+      }
+
+      return { newHp };
+    });
+
     return {
       circlePublicId: publicId,
-      userId,
-      karmaSpent: body.karmaAmount,
-      hpGained: Math.max(1, Math.floor(body.karmaAmount / 5)),
-      newKarma: 1000 - body.karmaAmount,
-      restrictionUntil: null,
-      badgeGranted: true,
+      newHp: result.newHp,
     };
   }
 
