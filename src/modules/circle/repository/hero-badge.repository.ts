@@ -8,15 +8,27 @@ type CreateHeroBadgeInput = {
 };
 
 class HeroBadgeRepository {
-    async create(
+    async upsert(
         data: CreateHeroBadgeInput,
         tx: Prisma.TransactionClient = prisma,
     ) {
-        return tx.heroBadge.create({
-            data: {
+        const expireAt = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000);
+
+        return tx.heroBadge.upsert({
+            where: {
+                userId_circleId: {
+                    userId: data.userId,
+                    circleId: data.circleId,
+                },
+            },
+            update: {
+                expireAt,
+            },
+            create: {
                 userId: data.userId,
                 circleId: data.circleId,
                 type: data.type,
+                expireAt,
             },
         });
     }

@@ -9,6 +9,8 @@ import { CIRCLE_ROLE_PERMISSIONS, CirclePermission } from "@/modules/circle/perm
 import { checkCirclePermission } from "@/modules/circle/policy/check-circle-permission";
 import { circleInvitationRepository } from "@/modules/circle/repository/circle-invation.repository";
 import { circleJoinRequestRepository } from "@/modules/circle/repository/circle-join.repository";
+import { heroBadgeRepository } from "@/modules/circle/repository/hero-badge.repository";
+import { karmaTransactionRepository } from "@/modules/circle/repository/karma-transaction.repository";
 import { emailProducer } from "@/modules/job/email/producer/email.producer";
 import { postService } from "@/modules/post/service/post.service";
 import { userActionLogService } from "@/modules/user-action-log/service/user-action-log.service";
@@ -19,11 +21,14 @@ import { buildCursorPagination } from "@/shared/pagination/cursor-pagination";
 import { buildPaginationResponse } from "@/shared/pagination/pagination";
 import { transactionService } from "@/shared/transaction/transaction.service";
 import {
+  BadgeType,
   CircleInvitationStatus,
+  KarmaReason,
   PostScoreLabel,
   Prisma,
   RequestStatus,
   RoleMembership,
+  UserRestrictionType,
   Visibility,
 } from "@prisma/client";
 import crypto from "crypto";
@@ -541,28 +546,46 @@ class CircleService {
         throw new BadRequestException("Insufficient karma");
       }
 
-      const { newHp } = await circleEnergyService.addExpAndHp(
-        circle.id,
-        0,
-        hpGained,
-        tx,
-      );
-
-      const newKarma = await userKarmaRepository.decrementKarma(
-        userId,
-        body.karmaAmount,
-        tx,
-      );
+      const [{ newHp }, newKarma] = await Promise.all([
+        circleEnergyService.addExpAndHp(
+          circle.id,
+          0,
+          hpGained,
+          tx,
+        ),
+        userKarmaRepository.decrementKarma(
+          userId,
+          body.karmaAmount,
+          tx,
+        )
+      ])
 
       if (newKarma === null) {
         throw new BadRequestException("Insufficient karma");
       }
 
+      const [] = await Promise.all([
+        karmaTransactionRepository.create({
+          userId,
+          circleId: circle.id,
+          delta: body.karmaAmount,
+          reason: KarmaReason.BURN_FOR_CIRCLE,
+        }, tx),
+        heroBadgeRepository.upsert({
+          userId,
+          circleId: circle.id,
+          type: BadgeType.KARMA_SACRIFICE,
+        }, tx),
+        userRestrictionService.create({
+          userId,
+          type: UserRestrictionType.POST_AND_USE_KARMA,
+          reason: `Sacrificed ${body.karmaAmount} karma for circle ${circle.name}`,
+          expiresAt: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), // 48 hour restriction
+        }, tx),
+      ]);
+
       return { newHp };
     });
-
-
-    
 
     return {
       circlePublicId: publicId,
@@ -876,7 +899,10 @@ class CircleService {
       throw new NotFoundException(`Circle ${publicId} not found`);
     }
 
-    const role = await circleMemberRepository.findRoleByCircleId(circle.id, userId);
+    const [role, restriction] = await Promise.all([
+      circleMemberRepository.findRoleByCircleId(circle.id, userId),
+      userRestrictionService.getActiveRestriction(userId)
+    ]);
 
     const energyRecord =
       circle.circleEnergies[0] ??
@@ -896,6 +922,7 @@ class CircleService {
       createdAt: energyRecord.createdAt,
     };
 
+
     return {
       id: circle.id,
       publicId: circle.publicId,
@@ -909,6 +936,7 @@ class CircleService {
       permission: CIRCLE_ROLE_PERMISSIONS[role?.role ?? RoleMembership.MEMBER] || [],
       createdAt: circle.createdAt,
       updatedAt: circle.updatedAt,
+      isRestrictedKarma: restriction && restriction.type === UserRestrictionType.POST_AND_USE_KARMA,
     };
   }
 

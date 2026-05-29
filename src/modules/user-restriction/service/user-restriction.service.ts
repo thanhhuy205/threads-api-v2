@@ -1,4 +1,12 @@
+import { Prisma, UserRestrictionType } from "@prisma/client";
 import { userRestrictionRepository } from "../repository/user-restriction.repository";
+
+type CreateUserRestrictionInput = {
+    userId: string;
+    type: UserRestrictionType;
+    reason?: string;
+    expiresAt: Date;
+};
 
 class UserRestrictionService {
 
@@ -15,6 +23,13 @@ class UserRestrictionService {
 
     async getActiveRestriction(userId: string) {
         return userRestrictionRepository.findFirstActive(userId);
+    }
+
+    async create(
+        data: CreateUserRestrictionInput,
+        tx?: Prisma.TransactionClient,
+    ) {
+        return userRestrictionRepository.create(data, tx);
     }
 }
 
