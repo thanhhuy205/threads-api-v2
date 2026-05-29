@@ -8,6 +8,13 @@ class CircleInvitationRepository implements ICursorPagination<
   Prisma.CircleInvitationWhereInput,
   any
 > {
+  private buildManageInvitationWhere(circleId: number): Prisma.CircleInvitationWhereInput {
+    return {
+      circleId,
+      inviterId: { not: { equals: prisma.circleInvitation.fields.userId } },
+    };
+  }
+
   async findAll({
     after,
     take,
@@ -214,10 +221,7 @@ class CircleInvitationRepository implements ICursorPagination<
     limit: number;
   }) {
     const { offset, currentLimit } = buildOffsetPagination({ page, limit });
-    const where: Prisma.CircleInvitationWhereInput = {
-      circleId,
-      inviterId: { not: { equals: prisma.circleInvitation.fields.userId } },
-    };
+    const where = this.buildManageInvitationWhere(circleId);
 
     return prisma.circleInvitation.findMany({
       where,
@@ -254,12 +258,40 @@ class CircleInvitationRepository implements ICursorPagination<
   }
 
   countByCircleId(circleId: number) {
-    const where: Prisma.CircleInvitationWhereInput = {
-      circleId,
-      inviterId: { not: { equals: prisma.circleInvitation.fields.userId } },
-    };
+    const where = this.buildManageInvitationWhere(circleId);
 
     return prisma.circleInvitation.count({ where });
+  }
+
+  async countManageInvitationStatsByCircleId(circleId: number) {
+    const where = this.buildManageInvitationWhere(circleId);
+    const grouped = await prisma.circleInvitation.groupBy({
+      by: ["status"],
+      where,
+      _count: {
+        _all: true,
+      },
+    });
+
+    let pending = 0;
+    let accepted = 0;
+    let rejected = 0;
+
+    for (const row of grouped) {
+      if (row.status === CircleInvitationStatus.PENDING) {
+        pending = row._count._all;
+      } else if (row.status === CircleInvitationStatus.ACCEPTED) {
+        accepted = row._count._all;
+      } else if (row.status === CircleInvitationStatus.REJECTED) {
+        rejected = row._count._all;
+      }
+    }
+
+    return {
+      pending,
+      accepted,
+      rejected,
+    };
   }
 
   countPendingInvitationsByCircleIdWithinRange(circleId: number, from: Date) {

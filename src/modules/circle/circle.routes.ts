@@ -65,6 +65,11 @@ circleRouter.get(
     circleController.getManageMembers,
 );
 circleRouter.get(
+    '/:publicId/manage/invitations/stats',
+    validate(circlePublicIdParamsSchema, 'params'),
+    circleController.getManageInvitationStats,
+);
+circleRouter.get(
     '/:publicId/manage/invitations',
     validate(circlePublicIdParamsSchema, 'params'),
     validate(offsetLimitQuerySchema, 'query'),

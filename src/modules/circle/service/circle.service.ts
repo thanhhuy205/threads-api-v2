@@ -864,6 +864,25 @@ class CircleService {
     };
   }
 
+  async getManageInvitationStats(publicId: string, userId: string) {
+    const circle = await this.assertCanManageCircle(
+      publicId,
+      userId,
+      CirclePermission.ACCEPT_USE_JOIN,
+    );
+
+    const stats = await circleInvitationRepository.countManageInvitationStatsByCircleId(
+      circle.id,
+    );
+
+    return {
+      circlePublicId: circle.publicId,
+      pending: stats.pending,
+      accepted: stats.accepted,
+      rejected: stats.rejected,
+    };
+  }
+
   async getManageJoinRequests(
     publicId: string,
     userId: string,

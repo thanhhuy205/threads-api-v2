@@ -84,6 +84,25 @@ export const circleSwaggerSchemas = {
         },
         required: ['userId', 'id', 'status', 'createdAt', 'updatedAt', 'circleId', 'inviterId'],
     },
+    CircleInvitationStatsItem: {
+        type: 'object',
+        properties: {
+            circlePublicId: { type: 'string', example: 'clr_123' },
+            pending: { type: 'number', example: 3 },
+            accepted: { type: 'number', example: 15 },
+            rejected: { type: 'number', example: 2 },
+        },
+        required: ['circlePublicId', 'pending', 'accepted', 'rejected'],
+    },
+    CircleInvitationStatsResponse: {
+        type: 'object',
+        properties: {
+            success: { type: 'boolean', example: true },
+            message: { type: 'string', example: 'Circle invitation stats retrieved successfully' },
+            data: { $ref: '#/components/schemas/CircleInvitationStatsItem' },
+        },
+        required: ['success', 'message', 'data'],
+    },
     CursorPagination: {
         type: 'object',
         properties: {
@@ -387,6 +406,26 @@ export const circleSwaggerPaths = {
                     content: { 'application/json': { schema: { $ref: '#/components/schemas/RespondJoinRequestResponse' } } },
                 },
                 400: { description: COMMON_MESSAGE.BAD_REQUEST },
+                401: { description: COMMON_MESSAGE.UNAUTHORIZED },
+                403: { description: 'Requires ACCEPT_USE_JOIN permission' },
+                404: { description: COMMON_MESSAGE.NOT_FOUND },
+            },
+        },
+    },
+    '/circle/{publicId}/manage/invitations/stats': {
+        get: {
+            tags: ['Circle'],
+            summary: 'Get invitation stats for circle management',
+            description: 'Returns invitation totals by status for a circle. Requires ACCEPT_USE_JOIN permission.',
+            security: bearerAuthSecurity,
+            parameters: [
+                { name: 'publicId', in: 'path', required: true, schema: { type: 'string' }, description: 'Circle public ID' },
+            ],
+            responses: {
+                200: {
+                    description: 'Circle invitation stats retrieved',
+                    content: { 'application/json': { schema: { $ref: '#/components/schemas/CircleInvitationStatsResponse' } } },
+                },
                 401: { description: COMMON_MESSAGE.UNAUTHORIZED },
                 403: { description: 'Requires ACCEPT_USE_JOIN permission' },
                 404: { description: COMMON_MESSAGE.NOT_FOUND },
