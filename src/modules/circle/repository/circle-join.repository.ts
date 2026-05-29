@@ -104,16 +104,19 @@ class CircleJoinRequestRepository implements ICursorPagination<
         circleId,
         page,
         limit,
+        status,
     }: {
         circleId: number;
         page: number;
         limit: number;
+        status?: RequestStatus;
     }) {
         const { offset, currentLimit } = buildOffsetPagination({ page, limit });
 
         return prisma.circleJoinRequest.findMany({
             where: {
                 circleId,
+                ...(status ? { status } : {}),
             },
             skip: offset,
             take: currentLimit,
@@ -137,10 +140,11 @@ class CircleJoinRequestRepository implements ICursorPagination<
         });
     }
 
-    countByCircleId(circleId: number) {
+    countByCircleId(circleId: number, status?: RequestStatus) {
         return prisma.circleJoinRequest.count({
             where: {
                 circleId,
+                ...(status ? { status } : {}),
             },
         });
     }

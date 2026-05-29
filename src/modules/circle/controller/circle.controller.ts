@@ -473,7 +473,7 @@ class CircleController {
     }
     const { publicId } = req.params;
     const { isAccept, userId } = req.body;
-    await circleService.respondJoinRequest({
+    const result = await circleService.respondJoinRequest({
       publicId,
       adminId,
       userId,
@@ -482,6 +482,7 @@ class CircleController {
     return res.success(
       200,
       `Join request ${isAccept ? 'accept' : 'reject'} for user ${userId} to join circle ${publicId}`,
+      result
     );
   }
 }

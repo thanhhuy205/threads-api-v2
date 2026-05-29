@@ -882,8 +882,12 @@ class CircleService {
         circleId: circle.id,
         page: query.page,
         limit: query.limit,
+        status: RequestStatus.PENDING,
       }),
-      circleJoinRequestRepository.countByCircleId(circle.id),
+      circleJoinRequestRepository.countByCircleId(
+        circle.id,
+        RequestStatus.PENDING,
+      ),
     ]);
 
     return {
@@ -1312,7 +1316,7 @@ class CircleService {
       );
     }
 
-    await transactionService.doInTransaction(async (tx) => {
+    const result = await transactionService.doInTransaction(async (tx) => {
       const joinRequest =
         await circleJoinRequestRepository.findPendingRequestByCircleIdAndUserId(
           circle.id,
@@ -1333,7 +1337,7 @@ class CircleService {
       }
 
       if (isAccept) {
-        await circleJoinRequestRepository.updateStatus(
+        const result = await circleJoinRequestRepository.updateStatus(
           joinRequest.id,
           RequestStatus.ACCEPTED,
           tx,
@@ -1355,16 +1359,25 @@ class CircleService {
           },
           tx,
         });
+        return result;
+
       } else {
-        await circleJoinRequestRepository.updateStatus(
+        const result = await circleJoinRequestRepository.updateStatus(
           joinRequest.id,
           RequestStatus.REJECTED,
           tx,
         );
+        return result;
       }
+
     });
 
     await this.bumpCircleListCacheVersion();
+
+    return {
+      userId: result.userId,
+      circlePublicId: publicId,
+    }
   }
 
   async countCircles() {
