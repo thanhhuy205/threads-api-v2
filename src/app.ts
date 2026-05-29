@@ -11,7 +11,6 @@ import express from 'express';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import { responseHandler } from './middlewares/response-handler';
-
 const app = express();
 
 app.disable('x-powered-by');
@@ -20,6 +19,8 @@ app.use(cors({ origin: corsOrigin }));
 app.use(compression());
 app.set('trust proxy', 1)
 app.use(morgan(configService.NODE_ENV === 'development' ? 'dev' : 'combined'));
+
+// app.use(capture);
 // Mux sends webhooks with 'application/json' content type
 app.use(
     '/api/v1/webhooks/mux',

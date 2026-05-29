@@ -561,6 +561,9 @@ class CircleService {
       return { newHp };
     });
 
+
+    
+
     return {
       circlePublicId: publicId,
       newHp: result.newHp,
