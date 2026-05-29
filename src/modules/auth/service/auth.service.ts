@@ -296,7 +296,6 @@ class AuthService {
     const hashedToken = hasherToken(payload.refreshToken);
     const refreshToken =
       await authRepository.findRefreshTokenByToken(hashedToken);
-
     if (!refreshToken || refreshToken.revokedAt) {
       return null;
     }
@@ -304,10 +303,12 @@ class AuthService {
     const now = new Date();
     if (refreshToken.expireAt < now) {
       await authRepository.revokeRefreshTokenById(refreshToken.id, now);
+      baseLogger.info(`Refresh token with id ${refreshToken.id} has expired and been revoked.`);
       return null;
     }
 
     const user = await userRepository.findById(refreshToken.userId);
+    baseLogger.info(`${JSON.stringify(user)}`)
     if (!user) {
       return null;
     }
@@ -323,6 +324,10 @@ class AuthService {
       status: user.status,
       roles: roles,
     });
+
+    baseLogger.info(`Generated new token pair for user ${user.id} 
+      with session ${refreshToken.sessionId} during refresh token flow.${tokenPair} `);
+
 
     await this.createRefreshToken(
       tokenPair.refreshToken,
