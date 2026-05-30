@@ -19,11 +19,6 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-
-    outputs:
-      image: ${{ steps.set-image.outputs.uri }}
-      registry: ${{ steps.set-image.outputs.reg }}
-
     steps:
       - uses: actions/checkout@v4
 
@@ -31,6 +26,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 20.x
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -42,7 +38,6 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Build, tag, and push image to Amazon ECR
-        id: set-image
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
@@ -56,9 +51,6 @@ jobs:
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
           docker push $REGISTRY/$REPOSITORY:production
 
-          echo "uri=$REGISTRY/$REPOSITORY:production" >> $GITHUB_OUTPUT
-          echo "reg=$REGISTRY" >> $GITHUB_OUTPUT
-
   deploy:
     needs: build
     runs-on: self-hosted
@@ -66,13 +58,19 @@ jobs:
     if: github.ref == 'refs/heads/production'
 
     steps:
-      - name: Login ECR in EC2
+      - name: Login ECR inside EC2
         env:
-          REGISTRY: ${{ needs.build.outputs.registry }}
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
         run: |
-          aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin $REGISTRY
+          REGISTRY_URL="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
+          aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $REGISTRY_URL
 
       - name: Pull image
         env:
-          IMAGE_URI: ${{ needs.build.outputs.image }}
-        run: docker pull $IMAGE_URI
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+        run: |
+          REGISTRY_URL="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
+          docker pull $REGISTRY_URL/$REPOSITORY:production
