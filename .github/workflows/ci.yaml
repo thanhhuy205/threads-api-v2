@@ -18,12 +18,11 @@ permissions:
 
 jobs:
   build:
-    environment: production
     runs-on: ubuntu-latest
 
     outputs:
       image: ${{ steps.set-image.outputs.uri }}
-      registry: ${{ steps.login-ecr.outputs.registry }}
+      registry: ${{ steps.set-image.outputs.reg }}
 
     steps:
       - uses: actions/checkout@v4
@@ -58,6 +57,7 @@ jobs:
           docker push $REGISTRY/$REPOSITORY:production
 
           echo "uri=$REGISTRY/$REPOSITORY:production" >> $GITHUB_OUTPUT
+          echo "reg=$REGISTRY" >> $GITHUB_OUTPUT
 
   deploy:
     needs: build
