@@ -76,4 +76,6 @@ jobs:
           docker pull $REGISTRY_URL/$REPOSITORY:production
           export IMAGE_URL="$REGISTRY_URL/$REPOSITORY:production"
 
-          docker compose up -d --remove-orphans
+          cd threads-api
+
+          docker compose -f docker-compose.yml up -d --remove-orphans

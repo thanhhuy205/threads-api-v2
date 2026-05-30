@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   api:
     image: ${IMAGE_URL}
@@ -18,7 +16,7 @@ services:
     image: ${IMAGE_URL}
     container_name: threads-worker
     restart: unless-stopped
-    command: npm run worker
+    command: npm run start:worker
     env_file:
       - .env
     depends_on:
