@@ -52,8 +52,14 @@ class PostMediaRepository {
     async updateMediaStatusByMuxWebhook(body: MuxWebhooksResponseDto) {
         baseLogger.info(`Updating media status for Mux webhook: ${JSON.stringify(body)}`);
         const uploadId = body.data.upload_id;
+
+        if (!uploadId) {
+            baseLogger.warn(`Skipping Mux webhook because upload_id is missing: ${JSON.stringify(body)}`);
+            return null;
+        }
+
         const playbackId = body.data.playback_ids?.[0]?.id;
-        const hlsUrl = `https://stream.mux.com/${playbackId}.m3u8`;
+        const hlsUrl = playbackId ? `https://stream.mux.com/${playbackId}.m3u8` : '';
         return prisma.postMedia.upsert({
             where: {
                 key: uploadId,
@@ -69,7 +75,7 @@ class PostMediaRepository {
 
             create: {
                 key: uploadId,
-                url: body.data.playback_ids?.[0]?.id,
+                url: hlsUrl,
                 type: PostMediaType.VIDEO,
                 status:
                     body.data.status === 'ready'
