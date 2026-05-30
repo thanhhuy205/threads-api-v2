@@ -1,6 +1,40 @@
-.docs 
-.github 
-.vscode
-.idea
-.commitsage
+# ==========================================
+# 1. Local IDE & OS Trash (File cấu hình máy cá nhân)
+# ==========================================
+.vscode/
+.idea/
 .DS_Store
+Thumbs.db
+*.swp
+*.log
+
+# ==========================================
+# 2. Git & Documentation (Tài liệu & Lịch sử Git)
+# ==========================================
+.git/
+.github/
+.gitignore
+.dockerignore
+.commitsage
+.docs/
+*.md
+
+# ==========================================
+# 3. Dependencies & Build Outputs (Bắt buộc phải chặn)
+# ==========================================
+# Tuyệt đối không mang node_modules từ máy local vào Docker
+node_modules/
+/dist/
+/build/
+/out/
+.npm/
+.yarn/
+
+# ==========================================
+# 4. Environment & Secrets (Bảo mật - Tránh lộ Key)
+# ==========================================
+.env
+.env.*
+!.env.example
+*.pem
+*.key
