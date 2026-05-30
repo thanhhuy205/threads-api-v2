@@ -74,3 +74,6 @@ jobs:
         run: |
           REGISTRY_URL="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
           docker pull $REGISTRY_URL/$REPOSITORY:production
+          export IMAGE_URL="$REGISTRY_URL/$REPOSITORY:production"
+
+          docker compose up -d --remove-orphans
