@@ -58,6 +58,8 @@ jobs:
     if: github.ref == 'refs/heads/production'
 
     steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
       - name: Login ECR inside EC2
         env:
           AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
@@ -77,5 +79,7 @@ jobs:
           export IMAGE_URL="$REGISTRY_URL/$REPOSITORY:production"
 
           cd threads-api
-
+          docker container prune -f
+          docker system prune -f
           docker compose -f docker-compose.yml up -d --remove-orphans
+          docker system df
