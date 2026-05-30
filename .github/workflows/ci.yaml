@@ -23,6 +23,7 @@ jobs:
 
     outputs:
       image: ${{ steps.set-image.outputs.uri }}
+      registry: ${{ steps.login-ecr.outputs.registry }}
 
     steps:
       - uses: actions/checkout@v4
@@ -42,6 +43,7 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Build, tag, and push image to Amazon ECR
+        id: set-image
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
@@ -55,6 +57,8 @@ jobs:
           docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
           docker push $REGISTRY/$REPOSITORY:production
 
+          echo "uri=$REGISTRY/$REPOSITORY:production" >> $GITHUB_OUTPUT
+
   deploy:
     needs: build
     runs-on: self-hosted
@@ -62,14 +66,13 @@ jobs:
     if: github.ref == 'refs/heads/production'
 
     steps:
-      - name: Login to GHCR
+      - name: Login ECR in EC2
+        env:
+          REGISTRY: ${{ needs.build.outputs.registry }}
         run: |
-          echo ${{ github.token }} | docker login ghcr.io \
-            -u ${{ github.actor }} --password-stdin
-
-      - name: Create .env
-        run: |
-          echo "${{ secrets.ENV_FILE }}" > /home/ubuntu/.env
+          aws ecr get-login-password --region ap-southeast-1 | docker login --username AWS --password-stdin $REGISTRY
 
       - name: Pull image
-        run: docker pull ${{ needs.build.outputs.image }}
+        env:
+          IMAGE_URI: ${{ needs.build.outputs.image }}
+        run: docker pull $IMAGE_URI
