@@ -1,6 +1,7 @@
 import { SendInvitationEmailDto } from "@/modules/circle/dto/admin-circle.dto";
 import {
   RespondJoinRequestDto,
+  ResendInvitationDto,
   ResponseInvitationDto,
 } from "@/modules/circle/dto/response-invitation.dto";
 import type { SendInvitationDto } from "@/modules/circle/dto/send-invitation.dto";
@@ -306,6 +307,20 @@ class CircleController {
     return res.paginate({ rows: circle.rows, pagination: circle.pagination });
   }
 
+  async getMyInvitationDetail(
+    req: Request<CirclePublicIdParamsDto>,
+    res: Response,
+  ) {
+    const userId = req.user?.sub;
+    if (!userId) {
+      return res.error(401, "Unauthorized");
+    }
+
+    const { publicId } = req.params;
+    const data = await circleService.getMyInvitationDetail(publicId, userId);
+    return res.success(200, "Circle invitation detail retrieved successfully", data);
+  }
+
   async sendInvitation(
     req: Request<{}, {}, SendInvitationDto, {}>,
     res: Response,
@@ -420,6 +435,21 @@ class CircleController {
       "Circle invitation stats retrieved successfully",
       data,
     );
+  }
+
+  async resendManageInvitation(
+    req: Request<CirclePublicIdParamsDto, {}, ResendInvitationDto>,
+    res: Response,
+  ) {
+    const userId = req.user?.sub;
+    if (!userId) {
+      return res.error(401, "Unauthorized");
+    }
+
+    const { publicId } = req.params;
+    const { id } = req.body;
+    const data = await circleService.resendManageInvitation(publicId, userId, id);
+    return res.success(200, "Circle invitation resent successfully", data);
   }
 
   async getManageJoinRequests(

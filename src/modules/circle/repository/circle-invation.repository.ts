@@ -263,6 +263,81 @@ class CircleInvitationRepository implements ICursorPagination<
     return prisma.circleInvitation.count({ where });
   }
 
+  findManageInvitationByIdAndCircleId(id: number, circleId: number) {
+    return prisma.circleInvitation.findFirst({
+      where: {
+        id,
+        circleId,
+        inviterId: { not: { equals: prisma.circleInvitation.fields.userId } },
+      },
+      select: {
+        id: true,
+        circleId: true,
+        userId: true,
+        email: true,
+        role: true,
+        status: true,
+        isUser: true,
+        resentCount: true,
+        inviterId: true,
+        createdAt: true,
+        updatedAt: true,
+        user: {
+          select: {
+            name: true,
+            username: true,
+            avatar: true,
+            bio: true,
+          },
+        },
+        inviter: {
+          select: {
+            id: true,
+            name: true,
+            username: true,
+            avatar: true,
+            bio: true,
+          },
+        },
+      },
+    });
+  }
+
+  updateResendById(
+    {
+      id,
+      inviterId,
+      tokenHash,
+    }: {
+      id: number;
+      inviterId: string;
+      tokenHash?: string;
+    },
+    tx: Prisma.TransactionClient = prisma,
+  ) {
+    return tx.circleInvitation.update({
+      where: { id },
+      data: {
+        inviterId,
+        status: CircleInvitationStatus.PENDING,
+        resentCount: {
+          increment: 1,
+        },
+        ...(tokenHash ? { tokenHash } : {}),
+      },
+      select: {
+        id: true,
+        circleId: true,
+        userId: true,
+        email: true,
+        status: true,
+        resentCount: true,
+        inviterId: true,
+        updatedAt: true,
+      },
+    });
+  }
+
   async countManageInvitationStatsByCircleId(circleId: number) {
     const where = this.buildManageInvitationWhere(circleId);
     const grouped = await prisma.circleInvitation.groupBy({
@@ -339,6 +414,43 @@ class CircleInvitationRepository implements ICursorPagination<
         email: true,
         status: true,
         resentCount: true,
+      },
+    });
+  }
+
+  findLatestInvitationByCircleIdAndUserId(circleId: number, userId: string) {
+    return prisma.circleInvitation.findFirst({
+      where: {
+        circleId,
+        userId,
+        inviterId: { not: { equals: prisma.circleInvitation.fields.userId } },
+      },
+      orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
+      select: {
+        userId: true,
+        email: true,
+        role: true,
+        status: true,
+        isUser: true,
+        resentCount: true,
+        createdAt: true,
+        updatedAt: true,
+        circle: {
+          select: {
+            publicId: true,
+            name: true,
+            visibility: true,
+          },
+        },
+        inviter: {
+          select: {
+            id: true,
+            name: true,
+            username: true,
+            avatar: true,
+            bio: true,
+          },
+        },
       },
     });
   }

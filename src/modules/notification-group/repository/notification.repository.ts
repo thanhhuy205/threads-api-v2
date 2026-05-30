@@ -26,11 +26,6 @@ const notificationGroupSelect = {
         select: {
             publicId: true,
         }
-    },
-    targetPost: {
-        select: {
-            publicId: true,
-        }
     }
 } satisfies Prisma.NotificationGroupSelect;
 
@@ -120,6 +115,7 @@ class NotificationRepository
                 publicId: true,
                 type: true,
                 targetType: true,
+                targetId: true,
                 count: true,
                 isRead: true,
                 createdAt: true,
@@ -135,19 +131,31 @@ class NotificationRepository
                         publicId: true,
                         content: true,
                     }
-                },
-                targetPost: {
-                    select: {
-                        publicId: true,
-                        content: true,
-                        likesCount: true,
-                        repliesCount: true,
-                        repostsCountAndQuoteCount: true,
-                        replyPermission: true,
-                    }
                 }
             },
             cursor: after ? { publicId: after } : undefined,
+        });
+    }
+
+    findPostTargetsByPublicIds(publicIds: string[]) {
+        if (!publicIds.length) {
+            return Promise.resolve([]);
+        }
+
+        return prisma.post.findMany({
+            where: {
+                publicId: {
+                    in: publicIds,
+                },
+            },
+            select: {
+                publicId: true,
+                content: true,
+                likesCount: true,
+                repliesCount: true,
+                repostsCountAndQuoteCount: true,
+                replyPermission: true,
+            },
         });
     }
 

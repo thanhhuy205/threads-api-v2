@@ -15,5 +15,13 @@ export const respondJoinRequestSchema = z.object({
     isAccept: z.boolean({ required_error: 'isAccept is required', invalid_type_error: 'isAccept must be a boolean' }),
 });
 
+export const resendInvitationSchema = z.object({
+    id: z.coerce.number({
+        required_error: "Invitation ID is required",
+        invalid_type_error: "Invitation ID must be a number",
+    }).int("Invitation ID must be an integer").positive("Invitation ID must be a positive number"),
+});
+
 export type RespondJoinRequestDto = z.infer<typeof respondJoinRequestSchema>;
 export type ResponseInvitationDto = z.infer<typeof responseInvitationSchema>;
+export type ResendInvitationDto = z.infer<typeof resendInvitationSchema>;

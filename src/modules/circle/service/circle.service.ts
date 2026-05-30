@@ -12,6 +12,7 @@ import { circleJoinRequestRepository } from "@/modules/circle/repository/circle-
 import { heroBadgeRepository } from "@/modules/circle/repository/hero-badge.repository";
 import { karmaTransactionRepository } from "@/modules/circle/repository/karma-transaction.repository";
 import { emailProducer } from "@/modules/job/email/producer/email.producer";
+import { notificationService } from "@/modules/notification-group/service/notification.service";
 import { postService } from "@/modules/post/service/post.service";
 import { userActionLogService } from "@/modules/user-action-log/service/user-action-log.service";
 import { userRestrictionService } from "@/modules/user-restriction/service/user-restriction.service";
@@ -24,6 +25,7 @@ import {
   BadgeType,
   CircleInvitationStatus,
   KarmaReason,
+  NotificationType,
   PostScoreLabel,
   Prisma,
   RequestStatus,
@@ -883,6 +885,110 @@ class CircleService {
     };
   }
 
+  async resendManageInvitation(
+    publicId: string,
+    managerId: string,
+    invitationId: number,
+  ) {
+    const circle = await this.assertCanManageCircle(
+      publicId,
+      managerId,
+      CirclePermission.ACCEPT_USE_JOIN,
+    );
+
+    const invitation = await circleInvitationRepository.findManageInvitationByIdAndCircleId(
+      invitationId,
+      circle.id,
+    );
+    if (!invitation) {
+      throw new NotFoundException(
+        `Invitation ${invitationId} not found in circle ${publicId}`,
+      );
+    }
+
+    if (invitation.status === CircleInvitationStatus.ACCEPTED) {
+      throw new BadRequestException("Accepted invitation cannot be resent");
+    }
+
+    const resendLimit = 3;
+    if (invitation.resentCount >= resendLimit) {
+      throw new BadRequestException(
+        `Invitation ${invitationId} has reached resend limit`,
+      );
+    }
+
+    let nextToken: string | undefined;
+    let nextTokenHash: string | undefined;
+    if (invitation.email) {
+      nextToken = crypto.randomBytes(32).toString("hex");
+      nextTokenHash = hasherToken(nextToken);
+    }
+
+    const updatedInvitation = await transactionService.doInTransaction(
+      async (tx) => {
+        const updated = await circleInvitationRepository.updateResendById(
+          {
+            id: invitation.id,
+            inviterId: managerId,
+            tokenHash: nextTokenHash,
+          },
+          tx,
+        );
+
+        if (invitation.userId) {
+          await notificationService.create(
+            {
+              recipientId: invitation.userId,
+              actorId: managerId,
+              type: NotificationType.INVITATION,
+              targetType: "RESENT_INVITATION",
+              targetId: circle.publicId,
+              count: 0,
+            },
+            tx,
+          );
+        }
+
+        await userActionLogService.logInviteSent({
+          userId: managerId,
+          targetId: circle.publicId,
+          metadata: {
+            circleId: circle.id,
+            invitationId: invitation.id,
+            invitedUserId: invitation.userId ?? null,
+            email: invitation.email ?? null,
+            source: "MANAGE_RESEND",
+          },
+          tx,
+        });
+
+        return updated;
+      },
+    );
+
+    if (invitation.email && nextToken) {
+      await emailProducer.sendInvitationEmail({
+        email: invitation.email,
+        token: nextToken,
+        username:
+          invitation.user?.username ?? invitation.email.split("@")[0] ?? "user",
+      });
+    }
+
+    await this.bumpCircleListCacheVersion();
+
+    return {
+      circlePublicId: circle.publicId,
+      id: updatedInvitation.id,
+      userId: updatedInvitation.userId,
+      email: updatedInvitation.email,
+      status: updatedInvitation.status,
+      resentCount: updatedInvitation.resentCount,
+      inviterId: updatedInvitation.inviterId,
+      updatedAt: updatedInvitation.updatedAt,
+    };
+  }
+
   async getManageJoinRequests(
     publicId: string,
     userId: string,
@@ -1137,6 +1243,48 @@ class CircleService {
       take,
       getAfter: (item) => String(item.id),
     });
+  }
+
+  async getMyInvitationDetail(publicId: string, userId: string) {
+    const circle = await circleRepository.findByPublicId(publicId);
+    if (!circle) {
+      throw new NotFoundException(`Circle ${publicId} not found`);
+    }
+
+    const invitation = await circleInvitationRepository.findLatestInvitationByCircleIdAndUserId(
+      circle.id,
+      userId,
+    );
+    if (!invitation) {
+      throw new NotFoundException(
+        `Invitation for user ${userId} in circle ${publicId} not found`,
+      );
+    }
+
+    return {
+      circle: {
+        publicId: invitation.circle.publicId,
+        name: invitation.circle.name,
+        visibility: invitation.circle.visibility,
+      },
+      userId: invitation.userId,
+      email: invitation.email,
+      role: invitation.role,
+      status: invitation.status,
+      isUser: invitation.isUser,
+      resentCount: invitation.resentCount,
+      createdAt: invitation.createdAt,
+      updatedAt: invitation.updatedAt,
+      inviter: invitation.inviter
+        ? {
+          id: invitation.inviter.id,
+          name: invitation.inviter.name,
+          username: invitation.inviter.username,
+          avatar: invitation.inviter.avatar,
+          bio: invitation.inviter.bio,
+        }
+        : null,
+    };
   }
 
   async sendJoinRequest(publicId: string, userId: string) {

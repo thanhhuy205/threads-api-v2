@@ -76,7 +76,7 @@ export const circleSwaggerSchemas = {
         properties: {
             userId: { type: 'string', example: 'user_456' },
             id: { type: 'number', example: 12 },
-            status: { type: 'string', enum: ['PENDING', 'ACCEPTED', 'REJECTED'], example: 'PENDING' },
+            status: { type: 'string', enum: ['PENDING', 'ACCEPTED', 'REJECTED', 'CANCELLED'], example: 'PENDING' },
             createdAt: { type: 'string', format: 'date-time' },
             updatedAt: { type: 'string', format: 'date-time' },
             circleId: { type: 'number', example: 1 },
@@ -201,6 +201,79 @@ export const circleSwaggerSchemas = {
             message: { type: 'string', example: 'Join request accept for user user_xin_vao_nhom to join circle circle_public_id' },
         },
         required: ['success', 'message'],
+    },
+    ResendInvitationRequest: {
+        type: 'object',
+        properties: {
+            id: { type: 'number', example: 3611 },
+        },
+        required: ['id'],
+    },
+    ResendInvitationItem: {
+        type: 'object',
+        properties: {
+            circlePublicId: { type: 'string', example: 'clr_123' },
+            id: { type: 'number', example: 3611 },
+            userId: { type: 'string', example: 'user_456', nullable: true },
+            email: { type: 'string', example: 'invited@example.com', nullable: true },
+            status: { type: 'string', enum: ['PENDING', 'ACCEPTED', 'REJECTED', 'CANCELLED'], example: 'PENDING' },
+            resentCount: { type: 'number', example: 2 },
+            inviterId: { type: 'string', example: 'user_admin' },
+            updatedAt: { type: 'string', format: 'date-time' },
+        },
+        required: ['circlePublicId', 'id', 'status', 'resentCount', 'inviterId', 'updatedAt'],
+    },
+    ResendInvitationResponse: {
+        type: 'object',
+        properties: {
+            success: { type: 'boolean', example: true },
+            message: { type: 'string', example: 'Circle invitation resent successfully' },
+            data: { $ref: '#/components/schemas/ResendInvitationItem' },
+        },
+        required: ['success', 'message', 'data'],
+    },
+    CircleInvitationMeItem: {
+        type: 'object',
+        properties: {
+            circle: {
+                type: 'object',
+                properties: {
+                    publicId: { type: 'string', example: 'clr_123' },
+                    name: { type: 'string', example: 'Vong tron thu vi' },
+                    visibility: { type: 'string', example: 'PRIVATE' },
+                },
+                required: ['publicId', 'name', 'visibility'],
+            },
+            userId: { type: 'string', example: 'user_456', nullable: true },
+            email: { type: 'string', example: 'invited@example.com', nullable: true },
+            role: { type: 'string', example: 'MEMBER', nullable: true },
+            status: { type: 'string', enum: ['PENDING', 'ACCEPTED', 'REJECTED', 'CANCELLED'], example: 'PENDING' },
+            isUser: { type: 'boolean', example: true },
+            resentCount: { type: 'number', example: 1 },
+            createdAt: { type: 'string', format: 'date-time' },
+            updatedAt: { type: 'string', format: 'date-time' },
+            inviter: {
+                type: 'object',
+                nullable: true,
+                properties: {
+                    id: { type: 'string', example: 'user_admin' },
+                    name: { type: 'string', example: 'Admin' },
+                    username: { type: 'string', example: 'admin' },
+                    avatar: { type: 'string', nullable: true, example: 'https://cdn.example.com/avatar.png' },
+                    bio: { type: 'string', nullable: true, example: 'Circle admin' },
+                },
+            },
+        },
+        required: ['circle', 'status', 'isUser', 'resentCount', 'createdAt', 'updatedAt'],
+    },
+    CircleInvitationMeResponse: {
+        type: 'object',
+        properties: {
+            success: { type: 'boolean', example: true },
+            message: { type: 'string', example: 'Circle invitation detail retrieved successfully' },
+            data: { $ref: '#/components/schemas/CircleInvitationMeItem' },
+        },
+        required: ['success', 'message', 'data'],
     },
     RequestInvitationResponse: {
         type: 'object',
@@ -356,6 +429,24 @@ export const circleSwaggerPaths = {
             },
         },
     },
+    '/circle/invitations/me/{publicId}': {
+        get: {
+            tags: ['Circle'],
+            summary: 'Get current user invitation detail in a circle',
+            security: bearerAuthSecurity,
+            parameters: [
+                { name: 'publicId', in: 'path', required: true, schema: { type: 'string' } },
+            ],
+            responses: {
+                200: {
+                    description: 'Circle invitation detail retrieved',
+                    content: { 'application/json': { schema: { $ref: '#/components/schemas/CircleInvitationMeResponse' } } },
+                },
+                401: { description: COMMON_MESSAGE.UNAUTHORIZED },
+                404: { description: COMMON_MESSAGE.NOT_FOUND },
+            },
+        },
+    },
     '/circle/me/owner-circle': {
         get: {
             tags: ['Circle'],
@@ -426,6 +517,31 @@ export const circleSwaggerPaths = {
                     description: 'Circle invitation stats retrieved',
                     content: { 'application/json': { schema: { $ref: '#/components/schemas/CircleInvitationStatsResponse' } } },
                 },
+                401: { description: COMMON_MESSAGE.UNAUTHORIZED },
+                403: { description: 'Requires ACCEPT_USE_JOIN permission' },
+                404: { description: COMMON_MESSAGE.NOT_FOUND },
+            },
+        },
+    },
+    '/circle/{publicId}/manage/resend': {
+        post: {
+            tags: ['Circle'],
+            summary: 'Resend an invitation in circle management',
+            description: 'Resend invitation by invitation ID in a managed circle. Requires ACCEPT_USE_JOIN permission.',
+            security: bearerAuthSecurity,
+            parameters: [
+                { name: 'publicId', in: 'path', required: true, schema: { type: 'string' }, description: 'Circle public ID' },
+            ],
+            requestBody: {
+                required: true,
+                content: { 'application/json': { schema: { $ref: '#/components/schemas/ResendInvitationRequest' } } },
+            },
+            responses: {
+                200: {
+                    description: 'Circle invitation resent successfully',
+                    content: { 'application/json': { schema: { $ref: '#/components/schemas/ResendInvitationResponse' } } },
+                },
+                400: { description: COMMON_MESSAGE.BAD_REQUEST },
                 401: { description: COMMON_MESSAGE.UNAUTHORIZED },
                 403: { description: 'Requires ACCEPT_USE_JOIN permission' },
                 404: { description: COMMON_MESSAGE.NOT_FOUND },

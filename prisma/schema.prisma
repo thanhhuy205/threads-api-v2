@@ -162,6 +162,7 @@ enum NotificationType {
   MESSAGE
   REPLY
   MENTION
+  INVITATION
 }
 
 enum UserRestrictionType {
@@ -472,7 +473,6 @@ model Post {
   circlePostQualityLogs   CirclePostQualityLog[]
   circleExpLogs           CircleExpLog[]
   originPostNotifications NotificationGroup[]    @relation("NotificationOriginPost")
-  targetPostNotifications NotificationGroup[]    @relation("NotificationTargetPost")
 
   @@index([userId, createdAt])
   @@index([parentId])
@@ -969,7 +969,6 @@ model NotificationGroup {
   originPostId String?          @map("origin_post") // dùng để lưu publicId của bài gốc trong trường hợp notification liên quan đến bài viết, giúp tránh việc phải join nhiều bảng để lấy thông tin bài gốc khi hiển thị notification
   lastActor    User?            @relation(fields: [lastActorId], references: [id])
 
-  targetPost Post  @relation("NotificationTargetPost", fields: [targetId], references: [publicId])
   originPost Post? @relation("NotificationOriginPost", fields: [originPostId], references: [publicId])
 
   @@index([recipientId, isRead, lastEventAt])

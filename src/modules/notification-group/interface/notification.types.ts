@@ -7,6 +7,7 @@ export type CreateNotificationGroupInput = {
     targetType: string;
     targetId: string;
     lastEventAt?: Date;
+    count?: number;
     userId?: string | null;
 };
 

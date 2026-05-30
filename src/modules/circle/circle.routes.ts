@@ -2,6 +2,7 @@ import { authorization } from '@/middlewares/auth';
 import { validate } from '@/middlewares/validate';
 import {
     respondJoinRequestSchema,
+    resendInvitationSchema,
     responseInvitationSchema,
 } from '@/modules/circle/dto/response-invitation.dto';
 import { Router } from 'express';
@@ -31,6 +32,11 @@ circleRouter.get('/', circleController.getCircle);
 circleRouter.get('/me-join', circleController.getMyJoinedCircles);
 circleRouter.get('/me/owner-circle', circleController.getMyOwnerCircles);
 circleRouter.get('/request-invitation', circleController.getRequestInvitation);
+circleRouter.get(
+    '/invitations/me/:publicId',
+    validate(circlePublicIdParamsSchema, 'params'),
+    circleController.getMyInvitationDetail,
+);
 circleRouter.post('/', validate(createCircleSchema), circleController.createCircle);
 circleRouter.post('/send-invitation', validate(sendInvitationSchema), circleController.sendInvitation);
 circleRouter.post('/response-invitation', validate(responseInvitationSchema), circleController.acceptInvitation);
@@ -82,6 +88,12 @@ circleRouter.get(
     circleController.getManageJoinRequests,
 );
 
+circleRouter.post(
+    '/:publicId/manage/resend',
+    validate(circlePublicIdParamsSchema, 'params'),
+    validate(resendInvitationSchema),
+    circleController.resendManageInvitation,
+);
 circleRouter.post(
     '/:publicId/manage/join-request/respond',
     validate(circlePublicIdParamsSchema, 'params'),

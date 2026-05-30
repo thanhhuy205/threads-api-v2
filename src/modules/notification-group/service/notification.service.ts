@@ -21,6 +21,10 @@ type NotificationGroupListRow = Awaited<
   ReturnType<typeof notificationRepository.findByRecipientId>
 >[number];
 
+type NotificationTargetPost = Awaited<
+  ReturnType<typeof notificationRepository.findPostTargetsByPublicIds>
+>[number];
+
 class NotificationService {
   create(data: CreateNotificationGroupInput, tx?: Prisma.TransactionClient) {
     return notificationRepository.create(
@@ -30,6 +34,7 @@ class NotificationService {
         targetType: data.targetType,
         targetId: data.targetId,
         actorIds: [data.actorId],
+        count: data.count,
         lastActorId: data.actorId,
         lastEventAt: data.lastEventAt ?? new Date(),
       },
@@ -42,7 +47,7 @@ class NotificationService {
     after,
     take,
   }: FindAllNotificationGroupsInput): Promise<{
-    rows: NotificationGroupListRow[];
+    rows: Array<NotificationGroupListRow & { targetPost: NotificationTargetPost | null }>;
     pagination: PaginationResponse<string | number | null>;
   }> {
     const notifications = await notificationRepository.findByRecipientId({
@@ -51,8 +56,28 @@ class NotificationService {
       take,
     });
 
+    const postTargetIds = [
+      ...new Set(
+        notifications
+          .filter((item) => item.targetType === "POST")
+          .map((item) => item.targetId),
+      ),
+    ];
+
+    const posts =
+      postTargetIds.length > 0
+        ? await notificationRepository.findPostTargetsByPublicIds(postTargetIds)
+        : [];
+    const postMap = new Map(posts.map((post) => [post.publicId, post]));
+
+    const rows = notifications.map((item) => ({
+      ...item,
+      targetPost:
+        item.targetType === "POST" ? postMap.get(item.targetId) ?? null : null,
+    }));
+
     return buildCursorPagination({
-      rows: notifications,
+      rows,
       take,
       getAfter: (item) => item.publicId,
     });
