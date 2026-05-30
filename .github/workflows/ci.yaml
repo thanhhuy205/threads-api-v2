@@ -18,7 +18,9 @@ permissions:
 
 jobs:
   build:
+    environment: production
     runs-on: ubuntu-latest
+
     outputs:
       image: ${{ steps.set-image.outputs.uri }}
 
