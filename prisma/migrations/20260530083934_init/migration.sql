@@ -84,10 +84,13 @@ CREATE TABLE `users` (
 CREATE TABLE `reports` (
     `id` VARCHAR(191) NOT NULL,
     `reporter_id` VARCHAR(191) NOT NULL,
-    `target_type` ENUM('POST', 'USER') NOT NULL,
+    `target_type` ENUM('POST', 'USER', 'CIRCLE') NOT NULL,
     `target_id` VARCHAR(255) NOT NULL,
     `reason` TEXT NOT NULL,
     `status` ENUM('PENDING', 'RESOLVED', 'DISMISSED') NOT NULL DEFAULT 'PENDING',
+    `assistant_note` TEXT NULL,
+    `confidence` DECIMAL(3, 2) NULL,
+    `is_disinformation` BOOLEAN NOT NULL DEFAULT false,
     `admin_note` TEXT NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
@@ -135,6 +138,7 @@ CREATE TABLE `member_message_groups` (
     `user_id` VARCHAR(191) NOT NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NOT NULL,
+    `unreadCount` INTEGER NOT NULL DEFAULT 0,
     `messageGroupId` INTEGER NULL,
 
     INDEX `idx_messages_sender_id`(`user_id`),
@@ -163,7 +167,8 @@ CREATE TABLE `posts` (
     `public_id` VARCHAR(191) NOT NULL,
     `user_id` VARCHAR(191) NOT NULL,
     `content` TEXT NOT NULL,
-    `type` ENUM('POST', 'REPLY', 'REPOST', 'QUOTE', 'CIRCLE') NOT NULL DEFAULT 'POST',
+    `content_json` JSON NULL,
+    `type` ENUM('POST', 'REPLY', 'REPOST', 'QUOTE', 'CIRCLE', 'CIRCLE_REPLY') NOT NULL DEFAULT 'POST',
     `visibility` ENUM('PUBLIC', 'FRIEND', 'PRIVATE', 'CIRCLE') NOT NULL DEFAULT 'PUBLIC',
     `parent_id` INTEGER NULL,
     `origin_post_id` INTEGER NULL,
@@ -184,6 +189,8 @@ CREATE TABLE `posts` (
     `deleted_at` DATETIME(3) NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NOT NULL,
+    `is_hidden` BOOLEAN NOT NULL DEFAULT false,
+    `is_disinformation` BOOLEAN NOT NULL DEFAULT false,
 
     UNIQUE INDEX `posts_public_id_key`(`public_id`),
     INDEX `posts_user_id_created_at_idx`(`user_id`, `created_at`),
@@ -199,12 +206,14 @@ CREATE TABLE `post_media` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `post_id` INTEGER NULL,
     `url` VARCHAR(2048) NOT NULL,
+    `upload_url` VARCHAR(2048) NULL,
+    `asset_id` VARCHAR(255) NULL,
     `type_enum` ENUM('IMAGE', 'VIDEO', 'GIF', 'OTHER') NULL,
     `width` INTEGER NULL,
     `height` INTEGER NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `key` VARCHAR(255) NOT NULL,
-    `status_enum` ENUM('TEMPORARY', 'UPLOADING', 'UPLOADED', 'FAILED') NULL DEFAULT 'TEMPORARY',
+    `status_enum` ENUM('TEMPORARY', 'UPLOADING', 'UPLOADED', 'FAILED', 'DELETED') NULL DEFAULT 'TEMPORARY',
 
     UNIQUE INDEX `post_media_key_key`(`key`),
     INDEX `idx_post_media_post_id`(`post_id`),
@@ -346,7 +355,7 @@ CREATE TABLE `circles` (
     `description` TEXT NOT NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NOT NULL,
-    `visibility` ENUM('PUBLIC', 'PRIVATE', 'CIRCLE') NOT NULL DEFAULT 'PRIVATE',
+    `visibility` ENUM('PUBLIC', 'PRIVATE') NOT NULL DEFAULT 'PRIVATE',
     `status_peak` BOOLEAN NOT NULL DEFAULT false,
     `create_by_id` VARCHAR(191) NOT NULL,
 
@@ -377,6 +386,9 @@ CREATE TABLE `daily_quests` (
     `karmaReward` INTEGER NOT NULL,
     `requirement` INTEGER NOT NULL,
     `isActive` BOOLEAN NOT NULL DEFAULT true,
+    `action_enum` ENUM('POST_CREATED', 'POST_DELETED', 'LIKE_CREATED', 'FLOW_FOLLOWER_CREATED', 'FOLLOW_FOLLOWING_CREATED', 'QUOTE_CREATED', 'QUOTE_DELETED', 'SHARE_CREATED', 'SHARE_DELETED', 'INVITE_SENT', 'INVITE_ACCEPTED', 'JOIN_CIRCLE', 'LEAVE_CIRCLE') NOT NULL,
+    `create_by_id` VARCHAR(191) NOT NULL,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
     UNIQUE INDEX `daily_quests_code_key`(`code`),
     PRIMARY KEY (`id`)
@@ -393,6 +405,21 @@ CREATE TABLE `user_quest_logs` (
     `date` DATE NOT NULL,
 
     UNIQUE INDEX `user_quest_logs_user_id_quest_id_date_key`(`user_id`, `quest_id`, `date`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `user_action_logs` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `user_id` VARCHAR(191) NOT NULL,
+    `type_enum` ENUM('POST_CREATED', 'POST_DELETED', 'LIKE_CREATED', 'FLOW_FOLLOWER_CREATED', 'FOLLOW_FOLLOWING_CREATED', 'QUOTE_CREATED', 'QUOTE_DELETED', 'SHARE_CREATED', 'SHARE_DELETED', 'INVITE_SENT', 'INVITE_ACCEPTED', 'JOIN_CIRCLE', 'LEAVE_CIRCLE') NOT NULL,
+    `targetId` VARCHAR(191) NULL,
+    `metadata` JSON NULL,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    INDEX `idx_user_action_logs_user_id`(`user_id`),
+    INDEX `idx_user_action_logs_type`(`type_enum`),
+    INDEX `idx_user_action_logs_created_at`(`created_at`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -418,8 +445,10 @@ CREATE TABLE `hero_badges` (
     `user_id` VARCHAR(191) NOT NULL,
     `circle_id` INTEGER NOT NULL,
     `type` ENUM('HERO', 'LEGEND', 'KARMA_SACRIFICE', 'CPR_HERO', 'FOUNDER') NOT NULL,
+    `expire_at` DATETIME(3) NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
+    UNIQUE INDEX `uq_hero_badges_user_circle`(`user_id`, `circle_id`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -440,6 +469,7 @@ CREATE TABLE `karma_transactions` (
 CREATE TABLE `circle_post_quality_logs` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `circle_id` INTEGER NOT NULL,
+    `circle_member_id` INTEGER NOT NULL,
     `post_id` INTEGER NOT NULL,
     `score` INTEGER NOT NULL DEFAULT 0,
     `label` ENUM('MASTERPIECE', 'DEEP_TALK', 'SOLID', 'NEUTRAL', 'NOISE', 'TOXIC', 'PENDING') NOT NULL DEFAULT 'PENDING',
@@ -463,6 +493,7 @@ CREATE TABLE `circle_post_quality_logs` (
 -- CreateTable
 CREATE TABLE `circle_exp_logs` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `public_id` VARCHAR(191) NOT NULL,
     `user_id` VARCHAR(191) NOT NULL,
     `circle_id` INTEGER NOT NULL,
     `post_id` INTEGER NULL,
@@ -471,6 +502,7 @@ CREATE TABLE `circle_exp_logs` (
     `is_delta` BOOLEAN NOT NULL DEFAULT false,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
+    UNIQUE INDEX `circle_exp_logs_public_id_key`(`public_id`),
     INDEX `idx_circle_exp_log_circle_id`(`circle_id`),
     INDEX `idx_circle_exp_log_user_id`(`user_id`),
     INDEX `idx_circle_exp_log_post_id`(`post_id`),
@@ -489,7 +521,7 @@ CREATE TABLE `user_karma` (
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NOT NULL,
 
-    INDEX `idx_user_karma_user_id`(`user_id`),
+    UNIQUE INDEX `uq_user_karma_user_id`(`user_id`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -497,7 +529,7 @@ CREATE TABLE `user_karma` (
 CREATE TABLE `user_restrictions` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `user_id` VARCHAR(191) NOT NULL,
-    `type_enum` ENUM('POSTING') NOT NULL,
+    `type_enum` ENUM('POSTING', 'POST_AND_USE_KARMA') NOT NULL,
     `reason` VARCHAR(255) NULL,
     `expires_at` DATETIME(3) NOT NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
@@ -543,13 +575,18 @@ CREATE TABLE `circle_soul_stones` (
 CREATE TABLE `circle_invitations` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `circle_id` INTEGER NOT NULL,
-    `user_id` VARCHAR(191) NOT NULL,
+    `user_id` VARCHAR(191) NULL,
+    `email` VARCHAR(255) NULL,
+    `role` ENUM('OWNER', 'ADMIN', 'MEMBER') NULL DEFAULT 'MEMBER',
+    `is_user` BOOLEAN NOT NULL DEFAULT true,
+    `tokenHash` VARCHAR(100) NULL,
     `inviter_id` VARCHAR(191) NOT NULL,
     `resent_count` INTEGER NOT NULL DEFAULT 0,
-    `status` ENUM('PENDING', 'ACCEPTED', 'REJECTED') NOT NULL DEFAULT 'PENDING',
+    `status` ENUM('PENDING', 'ACCEPTED', 'REJECTED', 'CANCELLED') NOT NULL DEFAULT 'PENDING',
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NOT NULL,
 
+    UNIQUE INDEX `circle_invitations_tokenHash_key`(`tokenHash`),
     INDEX `idx_circle_invitations_circle_id`(`circle_id`),
     INDEX `idx_circle_invitations_user_id`(`user_id`),
     INDEX `idx_circle_invitations_inviter_id`(`inviter_id`),
@@ -558,10 +595,22 @@ CREATE TABLE `circle_invitations` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
+CREATE TABLE `circle_join_requests` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `user_id` VARCHAR(191) NOT NULL,
+    `circleId` INTEGER NOT NULL,
+    `status` ENUM('PENDING', 'ACCEPTED', 'REJECTED', 'CANCELLED') NOT NULL DEFAULT 'PENDING',
+    `reason` VARCHAR(255) NULL,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
 CREATE TABLE `anti_spam` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `user_id` VARCHAR(191) NOT NULL,
-    `action` ENUM('POST_CREATED', 'POST_DELETED', 'LIKE_CREATED', 'DISLIKE_CREATED', 'FLOW_FOLLOWER_CREATED', 'FOLLOW_FOLLOWING_CREATED', 'QUOTE_CREATED', 'QUOTE_DELETED', 'SHARE_CREATED', 'SHARE_DELETED') NOT NULL,
+    `action` ENUM('POST_CREATED', 'POST_DELETED', 'LIKE_CREATED', 'FLOW_FOLLOWER_CREATED', 'FOLLOW_FOLLOWING_CREATED', 'QUOTE_CREATED', 'QUOTE_DELETED', 'SHARE_CREATED', 'SHARE_DELETED', 'INVITE_SENT', 'INVITE_ACCEPTED', 'JOIN_CIRCLE', 'LEAVE_CIRCLE') NOT NULL,
     `reason` VARCHAR(255) NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
@@ -574,7 +623,7 @@ CREATE TABLE `notification_groups` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `public_id` VARCHAR(191) NOT NULL,
     `recipient_id` VARCHAR(191) NOT NULL,
-    `type` ENUM('POST', 'LIKE', 'FOLLOW', 'QUOTE', 'SHARE', 'MESSAGE', 'REPLY') NOT NULL,
+    `type` ENUM('POST', 'LIKE', 'FOLLOW', 'QUOTE', 'SHARE', 'MESSAGE', 'REPLY', 'MENTION', 'INVITATION') NOT NULL,
     `target_type` VARCHAR(191) NOT NULL,
     `target_id` VARCHAR(191) NOT NULL,
     `actor_ids` JSON NOT NULL,
@@ -644,6 +693,9 @@ ALTER TABLE `post_media` ADD CONSTRAINT `post_media_post_id_fkey` FOREIGN KEY (`
 ALTER TABLE `post_mentions` ADD CONSTRAINT `post_mentions_post_id_fkey` FOREIGN KEY (`post_id`) REFERENCES `posts`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `post_mentions` ADD CONSTRAINT `post_mentions_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE `follows` ADD CONSTRAINT `follows_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -686,10 +738,16 @@ ALTER TABLE `circle_members` ADD CONSTRAINT `circle_members_circle_id_fkey` FORE
 ALTER TABLE `circle_members` ADD CONSTRAINT `circle_members_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `daily_quests` ADD CONSTRAINT `daily_quests_create_by_id_fkey` FOREIGN KEY (`create_by_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE `user_quest_logs` ADD CONSTRAINT `user_quest_logs_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `user_quest_logs` ADD CONSTRAINT `user_quest_logs_quest_id_fkey` FOREIGN KEY (`quest_id`) REFERENCES `daily_quests`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `user_action_logs` ADD CONSTRAINT `user_action_logs_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `circle_energy` ADD CONSTRAINT `circle_energy_circle_id_fkey` FOREIGN KEY (`circle_id`) REFERENCES `circles`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -708,6 +766,9 @@ ALTER TABLE `circle_post_quality_logs` ADD CONSTRAINT `circle_post_quality_logs_
 
 -- AddForeignKey
 ALTER TABLE `circle_post_quality_logs` ADD CONSTRAINT `circle_post_quality_logs_post_id_fkey` FOREIGN KEY (`post_id`) REFERENCES `posts`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `circle_post_quality_logs` ADD CONSTRAINT `circle_post_quality_logs_circle_member_id_fkey` FOREIGN KEY (`circle_member_id`) REFERENCES `circle_members`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `circle_exp_logs` ADD CONSTRAINT `circle_exp_logs_circle_id_fkey` FOREIGN KEY (`circle_id`) REFERENCES `circles`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -734,19 +795,22 @@ ALTER TABLE `circle_soul_stones` ADD CONSTRAINT `circle_soul_stones_circleId_fke
 ALTER TABLE `circle_invitations` ADD CONSTRAINT `circle_invitations_circle_id_fkey` FOREIGN KEY (`circle_id`) REFERENCES `circles`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `circle_invitations` ADD CONSTRAINT `circle_invitations_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `circle_invitations` ADD CONSTRAINT `circle_invitations_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `circle_invitations` ADD CONSTRAINT `circle_invitations_inviter_id_fkey` FOREIGN KEY (`inviter_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `circle_join_requests` ADD CONSTRAINT `circle_join_requests_circleId_fkey` FOREIGN KEY (`circleId`) REFERENCES `circles`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `circle_join_requests` ADD CONSTRAINT `circle_join_requests_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `anti_spam` ADD CONSTRAINT `anti_spam_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `notification_groups` ADD CONSTRAINT `notification_groups_last_actor_id_fkey` FOREIGN KEY (`last_actor_id`) REFERENCES `users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `notification_groups` ADD CONSTRAINT `notification_groups_target_id_fkey` FOREIGN KEY (`target_id`) REFERENCES `posts`(`public_id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `notification_groups` ADD CONSTRAINT `notification_groups_origin_post_fkey` FOREIGN KEY (`origin_post`) REFERENCES `posts`(`public_id`) ON DELETE SET NULL ON UPDATE CASCADE;

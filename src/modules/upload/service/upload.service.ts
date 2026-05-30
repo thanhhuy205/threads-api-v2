@@ -55,7 +55,6 @@ class UploadService {
             },
             cors_origin: configService.FRONTEND_URL,
         });
-        console.log(upload);
         return {
             url: upload.url ?? '',
             status: upload.status === 'waiting' ? PostMediaStatus.UPLOADING : PostMediaStatus.UPLOADED,

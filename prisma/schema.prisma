@@ -144,6 +144,7 @@ enum PostMediaStatus {
   UPLOADING
   UPLOADED
   FAILED
+  DELETED
 }
 
 enum FriendRequestStatus {
@@ -486,6 +487,8 @@ model PostMedia {
   id        Int              @id @default(autoincrement())
   postId    Int?             @map("post_id")
   url       String           @db.VarChar(2048)
+  uploadUrl String?          @map("upload_url") @db.VarChar(2048) // url dùng để upload file, chỉ tồn tại khi media đang ở trạng thái TEMPORARY hoặc UPLOADING
+  assetId   String?          @map("asset_id") @db.VarChar(255) // id của file trên dịch vụ lưu trữ, dùng để quản lý và xóa file khi cần thiết
   type      PostMediaType?   @map("type_enum")
   width     Int?
   height    Int?
