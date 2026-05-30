@@ -24,6 +24,7 @@ export const postFeedSelect = Prisma.validator<Prisma.PostSelect>()({
       type: true,
       width: true,
       height: true,
+      status: true,
     },
   },
   mentions: {

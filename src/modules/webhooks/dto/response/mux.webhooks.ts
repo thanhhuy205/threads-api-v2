@@ -13,6 +13,7 @@ export interface MuxWebhookDataDto {
     playback_ids: MuxWebhookPlaybackIdDto[];
     duration: number;
     id: string;
+    upload_id: string;
 }
 
 export interface MuxWebhooksResponseDto {

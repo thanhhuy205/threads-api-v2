@@ -2,6 +2,7 @@ import configService from '@/config/config';
 import { putObject } from '@/providers/cloudflare.provider';
 import { muxClient } from '@/providers/mux.provider';
 import { generateKeyImage } from '@/util/upload.util';
+import { PostMediaStatus } from '@prisma/client';
 import type { UploadMediaDataDto } from '../dto/response/upload-media.response.dto';
 import { postMediaRepository } from '../repository/post-media.repository';
 
@@ -19,6 +20,9 @@ class UploadService {
     async uploadMedia(files: Express.Multer.File[]): Promise<UploadMediaDataDto> {
         const uploadResults = await Promise.all(
             files.map(async (file) => {
+                if (file.mimetype.startsWith('video/')) {
+                    return this.getUploadVideosUrl();
+                }
                 const key = generateKeyImage('medias', file.originalname);
                 const result = await putObject({
                     key,
@@ -30,7 +34,9 @@ class UploadService {
                     key: result.key,
                     url: result.url,
                     type: 'IMAGE' as const,
-                    status: 'UPLOADED' as const,
+                    status: PostMediaStatus.UPLOADED,
+                    width: file.width ?? null,
+                    height: file.height ?? null,
                 };
             }),
         );
@@ -38,7 +44,7 @@ class UploadService {
         const medias = await postMediaRepository.createMedia(uploadResults);
 
         return {
-            medias,
+            media: medias,
         };
     }
 
@@ -49,12 +55,15 @@ class UploadService {
             },
             cors_origin: configService.FRONTEND_URL,
         });
+        console.log(upload);
         return {
-            url: upload.url,
-            timeout: upload.timeout,
-            status: upload.status,
-            id: upload.id,
-        }
+            url: upload.url ?? '',
+            status: upload.status === 'waiting' ? PostMediaStatus.UPLOADING : PostMediaStatus.UPLOADED,
+            type: 'VIDEO' as const,
+            key: upload.id,
+            width: null,
+            height: null,
+        };
     }
 
 }

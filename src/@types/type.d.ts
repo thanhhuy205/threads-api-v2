@@ -19,6 +19,8 @@ declare global {
     namespace Multer {
       interface File {
         resizedBuffer?: Buffer<ArrayBufferLike>;
+        width?: number;
+        height?: number;
       }
     }
     interface Response {

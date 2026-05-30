@@ -26,6 +26,14 @@ postRouter.get(
   validate(cursorPaginationQuerySchema, "query"),
   postController.getReplies,
 );
+
+postRouter.get(
+  "/me",
+  authorization,
+  validate(cursorPaginationQuerySchema, "query"),
+  postController.getPostMe,
+);
+
 postRouter.get(
   "/:publicId",
   validate(publicIdParamsSchema, "params"),
@@ -58,11 +66,7 @@ postRouter.get(
   postController.getJudgeStatus,
 );
 
-postRouter.get(
-  "/me",
-  validate(cursorPaginationQuerySchema, "query"),
-  postController.getPostMe,
-);
+
 postRouter.get(
   "/me/replies",
   validate(cursorPaginationQuerySchema, "query"),
