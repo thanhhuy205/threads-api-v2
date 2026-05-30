@@ -299,7 +299,6 @@ class CircleService {
       postId: post.id,
       score: 0,
       hpDelta: 0,
-      userId,
       circleMemberId: member.id
     });
 
@@ -429,7 +428,6 @@ class CircleService {
       score: 0,
       hpDelta: 0,
       circleMemberId: member.id,
-      userId: userId
     });
 
     await evaluationProducer.enqueueEvaluationPost({

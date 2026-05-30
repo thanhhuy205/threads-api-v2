@@ -480,7 +480,6 @@ class CircleInvitationRepository implements ICursorPagination<
           inviterId: payload.inviterId,
           isUser: payload.isUser,
           role: payload.role,
-          description: payload.description,
           tokenHash: payload.tokenHash,
           status: CircleInvitationStatus.PENDING,
           resentCount: {
@@ -498,7 +497,6 @@ class CircleInvitationRepository implements ICursorPagination<
         inviterId: payload.inviterId,
         isUser: payload.isUser,
         role: payload.role,
-        description: payload.description,
         tokenHash: payload.tokenHash,
         status: CircleInvitationStatus.PENDING,
       },

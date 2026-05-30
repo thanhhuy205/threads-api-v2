@@ -8,7 +8,6 @@ type CreateCirclePostQualityLogInput = {
   postId: number;
   score?: number;
   hpDelta?: number;
-  userId: string;
 };
 
 type SaveCirclePostJudgeResultInput = {
@@ -256,7 +255,6 @@ class CirclePostQualityLogRepository {
 
     return tx.circlePostQualityLog.create({
       data: {
-        userId: data.userId,
         circleMemberId: data.circleMemberId,
         circleId: data.circleId,
         postId: data.postId,
@@ -281,7 +279,7 @@ class CirclePostQualityLogRepository {
         circleMember: {
           select: {
             userId: true,
-            postQualityLogs: {
+            circlePostQuantity: {
               where: {
                 circleId,
               },

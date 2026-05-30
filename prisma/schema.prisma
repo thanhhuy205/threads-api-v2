@@ -827,6 +827,7 @@ model CircleExpLog {
   expDelta  Int       @default(0) @map("exp_delta") // +5, 0, -1
   isDelta   Boolean   @default(false) @map("is_delta")
   createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
 
   circle Circle @relation(fields: [circleId], references: [id])
   user   User   @relation(fields: [userId], references: [id])
