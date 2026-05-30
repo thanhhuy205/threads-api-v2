@@ -7,7 +7,7 @@
     "scripts": {
         "dev": "tsx --watch src/server.ts",
         "server": "tsx src/server.ts",
-        "build": "tsc -p tsconfig.json",
+        "build": "tsc && tsc-alias",
         "start": "node dist/src/server.js",
         "typecheck": "tsc -p tsconfig.json --noEmit",
         "db:generate": "prisma generate",
@@ -86,6 +86,7 @@
         "@types/node": "^22.0.0",
         "@types/sharp": "^0.31.1",
         "prisma": "^7.0.0",
+        "tsc-alias": "^1.8.17",
         "tsx": "^4.19.0",
         "typescript": "^5.8.0"
     }

@@ -24,4 +24,4 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist 
 COPY --from=builder /app/prisma ./prisma
 
-CMD ["node", "-r", "tsconfig-paths/register", "dist/src/server.js"]
+CMD ["node", "dist/src/server.js"]
