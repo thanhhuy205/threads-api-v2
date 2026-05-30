@@ -18,7 +18,6 @@ Thumbs.db
 .commitsage
 .docs/
 *.md
-prisma/seed.ts
 
 # ==========================================
 # 3. Dependencies & Build Outputs (Bắt buộc phải chặn)
