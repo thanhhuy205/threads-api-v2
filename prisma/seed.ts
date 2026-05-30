@@ -650,7 +650,7 @@ async function seedUsers(): Promise<SeedUser[]> {
     console.log("\n📋 3 users mới nhất:");
     preview.forEach(u => console.log(`   @${u.username} | ${u.name}`));
 
-    return users;
+    return users as SeedUser[];
 }
 
 async function seedPosts(users: SeedUser[]) {
