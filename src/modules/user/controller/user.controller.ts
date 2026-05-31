@@ -134,7 +134,6 @@ class UserController {
 
   async getByUsername(req: Request<UsernameParamsDto>, res: Response) {
     const userId = await jwtService.requestAuthToken(req);
-    console.log("userId", userId);
     const user = await userService.findByUsername(req.params.username, userId ?? undefined);
     if (!user) {
       return res.error(404, USER_MESSAGE.USER_NOT_FOUND);
