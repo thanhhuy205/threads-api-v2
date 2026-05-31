@@ -79,4 +79,5 @@ jobs:
           docker system prune -f
           docker compose -f docker-compose.yml up -d --remove-orphans
           docker exec threads-api npx prisma migrate deploy 
+          docker exec threads-nginx nginx -s reload
           docker system df
