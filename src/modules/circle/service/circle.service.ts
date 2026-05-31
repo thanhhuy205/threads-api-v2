@@ -130,6 +130,23 @@ class CircleService {
     };
   }
 
+  private mapCircleListItemEnergy(circle: any) {
+    const energyRecord = Array.isArray(circle.circleEnergies)
+      ? circle.circleEnergies[0]
+      : undefined;
+    const { circleEnergies, ...rest } = circle;
+
+    return {
+      ...rest,
+      energy: energyRecord
+        ? {
+          current: energyRecord.current,
+          level: energyRecord.level,
+        }
+        : null,
+    };
+  }
+
   private async buildCircleListResponse({
     publicId,
     take,
@@ -150,16 +167,21 @@ class CircleService {
     const circleIds = circles.map((circle) => circle.id as number);
     let pendingCircleIdSet = new Set<number>();
     let joinedCircleIdSet = new Set<number>();
+    let invitedCircleIdSet = new Set<number>();
 
     if (userId && circleIds.length) {
-      const [pendingInvitations, memberships] = await Promise.all([
+      const [pendingInvitations, memberships, invitedCircle] = await Promise.all([
         circleJoinRequestRepository.findPendingRequestByCircleId(
           circleIds,
           userId,
         ),
         circleMemberRepository.findMembershipsByCircleIds(circleIds, userId),
+        circleInvitationRepository.findPendingInvitationsByCircleIds(circleIds, userId),
       ]);
 
+      invitedCircleIdSet = new Set(
+        invitedCircle.map((invitation) => invitation.circleId),
+      );
       pendingCircleIdSet = new Set(
         pendingInvitations.map((invitation) => invitation.circleId),
       );
@@ -169,9 +191,10 @@ class CircleService {
     }
 
     const rows = circles.map((circle) =>
-      mapCircleWithJoinStatus(circle, {
+      mapCircleWithJoinStatus(this.mapCircleListItemEnergy(circle), {
         pendingCircleIdSet,
         joinedCircleIdSet,
+        invitedCircleIdSet
       }),
     );
 
@@ -730,11 +753,13 @@ class CircleService {
     });
 
     const pendingCircleIdSet = new Set<number>();
+    const invitedCircleIdSet = new Set<number>();
     const joinedCircleIdSet = new Set(circles.map((circle) => circle.id));
     const rows = circles.map((circle) =>
-      mapCircleWithJoinStatus(circle, {
+      mapCircleWithJoinStatus(this.mapCircleListItemEnergy(circle), {
         pendingCircleIdSet,
         joinedCircleIdSet,
+        invitedCircleIdSet
       }),
     );
 
@@ -766,11 +791,13 @@ class CircleService {
     });
 
     const pendingCircleIdSet = new Set<number>();
+    const invitedCircleIdSet = new Set<number>();
     const joinedCircleIdSet = new Set(circles.map((circle) => circle.id));
     const rows = circles.map((circle) =>
-      mapCircleWithJoinStatus(circle, {
+      mapCircleWithJoinStatus(this.mapCircleListItemEnergy(circle), {
         pendingCircleIdSet,
         joinedCircleIdSet,
+        invitedCircleIdSet
       }),
     );
 

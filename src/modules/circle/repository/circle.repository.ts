@@ -45,6 +45,16 @@ class CircleRepository implements ICursorPagination<
         _count: {
           select: { circleMembers: true },
         },
+        circleEnergies: {
+          orderBy: {
+            createdAt: "desc",
+          },
+          take: 1,
+          select: {
+            current: true,
+            level: true,
+          },
+        },
         createdBy: {
           select: {
             name: true,
