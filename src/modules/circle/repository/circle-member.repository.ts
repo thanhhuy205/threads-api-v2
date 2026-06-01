@@ -148,6 +148,19 @@ class CircleMemberRepository implements ICursorPagination<Prisma.CircleMemberWhe
         });
     }
 
+    kickMemberByCircleIdAndUserId(
+        circleId: number,
+        userId: string,
+        tx: Prisma.TransactionClient = prisma,
+    ) {
+        return tx.circleMember.deleteMany({
+            where: {
+                circleId,
+                userId,
+            },
+        });
+    }
+
     countMembersByCircleIdWithinRange(circleId: number, from: Date) {
         return prisma.circleMember.count({
             where: {

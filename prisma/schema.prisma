@@ -319,6 +319,8 @@ model User {
   reports             Report[]             @relation("UserReports")
   postMentions        PostMention[]
   circleJoinRequests  CircleJoinRequest[]
+  circleMemberBans    CircleMemberBan[] @relation("CircleMemberBanUser")
+  circleMemberBansBy  CircleMemberBan[] @relation("CircleMemberBanBy")
   dailyQuests         DailyQuest[]
   userActionLogs      UserActionLog[]
 
@@ -666,6 +668,7 @@ model Circle {
   circleExpLogs         CircleExpLog[]
   heroBadges            HeroBadge[]
   circleJoinRequests    CircleJoinRequest[]
+  circleMemberBans      CircleMemberBan[]
 
   @@index([createById], map: "idx_circles_created_by")
   @@map("circles")
@@ -686,6 +689,27 @@ model CircleMember {
   @@index([circleId], map: "idx_circle_members_circle_id")
   @@index([userId], map: "idx_circle_members_user_id")
   @@map("circle_members")
+}
+
+model CircleMemberBan {
+  id         Int       @id @default(autoincrement())
+  circleId   Int       @map("circle_id")
+  userId     String    @map("user_id")
+  bannedById String    @map("banned_by_id")
+  reason     String?   @db.VarChar(255)
+  expiresAt  DateTime? @map("expires_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  circle   Circle @relation(fields: [circleId], references: [id])
+  user     User   @relation("CircleMemberBanUser", fields: [userId], references: [id])
+  bannedBy User   @relation("CircleMemberBanBy", fields: [bannedById], references: [id])
+
+  @@unique([circleId, userId], map: "uq_circle_member_bans_circle_user")
+  @@index([circleId], map: "idx_circle_member_bans_circle_id")
+  @@index([userId], map: "idx_circle_member_bans_user_id")
+  @@index([bannedById], map: "idx_circle_member_bans_banned_by_id")
+  @@index([expiresAt], map: "idx_circle_member_bans_expires_at")
+  @@map("circle_member_bans")
 }
 
 model DailyQuest {

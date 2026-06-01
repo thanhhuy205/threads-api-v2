@@ -10,6 +10,10 @@ import { circleController } from './controller/circle.controller';
 import { sendInvitationEmailSchema } from './dto/admin-circle.dto';
 import { createCircleSchema } from './dto/create-circle.dto';
 import {
+    banCircleMemberSchema,
+    kickCircleMemberSchema,
+} from './dto/manage-member.dto';
+import {
     circlePostsQuerySchema,
     circlePublicIdParamsSchema,
     circleReplyParamsSchema,
@@ -69,6 +73,18 @@ circleRouter.get(
     validate(circlePublicIdParamsSchema, 'params'),
     validate(offsetLimitQuerySchema, 'query'),
     circleController.getManageMembers,
+);
+circleRouter.post(
+    '/:publicId/manage/members/ban',
+    validate(circlePublicIdParamsSchema, 'params'),
+    validate(banCircleMemberSchema),
+    circleController.banMember,
+);
+circleRouter.post(
+    '/:publicId/manage/members/kick',
+    validate(circlePublicIdParamsSchema, 'params'),
+    validate(kickCircleMemberSchema),
+    circleController.kickMember,
 );
 circleRouter.get(
     '/:publicId/manage/invitations/stats',

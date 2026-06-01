@@ -48,6 +48,7 @@ import {
 import { mapCircleWithJoinStatus } from "../mapper/circle.mapper";
 import { circleEnergyRepository } from "../repository/circle-energy.repository";
 import { circleExpLogRepository } from "../repository/circle-exp-log.repository";
+import { circleMemberBanRepository } from "../repository/circle-member-ban.repository";
 import { circleMemberRepository } from "../repository/circle-member.repository";
 import { circlePostQualityLogRepository } from "../repository/circle-post-quality-log.repository";
 import { circleRepository } from "../repository/circle.repository";
@@ -860,6 +861,86 @@ class CircleService {
     return {
       rows,
       pagination: buildPaginationResponse(total, query.page, query.limit),
+    };
+  }
+
+  async banMember({
+    publicId,
+    userId,
+    bannedById,
+    reason,
+    expiresAt,
+  }: {
+    publicId: string;
+    userId: string;
+    bannedById: string;
+    reason?: string;
+    expiresAt?: Date;
+  }) {
+    const circle = await circleRepository.findByPublicId(publicId);
+    if (!circle) {
+      throw new NotFoundException(`Circle ${publicId} not found`);
+    }
+
+    const result = await transactionService.doInTransaction(async (tx) => {
+      const banRecord = await circleMemberBanRepository.upsertByCircleIdAndUserId(
+        {
+          circleId: circle.id,
+          userId,
+          bannedById,
+          reason,
+          expiresAt,
+        },
+        tx,
+      );
+
+      const kicked = await circleMemberRepository.kickMemberByCircleIdAndUserId(
+        circle.id,
+        userId,
+        tx,
+      );
+
+      return {
+        banRecord,
+        kickedCount: kicked.count,
+      };
+    });
+
+    await this.bumpCircleListCacheVersion();
+
+    return {
+      circlePublicId: circle.publicId,
+      userId: result.banRecord.userId,
+      bannedById: result.banRecord.bannedById,
+      reason: result.banRecord.reason,
+      expiresAt: result.banRecord.expiresAt,
+      kickedCount: result.kickedCount,
+    };
+  }
+
+  async kickMember({
+    publicId,
+    userId,
+  }: {
+    publicId: string;
+    userId: string;
+  }) {
+    const circle = await circleRepository.findByPublicId(publicId);
+    if (!circle) {
+      throw new NotFoundException(`Circle ${publicId} not found`);
+    }
+
+    const result = await circleMemberRepository.kickMemberByCircleIdAndUserId(
+      circle.id,
+      userId,
+    );
+
+    await this.bumpCircleListCacheVersion();
+
+    return {
+      circlePublicId: circle.publicId,
+      userId,
+      kickedCount: result.count,
     };
   }
 

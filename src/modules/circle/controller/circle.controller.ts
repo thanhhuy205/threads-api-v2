@@ -1,5 +1,9 @@
 import { SendInvitationEmailDto } from "@/modules/circle/dto/admin-circle.dto";
 import {
+  BanCircleMemberDto,
+  KickCircleMemberDto,
+} from "@/modules/circle/dto/manage-member.dto";
+import {
   RespondJoinRequestDto,
   ResendInvitationDto,
   ResponseInvitationDto,
@@ -395,6 +399,45 @@ class CircleController {
     return res.success(200, "Circle members retrieved successfully", data.rows, {
       pagination: data.pagination,
     });
+  }
+
+  async banMember(
+    req: Request<CirclePublicIdParamsDto, {}, BanCircleMemberDto>,
+    res: Response,
+  ) {
+    const bannedById = req.user?.sub;
+    if (!bannedById) {
+      return res.error(401, "Unauthorized");
+    }
+
+    const { publicId } = req.params;
+    const result = await circleService.banMember({
+      publicId,
+      userId: req.body.userId,
+      bannedById,
+      reason: req.body.reason,
+      expiresAt: req.body.expiresAt ? new Date(req.body.expiresAt) : undefined,
+    });
+
+    return res.success(200, "Circle member banned successfully", result);
+  }
+
+  async kickMember(
+    req: Request<CirclePublicIdParamsDto, {}, KickCircleMemberDto>,
+    res: Response,
+  ) {
+    const managerId = req.user?.sub;
+    if (!managerId) {
+      return res.error(401, "Unauthorized");
+    }
+
+    const { publicId } = req.params;
+    const result = await circleService.kickMember({
+      publicId,
+      userId: req.body.userId,
+    });
+
+    return res.success(200, "Circle member kicked successfully", result);
   }
 
   async getManageInvitations(

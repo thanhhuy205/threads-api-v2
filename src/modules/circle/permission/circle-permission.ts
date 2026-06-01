@@ -12,6 +12,7 @@ export enum CirclePermission {
     POST = 'post',
     COMMENT = 'comment',
     STATISTICS = 'statistics',
+    UPDATE_LEVEL = 'update_level',
 }
 
 export const CIRCLE_ROLE_PERMISSIONS: Record<RoleMembership, CirclePermission[]> = {
@@ -27,6 +28,7 @@ export const CIRCLE_ROLE_PERMISSIONS: Record<RoleMembership, CirclePermission[]>
         CirclePermission.POST,
         CirclePermission.COMMENT,
         CirclePermission.STATISTICS,
+        CirclePermission.UPDATE_LEVEL,
     ],
     [RoleMembership.ADMIN]: [
         CirclePermission.INVITE_MEMBER,
