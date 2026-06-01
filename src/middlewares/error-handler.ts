@@ -32,8 +32,8 @@ export const errorHandler = (error: unknown, _req: Request, res: Response, _next
     }
 
     if (env.NODE_ENV === 'development' && error instanceof Error && error.stack) {
-        res.error(500, COMMON_MESSAGE.INTERNAL_SERVER_ERROR, undefined, { stack: error.stack });
+        return res.error(500, COMMON_MESSAGE.INTERNAL_SERVER_ERROR, undefined, { stack: error.stack });
     } else {
-        res.error(500, COMMON_MESSAGE.INTERNAL_SERVER_ERROR);
+        return res.error(500, COMMON_MESSAGE.INTERNAL_SERVER_ERROR);
     }
 };

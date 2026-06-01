@@ -327,9 +327,55 @@ export const circleSwaggerSchemas = {
         },
         required: ['success', 'message', 'data'],
     },
+    CircleAiMarkdownRequest: {
+        type: 'object',
+        properties: {
+            textNguoiDung: { type: 'string', example: 'Please format this as clean markdown.' },
+        },
+        required: ['textNguoiDung'],
+    },
+    CircleAiMarkdownData: {
+        type: 'object',
+        properties: {
+            markdown: { type: 'string', example: '# Title\n\n- Item one\n- Item two' },
+        },
+        required: ['markdown'],
+    },
+    CircleAiMarkdownResponse: {
+        type: 'object',
+        properties: {
+            success: { type: 'boolean', example: true },
+            message: { type: 'string', example: 'Markdown generated' },
+            data: { $ref: '#/components/schemas/CircleAiMarkdownData' },
+        },
+        required: ['success', 'message', 'data'],
+    },
 };
 
 export const circleSwaggerPaths = {
+    '/circle-ai/generate-response': {
+        post: {
+            tags: ['Circle'],
+            summary: 'Generate markdown from text',
+            security: bearerAuthSecurity,
+            requestBody: {
+                required: true,
+                content: {
+                    'application/json': {
+                        schema: { $ref: '#/components/schemas/CircleAiMarkdownRequest' },
+                    },
+                },
+            },
+            responses: {
+                200: {
+                    description: 'Markdown generated',
+                    content: { 'application/json': { schema: { $ref: '#/components/schemas/CircleAiMarkdownResponse' } } },
+                },
+                400: { description: COMMON_MESSAGE.BAD_REQUEST },
+                401: { description: COMMON_MESSAGE.UNAUTHORIZED },
+            },
+        },
+    },
     '/circle': {
         get: {
             tags: ['Circle'],

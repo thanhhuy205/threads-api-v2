@@ -149,5 +149,24 @@ Output JSON shape:
 }
 `;
 
-export const FORMAT_MARKDOWN_PROMPT = (textNguoiDung: string) =>
-  `Định dạng đoạn sau thành Markdown sạch: dùng # cho tiêu đề chính, ## cho mục, **bold** cho ý quan trọng, - cho danh sách. CHỈ trả về Markdown, không giải thích.\n\nNội dung:\n${textNguoiDung}`;
+export const FORMAT_MARKDOWN_PROMPT = (t: string) => `Định dạng văn bản sau thành Markdown sạch, chuẩn Lexical, kiêm hiệu đính.
+
+ĐỊNH DẠNG:
+- Heading: # (1 H1 duy nhất), ## , ### ; không nhảy cấp.
+- 1 dòng trống quanh heading/list/code.
+- **bold** cho ý chính, *italic* nhấn nhẹ.
+- List: "- " thống nhất; có thứ tự "1."; con thụt 2 space.
+- Code inline: \\\`...\\\`; khối: \\\`\\\`\\\`lang.
+- Trích dẫn "> "; link [text](url).
+
+HIỆU ĐÍNH:
+- Sai & chắc chắn → sửa, đánh dấu **[Sửa]** ... — *lý do*.
+- Nghi ngờ → **[Kiểm chứng]** ... — *lý do*. Thiếu ý → **[Bổ sung]**.
+- Không bịa; chỉ sửa khi chắc; giữ giọng gốc.
+
+CẤM: bảng, task list, footnote, HTML, emoji code; space cuối dòng; >1 dòng trống liên tiếp; bọc toàn bộ trong code block.
+
+CHỈ trả Markdown thuần.
+
+Nội dung:
+${t}`;

@@ -6,3 +6,5 @@ const circleAIRouter = Router();
 
 circleAIRouter.use(authorization);
 circleAIRouter.post('/generate-response', circleAiController.generateMdContent);
+
+export default circleAIRouter;

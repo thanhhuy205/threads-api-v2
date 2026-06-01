@@ -28,10 +28,6 @@ import {
     adminSwaggerSchemas,
 } from '../modules/admin/docs/admin.swagger';
 import {
-    aiSwaggerPaths,
-    aiSwaggerSchemas,
-} from '../modules/ai/docs/ai.swagger';
-import {
     circleSwaggerPaths,
     circleSwaggerSchemas,
 } from '../modules/circle/docs/circle.swagger';
@@ -133,10 +129,6 @@ export const swaggerDocument = {
             description: 'Topic APIs',
         },
         {
-            name: 'AI',
-            description: 'AI assistance APIs',
-        },
-        {
             name: 'Quest',
             description: 'Quest and reward APIs',
         },
@@ -173,7 +165,6 @@ export const swaggerDocument = {
         ...adminSwaggerPaths,
         ...messageGroupSwaggerPaths,
         ...topicSwaggerPaths,
-        ...aiSwaggerPaths,
         ...questSwaggerPaths,
         ...museumSwaggerPaths,
         ...internalSwaggerPaths,
@@ -195,7 +186,6 @@ export const swaggerDocument = {
             ...adminSwaggerSchemas,
             ...messageGroupSwaggerSchemas,
             ...topicSwaggerSchemas,
-            ...aiSwaggerSchemas,
             ...questSwaggerSchemas,
             ...museumSwaggerSchemas,
             ...internalSwaggerSchemas,
