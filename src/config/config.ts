@@ -5,6 +5,7 @@ import { jwtConfig } from '@/config/jwt';
 import { mixedbreadAIConfig } from '@/config/mixedbread-ai';
 import { muxConfig } from '@/config/mux';
 import { nodemailerConfig } from '@/config/nodemailer';
+import { notionConfig } from '@/config/notion';
 import { openRouterConfig } from '@/config/openrouter';
 import { pineconeConfig } from '@/config/pinecone';
 import { pusherConfig } from '@/config/pusher';
@@ -33,6 +34,7 @@ const envSchema = z.object({
     ...muxConfig.shape,
     ...openRouterConfig.shape,
     ...elasticSearchConfig.shape,
+    ...notionConfig.shape,
 });
 
 const parsedEnv = envSchema.safeParse(process.env);

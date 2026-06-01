@@ -33,6 +33,7 @@
         "@elastic/elasticsearch": "^7.13.0",
         "@mixedbread-ai/sdk": "^2.2.11",
         "@mux/mux-node": "^14.0.1",
+        "@notionhq/client": "^5.22.0",
         "@openrouter/ai-sdk-provider": "^2.9.0",
         "@openrouter/sdk": "^0.12.35",
         "@pinecone-database/pinecone": "^7.2.0",
