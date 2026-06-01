@@ -1,29 +1,31 @@
 import {
+  FORMAT_MARKDOWN_PROMPT,
   POST_SCORING_SYSTEM_PROMPT,
   REPORT_EVALUATION_SYSTEM_PROMPT,
 } from "@/modules/ai/promt/system.promt";
+import { gemini } from "@/providers/google.provider";
 import { openrouter } from "@/providers/openrouter.provider";
 import { ReportTargetType } from "@prisma/client";
 class AiService {
-  async moderateContent(content: string) {
-    // TODO: AI Content Moderation - detect toxic/spam, put in admin queue or auto hide
-    return { isSafe: true, confidence: 0.99 };
+  async generateCaptionMd(textNguoiDung: string) {
+    if (!textNguoiDung?.trim()) {
+      throw new Error("Input text is empty");
+    }
+
+    const response = await gemini.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: FORMAT_MARKDOWN_PROMPT(textNguoiDung),
+    });
+
+    const markdown = await response.text;
+
+    if (!markdown) {
+      throw new Error("AI markdown response is empty");
+    }
+
+    return markdown;
   }
 
-  async generateCaption(imageUrl: string) {
-    // TODO: AI Caption Generator - suggest 3 captions + hashtags
-    return { captions: [], hashtags: [] };
-  }
-
-  async generateSmartReply(context: string) {
-    // TODO: AI Smart Reply in chat - suggest 3 quick replies
-    return { replies: [] };
-  }
-
-  async recommendContent(userId: string) {
-    // TODO: AI Friend/Content Recommendation based on interests & interactions
-    return { friends: [], posts: [] };
-  }
 
   async scorePostAI(content: string) {
     const response = await openrouter.chat.send({

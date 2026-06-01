@@ -148,3 +148,6 @@ Output JSON shape:
 "isDisinformation": boolean
 }
 `;
+
+export const FORMAT_MARKDOWN_PROMPT = (textNguoiDung: string) =>
+  `Định dạng đoạn sau thành Markdown sạch: dùng # cho tiêu đề chính, ## cho mục, **bold** cho ý quan trọng, - cho danh sách. CHỈ trả về Markdown, không giải thích.\n\nNội dung:\n${textNguoiDung}`;
