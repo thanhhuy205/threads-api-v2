@@ -3,6 +3,7 @@ import { databaseConfig } from '@/config/database';
 import { elasticSearchConfig } from '@/config/elasticsearch';
 import { geminiConfig } from '@/config/gemini';
 import { jwtConfig } from '@/config/jwt';
+import { leonardoConfig } from '@/config/leonardo';
 import { mixedbreadAIConfig } from '@/config/mixedbread-ai';
 import { muxConfig } from '@/config/mux';
 import { nodemailerConfig } from '@/config/nodemailer';
@@ -34,6 +35,7 @@ const envSchema = z.object({
     ...pusherConfig.shape,
     ...muxConfig.shape,
     ...openRouterConfig.shape,
+    ...leonardoConfig.shape,
     ...elasticSearchConfig.shape,
     ...notionConfig.shape,
     ...geminiConfig.shape,
