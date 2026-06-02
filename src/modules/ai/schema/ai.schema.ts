@@ -15,3 +15,9 @@ export const PostScoreSchema = z.object({
     isToxic: z.boolean(),
     isSpam: z.boolean(),
 });
+
+export const generateImageRequestSchema = z.object({
+    content: z.string().trim().min(1, "Content is required"),
+}).passthrough();
+
+export type GenerateImageRequestDto = z.infer<typeof generateImageRequestSchema> 

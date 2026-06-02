@@ -1,6 +1,6 @@
 import configService from "@/config/config";
 import type {
-    LeonardoGenerationObject,
+    LeonardoGenerationJob,
     LeonardoGenerationResponse,
 } from "@/providers/leonardo.types";
 
@@ -21,7 +21,7 @@ export type LeonardoGenerateJobOptions = {
 export async function generateJob(
     prompt: string,
     options: LeonardoGenerateJobOptions = {},
-): Promise<LeonardoGenerationObject> {
+): Promise<LeonardoGenerationJob> {
     const response = await fetch(`${API}/generations`, {
         method: "POST",
         headers,

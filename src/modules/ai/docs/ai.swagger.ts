@@ -6,15 +6,18 @@ export const aiSwaggerSchemas = {
     AiGenerateImageRequest: {
         type: 'object',
         properties: {
-            textNguoiDung: {
+            content: {
                 type: 'string',
                 example: 'A dreamy sunset over a calm lake, cinematic lighting',
-                description: 'Fallback keys also supported: text, content',
             },
-            text: { type: 'string', nullable: true },
-            content: { type: 'string', nullable: true },
+            draftId: {
+                type: 'string',
+                example: 'draft_123',
+                description: 'Optional draft ID used to persist the preview job record.',
+            },
         },
-        required: ['textNguoiDung'],
+        required: ['content'],
+        additionalProperties: true,
     },
     AiGenerateImageData: {
         type: 'object',
@@ -23,8 +26,12 @@ export const aiSwaggerSchemas = {
                 type: 'object',
                 additionalProperties: true,
                 example: {
-                    generationId: 'gen_123',
-                    status: 'PENDING',
+                    generationId: '020d4b8f-3a2a-4d36-8121-ad734a979f7a',
+                    apiCreditCost: null,
+                    cost: {
+                        amount: '0.012',
+                        unit: 'DOLLARS',
+                    },
                 },
             },
         },
@@ -34,7 +41,7 @@ export const aiSwaggerSchemas = {
         type: 'object',
         properties: {
             success: { type: 'boolean', example: true },
-            message: { type: 'string', example: 'Image generated' },
+            message: { type: 'string', example: 'Image generation job created' },
             data: { $ref: '#/components/schemas/AiGenerateImageData' },
         },
         required: ['success', 'message', 'data'],

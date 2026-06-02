@@ -29,6 +29,18 @@ export interface LeonardoGeneratedImage {
   threeDUrl: string | null;
 }
 
+export interface LeonardoGenerationJobCost {
+  amount: string;
+  unit: string;
+}
+
+export interface LeonardoGenerationJob {
+  generationId: string;
+  apiCreditCost: number | null;
+  cost: LeonardoGenerationJobCost;
+  [key: string]: unknown;
+}
+
 export interface LeonardoModel {
   id: string;
   createdAt: string;
@@ -114,7 +126,7 @@ export interface LeonardoWebhookPayload {
 }
 
 export interface LeonardoGenerationResponse {
-  sdGenerationJob: LeonardoGenerationObject;
+  sdGenerationJob: LeonardoGenerationJob;
 }
 
 export function isImageGenerationComplete(

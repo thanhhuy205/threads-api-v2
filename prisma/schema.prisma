@@ -292,38 +292,39 @@ model User {
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
 
-  posts               Post[]
-  refreshTokens       RefreshToken[]
-  verificationCodes   VerificationCode[]
-  follows             Follow[]             @relation("FollowUser")
-  followers           Follow[]             @relation("FollowFollowing")
-  circles             Circle[]             @relation("CircleCreated")
-  circleMembers       CircleMember[]
-  antiSpams           AntiSpam[]
-  emailLogs           EmailLog[]
-  notifications       NotificationGroup[]
-  circleInvitations   CircleInvitation[]   @relation("CircleInvitationUser")
-  circleInvited       CircleInvitation[]   @relation("CircleInvitationInviter")
-  likes               Like[]
-  messageGroups       MessageGroup[]       @relation("MessageGroupCreator")
-  memberMessageGroups MemberMessageGroup[]
-  friendRequests      FriendRequest[]      @relation("FriendRequestSender")
-  receivedRequests    FriendRequest[]      @relation("FriendRequestReceiver")
-  userRoles           UserRole[]
-  userKarma           UserKarma?
-  userRestrictions    UserRestriction[]
-  messages            Message[]
-  circleExpLogs       CircleExpLog[]
-  heroBadges          HeroBadge[]
-  karmaTransactions   KarmaTransaction[]
-  userQuestLogs       UserQuestLog[]
-  reports             Report[]             @relation("UserReports")
-  postMentions        PostMention[]
-  circleJoinRequests  CircleJoinRequest[]
-  circleMemberBans    CircleMemberBan[] @relation("CircleMemberBanUser")
-  circleMemberBansBy  CircleMemberBan[] @relation("CircleMemberBanBy")
-  dailyQuests         DailyQuest[]
-  userActionLogs      UserActionLog[]
+  posts                Post[]
+  refreshTokens        RefreshToken[]
+  verificationCodes    VerificationCode[]
+  follows              Follow[]              @relation("FollowUser")
+  followers            Follow[]              @relation("FollowFollowing")
+  circles              Circle[]              @relation("CircleCreated")
+  circleMembers        CircleMember[]
+  antiSpams            AntiSpam[]
+  emailLogs            EmailLog[]
+  notifications        NotificationGroup[]
+  circleInvitations    CircleInvitation[]    @relation("CircleInvitationUser")
+  circleInvited        CircleInvitation[]    @relation("CircleInvitationInviter")
+  likes                Like[]
+  messageGroups        MessageGroup[]        @relation("MessageGroupCreator")
+  memberMessageGroups  MemberMessageGroup[]
+  friendRequests       FriendRequest[]       @relation("FriendRequestSender")
+  receivedRequests     FriendRequest[]       @relation("FriendRequestReceiver")
+  userRoles            UserRole[]
+  userKarma            UserKarma?
+  userRestrictions     UserRestriction[]
+  messages             Message[]
+  circleExpLogs        CircleExpLog[]
+  heroBadges           HeroBadge[]
+  karmaTransactions    KarmaTransaction[]
+  userQuestLogs        UserQuestLog[]
+  reports              Report[]              @relation("UserReports")
+  postMentions         PostMention[]
+  circleJoinRequests   CircleJoinRequest[]
+  circleMemberBans     CircleMemberBan[]     @relation("CircleMemberBanUser")
+  circleMemberBansBy   CircleMemberBan[]     @relation("CircleMemberBanBy")
+  dailyQuests          DailyQuest[]
+  userActionLogs       UserActionLog[]
+  webHookPreviewImages WebHookPreviewImage[]
 
   @@index([deletedAt], map: "idx_users_deleted_at")
   @@index([bannedUntil], map: "idx_users_banned_until")
@@ -979,6 +980,21 @@ model AntiSpam {
 
   @@index([userId], map: "idx_anti_spam_user_id")
   @@map("anti_spam")
+}
+
+model WebHookPreviewImage {
+  id           Int      @id @default(autoincrement())
+  userId       String   @map("user_id")
+  generationId String   @unique @map("generation_id")
+  content      String   @db.VarChar(2048)
+  metadata     Json?    @map("metadata") // width, height, size, format, url, v.v.
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([generationId], map: "idx_webhook_preview_images_draft_id")
+  @@map("webhook_preview_images")
 }
 
 model NotificationGroup {

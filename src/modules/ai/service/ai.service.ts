@@ -1,13 +1,21 @@
 import {
   FORMAT_MARKDOWN_PROMPT,
+  GENERATE_IMAGE_PROMPT,
   POST_SCORING_SYSTEM_PROMPT,
   REPORT_EVALUATION_SYSTEM_PROMPT
 } from "@/modules/ai/promt/system.promt";
+import { webhookPreviewImageRepository } from "@/modules/ai/repository/webhook-preview-image.repository";
 import { gemini } from "@/providers/google.provider";
 import { generateJob } from "@/providers/leonardo.provider";
-import type { LeonardoGenerationObject } from "@/providers/leonardo.types";
+import type { LeonardoGenerationJob } from "@/providers/leonardo.types";
 import { openrouter } from "@/providers/openrouter.provider";
 import { ReportTargetType } from "@prisma/client";
+
+type GenerateImageCaptionInput = {
+  content: string;
+  userId: string;
+};
+
 class AiService {
   async generateCaptionMd(textNguoiDung: string) {
     if (!textNguoiDung?.trim()) {
@@ -28,13 +36,33 @@ class AiService {
     return markdown;
   }
 
-  async generateImageCaption(textNguoiDung: string): Promise<LeonardoGenerationObject> {
-    if (!textNguoiDung?.trim()) {
-      throw new Error("Input text is empty");
+  async generateImageCaption(input: GenerateImageCaptionInput): Promise<LeonardoGenerationJob> {
+    const { content, userId } = input;
+
+    if (!content?.trim()) {
+      throw new Error("Input content is empty");
+    }
+    if (!userId?.trim()) {
+      throw new Error("User ID is empty");
     }
     const MAX_PROMPT = 1450;
-    const prompt = textNguoiDung.slice(0, MAX_PROMPT);
-    return await generateJob(prompt);
+    const generatedPrompt = await this.generatePromptForImageGeneration(content);
+    const normalizedPrompt = generatedPrompt.trim();
+
+    if (!normalizedPrompt) {
+      throw new Error("AI image prompt response is empty");
+    }
+
+    const prompt = normalizedPrompt.slice(0, MAX_PROMPT);
+    const sdGenerationJob = await generateJob(prompt);
+
+    await webhookPreviewImageRepository.savePreviewImage({
+      generationId: sdGenerationJob.generationId,
+      content: normalizedPrompt,
+      userId,
+    });
+
+    return sdGenerationJob;
   }
 
   async scorePostAI(content: string) {
@@ -230,6 +258,31 @@ class AiService {
       throw new Error("AI report evaluation JSON parse failed");
     }
   }
+
+  async generatePromptForImageGeneration(content: string) {
+    if (!content?.trim()) {
+      throw new Error("Input content is empty");
+    }
+
+    const response = await openrouter.chat.send({
+      chatRequest: {
+        models: [
+          "openrouter/free"
+        ],
+        messages: [
+          {
+            role: "system",
+            content: GENERATE_IMAGE_PROMPT(content),
+          },
+        ],
+        stream: false,
+        temperature: 0.2,
+      },
+    });
+
+    return response.choices[0]?.message?.content || "";
+  }
+
 }
 
 export const aiService = new AiService();
