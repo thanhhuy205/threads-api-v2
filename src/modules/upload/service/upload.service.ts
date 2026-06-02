@@ -3,12 +3,12 @@ import { putObject } from '@/providers/cloudflare.provider';
 import { muxClient } from '@/providers/mux.provider';
 import { generateKeyImage } from '@/util/upload.util';
 import { PostMediaStatus } from '@prisma/client';
+import { v4 as uuid } from 'uuid';
 import type { UploadMediaDataDto } from '../dto/response/upload-media.response.dto';
 import { postMediaRepository } from '../repository/post-media.repository';
-
 class UploadService {
-    async uploadAvatar(file: Express.Multer.File) {
-        const key = generateKeyImage('avatars', file.originalname);
+    async uploadImage(file: Express.Multer.File, folder = 'avatars') {
+        const key = generateKeyImage(folder, file.originalname);
 
         return putObject({
             key,
@@ -16,6 +16,18 @@ class UploadService {
             contentType: file.mimetype,
         });
     }
+
+    async uploadAiImage(buffer: Buffer, folder = 'ai-images') {
+        const key = generateKeyImage(folder, uuid());
+
+        return putObject({
+            key,
+            body: buffer,
+            contentType: 'image/png',
+        });
+    }
+
+
 
     async uploadMedia(files: Express.Multer.File[]): Promise<UploadMediaDataDto> {
         const uploadResults = await Promise.all(

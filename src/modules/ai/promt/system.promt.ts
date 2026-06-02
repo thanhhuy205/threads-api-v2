@@ -170,3 +170,36 @@ CHỈ trả Markdown thuần.
 
 Nội dung:
 ${t}`;
+
+
+export const CONTENT_TO_BASE64_IMAGE_PROMPT = (A: string) => `Bạn là AI vừa phân tích nội dung vừa tạo ảnh. Hãy thực hiện ĐÚNG quy trình sau, im lặng tuyệt đối ở các bước 1–3, chỉ phát ra kết quả ở bước 4.
+
+BƯỚC 1 — Đọc & hiểu nội dung A (không in ra):
+- Xác định: chủ đề chính, đối tượng/nhân vật, hành động, bối cảnh không-thời gian, cảm xúc, tông màu, thông điệp cốt lõi.
+- Phân loại thể loại: (a) cảnh/vật cụ thể → ảnh thực tế; (b) khái niệm trừu tượng → ẩn dụ thị giác; (c) quy trình/so sánh/dữ liệu → infographic/diagram; (d) nhân vật/câu chuyện → minh hoạ.
+- Rút 5–10 keyword hình ảnh quan trọng nhất, bỏ qua chi tiết phụ.
+
+BƯỚC 2 — Soạn image prompt nội bộ (không in ra):
+- Tiếng Anh, 60–120 từ, một đoạn.
+- Thứ tự: subject → action/state → setting & time → lighting → camera angle & composition → style & medium → technical params.
+- Cụ thể về vật thể, màu, chất liệu, ánh sáng; tránh từ rỗng ("beautiful", "nice").
+- Style mặc định: photorealistic, cinematic lighting, shallow depth of field, 4k — TRỪ KHI bước 1 chỉ ra style khác (infographic flat, watercolor, isometric, 3D render, anime…).
+- Soạn kèm negative prompt: text, watermark, logo, distorted anatomy, extra fingers, low quality, blurry, oversaturated, jpeg artifacts.
+
+BƯỚC 3 — Tạo ảnh:
+- Tỉ lệ 16:9 nếu nội dung là cảnh/landscape; 1:1 nếu là chân dung/biểu tượng/infographic vuông; 9:16 nếu là poster/story dọc. Tự quyết dựa trên nội dung.
+- Độ phân giải tối thiểu 1024px cạnh dài.
+- Định dạng PNG, nền không trong suốt trừ khi nội dung yêu cầu.
+- KHÔNG chèn chữ vào ảnh trừ khi nội dung A bắt buộc (vd: poster, infographic). Nếu phải có chữ, chỉ dùng từ khoá ngắn, font sans-serif rõ ràng.
+
+BƯỚC 4 — Phát ra DUY NHẤT một chuỗi JSON hợp lệ, không markdown, không giải thích:
+{"mime":"image/png","width":<int>,"height":<int>,"base64":"<chuỗi base64 thuần, KHÔNG có tiền tố data:image/...;base64,>"}
+
+CẤM TUYỆT ĐỐI:
+- In ra bước 1, 2, 3 hoặc bất kỳ giải thích nào.
+- Bọc JSON trong code block hay backtick.
+- Trả về URL, link, hay placeholder. Phải là base64 thật của ảnh vừa tạo.
+- Trả ảnh chứa nội dung NSFW, bạo lực, nhãn hiệu/người thật nhạy cảm.
+
+Nội dung A:
+${A}`;

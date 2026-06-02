@@ -28,6 +28,10 @@ import {
     adminSwaggerSchemas,
 } from '../modules/admin/docs/admin.swagger';
 import {
+    aiSwaggerPaths,
+    aiSwaggerSchemas,
+} from '../modules/ai/docs/ai.swagger';
+import {
     circleSwaggerPaths,
     circleSwaggerSchemas,
 } from '../modules/circle/docs/circle.swagger';
@@ -121,6 +125,10 @@ export const swaggerDocument = {
             description: 'Admin APIs',
         },
         {
+            name: 'AI',
+            description: 'AI generation APIs',
+        },
+        {
             name: 'MessageGroup',
             description: 'Message group and message APIs',
         },
@@ -163,6 +171,7 @@ export const swaggerDocument = {
         ...circleSwaggerPaths,
         ...notificationSwaggerPaths,
         ...adminSwaggerPaths,
+        ...aiSwaggerPaths,
         ...messageGroupSwaggerPaths,
         ...topicSwaggerPaths,
         ...questSwaggerPaths,
@@ -184,6 +193,7 @@ export const swaggerDocument = {
             ...notificationSwaggerSchemas,
             ...jwtSwaggerSchemas,
             ...adminSwaggerSchemas,
+            ...aiSwaggerSchemas,
             ...messageGroupSwaggerSchemas,
             ...topicSwaggerSchemas,
             ...questSwaggerSchemas,

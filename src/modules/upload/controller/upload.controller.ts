@@ -5,7 +5,7 @@ import { uploadService } from '../service/upload.service';
 
 class UploadController {
     async uploadAvatar(req: Request<{}, {}, UploadAvatarDto>, res: Response) {
-        const result = await uploadService.uploadAvatar(req.file!);
+        const result = await uploadService.uploadImage(req.file!);
         return res.success(201, UPLOAD_MESSAGE.UPLOAD_AVATAR_SUCCESS, result);
     }
 
