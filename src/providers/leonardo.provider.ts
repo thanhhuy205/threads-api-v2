@@ -1,8 +1,13 @@
 import configService from "@/config/config";
+import type {
+    LeonardoGenerationObject,
+    LeonardoGenerationResponse,
+} from "@/providers/leonardo.types";
 
 const API = "https://cloud.leonardo.ai/api/rest/v1";
 
 const headers = {
+    Accept: "application/json",
     Authorization: `Bearer ${configService.LEONARDO_API_KEY}`,
     "Content-Type": "application/json",
 };
@@ -13,19 +18,10 @@ export type LeonardoGenerateJobOptions = {
     height?: number;
 };
 
-export type LeonardoSdGenerationJob = {
-    generationId?: string;
-    modelId?: string;
-    prompt?: string;
-    status?: string;
-    [key: string]: unknown;
-};
-
-type LeonardoGenerateJobResponse = {
-    sdGenerationJob: LeonardoSdGenerationJob;
-};
-
-export async function generateJob(prompt: string, options: LeonardoGenerateJobOptions = {}) {
+export async function generateJob(
+    prompt: string,
+    options: LeonardoGenerateJobOptions = {},
+): Promise<LeonardoGenerationObject> {
     const response = await fetch(`${API}/generations`, {
         method: "POST",
         headers,
@@ -42,7 +38,7 @@ export async function generateJob(prompt: string, options: LeonardoGenerateJobOp
         throw new Error(`Leonardo generate job failed: ${response.status} ${errorText}`);
     }
 
-    const { sdGenerationJob } = (await response.json()) as LeonardoGenerateJobResponse;
+    const { sdGenerationJob } = (await response.json()) as LeonardoGenerationResponse;
 
     return sdGenerationJob;
 }

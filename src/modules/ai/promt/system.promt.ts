@@ -199,3 +199,21 @@ CẤM TUYỆT ĐỐI:
 
 Nội dung A:
 ${A}`;
+
+
+
+export const GENERATE_IMAGE_PROMPT = (A: string) => `Bạn là chuyên gia viết prompt cho Leonardo/Flux/Midjourney.
+Đọc nội dung và sinh DUY NHẤT 1 prompt tiếng Anh để tạo ảnh.
+
+Yêu cầu:
+- Tiếng Anh, 50–100 từ, một đoạn liền.
+- Thứ tự: subject → action → setting → lighting → camera/composition → style.
+- Cụ thể, giàu hình ảnh. Tránh "beautiful", "nice".
+- Style mặc định: photorealistic, cinematic, 4k. Đổi style nếu nội dung gợi ý khác.
+
+Định dạng đầu ra (đúng 2 dòng, KHÔNG markdown):
+<prompt tiếng Anh>
+Negative: text, watermark, blurry, distorted, low quality, extra fingers
+
+Nội dung:
+${A}`;

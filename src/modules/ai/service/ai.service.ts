@@ -5,6 +5,7 @@ import {
 } from "@/modules/ai/promt/system.promt";
 import { gemini } from "@/providers/google.provider";
 import { generateJob } from "@/providers/leonardo.provider";
+import type { LeonardoGenerationObject } from "@/providers/leonardo.types";
 import { openrouter } from "@/providers/openrouter.provider";
 import { ReportTargetType } from "@prisma/client";
 class AiService {
@@ -27,7 +28,7 @@ class AiService {
     return markdown;
   }
 
-  async generateImageCaption(textNguoiDung: string) {
+  async generateImageCaption(textNguoiDung: string): Promise<LeonardoGenerationObject> {
     if (!textNguoiDung?.trim()) {
       throw new Error("Input text is empty");
     }
