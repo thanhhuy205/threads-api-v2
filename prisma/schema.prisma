@@ -99,6 +99,7 @@ enum ActionType {
   INVITE_ACCEPTED
   JOIN_CIRCLE
   LEAVE_CIRCLE
+  GENERATE_POST_BEAUTIFUL
 }
 
 enum InteractionType {

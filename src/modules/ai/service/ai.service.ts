@@ -26,6 +26,15 @@ class AiService {
     return markdown;
   }
 
+  async generateImageCaption(textNguoiDung: string) {
+    if (!textNguoiDung?.trim()) {
+      throw new Error("Input text is empty");
+    }
+    const response = await gemini.models.generateContent({
+      model: "gemini-2.5-flash-image",
+      contents: FORMAT_MARKDOWN_PROMPT(textNguoiDung),
+    });
+  }
 
   async scorePostAI(content: string) {
     const response = await openrouter.chat.send({
