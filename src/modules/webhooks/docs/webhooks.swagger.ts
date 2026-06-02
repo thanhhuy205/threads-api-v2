@@ -23,6 +23,7 @@ export const webhooksSwaggerSchemas = {
             },
             duration: { type: 'number', example: 120.4 },
             id: { type: 'string', example: 'asset-123' },
+            upload_id: { type: 'string', example: 'upload-123' },
         },
     },
     MuxWebhookRequest: {
@@ -42,6 +43,32 @@ export const webhooksSwaggerSchemas = {
         properties: {
             success: { type: 'boolean', example: true },
             message: { type: 'string', example: 'Mux webhook received' },
+            data: {
+                type: 'object',
+                properties: {
+                    received: { type: 'boolean', example: true },
+                },
+                required: ['received'],
+            },
+        },
+        required: ['success', 'message', 'data'],
+    },
+    LeonardoWebhookRequest: {
+        type: 'object',
+        properties: {
+            type: { type: 'string', example: 'generation.completed' },
+            data: {
+                type: 'object',
+                additionalProperties: true,
+            },
+        },
+        additionalProperties: true,
+    },
+    LeonardoWebhookResponse: {
+        type: 'object',
+        properties: {
+            success: { type: 'boolean', example: true },
+            message: { type: 'string', example: 'Leonardo webhook received' },
             data: {
                 type: 'object',
                 properties: {
@@ -74,6 +101,31 @@ export const webhooksSwaggerPaths = {
                     content: {
                         'application/json': {
                             schema: { $ref: '#/components/schemas/MuxWebhookResponse' },
+                        },
+                    },
+                },
+            },
+        },
+    },
+    '/webhooks/leonardo/webhook': {
+        post: {
+            tags: ['Webhooks'],
+            summary: 'Receive Leonardo webhook events',
+            security: [{ leonardoWebhookApiKey: [] }],
+            requestBody: {
+                required: true,
+                content: {
+                    'application/json': {
+                        schema: { $ref: '#/components/schemas/LeonardoWebhookRequest' },
+                    },
+                },
+            },
+            responses: {
+                200: {
+                    description: 'Leonardo webhook received',
+                    content: {
+                        'application/json': {
+                            schema: { $ref: '#/components/schemas/LeonardoWebhookResponse' },
                         },
                     },
                 },
