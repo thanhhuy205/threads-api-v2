@@ -1,4 +1,5 @@
 import configService from "@/config/config";
+import { baseLogger } from "@/middlewares/logger";
 import crypto from "crypto";
 import { NextFunction, Request, Response } from "express";
 
@@ -7,20 +8,35 @@ export const leonardoWebhookAuth = (
     res: Response,
     next: NextFunction,
 ) => {
-    const receivedHeader = req.headers["x-leonardo-webhook-api-key"];
-    const received = Array.isArray(receivedHeader) ? receivedHeader[0] : receivedHeader;
-    const expected = configService.LEONARDO_API_KEY;
+    baseLogger.info(`Authenticating Leonardo webhook with headers: ${JSON.stringify(req.headers)}`);
+    const authorizationHeader = req.headers.authorization;
+    const receivedAuthorization = Array.isArray(authorizationHeader) ? authorizationHeader[0] : authorizationHeader;
+    const receivedWebhookKeyHeader = req.headers["x-leonardo-webhook-api-key"];
+    const receivedWebhookKey = Array.isArray(receivedWebhookKeyHeader)
+        ? receivedWebhookKeyHeader[0]
+        : receivedWebhookKeyHeader;
+    const expected = configService.LEONARDO_WEBHOOK_API_KEY;
 
-    if (!received) {
+    const token = receivedAuthorization?.startsWith("Bearer ")
+        ? receivedAuthorization.slice("Bearer ".length)
+        : receivedWebhookKey ?? "";
+
+    baseLogger.info(`Received Leonardo webhook bearer token: ${token}`);
+
+    if (!token) {
         return res.status(401).json({ error: "Invalid webhook key" });
     }
 
+    baseLogger.info(`Comparing received key with expected key using timingSafeEqual`);
+
     if (
-        received.length !== expected.length ||
-        !crypto.timingSafeEqual(Buffer.from(received), Buffer.from(expected))
+        token.length !== expected.length ||
+        !crypto.timingSafeEqual(Buffer.from(token), Buffer.from(expected))
     ) {
         return res.status(401).json({ error: "Invalid webhook key" });
     }
+
+    baseLogger.info(`Leonardo webhook authenticated successfully`);
 
     next();
 };

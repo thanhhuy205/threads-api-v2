@@ -1,11 +1,10 @@
 import {
-  CONTENT_TO_BASE64_IMAGE_PROMPT,
   FORMAT_MARKDOWN_PROMPT,
   POST_SCORING_SYSTEM_PROMPT,
-  REPORT_EVALUATION_SYSTEM_PROMPT,
+  REPORT_EVALUATION_SYSTEM_PROMPT
 } from "@/modules/ai/promt/system.promt";
-import { uploadService } from "@/modules/upload/service/upload.service";
 import { gemini } from "@/providers/google.provider";
+import { generateJob } from "@/providers/leonardo.provider";
 import { openrouter } from "@/providers/openrouter.provider";
 import { ReportTargetType } from "@prisma/client";
 class AiService {
@@ -32,20 +31,9 @@ class AiService {
     if (!textNguoiDung?.trim()) {
       throw new Error("Input text is empty");
     }
-    const response = await gemini.models.generateContent({
-      model: "gemini-2.5-flash-image",
-      contents: CONTENT_TO_BASE64_IMAGE_PROMPT(textNguoiDung),
-    });
-
-    const base64Image = await response.text;
-
-    if (!base64Image) {
-      throw new Error("AI image caption response is empty");
-    }
-    const buffer = Buffer.from(base64Image, "base64");
-
-    const fileUrl = await uploadService.uploadAiImage(buffer);
-    return fileUrl;
+    const MAX_PROMPT = 1450;
+    const prompt = textNguoiDung.slice(0, MAX_PROMPT);
+    return await generateJob(prompt);
   }
 
   async scorePostAI(content: string) {

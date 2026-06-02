@@ -107,11 +107,11 @@ export const webhooksSwaggerPaths = {
             },
         },
     },
-    '/webhooks/leonardo/webhook': {
+    '/webhooks/leonardo': {
         post: {
             tags: ['Webhooks'],
             summary: 'Receive Leonardo webhook events',
-            security: [{ leonardoWebhookApiKey: [] }],
+            security: [{ leonardoWebhookAuth: [] }],
             requestBody: {
                 required: true,
                 content: {

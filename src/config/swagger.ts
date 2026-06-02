@@ -210,11 +210,11 @@ export const swaggerDocument = {
                 scheme: 'bearer',
                 bearerFormat: 'JWT',
             },
-            leonardoWebhookApiKey: {
-                type: 'apiKey',
-                in: 'header',
-                name: 'x-leonardo-webhook-api-key',
-                description: 'Leonardo webhook API key header',
+            leonardoWebhookAuth: {
+                type: 'http',
+                scheme: 'bearer',
+                bearerFormat: 'Leonardo webhook callback API key',
+                description: 'Leonardo webhook callback authorization header',
             },
         },
     },

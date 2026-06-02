@@ -19,12 +19,16 @@ export const aiSwaggerSchemas = {
     AiGenerateImageData: {
         type: 'object',
         properties: {
-            fileUrl: {
-                type: 'string',
-                example: 'https://cdn.example.com/ai/generated/image.png',
+            sdGenerationJob: {
+                type: 'object',
+                additionalProperties: true,
+                example: {
+                    generationId: 'gen_123',
+                    status: 'PENDING',
+                },
             },
         },
-        required: ['fileUrl'],
+        required: ['sdGenerationJob'],
     },
     AiGenerateImageResponse: {
         type: 'object',
@@ -41,7 +45,7 @@ export const aiSwaggerPaths = {
     '/ai/generate-image': {
         post: {
             tags: ['AI'],
-            summary: 'Generate image and return file URL',
+            summary: 'Submit Leonardo image generation job',
             security: bearerAuthSecurity,
             requestBody: {
                 required: true,
@@ -53,7 +57,7 @@ export const aiSwaggerPaths = {
             },
             responses: {
                 200: {
-                    description: 'Image generated',
+                    description: 'Image generation job created',
                     content: {
                         'application/json': {
                             schema: { $ref: '#/components/schemas/AiGenerateImageResponse' },

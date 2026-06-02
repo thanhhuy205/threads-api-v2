@@ -192,13 +192,9 @@ BƯỚC 3 — Tạo ảnh:
 - Định dạng PNG, nền không trong suốt trừ khi nội dung yêu cầu.
 - KHÔNG chèn chữ vào ảnh trừ khi nội dung A bắt buộc (vd: poster, infographic). Nếu phải có chữ, chỉ dùng từ khoá ngắn, font sans-serif rõ ràng.
 
-BƯỚC 4 — Phát ra DUY NHẤT một chuỗi JSON hợp lệ, không markdown, không giải thích:
-{"mime":"image/png","width":<int>,"height":<int>,"base64":"<chuỗi base64 thuần, KHÔNG có tiền tố data:image/...;base64,>"}
 
 CẤM TUYỆT ĐỐI:
 - In ra bước 1, 2, 3 hoặc bất kỳ giải thích nào.
-- Bọc JSON trong code block hay backtick.
-- Trả về URL, link, hay placeholder. Phải là base64 thật của ảnh vừa tạo.
 - Trả ảnh chứa nội dung NSFW, bạo lực, nhãn hiệu/người thật nhạy cảm.
 
 Nội dung A:

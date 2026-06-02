@@ -3,10 +3,10 @@ import { Request, Response } from "express";
 
 class AiController {
     async generateImageCaption(req: Request, res: Response) {
-        const { textNguoiDung, text, content } = req.body ?? {};
-        const input = textNguoiDung ?? text ?? content;
-        const fileUrl = await aiService.generateImageCaption(input);
-        return res.success(200, "Image generated", { fileUrl });
+        const { textNguoiDung } = req.body ?? {};
+        const input = textNguoiDung;
+        const sdGenerationJob = await aiService.generateImageCaption(input);
+        return res.success(200, "Image generation job created", { sdGenerationJob });
     }
 }
 
