@@ -100,6 +100,8 @@ enum ActionType {
   JOIN_CIRCLE
   LEAVE_CIRCLE
   GENERATE_POST_BEAUTIFUL
+  GENERATE_CAPTION_MD
+  GENERATE_IMAGE
 }
 
 enum InteractionType {
@@ -170,8 +172,8 @@ enum NotificationType {
 enum UserRestrictionType {
   POSTING
   POST_AND_USE_KARMA
-  GENERATE_BEAUTIFUL_POST
-  GENERATE_IMAGE_REVIEW
+  AI_GENERATION_CAPTION
+  AI_GENERATION_IMAGE
 }
 
 enum GroupType {
@@ -327,6 +329,7 @@ model User {
   dailyQuests          DailyQuest[]
   userActionLogs       UserActionLog[]
   webHookPreviewImages WebHookPreviewImage[]
+  limitActionAIs       LimitActionAI[]
 
   @@index([deletedAt], map: "idx_users_deleted_at")
   @@index([bannedUntil], map: "idx_users_banned_until")
@@ -881,6 +884,21 @@ model UserKarma {
   user User @relation(fields: [userId], references: [id])
 
   @@map("user_karma")
+}
+
+model LimitActionAI {
+  id      Int        @id @default(autoincrement())
+  userId  String     @map("user_id")
+  type    ActionType @map("type_enum")
+  count   Int        @default(5) // mặc định 5 lượt tạo imag,md
+  resetAt DateTime   @map("reset_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId], map: "idx_limit_actions_user_id")
+  @@index([type], map: "idx_limit_actions_type")
+  @@index([resetAt], map: "idx_limit_actions_reset_at")
+  @@map("limit_actions")
 }
 
 model UserRestriction {

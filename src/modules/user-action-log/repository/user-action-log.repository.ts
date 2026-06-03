@@ -35,6 +35,19 @@ class UserActionLogRepository {
     });
   }
 
+  countByType(params: {
+    userId: string;
+    type: ActionType;
+  }
+  ) {
+    return prisma.userActionLog.count({
+      where: {
+        userId: params.userId,
+        type: params.type,
+      },
+    });
+  }
+
   async countByTypeInWindow(
     {
       userId,

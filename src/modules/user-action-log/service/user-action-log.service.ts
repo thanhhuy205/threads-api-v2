@@ -25,6 +25,15 @@ class UserActionLogService {
     );
   }
 
+  countActionLog(userId: string, type: ActionType) {
+    return userActionLogRepository.countByType(
+      {
+        userId,
+        type,
+      },
+    );
+  }
+
   logPostCreated(input: LogActionInput) {
     return this.logAction({ ...input, type: ActionType.POST_CREATED });
   }
