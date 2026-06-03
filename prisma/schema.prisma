@@ -170,6 +170,8 @@ enum NotificationType {
 enum UserRestrictionType {
   POSTING
   POST_AND_USE_KARMA
+  GENERATE_BEAUTIFUL_POST
+  GENERATE_IMAGE_REVIEW
 }
 
 enum GroupType {
@@ -718,7 +720,7 @@ model DailyQuest {
   id          Int        @id @default(autoincrement())
   code        String     @unique @default(cuid()) @db.VarChar(255)
   description String     @db.VarChar(255)
-  karmaReward Int        // thường là 1, nhiệm vụ khó hơn là 2
+  karmaReward Int // thường là 1, nhiệm vụ khó hơn là 2
   requirement Int // số lần cần hoàn thành
   isActive    Boolean    @default(true)
   action      ActionType @map("action_enum")
