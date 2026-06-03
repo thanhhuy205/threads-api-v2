@@ -2,6 +2,18 @@ import { CreatePostDto, createPostSchema } from '@/modules/post/dto/post.dto';
 import { VisibilityPost } from '@prisma/client';
 import { z } from 'zod';
 
+
+const createCircle = z.object({
+    content: z
+        .string()
+        .min(1, "Content must be at least 1 character")
+        .max(5000, "Content must be at most 5000 characters"),
+    contentJson: z.unknown().optional(),
+    mediaUrls: z.array(z.string().url('Each media URL must be a valid URL')).max(5, 'You can upload up to 5 media files').optional(),
+});
+
+const createCirclePostSchema = createCircle
+
 export const circlePublicIdParamsSchema = z.object({
     publicId: z.string().min(1, 'Circle public ID is required'),
 });
@@ -43,11 +55,6 @@ export const circlePostsQuerySchema = cursorLimitQuerySchema.extend({
 export type CirclePostsQueryDto = z.infer<typeof circlePostsQuerySchema>;
 export type CircleRepliesQueryDto = z.infer<typeof cursorLimitQuerySchema>;
 
-const createCirclePostSchema = createPostSchema.and(
-    z.object({
-        contentJson: z.unknown().optional(),
-    }),
-);
 
 export const createCirclePostRuntimeSchema = z.preprocess(
     (value) => {

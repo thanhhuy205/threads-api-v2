@@ -149,59 +149,6 @@ Output JSON shape:
 }
 `;
 
-export const FORMAT_MARKDOWN_PROMPT = (t: string) => `Định dạng văn bản sau thành Markdown sạch, chuẩn Lexical, kiêm hiệu đính.
-
-ĐỊNH DẠNG:
-- Heading: # (1 H1 duy nhất), ## , ### ; không nhảy cấp.
-- 1 dòng trống quanh heading/list/code.
-- **bold** cho ý chính, *italic* nhấn nhẹ.
-- List: "- " thống nhất; có thứ tự "1."; con thụt 2 space.
-- Code inline: \\\`...\\\`; khối: \\\`\\\`\\\`lang.
-- Trích dẫn "> "; link [text](url).
-
-HIỆU ĐÍNH:
-- Sai & chắc chắn → sửa, đánh dấu **[Sửa]** ... — *lý do*.
-- Nghi ngờ → **[Kiểm chứng]** ... — *lý do*. Thiếu ý → **[Bổ sung]**.
-- Không bịa; chỉ sửa khi chắc; giữ giọng gốc.
-
-CẤM: bảng, task list, footnote, HTML, emoji code; space cuối dòng; >1 dòng trống liên tiếp; bọc toàn bộ trong code block.
-
-CHỈ trả Markdown thuần.
-
-Nội dung:
-${t}`;
-
-
-export const CONTENT_TO_BASE64_IMAGE_PROMPT = (A: string) => `Bạn là AI vừa phân tích nội dung vừa tạo ảnh. Hãy thực hiện ĐÚNG quy trình sau, im lặng tuyệt đối ở các bước 1–3, chỉ phát ra kết quả ở bước 4.
-
-BƯỚC 1 — Đọc & hiểu nội dung A (không in ra):
-- Xác định: chủ đề chính, đối tượng/nhân vật, hành động, bối cảnh không-thời gian, cảm xúc, tông màu, thông điệp cốt lõi.
-- Phân loại thể loại: (a) cảnh/vật cụ thể → ảnh thực tế; (b) khái niệm trừu tượng → ẩn dụ thị giác; (c) quy trình/so sánh/dữ liệu → infographic/diagram; (d) nhân vật/câu chuyện → minh hoạ.
-- Rút 5–10 keyword hình ảnh quan trọng nhất, bỏ qua chi tiết phụ.
-
-BƯỚC 2 — Soạn image prompt nội bộ (không in ra):
-- Tiếng Anh, 60–120 từ, một đoạn.
-- Thứ tự: subject → action/state → setting & time → lighting → camera angle & composition → style & medium → technical params.
-- Cụ thể về vật thể, màu, chất liệu, ánh sáng; tránh từ rỗng ("beautiful", "nice").
-- Style mặc định: photorealistic, cinematic lighting, shallow depth of field, 4k — TRỪ KHI bước 1 chỉ ra style khác (infographic flat, watercolor, isometric, 3D render, anime…).
-- Soạn kèm negative prompt: text, watermark, logo, distorted anatomy, extra fingers, low quality, blurry, oversaturated, jpeg artifacts.
-
-BƯỚC 3 — Tạo ảnh:
-- Tỉ lệ 16:9 nếu nội dung là cảnh/landscape; 1:1 nếu là chân dung/biểu tượng/infographic vuông; 9:16 nếu là poster/story dọc. Tự quyết dựa trên nội dung.
-- Độ phân giải tối thiểu 1024px cạnh dài.
-- Định dạng PNG, nền không trong suốt trừ khi nội dung yêu cầu.
-- KHÔNG chèn chữ vào ảnh trừ khi nội dung A bắt buộc (vd: poster, infographic). Nếu phải có chữ, chỉ dùng từ khoá ngắn, font sans-serif rõ ràng.
-
-
-CẤM TUYỆT ĐỐI:
-- In ra bước 1, 2, 3 hoặc bất kỳ giải thích nào.
-- Trả ảnh chứa nội dung NSFW, bạo lực, nhãn hiệu/người thật nhạy cảm.
-
-Nội dung A:
-${A}`;
-
-
-
 export const GENERATE_IMAGE_PROMPT = (A: string) => `Bạn là chuyên gia viết prompt cho Leonardo/Flux/Midjourney.
 Đọc nội dung và sinh DUY NHẤT 1 prompt tiếng Anh để tạo ảnh.
 
@@ -217,3 +164,41 @@ Negative: text, watermark, blurry, distorted, low quality, extra fingers
 
 Nội dung:
 ${A}`;
+
+export const FORMAT_MARKDOWN_PROMPT = (t: string) => `Bạn là trợ lý định dạng + hiệu đính. Nhiệm vụ: biến văn bản dưới đây thành Markdown sạch, đẹp, tương thích Lexical, đồng thời hiệu đính nội dung.
+
+# VAI TRÒ
+- Ưu tiên: (1) giữ đúng nội dung & giọng gốc, (2) trình bày rõ ràng dễ đọc, (3) sửa lỗi chắc chắn.
+- Không bịa thông tin. Không thêm ý mới trừ mục [Bổ sung].
+
+# ĐỊNH DẠNG
+- Heading: dùng #, ##, ### theo phân cấp logic; KHÔNG nhảy cấp (vd ## rồi tới ####). Có thể có nhiều H1 nếu văn bản gồm nhiều phần lớn độc lập.
+- Chèn đúng 1 dòng trống quanh mỗi heading, list, blockquote và code block.
+- **In đậm** cho ý chính / thuật ngữ quan trọng; *in nghiêng* để nhấn nhẹ.
+- List không thứ tự dùng "- " thống nhất; list có thứ tự dùng "1." "2."; mục con thụt vào 2 space.
+- Code inline dùng \\\`...\\\`; code block dùng \\\`\\\`\\\` kèm tên ngôn ngữ (vd \\\`\\\`\\\`ts).
+- Trích dẫn dùng "> "; link dùng [text](url).
+- Dùng "---" để ngăn các phần lớn khi cần, nhưng đừng lạm dụng.
+
+# EMOJI (tùy chọn, tinh tế)
+- Được phép thêm emoji Unicode (🔑, 💡, ⚠️, ✅...) ở đầu heading hoặc đầu dòng ý quan trọng để dễ quét mắt.
+- Mỗi heading tối đa 1 emoji; không rải emoji giữa câu; không lạm dụng.
+- TUYỆT ĐỐI không dùng emoji dạng shortcode (vd :smile:, :fire:) — chỉ dùng ký tự Unicode thật.
+
+# HIỆU ĐÍNH
+- Lỗi sai chắc chắn → sửa luôn và đánh dấu **[Sửa]** ... — *lý do ngắn*.
+- Điểm nghi ngờ / không chắc → **[Kiểm chứng]** ... — *lý do*.
+- Thiếu ý quan trọng → **[Bổ sung]** ... (gợi ý, không bịa số liệu).
+- Chỉ can thiệp khi chắc chắn; giữ nguyên văn phong, ngôi kể và sắc thái gốc.
+
+# CẤM
+- Bảng (table), task list (- [ ]), footnote, thẻ HTML.
+- Emoji shortcode (:emoji:).
+- Khoảng trắng thừa cuối dòng; quá 1 dòng trống liên tiếp.
+- Bọc TOÀN BỘ kết quả trong một code block (chỉ code thật mới nằm trong code block).
+
+# ĐẦU RA
+Chỉ trả về Markdown thuần, không thêm lời dẫn hay giải thích.
+
+Nội dung:
+${t}\\`;

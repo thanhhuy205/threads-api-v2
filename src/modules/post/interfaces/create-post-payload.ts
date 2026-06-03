@@ -1,14 +1,15 @@
 import type { CreatePostDto } from '@/modules/post/dto/post.dto';
-import type { PostType, ReplyPermission, VisibilityPost } from '@prisma/client';
+import type { PostType, ReplyPermission } from '@prisma/client';
 
 export type CreatePostPayload = CreatePostDto & {
     userId: string;
 };
 
-export type CreateCirclePostPayload = Omit<CreatePostDto, "visibility" | "replyPermission"> & {
+export type CreateCirclePostPayload = {
     userId: string;
+    content: string;
     contentJson?: unknown;
     type?: PostType;
-    visibility?: VisibilityPost;
     replyPermission?: ReplyPermission;
+    mediaUrls?: string[];
 };

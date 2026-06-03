@@ -1,6 +1,6 @@
 export interface PineRequestDto {
     content: string;
-    topic: string[];
+    topic?: string[];
     postId: number;
     userId: string;
 }

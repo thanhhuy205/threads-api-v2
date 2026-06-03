@@ -21,7 +21,7 @@ import {
 } from "@/modules/post/helper";
 import type {
   CreateCirclePostPayload,
-  CreatePostPayload,
+  CreatePostPayload
 } from "@/modules/post/interfaces/create-post-payload";
 import type { GetPostWithPublicId } from "@/modules/post/interfaces/get-post-with-public-id";
 import type { GetPostWithUser } from "@/modules/post/interfaces/get-post-with-user";
@@ -135,7 +135,7 @@ class PostService {
 
   private async createInTransaction(
     createFn: (tx: Prisma.TransactionClient) => Promise<PostRecord>,
-    meta: { topic?: string; mentionIds: string[] },
+    meta?: { topic?: string; mentionIds: string[] },
   ): Promise<PostRecord> {
     return transactionService.doInTransaction(async (tx) => {
       const post = await createFn(tx);
@@ -229,8 +229,9 @@ class PostService {
   private async attachPostMeta(
     tx: Prisma.TransactionClient,
     postId: number,
-    payload: { topic?: string; mentionIds: string[] },
+    payload?: { topic?: string; mentionIds: string[] },
   ): Promise<void> {
+    if (!payload) return;
     if (payload.mentionIds.length) {
       await tx.postMention.createMany({
         data: payload.mentionIds.map((userId) => ({
@@ -556,29 +557,25 @@ class PostService {
 
   async createCircle(payload: CreateCirclePostPayload) {
     const snapshot = await this.resolveUser(payload.userId);
-    const mentionIds = await this.validateMentions(payload.mentions);
     const options = this.resolvePostOptions({
-      visibility: payload.visibility ?? VisibilityPost.CIRCLE,
-      replyPermission: payload.replyPermission ?? ReplyPermission.EVERYONE,
+      visibility: VisibilityPost.CIRCLE,
+      replyPermission: ReplyPermission.EVERYONE,
     });
 
-    const post = await this.createInTransaction(
-      (tx) =>
-        postRepository.create(
-          {
-            ...payload,
-            type: payload.type ?? PostType.CIRCLE,
-            ...options,
-          },
-          snapshot,
-          tx,
-        ),
-      { topic: payload.topic, mentionIds },
-    );
+    baseLogger.info(`Resolved post options: ${JSON.stringify(payload)}`);
 
+    const post = await postRepository.createCircle(
+      { ...payload, ...options }, snapshot,
+    )
+
+    if (payload.mediaUrls?.length) {
+      await postRepository.createCirclePostMedia(
+        post.id!,
+        payload.mediaUrls,
+      )
+    }
     await pineProducer.addToPineconeQueue({
       content: payload.content,
-      topic: [normalizeTopic(payload.topic) ?? "not"],
       postId: post.id || 0,
       userId: payload.userId,
     });
@@ -591,6 +588,7 @@ class PostService {
         source: "CIRCLE_POST",
       },
     });
+
     await this.bumpPostListCacheVersion();
     return post;
   }

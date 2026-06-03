@@ -7,6 +7,7 @@ export const createCircleSchema = z.object({
     visibility: z.nativeEnum(Visibility, {
         errorMap: () => ({ message: `Visibility must be one of: ${Object.values(Visibility).join(', ')}` }),
     }).optional(),
+    mediaUrls: z.array(z.string().url('Each media URL must be a valid URL')).max(5, 'You can upload up to 5 media files').optional(),
 });
 
 export type CreateCircleDto = z.infer<typeof createCircleSchema>;

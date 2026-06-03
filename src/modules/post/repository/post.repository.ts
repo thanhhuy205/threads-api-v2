@@ -1,14 +1,15 @@
 import prisma from "@/config/prisma";
 import { baseLogger } from "@/middlewares/logger";
 import type {
-  CreateCirclePostPayload,
-  CreatePostPayload,
+  CreatePostPayload
 } from "@/modules/post/interfaces/create-post-payload";
 import {
   postFeedSelect,
   postSelectRepository,
 } from "@/modules/post/selector/post.selector";
 import {
+  PostMediaStatus,
+  PostMediaType,
   PostType,
   Prisma,
   ReplyPermission,
@@ -16,6 +17,8 @@ import {
 } from "@prisma/client";
 import { UpdatePostDto } from "../dto/post.dto";
 import { UserSnapshot } from "../mapper/post.mapper";
+
+import { v4 as uuidv4 } from "uuid";
 
 export type PostRecord = {
   id?: number;
@@ -28,11 +31,8 @@ export type PostRecord = {
   createdAt: string;
 };
 
-type RepositoryCreatePostPayload = (CreatePostPayload | CreateCirclePostPayload) & {
-  contentJson?: unknown;
+type RepositoryCreatePostPayload = CreatePostPayload & {
   type?: PostType;
-  replyPermission?: ReplyPermission;
-  visibility?: VisibilityPost;
 };
 
 type CreateRepostPayload = {
@@ -154,7 +154,6 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
   ) {
     return {
       content: payload.content,
-      contentJson: this.resolveContentJson(payload.contentJson),
       userId: payload.userId,
       type: payload.type ?? PostType.POST,
       replyPermission: payload.replyPermission ?? ReplyPermission.EVERYONE,
@@ -216,6 +215,41 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
     };
   }
 
+  async createCircle(
+    payload: {
+      contentJson?: unknown;
+      content: string;
+      type?: PostType;
+      replyPermission?: ReplyPermission;
+      visibility?: VisibilityPost;
+    },
+    userSnapshot: UserSnapshot,
+    tx: Prisma.TransactionClient = prisma,
+  ) {
+    const post = await tx.post.create({
+      data: {
+        userId: userSnapshot.id,
+        content: payload.content,
+        contentJson: this.resolveContentJson(payload.contentJson),
+        userSnapshot,
+        replyPermission: payload.replyPermission ?? ReplyPermission.EVERYONE,
+        visibility: payload.visibility ?? VisibilityPost.PUBLIC,
+        type: PostType.CIRCLE,
+      },
+      select: postSelectRepository
+    });
+    return {
+      id: post.id,
+      publicId: post.publicId,
+      content: post.content!,
+      contentJson: post.contentJson,
+      userId: post.userId,
+      visibility: post.visibility,
+      isDisinformation: post.isDisinformation,
+      createdAt: post.createdAt.toISOString(),
+    };
+  }
+
   async createCircleReply(
     payload: RepositoryCreatePostPayload,
     parent: { id: number; publicId: string },
@@ -258,6 +292,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
             ...payload,
             content: payload.content ?? "",
             visibility: payload.visibility ?? VisibilityPost.PUBLIC,
+            replyPermission: payload.replyPermission ?? ReplyPermission.EVERYONE,
           },
           userSnapshot,
         ),
@@ -387,6 +422,20 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
       },
     });
   }
+
+  async createCirclePostMedia(postId: number, mediaUrls: string[]) {
+    const mediaData = mediaUrls.map((url) => ({
+      key: uuidv4(),
+      url,
+      postId,
+      type: PostMediaType.IMAGE,
+      status: PostMediaStatus.UPLOADED,
+    }));
+    await prisma.postMedia.createMany({
+      data: mediaData
+    });
+  }
+
 
   async updateByPublicId(
     publicId: string,

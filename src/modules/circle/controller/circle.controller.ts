@@ -186,9 +186,11 @@ class CircleController {
     }
     const { publicId } = req.params;
     const { after, take } = getCursorPagination(req);
+    const sort = req.query_parsed?.sort;
     const data = await circleService.getCirclePosts(publicId, userId, {
       after: after ?? undefined,
       take,
+      sort: sort ?? undefined,
     });
     return res.paginate(data);
   }

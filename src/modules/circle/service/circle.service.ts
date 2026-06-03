@@ -313,7 +313,7 @@ class CircleService {
       userId,
     });
 
-    if (!post.id) {
+    if (!post) {
       throw new BadRequestException("Failed to create post");
     }
 
@@ -387,11 +387,12 @@ class CircleService {
 
     return {
       rows: rows.map((item) => ({
-        postId: item.post.id,
+        postId: item.post.publicId,
         publicId: item.post.publicId,
         userId: item.post.userId,
         content: item.post.content,
         contentJson: item.post.contentJson,
+        media: item.post.media?.map(({ ...media }) => media) ?? [],
         createdAt: item.post.createdAt,
         userSnapshot: item.post.userSnapshot,
         qualityLog: {

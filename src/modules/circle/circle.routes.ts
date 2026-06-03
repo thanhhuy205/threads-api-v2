@@ -1,8 +1,8 @@
 import { authorization } from '@/middlewares/auth';
 import { validate } from '@/middlewares/validate';
 import {
-    respondJoinRequestSchema,
     resendInvitationSchema,
+    respondJoinRequestSchema,
     responseInvitationSchema,
 } from '@/modules/circle/dto/response-invitation.dto';
 import { Router } from 'express';
@@ -116,7 +116,6 @@ circleRouter.post(
     validate(respondJoinRequestSchema),
     circleController.respondJoinRequest,
 );
-
 
 circleRouter.post("/:publicId/send-invitation/manage",
     validate(sendInvitationEmailSchema),

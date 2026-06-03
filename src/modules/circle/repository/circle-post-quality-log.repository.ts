@@ -1,4 +1,5 @@
 import prisma from "@/config/prisma";
+import { postFeedSelect } from "@/modules/post/selector/post.selector";
 import { buildPagination } from "@/shared/pagination/pagination";
 import { PostScoreLabel, PostType, Prisma } from "@prisma/client";
 
@@ -198,7 +199,6 @@ class CirclePostQualityLogRepository {
         createdAt: true,
         post: {
           select: {
-            id: true,
             publicId: true,
             userId: true,
             content: true,
@@ -206,7 +206,8 @@ class CirclePostQualityLogRepository {
             createdAt: true,
             visibility: true,
             replyPermission: true,
-            userSnapshot: true
+            userSnapshot: true,
+            media: postFeedSelect.media,
           },
         },
       },
