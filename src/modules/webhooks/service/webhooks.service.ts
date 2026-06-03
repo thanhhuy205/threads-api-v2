@@ -38,9 +38,9 @@ class WebhooksService {
 
     baseLogger.info(`Leonardo webhook processing completed for generation ID: ${JSON.stringify(result)}`);
 
-    pusherService.trigger("private-generate-" + _body.data.object.id, "leonardo-generation-complete", {
+    pusherService.trigger("public-generate-" + _body.data.object.id, "leonardo-generation-complete", {
       generationId: _body.data.object.id,
-      image: _body.data.object.images?.[0] || null,
+      images: _body.data.object.images || null,
     });
 
     return {

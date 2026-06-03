@@ -296,6 +296,8 @@ class AuthService {
     const hashedToken = hasherToken(payload.refreshToken);
     const refreshToken =
       await authRepository.findRefreshTokenByToken(hashedToken);
+
+    baseLogger.info(`Attempting to refresh token with provided refresh token. Found refresh token record: ${JSON.stringify(refreshToken)}`);
     if (!refreshToken || refreshToken.revokedAt) {
       return null;
     }
@@ -308,7 +310,7 @@ class AuthService {
     }
 
     const user = await userRepository.findById(refreshToken.userId);
-    baseLogger.info(`${JSON.stringify(user)}`)
+    baseLogger.info(`Found user ${user?.id} for refresh token with id ${refreshToken.id} user = ${JSON.stringify(user)}.`);
     if (!user) {
       return null;
     }

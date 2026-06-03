@@ -27,11 +27,6 @@ export const aiSwaggerSchemas = {
                 additionalProperties: true,
                 example: {
                     generationId: '020d4b8f-3a2a-4d36-8121-ad734a979f7a',
-                    apiCreditCost: null,
-                    cost: {
-                        amount: '0.012',
-                        unit: 'DOLLARS',
-                    },
                 },
             },
         },

@@ -25,9 +25,11 @@ const extractPrivateChatPublicId = (channelName: string) => {
 };
 
 
+
 const privateNotification = (userId: string) => `private-user-notification-${userId}`;
 const privateNotificationMessage = (userId: string) => `private-notification-message-${userId}`;
 const privateReport = (userId: string) => `private-report-${userId}`;
+const privateGeneratedImage = (userId: string) => `private-generated-image-${userId}`;
 export const pusherChannel = {
   privateChat,
   privateUser,
@@ -37,5 +39,6 @@ export const pusherChannel = {
   privateNotification,
   privateNotificationMessage,
   notification,
+  privateGeneratedImage,
   privateReport
 } as const;
