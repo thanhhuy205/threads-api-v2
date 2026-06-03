@@ -62,6 +62,40 @@ class ReportManagementRepository {
   async findById(reportId: string) {
     return prisma.report.findUnique({
       where: { id: reportId },
+      select: {
+        id: true,
+        targetId: true,
+        reason: true,
+        status: true,
+        confidence: true,
+        createdAt: true,
+        reporter: {
+          select: {
+            id: true,
+            username: true,
+            name: true,
+            avatar: true,
+            email: true,
+          },
+        },
+        targetType: true,
+        post: {
+          select: {
+            publicId: true,
+            userId: true,
+            content: true,
+            media: true,
+            type: true,
+            visibility: true,
+            isDeleted: true,
+            isHidden: true,
+            isDisinformation: true,
+            createdAt: true,
+            userSnapshot: true
+          },
+        },
+
+      }
     });
   }
 

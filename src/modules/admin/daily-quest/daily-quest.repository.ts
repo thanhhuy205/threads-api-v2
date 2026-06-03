@@ -58,7 +58,6 @@ class DailyQuestRepository
   async createDailyQuest(input: CreateDailyQuestInput) {
     return prisma.dailyQuest.create({
       data: {
-        code: input.code,
         description: input.description,
         karmaReward: input.karmaReward,
         requirement: input.requirement,
