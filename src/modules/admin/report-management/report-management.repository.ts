@@ -5,14 +5,10 @@ import { ReportTargetType } from "@prisma/client";
 
 const adminReportSelect = {
   id: true,
-  reporterId: true,
-  targetType: true,
   targetId: true,
   reason: true,
   status: true,
-  assistantNote: true,
   confidence: true,
-  adminNote: true,
   createdAt: true,
   reporter: {
     select: {

@@ -1,15 +1,15 @@
-import { Router } from "express";
-import { userManagementController } from "./user-management/user-management.controller";
-import { reportManagementController } from "./report-management/report-management.controller";
-import { hashtagTrendingController } from "./hashtag-trending/hashtag-trending.controller";
-import { statisticsController } from "./statistics/statistics.controller";
-import { checkRole } from "../access-control/middleware";
-import { UserRoleType } from "@prisma/client";
-import { dailyQuestController } from "./daily-quest/daily-quest.controller";
 import { validate } from "@/middlewares/validate";
+import { UserRoleType } from "@prisma/client";
+import { Router } from "express";
+import { checkRole } from "../access-control/middleware";
+import { dailyQuestController } from "./daily-quest/daily-quest.controller";
 import { createDailyQuestRequestSchema } from "./daily-quest/dto/request/create-daily-quest.request.dto";
 import { disableDailyQuestParamsSchema } from "./daily-quest/dto/request/disable-daily-quest.params.dto";
+import { hashtagTrendingController } from "./hashtag-trending/hashtag-trending.controller";
 import { listReportsQuerySchema } from "./report-management/dto/request/list-reports.query.dto";
+import { reportManagementController } from "./report-management/report-management.controller";
+import { statisticsController } from "./statistics/statistics.controller";
+import { userManagementController } from "./user-management/user-management.controller";
 
 const adminRouter = Router();
 
@@ -30,6 +30,13 @@ adminRouter.get(
   validate(listReportsQuerySchema, "query"),
   reportManagementController.listReports,
 );
+
+adminRouter.get(
+  "/reports/:reportId",
+  checkRole(UserRoleType.ADMIN),
+  reportManagementController.getReportDetails,
+);
+
 
 adminRouter.patch(
   "/reports/:reportId",

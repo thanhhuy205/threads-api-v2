@@ -22,6 +22,16 @@ class ReportManagementController {
     });
   };
 
+  getReportDetails = async (
+    req: Request<{ reportId: string }, {}, {}>,
+    res: Response) => {
+    const reportId = req.params.reportId;
+    const result = await reportManagementService.getReportDetails(reportId);
+
+    return res.success(200, "Report details retrieved successfully", result);
+  }
+
+
   moderateReport = async (
     req: Request<{ reportId: string }, {}, ModerateReportRequestDto>,
     res: Response,

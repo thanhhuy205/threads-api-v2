@@ -150,15 +150,10 @@ export const adminSwaggerSchemas = {
         type: 'object',
         properties: {
             id: { type: 'string', example: 'cm_report_123' },
-            reporterId: { type: 'string', example: 'user_123' },
-            reporter: { $ref: '#/components/schemas/AdminReportReporter' },
-            targetType: { type: 'string', enum: ['POST', 'USER', 'CIRCLE'], example: 'POST' },
-            targetId: { type: 'string', example: 'post_123' },
             reason: { type: 'string', example: 'Spam content' },
-            status: { type: 'string', enum: ['PENDING', 'RESOLVED', 'DISMISSED'], example: 'PENDING' },
-            assistantNote: { type: ['string', 'null'], example: 'Potential spam' },
+            reporter: { $ref: '#/components/schemas/AdminReportReporter' },
             confidence: { type: ['number', 'null'], example: 0.82 },
-            adminNote: { type: ['string', 'null'], example: null },
+            status: { type: 'string', enum: ['PENDING', 'RESOLVED', 'DISMISSED'], example: 'PENDING' },
             createdAt: { type: 'string', format: 'date-time' },
             post: { $ref: '#/components/schemas/AdminReportTargetPost' },
             targetUser: { $ref: '#/components/schemas/AdminReportTargetUser' },
@@ -351,7 +346,7 @@ export const adminSwaggerPaths = {
         get: {
             tags: ['Admin'],
             summary: 'List reports for admin',
-            description: 'List reports by target type. type defaults to post. For type post or circle, target data is returned in post. For type user, target data is returned in targetUser.',
+            description: 'List reports by target type. type defaults to post. Each item includes id, reason, reporter, confidence, status, createdAt, and the target data as post or targetUser depending on type.',
             security: bearerAuthSecurity,
             parameters: [
                 { name: 'page', in: 'query', schema: { type: 'number', example: 1 } },

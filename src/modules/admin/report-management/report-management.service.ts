@@ -35,6 +35,16 @@ class ReportManagementService {
     };
   }
 
+  async getReportDetails(reportId: string) {
+    const report = await reportManagementRepository.findById(reportId);
+    if (!report) {
+      throw new Error("Report not found");
+    }
+
+    return report;
+  }
+
+
   async moderateReport(input: ModerateReportInput) {
     const report = await reportManagementRepository.findById(input.reportId);
 
@@ -75,18 +85,15 @@ class ReportManagementService {
     }));
   }
 
+
+
   private mapBaseReport(report: AdminReportRow) {
     return {
       id: report.id,
-      reporterId: report.reporterId,
       reporter: report.reporter,
-      targetType: report.targetType,
-      targetId: report.targetId,
       reason: report.reason,
       status: report.status,
-      assistantNote: report.assistantNote,
       confidence: report.confidence?.toNumber() ?? null,
-      adminNote: report.adminNote,
       createdAt: report.createdAt,
     };
   }
