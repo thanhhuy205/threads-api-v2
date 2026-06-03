@@ -33,6 +33,27 @@ type CreateQuestLogInput = {
 };
 
 class UserQuestLogRepository {
+  countAllCompletedQuestsByUserAndDate(userId: string, date: Date, tx: QuestLogDbClient = prisma) {
+    return tx.userQuestLog.count({
+      where: {
+        userId,
+        date,
+        completed: true,
+      },
+    });
+  }
+
+  countAllCompletedQuests(date: Date, tx: QuestLogDbClient = prisma) {
+    return tx.userQuestLog.count({
+      where: {
+        date,
+        completed: true,
+      },
+    });
+  }
+
+
+
   lockUserRow(userId: string, tx: QuestLogDbClient = prisma) {
     return tx.$queryRaw<{ id: string }[]>`
       SELECT id

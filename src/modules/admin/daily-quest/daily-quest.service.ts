@@ -9,6 +9,11 @@ class DailyQuestService {
   getDailyQuestActions() {
     return dailyQuestActionOptions;
   }
+  
+  async staticsDailyQuestActions() {
+   
+ }
+
 
   async createDailyQuest(input: CreateDailyQuestInput) {
     return dailyQuestRepository.createDailyQuest(input);

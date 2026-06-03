@@ -7,7 +7,7 @@ class UserKarmaRepository {
   async getTotalKarmaByUserId(
     userId: string,
     tx: UserKarmaDbClient = prisma,
-  ) {
+  ): Promise<number | null> {
     const existing = await tx.userKarma.findUnique({
       where: {
         userId,
@@ -22,7 +22,7 @@ class UserKarmaRepository {
   async createDefaultKarmaByUserId(
     userId: string,
     tx: UserKarmaDbClient = prisma,
-  ) {
+  ): Promise<number> {
     const created = await tx.userKarma.create({
       data: {
         userId,
@@ -40,7 +40,7 @@ class UserKarmaRepository {
     userId: string,
     amount: number,
     tx: UserKarmaDbClient = prisma,
-  ) {
+  ): Promise<number> {
     if (!Number.isInteger(amount) || amount <= 0) {
       throw new Error("Karma increment amount must be a positive integer");
     }
@@ -56,7 +56,7 @@ class UserKarmaRepository {
       },
       create: {
         userId,
-        karma: 1 + amount,
+        karma: Math.max(amount, 1),
       },
       select: {
         karma: true,
@@ -70,7 +70,7 @@ class UserKarmaRepository {
     userId: string,
     amount: number,
     tx: UserKarmaDbClient = prisma,
-  ) {
+  ): Promise<number | null> {
     if (!Number.isInteger(amount) || amount <= 0) {
       throw new Error("Karma decrement amount must be a positive integer");
     }

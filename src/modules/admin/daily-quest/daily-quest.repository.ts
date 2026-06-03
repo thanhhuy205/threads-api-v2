@@ -91,6 +91,24 @@ class DailyQuestRepository
     });
   }
 
+
+  async countDailyWhere(where?: Prisma.DailyQuestWhereInput) {
+    return prisma.dailyQuest.count({
+      where: where,
+    });
+  }
+
+  async countActive() {
+    return this.countDailyWhere({
+      isActive: true,
+    });
+  }
+
+  async countDailyAll() {
+    return this.countDailyWhere();
+  }
+
+
   async disableDailyQuest(code: string) {
     return prisma.dailyQuest.update({
       where: {
