@@ -7,11 +7,12 @@ import {
 import { webhookPreviewImageRepository } from "@/modules/ai/repository/webhook-preview-image.repository";
 import { limitActionService } from "@/modules/limit-action/service/limit-action.service";
 import { userActionLogService } from "@/modules/user-action-log/service/user-action-log.service";
-import { gemini } from "@/providers/google.provider";
+import { groq } from "@/providers/groq.provider";
 import { generateJob } from "@/providers/leonardo.provider";
 import type { LeonardoGenerationJob } from "@/providers/leonardo.types";
 import { openrouter } from "@/providers/openrouter.provider";
 import { ActionType, ReportTargetType } from "@prisma/client";
+import { BadRequestException } from "@/errors/error";
 
 type GenerateImageCaptionInput = {
   content: string;
@@ -22,25 +23,28 @@ class AiService {
   async generateCaptionMd(userId: string, content: string) {
     const countGeneration = await userActionLogService.countActionLog(userId, ActionType.GENERATE_CAPTION_MD);
 
-    if (countGeneration >= 5) {
+    if (countGeneration >= 3) {
       await limitActionService.createLimitAction({
         userId,
         type: ActionType.GENERATE_CAPTION_MD,
         resetAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), // reset sau 5 ngày
       });
-      throw new Error("Generation free for account limit 5 times, please contact support to increase the limit");
+      throw new BadRequestException("Generation free for account limit 5 times, please contact support to increase the limit");
     }
 
     if (!content?.trim()) {
-      throw new Error("Input text is empty");
+      throw new BadRequestException("Input text is empty");
     }
 
-    const response = await gemini.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: FORMAT_MARKDOWN_PROMPT(content),
-    });
-
-    const markdown = await response.text;
+    const response = await groq.chat.completions.create({
+      model: "llama-3.1-8b-instant",
+      messages: [
+        { role: "system", content: FORMAT_MARKDOWN_PROMPT() },
+        { role: "user", content: `Đây là nội dung cần đánh bóng ${content}` },
+      ]
+    })
+    console.log(response)
+    const markdown = response.choices[0].message.content;
 
     if (!markdown) {
       throw new Error("AI markdown response is empty");
@@ -48,8 +52,8 @@ class AiService {
 
 
     await userActionLogService.logAction({
-      userId: "system",
-      type: "GENERATE_CAPTION_MD",
+      userId,
+      type: ActionType.GENERATE_CAPTION_MD,
       metadata: {
         inputLength: content.length,
         outputLength: markdown.length,
@@ -68,14 +72,14 @@ class AiService {
         type: ActionType.GENERATE_IMAGE,
         resetAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), // reset sau 5 ngày
       });
-      throw new Error("Generation free for account limit 5 times, please contact support to increase the limit");
+      throw new BadRequestException("Generation free for account limit 5 times, please contact support to increase the limit");
     }
 
     if (!content?.trim()) {
-      throw new Error("Input content is empty");
+      throw new BadRequestException("Input content is empty");
     }
     if (!userId?.trim()) {
-      throw new Error("User ID is empty");
+      throw new BadRequestException("User ID is empty");
     }
     const MAX_PROMPT = 1450;
     const generatedPrompt = await this.generatePromptForImageGeneration(content);
@@ -87,7 +91,13 @@ class AiService {
 
     const prompt = normalizedPrompt.slice(0, MAX_PROMPT);
     const sdGenerationJob = await generateJob(prompt);
-
+    await userActionLogService.logAction({
+      userId,
+      type: ActionType.GENERATE_IMAGE,
+      metadata: {
+        inputLength: content.length,
+      },
+    });
     await webhookPreviewImageRepository.savePreviewImage({
       generationId: sdGenerationJob.generationId,
       content: normalizedPrompt,
@@ -202,7 +212,7 @@ class AiService {
   }) {
 
     if (!input.reason?.trim()) {
-      throw new Error("Report reason is empty");
+      throw new BadRequestException("Report reason is empty");
     }
 
     const response = await openrouter.chat.send({
@@ -293,7 +303,7 @@ class AiService {
 
   async generatePromptForImageGeneration(content: string) {
     if (!content?.trim()) {
-      throw new Error("Input content is empty");
+      throw new BadRequestException("Input content is empty");
     }
 
     const response = await openrouter.chat.send({

@@ -1,7 +1,7 @@
 import { cloudflareConfig } from '@/config/cloudflare';
 import { databaseConfig } from '@/config/database';
 import { elasticSearchConfig } from '@/config/elasticsearch';
-import { geminiConfig } from '@/config/gemini';
+import { groQConfig } from '@/config/groq';
 import { jwtConfig } from '@/config/jwt';
 import { leonardoConfig } from '@/config/leonardo';
 import { mixedbreadAIConfig } from '@/config/mixedbread-ai';
@@ -38,7 +38,7 @@ const envSchema = z.object({
     ...leonardoConfig.shape,
     ...elasticSearchConfig.shape,
     ...notionConfig.shape,
-    ...geminiConfig.shape,
+    ...groQConfig.shape,
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
