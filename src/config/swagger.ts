@@ -35,10 +35,7 @@ import {
     circleSwaggerPaths,
     circleSwaggerSchemas,
 } from '../modules/circle/docs/circle.swagger';
-import {
-    internalSwaggerPaths,
-    internalSwaggerSchemas,
-} from '../modules/internal/docs/internal.swagger';
+
 import {
     jwtSwaggerSchemas,
 } from '../modules/jwt/docs/jwt.swagger';
@@ -176,7 +173,6 @@ export const swaggerDocument = {
         ...topicSwaggerPaths,
         ...questSwaggerPaths,
         ...museumSwaggerPaths,
-        ...internalSwaggerPaths,
         ...searchSwaggerPaths,
         ...pusherSwaggerPaths,
         ...webhooksSwaggerPaths,
@@ -198,7 +194,6 @@ export const swaggerDocument = {
             ...topicSwaggerSchemas,
             ...questSwaggerSchemas,
             ...museumSwaggerSchemas,
-            ...internalSwaggerSchemas,
             ...searchSwaggerSchemas,
             ...pusherSwaggerSchemas,
             ...webhooksSwaggerSchemas,
