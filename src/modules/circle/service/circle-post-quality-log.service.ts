@@ -18,6 +18,58 @@ type SaveCirclePostJudgeResultInput = {
 };
 
 class CirclePostQualityLogService {
+  findByCircleIdPaginated({
+    circleId,
+    page,
+    limit,
+  }: {
+    circleId: number;
+    page: number;
+    limit: number;
+  }) {
+    return circlePostQualityLogRepository.findByCircleIdPaginated({
+      circleId,
+      page,
+      limit,
+    });
+  }
+
+  countByCircleId(circleId: number) {
+    return circlePostQualityLogRepository.countByCircleId(circleId);
+  }
+
+  findByCircleAndPostPublicId(circleId: number, postPublicId: string) {
+    return circlePostQualityLogRepository.findByCircleAndPostPublicId(
+      circleId,
+      postPublicId,
+    );
+  }
+
+  findCirclePosts(params: {
+    circleId: number;
+    after?: string;
+    take: number;
+    sort: "latest" | "quality";
+  }) {
+    return circlePostQualityLogRepository.findCirclePosts(params);
+  }
+
+  create(
+    data: {
+      circleMemberId: number;
+      circleId: number;
+      postId: number;
+      score?: number;
+      hpDelta?: number;
+    },
+    tx?: Prisma.TransactionClient,
+  ) {
+    return circlePostQualityLogRepository.create(
+      data,
+      tx as Prisma.TransactionClient,
+    );
+  }
+
   async saveJudgeResult({
     circleMemberId,
     userId,

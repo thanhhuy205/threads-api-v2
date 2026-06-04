@@ -18,6 +18,33 @@ type UpsertPostQualityExpLogInput = {
 };
 
 class CircleExpLogService {
+  findExpLogsByCircleIdPaginated({
+    circleId,
+    page,
+    limit,
+  }: {
+    circleId: number;
+    page: number;
+    limit: number;
+  }) {
+    return circleExpLogRepository.findExpLogsByCircleIdPaginated({
+      circleId,
+      page,
+      limit,
+    });
+  }
+
+  countExpLogsByCircleId(circleId: number) {
+    return circleExpLogRepository.countExpLogsByCircleId(circleId);
+  }
+
+  aggregateDeltaByCircleIdWithinRange(circleId: number, from: Date) {
+    return circleExpLogRepository.aggregateDeltaByCircleIdWithinRange(
+      circleId,
+      from,
+    );
+  }
+
   async grantMemberJoinExpIfFirstTime({
     circleId,
     userId,

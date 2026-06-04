@@ -7,10 +7,6 @@ import { SendInvitationEmailAdminInterface } from "@/modules/circle/interfaces/s
 import { SendInvitationInput } from "@/modules/circle/interfaces/send-invitation.interface";
 import { CIRCLE_ROLE_PERMISSIONS, CirclePermission } from "@/modules/circle/permission/circle-permission";
 import { checkCirclePermission } from "@/modules/circle/policy/check-circle-permission";
-import { circleInvitationRepository } from "@/modules/circle/repository/circle-invation.repository";
-import { circleJoinRequestRepository } from "@/modules/circle/repository/circle-join.repository";
-import { heroBadgeRepository } from "@/modules/circle/repository/hero-badge.repository";
-import { karmaTransactionRepository } from "@/modules/circle/repository/karma-transaction.repository";
 import { emailProducer } from "@/modules/job/email/producer/email.producer";
 import { notificationService } from "@/modules/notification-group/service/notification.service";
 import { postService } from "@/modules/post/service/post.service";
@@ -46,15 +42,15 @@ import {
   SacrificeBodyDto,
 } from "../dto/runtime.dto";
 import { mapCircleWithJoinStatus } from "../mapper/circle.mapper";
-import { circleEnergyRepository } from "../repository/circle-energy.repository";
-import { circleExpLogRepository } from "../repository/circle-exp-log.repository";
-import { circleMemberBanRepository } from "../repository/circle-member-ban.repository";
-import { circleMemberRepository } from "../repository/circle-member.repository";
-import { circlePostQualityLogRepository } from "../repository/circle-post-quality-log.repository";
 import { circleRepository } from "../repository/circle.repository";
-import { userKarmaRepository } from "../repository/user-karma.repository";
 import { circleEnergyService } from "./circle-enery.service";
 import { circleExpLogService } from "./circle-exp-log.service";
+import { circleInvitationService } from "./circle-invitation.service";
+import { circleKarmaService } from "./circle-karma.service";
+import { circleJoinRequestService } from "./circle-join-request.service";
+import { circleMemberBanService } from "./circle-member-ban.service";
+import { circleMemberService } from "./circle-member.service";
+import { circlePostQualityLogService } from "./circle-post-quality-log.service";
 
 type CircleVisibilityFilterType = "public" | "private" | "accepting" | "join" | null;
 
@@ -71,7 +67,10 @@ class CircleService {
       throw new NotFoundException(`Circle ${circlePublicId} not found`);
     }
 
-    const member = await circleMemberRepository.findRoleByCircleId(circle.id, userId);
+    const member = await circleMemberService.findRoleByCircleId(
+      circle.id,
+      userId,
+    );
     if (!member) {
       throw new ForbiddenException("You do not have permission to access this circle");
     }
@@ -172,12 +171,12 @@ class CircleService {
 
     if (userId && circleIds.length) {
       const [pendingInvitations, memberships, invitedCircle] = await Promise.all([
-        circleJoinRequestRepository.findPendingRequestByCircleId(
+        circleJoinRequestService.findPendingRequestByCircleId(circleIds, userId),
+        circleMemberService.findMembershipsByCircleIds(circleIds, userId),
+        circleInvitationService.findPendingInvitationsByCircleIds(
           circleIds,
           userId,
         ),
-        circleMemberRepository.findMembershipsByCircleIds(circleIds, userId),
-        circleInvitationRepository.findPendingInvitationsByCircleIds(circleIds, userId),
       ]);
 
       invitedCircleIdSet = new Set(
@@ -234,12 +233,12 @@ class CircleService {
     const page = query.page ?? 1;
     const limit = query.limit ?? 10;
     const [rows, total] = await Promise.all([
-      circleExpLogRepository.findExpLogsByCircleIdPaginated({
+      circleExpLogService.findExpLogsByCircleIdPaginated({
         circleId: circle.id,
         page,
         limit,
       }),
-      circleExpLogRepository.countExpLogsByCircleId(circle.id),
+      circleExpLogService.countExpLogsByCircleId(circle.id),
     ]);
 
     return {
@@ -262,12 +261,12 @@ class CircleService {
     const limit = query.limit ?? 10;
 
     const [rows, total] = await Promise.all([
-      circlePostQualityLogRepository.findByCircleIdPaginated({
+      circlePostQualityLogService.findByCircleIdPaginated({
         circleId: circle.id,
         page,
         limit,
       }),
-      circlePostQualityLogRepository.countByCircleId(circle.id),
+      circlePostQualityLogService.countByCircleId(circle.id),
     ]);
 
     return {
@@ -286,7 +285,10 @@ class CircleService {
     if (!circle) {
       throw new NotFoundException("Circle not found");
     }
-    const member = await circleMemberRepository.findRoleByCircleId(circle.id, userId);
+    const member = await circleMemberService.findRoleByCircleId(
+      circle.id,
+      userId,
+    );
     if (!member) {
       throw new ForbiddenException("You are not a member of this circle");
     }
@@ -318,12 +320,12 @@ class CircleService {
     }
 
     // 5. Keep circle-post mapping + pending quality status
-    const qualityLog = await circlePostQualityLogRepository.create({
+    const qualityLog = await circlePostQualityLogService.create({
       circleId: circle.id,
       postId: post.id,
       score: 0,
       hpDelta: 0,
-      circleMemberId: member.id
+      circleMemberId: member.id,
     });
 
     // 6. Enqueue evaluation job
@@ -362,7 +364,7 @@ class CircleService {
     if (!circle) {
       throw new NotFoundException(`Circle ${publicId} not found`);
     }
-    const role = await circleMemberRepository.findRoleByCircleId(circle.id, userId);
+    const role = await circleMemberService.findRoleByCircleId(circle.id, userId);
     if (circle.visibility === Visibility.PRIVATE && !role) {
       return buildCursorPagination({
         rows: [],
@@ -372,7 +374,7 @@ class CircleService {
     }
     const take = query.take ?? 20;
     const sort = query.sort ?? "latest";
-    const logs = await circlePostQualityLogRepository.findCirclePosts({
+    const logs = await circlePostQualityLogService.findCirclePosts({
       circleId: circle.id,
       after: query.after ?? undefined,
       take,
@@ -422,13 +424,16 @@ class CircleService {
       throw new NotFoundException("Circle not found");
     }
 
-    const member = await circleMemberRepository.findRoleByCircleId(circle.id, userId);
+    const member = await circleMemberService.findRoleByCircleId(
+      circle.id,
+      userId,
+    );
     if (!member) {
       throw new ForbiddenException("You are not a member of this circle");
     }
 
     const parentInCircle =
-      await circlePostQualityLogRepository.findByCircleAndPostPublicId(
+      await circlePostQualityLogService.findByCircleAndPostPublicId(
         circle.id,
         postPublicId,
       );
@@ -447,7 +452,7 @@ class CircleService {
       throw new BadRequestException("Failed to create reply");
     }
 
-    const qualityLog = await circlePostQualityLogRepository.create({
+    const qualityLog = await circlePostQualityLogService.create({
       circleId: circle.id,
       postId: post.id,
       score: 0,
@@ -498,7 +503,7 @@ class CircleService {
 
 
     const parentInCircle =
-      await circlePostQualityLogRepository.findByCircleAndPostPublicId(
+      await circlePostQualityLogService.findByCircleAndPostPublicId(
         circle.id,
         postPublicId,
       );
@@ -551,7 +556,10 @@ class CircleService {
       throw new NotFoundException(`Circle ${publicId} not found`);
     }
 
-    const member = await circleMemberRepository.findRoleByCircleId(circle.id, userId);
+    const member = await circleMemberService.findRoleByCircleId(
+      circle.id,
+      userId,
+    );
     if (!member) {
       throw new ForbiddenException("You are not a member of this circle");
     }
@@ -564,7 +572,10 @@ class CircleService {
     const hpGained = body.karmaAmount * 10;
 
     const result = await transactionService.doInTransaction(async (tx) => {
-      const currentKarma = await userKarmaRepository.getTotalKarmaByUserId(userId, tx);
+      const currentKarma = await circleKarmaService.getTotalKarmaByUserId(
+        userId,
+        tx,
+      );
       const availableKarma = currentKarma ?? 0;
 
       if (availableKarma < body.karmaAmount) {
@@ -578,25 +589,25 @@ class CircleService {
           hpGained,
           tx,
         ),
-        userKarmaRepository.decrementKarma(
+        circleKarmaService.decrementKarma(
           userId,
           body.karmaAmount,
           tx,
-        )
-      ])
+        ),
+      ]);
 
       if (newKarma === null) {
         throw new BadRequestException("Insufficient karma");
       }
 
       const [] = await Promise.all([
-        karmaTransactionRepository.create({
+        circleKarmaService.createTransaction({
           userId,
           circleId: circle.id,
           delta: body.karmaAmount,
           reason: KarmaReason.BURN_FOR_CIRCLE,
         }, tx),
-        heroBadgeRepository.upsert({
+        circleKarmaService.upsertHeroBadge({
           userId,
           circleId: circle.id,
           type: BadgeType.KARMA_SACRIFICE,
@@ -628,7 +639,10 @@ class CircleService {
       throw new NotFoundException(`Circle ${publicId} not found`);
     }
 
-    const member = await circleMemberRepository.findRoleByCircleId(circle.id, userId);
+    const member = await circleMemberService.findRoleByCircleId(
+      circle.id,
+      userId,
+    );
     if (!member) {
       throw new ForbiddenException("You do not have permission to access this circle");
     }
@@ -661,10 +675,10 @@ class CircleService {
 
     const [membersTotal, joinRequestsTotal, invitationsTotal, expLogAgg] =
       await Promise.all([
-        circleMemberRepository.countMembersByCircleIdWithinRange(circle.id, from),
-        circleJoinRequestRepository.countPendingByCircleIdWithinRange(circle.id, from),
-        circleInvitationRepository.countPendingInvitationsByCircleIdWithinRange(circle.id, from),
-        circleExpLogRepository.aggregateDeltaByCircleIdWithinRange(circle.id, from),
+        circleMemberService.countMembersByCircleIdWithinRange(circle.id, from),
+        circleJoinRequestService.countPendingByCircleIdWithinRange(circle.id, from),
+        circleInvitationService.countPendingInvitationsByCircleIdWithinRange(circle.id, from),
+        circleExpLogService.aggregateDeltaByCircleIdWithinRange(circle.id, from),
       ]);
 
     return {
@@ -825,10 +839,10 @@ class CircleService {
       throw new NotFoundException(`Circle ${circlePublicId} not found`);
     }
 
-    const members = await circleMemberRepository.findMembersByCircleIdAndUserId(
+    const members = await circleMemberService.findMembersByCircleIdAndUserId(
       circle.id,
       memberId,
-      take // or whatever default take value you want
+      take, // or whatever default take value you want
     );
     return buildCursorPagination({
       rows: members,
@@ -851,12 +865,12 @@ class CircleService {
       CirclePermission.KICK_MEMBER,
     );
     const [rows, total] = await Promise.all([
-      circleMemberRepository.findMembersByCircleIdPaginated({
+      circleMemberService.findMembersByCircleIdPaginated({
         circleId: circle.id,
         page: query.page,
         limit: query.limit,
       }),
-      circleMemberRepository.countMembersByCircleId(circle.id),
+      circleMemberService.countMembersByCircleId(circle.id),
     ]);
 
     return {
@@ -884,7 +898,7 @@ class CircleService {
     }
 
     const result = await transactionService.doInTransaction(async (tx) => {
-      const banRecord = await circleMemberBanRepository.upsertByCircleIdAndUserId(
+      const banRecord = await circleMemberBanService.upsertByCircleIdAndUserId(
         {
           circleId: circle.id,
           userId,
@@ -895,7 +909,7 @@ class CircleService {
         tx,
       );
 
-      const kicked = await circleMemberRepository.kickMemberByCircleIdAndUserId(
+      const kicked = await circleMemberService.kickMemberByCircleIdAndUserId(
         circle.id,
         userId,
         tx,
@@ -931,7 +945,7 @@ class CircleService {
       throw new NotFoundException(`Circle ${publicId} not found`);
     }
 
-    const result = await circleMemberRepository.kickMemberByCircleIdAndUserId(
+    const result = await circleMemberService.kickMemberByCircleIdAndUserId(
       circle.id,
       userId,
     );
@@ -959,12 +973,12 @@ class CircleService {
       CirclePermission.ACCEPT_USE_JOIN,
     );
     const [rows, total] = await Promise.all([
-      circleInvitationRepository.findByCircleIdPaginated({
+      circleInvitationService.findByCircleIdPaginated({
         circleId: circle.id,
         page: query.page,
         limit: query.limit,
       }),
-      circleInvitationRepository.countByCircleId(circle.id),
+      circleInvitationService.countByCircleId(circle.id),
     ]);
 
     return {
@@ -980,7 +994,7 @@ class CircleService {
       CirclePermission.ACCEPT_USE_JOIN,
     );
 
-    const stats = await circleInvitationRepository.countManageInvitationStatsByCircleId(
+    const stats = await circleInvitationService.countManageInvitationStatsByCircleId(
       circle.id,
     );
 
@@ -1003,7 +1017,7 @@ class CircleService {
       CirclePermission.ACCEPT_USE_JOIN,
     );
 
-    const invitation = await circleInvitationRepository.findManageInvitationByIdAndCircleId(
+    const invitation = await circleInvitationService.findManageInvitationByIdAndCircleId(
       invitationId,
       circle.id,
     );
@@ -1033,7 +1047,7 @@ class CircleService {
 
     const updatedInvitation = await transactionService.doInTransaction(
       async (tx) => {
-        const updated = await circleInvitationRepository.updateResendById(
+        const updated = await circleInvitationService.updateResendById(
           {
             id: invitation.id,
             inviterId: managerId,
@@ -1110,13 +1124,13 @@ class CircleService {
       CirclePermission.INVITE_MEMBER,
     );
     const [rows, total] = await Promise.all([
-      circleJoinRequestRepository.findByCircleIdPaginated({
+      circleJoinRequestService.findByCircleIdPaginated({
         circleId: circle.id,
         page: query.page,
         limit: query.limit,
         status: RequestStatus.PENDING,
       }),
-      circleJoinRequestRepository.countByCircleId(
+      circleJoinRequestService.countByCircleId(
         circle.id,
         RequestStatus.PENDING,
       ),
@@ -1135,19 +1149,18 @@ class CircleService {
       throw new NotFoundException(`Circle ${publicId} not found`);
     }
 
-    const [role, restriction] = await Promise.all([
-      circleMemberRepository.findRoleByCircleId(circle.id, userId),
-      userRestrictionService.getActiveRestriction(userId)
+    const [role, restriction, invitation] = await Promise.all([
+      circleMemberService.findRoleByCircleId(circle.id, userId),
+      userRestrictionService.getActiveRestriction(userId),
+      circleInvitationService.findPendingInvitationByCircleIdAndUserId(
+        circle.id,
+        userId,
+      ),
     ]);
 
     const energyRecord =
       circle.circleEnergies[0] ??
-      (await circleEnergyRepository.create({
-        circleId: circle.id,
-        current: 500,
-        max: 500,
-        peak: 500,
-      }));
+      (await circleEnergyService.getOrCreateCircleEnergy(circle.id));
 
     const energy = {
       current: energyRecord.current,
@@ -1168,11 +1181,16 @@ class CircleService {
       memberCount: circle._count.circleMembers,
       energy,
       isJoined: !!role,
-      isAdmin: role ? (role.role === RoleMembership.ADMIN || role.role === RoleMembership.OWNER) : false,
+      isAdmin: role
+        ? role.role === RoleMembership.ADMIN || role.role === RoleMembership.OWNER
+        : false,
       permission: CIRCLE_ROLE_PERMISSIONS[role?.role ?? RoleMembership.MEMBER] || [],
       createdAt: circle.createdAt,
       updatedAt: circle.updatedAt,
-      isRestrictedKarma: restriction && restriction.type === UserRestrictionType.POST_AND_USE_KARMA,
+      isRestrictedKarma: Boolean(
+        restriction && restriction.type === UserRestrictionType.POST_AND_USE_KARMA,
+      ),
+      inInvitation: !!invitation,
     };
   }
 
@@ -1189,7 +1207,7 @@ class CircleService {
   }
 
   async sendInvitation(data: SendInvitationInput) {
-    const circle = await circleMemberRepository.findByCircleId(
+    const circle = await circleMemberService.findByCircleId(
       data.circleId,
       data.userId,
     );
@@ -1199,7 +1217,7 @@ class CircleService {
       );
     }
 
-    const userRole = await circleMemberRepository.findRoleByCircleId(
+    const userRole = await circleMemberService.findRoleByCircleId(
       data.circleId,
       data.inviterId,
     );
@@ -1217,10 +1235,7 @@ class CircleService {
       );
     }
     const existingInvitation =
-      await circleInvitationRepository.findInvitationById(
-        data.circleId,
-        data.userId,
-      );
+      await circleInvitationService.findInvitationById(data.circleId, data.userId);
 
     const invitationResendLimit = 5;
     // Vẫn cho mời lại người đã từ chối, tối đa 5 lần resentCount nếu quá 5 lần thì không mời được nữa
@@ -1238,7 +1253,7 @@ class CircleService {
     }
 
     const invitation = await transactionService.doInTransaction(async (tx) => {
-      const result = await circleInvitationRepository.upsert(
+      const result = await circleInvitationService.upsert(
         {
           circleId: data.circleId,
           userId: data.userId,
@@ -1265,7 +1280,7 @@ class CircleService {
   }
 
   async acceptInvitation(data: ResponseInvitationInput) {
-    const circle = await circleMemberRepository.findByCircleId(
+    const circle = await circleMemberService.findByCircleId(
       data.circleId,
       data.userId,
     );
@@ -1274,7 +1289,7 @@ class CircleService {
         `User ${data.userId} is already a member of circle ${data.circleId}`,
       );
     }
-    const invitation = await circleInvitationRepository.findInvitationById(
+    const invitation = await circleInvitationService.findInvitationById(
       data.circleId,
       data.userId,
     );
@@ -1287,7 +1302,7 @@ class CircleService {
 
     if (data.status === CircleInvitationStatus.REJECTED) {
       const rejected = await transactionService.doInTransaction(async (tx) => {
-        await circleInvitationRepository.rejectInvitation(
+        await circleInvitationService.rejectInvitation(
           data.circleId,
           data.userId,
           tx,
@@ -1298,12 +1313,12 @@ class CircleService {
     }
 
     const member = await transactionService.doInTransaction(async (tx) => {
-      await circleInvitationRepository.acceptInvitation(
+      await circleInvitationService.acceptInvitation(
         data.circleId,
         data.userId,
         tx,
       );
-      const member = await circleMemberRepository.create(
+      const member = await circleMemberService.create(
         {
           circleId: data.circleId,
           userId: data.userId,
@@ -1339,7 +1354,7 @@ class CircleService {
     invitationId?: string,
     take: number = 10,
   ) {
-    const invitations = await circleInvitationRepository.findInvitations(
+    const invitations = await circleInvitationService.findInvitations(
       userId,
       invitationId,
       take,
@@ -1358,7 +1373,7 @@ class CircleService {
       throw new NotFoundException(`Circle ${publicId} not found`);
     }
 
-    const invitation = await circleInvitationRepository.findLatestInvitationByCircleIdAndUserId(
+    const invitation = await circleInvitationService.findLatestInvitationByCircleIdAndUserId(
       circle.id,
       userId,
     );
@@ -1399,7 +1414,7 @@ class CircleService {
     if (!circle) {
       throw new NotFoundException(`Circle ${publicId} not found`);
     }
-    const existingMember = await circleMemberRepository.findByCircleId(
+    const existingMember = await circleMemberService.findByCircleId(
       circle.id,
       userId,
     );
@@ -1407,13 +1422,13 @@ class CircleService {
       throw new Error(`User ${userId} is already a member of circle ${publicId}`,);
     }
 
-    const invitation = await circleJoinRequestRepository.findJoinRequestByCircleIdAndUserId(
+    const invitation = await circleJoinRequestService.findJoinRequestByCircleIdAndUserId(
       circle.id,
       userId,
     );
     if (invitation) {
       if (invitation.status === CircleInvitationStatus.PENDING) {
-        await circleJoinRequestRepository.updateStatus(
+        await circleJoinRequestService.updateStatus(
           invitation.id,
           RequestStatus.CANCELLED,
         );
@@ -1426,7 +1441,7 @@ class CircleService {
     }
 
 
-    await circleJoinRequestRepository.create({
+    await circleJoinRequestService.create({
       circleId: circle.id,
       userId,
       reason: "User requested to join the circle",
@@ -1452,7 +1467,7 @@ class CircleService {
       throw new NotFoundException(`Circle with id ${circlePublicId} not found`);
     }
 
-    const inviterRole = await circleMemberRepository.findRoleByCircleId(
+    const inviterRole = await circleMemberService.findRoleByCircleId(
       circle.id,
       inviterId,
     );
@@ -1475,7 +1490,7 @@ class CircleService {
 
 
     if (user) {
-      const existingMember = await circleMemberRepository.findByCircleId(
+      const existingMember = await circleMemberService.findByCircleId(
         circle.id,
         user.id,
       );
@@ -1486,7 +1501,7 @@ class CircleService {
       }
     }
 
-    const invitation = await circleInvitationRepository.findInvitationById(
+    const invitation = await circleInvitationService.findInvitationById(
       circle.id,
       user.id,
     );
@@ -1507,7 +1522,7 @@ class CircleService {
 
     await transactionService.doInTransaction(async (tx) => {
       await Promise.all([
-        circleInvitationRepository.upsertAdminInvitation(
+        circleInvitationService.upsertAdminInvitation(
           {
             existingInvitationId: invitation?.id,
             circleId: circle.id,
@@ -1561,7 +1576,7 @@ class CircleService {
       throw new NotFoundException(`Circle ${publicId} not found`);
     }
 
-    const userRole = await circleMemberRepository.findRoleByCircleId(
+    const userRole = await circleMemberService.findRoleByCircleId(
       circle.id,
       adminId,
     );
@@ -1584,7 +1599,7 @@ class CircleService {
 
     const result = await transactionService.doInTransaction(async (tx) => {
       const joinRequest =
-        await circleJoinRequestRepository.findPendingRequestByCircleIdAndUserId(
+        await circleJoinRequestService.findPendingRequestByCircleIdAndUserId(
           circle.id,
           targetUserId,
           tx,
@@ -1603,12 +1618,12 @@ class CircleService {
       }
 
       if (isAccept) {
-        const result = await circleJoinRequestRepository.updateStatus(
+        const result = await circleJoinRequestService.updateStatus(
           joinRequest.id,
           RequestStatus.ACCEPTED,
           tx,
         );
-        await circleMemberRepository.create(
+        await circleMemberService.create(
           {
             circleId: circle.id,
             userId: targetUserId,
@@ -1628,7 +1643,7 @@ class CircleService {
         return result;
 
       } else {
-        const result = await circleJoinRequestRepository.updateStatus(
+        const result = await circleJoinRequestService.updateStatus(
           joinRequest.id,
           RequestStatus.REJECTED,
           tx,
@@ -1667,7 +1682,7 @@ class CircleService {
       throw new NotFoundException(`Circle ${publicId} not found`);
     }
 
-    const member = await circleMemberRepository.findRoleByCircleId(circle.id, userId);
+    const member = await circleMemberService.findRoleByCircleId(circle.id, userId);
     if (!member) {
       throw new ForbiddenException(`User ${userId} is not a member of circle ${publicId}`);
     }
@@ -1678,7 +1693,6 @@ class CircleService {
 
 
 
-    // const quantity = await circlePostQualityLogRepository.countUserInCircle(circle.id);
     return {
       // circlePublicId: publicId,
       // userQuantity: quantity,
