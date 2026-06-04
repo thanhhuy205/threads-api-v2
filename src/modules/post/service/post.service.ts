@@ -861,7 +861,7 @@ class PostService {
       throw new Error("Users cannot hide their own posts");
     }
 
-    await postRepository.updateIsGhost(publicId, !post.isGhost);
+    // await postRepository.updateIsGhost(publicId, !post.isGhost);
     await this.bumpPostListCacheVersion();
   }
 

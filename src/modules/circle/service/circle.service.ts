@@ -1437,11 +1437,16 @@ class CircleService {
 
   async sendInvitationByAdmin({
     circlePublicId,
-    email,
+    username,
     inviterId,
     role,
     description,
   }: SendInvitationEmailAdminInterface) {
+    const user = await userService.findByUsername(username);
+    if (!user) {
+      throw new NotFoundException(`User with username ${username} not found`);
+    }
+
     const circle = await circleRepository.findByPublicId(circlePublicId);
     if (!circle) {
       throw new NotFoundException(`Circle with id ${circlePublicId} not found`);
@@ -1464,11 +1469,10 @@ class CircleService {
       throw new ForbiddenException("Admin can only invite member role");
     }
 
-    const normalizedEmail = email.trim().toLowerCase();
-    const user = await userService.findUserByEmail(normalizedEmail);
-    if (user?.id === inviterId) {
+    if (user.id === inviterId) {
       throw new BadRequestException("You cannot invite yourself");
     }
+
 
     if (user) {
       const existingMember = await circleMemberRepository.findByCircleId(
@@ -1482,78 +1486,66 @@ class CircleService {
       }
     }
 
-    let existingInvitation = user
-      ? await circleInvitationRepository.findInvitationByUserId(
-        circle.id,
-        user.id,
-      )
-      : null;
-    if (!existingInvitation) {
-      existingInvitation = await circleInvitationRepository.findInvitationByEmail(
-        circle.id,
-        normalizedEmail,
-      );
-    }
+    const invitation = await circleInvitationRepository.findInvitationById(
+      circle.id,
+      user.id,
+    );
 
     const invitationResendLimit = 3;
-    if (existingInvitation) {
-      if (existingInvitation.resentCount >= invitationResendLimit) {
+    if (invitation) {
+      if (invitation.resentCount >= invitationResendLimit) {
         throw new BadRequestException(
-          `Email ${normalizedEmail} has already been invited to join circle ${circlePublicId} multiple times`,
+          `User ${username} limit resent count invitation`,
         );
       }
-      if (existingInvitation.status === CircleInvitationStatus.ACCEPTED) {
+      if (invitation.status === CircleInvitationStatus.ACCEPTED) {
         throw new BadRequestException(
-          `Email ${normalizedEmail} has already accepted the invitation to join circle ${circlePublicId}`,
+          `User ${username} has already accepted the invitation for circle`,
         );
       }
     }
 
-    const token = crypto.randomBytes(32).toString("hex");
-    const tokenHash = hasherToken(token);
     await transactionService.doInTransaction(async (tx) => {
-      await circleInvitationRepository.upsertAdminInvitation(
-        {
-          existingInvitationId: existingInvitation?.id,
-          circleId: circle.id,
-          userId: user?.id,
-          email: normalizedEmail,
-          inviterId,
-          isUser: Boolean(user),
-          role,
-          description,
-          tokenHash,
-        },
-        tx,
-      );
-
-      await userActionLogService.logInviteSent({
-        userId: inviterId,
-        targetId: circlePublicId,
-        metadata: {
-          circleId: circle.id,
-          email: normalizedEmail,
-          invitedUserId: user?.id ?? null,
-          role,
-          source: "ADMIN_INVITATION",
-        },
-        tx,
-      });
+      await Promise.all([
+        circleInvitationRepository.upsertAdminInvitation(
+          {
+            existingInvitationId: invitation?.id,
+            circleId: circle.id,
+            userId: user.id,
+            isUser: !!user,
+            inviterId,
+            role,
+            description,
+          },
+          tx,
+        ),
+        userActionLogService.logInviteSent({
+          userId: inviterId,
+          targetId: circlePublicId,
+          metadata: {
+            circleId: circle.id,
+            username,
+            invitedUserId: user?.id ?? null,
+            role,
+            source: "ADMIN_INVITATION",
+          },
+          tx,
+        }),
+        notificationService.create(
+          {
+            recipientId: user.id,
+            actorId: inviterId,
+            type: NotificationType.INVITATION,
+            targetType: "ADMIN_INVITATION",
+            targetId: circle.publicId,
+            count: 0,
+          },
+          tx,
+        )])
     });
 
-    await emailProducer.sendInvitationEmail({
-      email: normalizedEmail,
-      token,
-      username: user?.username ?? normalizedEmail.split("@")[0],
-    });
 
     await this.bumpCircleListCacheVersion();
-    return {
-      email: normalizedEmail,
-      role,
-      isUser: Boolean(user),
-      circlePublicId,
-    };
   }
 
   async respondJoinRequest(

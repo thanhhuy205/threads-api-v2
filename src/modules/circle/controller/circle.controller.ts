@@ -1,11 +1,11 @@
-import { SendInvitationEmailDto } from "@/modules/circle/dto/admin-circle.dto";
+import { SendInvitationManageDto } from "@/modules/circle/dto/admin-circle.dto";
 import {
   BanCircleMemberDto,
   KickCircleMemberDto,
 } from "@/modules/circle/dto/manage-member.dto";
 import {
-  RespondJoinRequestDto,
   ResendInvitationDto,
+  RespondJoinRequestDto,
   ResponseInvitationDto,
 } from "@/modules/circle/dto/response-invitation.dto";
 import type { SendInvitationDto } from "@/modules/circle/dto/send-invitation.dto";
@@ -520,7 +520,7 @@ class CircleController {
 
 
   async sendInvitationByAdmin(
-    req: Request<CirclePublicIdParamsDto, {}, SendInvitationEmailDto, {}>,
+    req: Request<CirclePublicIdParamsDto, {}, SendInvitationManageDto, {}>,
     res: Response,
   ) {
     const userId = req.user?.sub;
@@ -528,10 +528,10 @@ class CircleController {
       return res.error(401, "Unauthorized");
     }
     const { publicId } = req.params;
-    const { email, role, description } = req.body;
+    const { username, role, description } = req.body;
     await circleService.sendInvitationByAdmin({
       circlePublicId: publicId,
-      email,
+      username,
       inviterId: userId,
       role,
       description,
@@ -539,7 +539,7 @@ class CircleController {
 
     return res.success(
       200,
-      `Invitation sent to ${email} for circle ${publicId} with role ${role}`,
+      `Invitation sent to ${username} for circle with role ${role}`,
     );
 
   }

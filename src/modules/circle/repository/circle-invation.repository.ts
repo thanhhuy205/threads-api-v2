@@ -459,13 +459,11 @@ class CircleInvitationRepository implements ICursorPagination<
     payload: {
       existingInvitationId?: number;
       circleId: number;
-      userId?: string;
-      email: string;
+      userId: string;
       inviterId: string;
       isUser: boolean;
       role: RoleMembership;
       description?: string;
-      tokenHash: string;
     },
     tx: Prisma.TransactionClient = prisma,
   ) {
@@ -476,11 +474,9 @@ class CircleInvitationRepository implements ICursorPagination<
         },
         data: {
           userId: payload.userId,
-          email: payload.email,
           inviterId: payload.inviterId,
           isUser: payload.isUser,
           role: payload.role,
-          tokenHash: payload.tokenHash,
           status: CircleInvitationStatus.PENDING,
           resentCount: {
             increment: 1,
@@ -493,11 +489,9 @@ class CircleInvitationRepository implements ICursorPagination<
       data: {
         circleId: payload.circleId,
         userId: payload.userId,
-        email: payload.email,
         inviterId: payload.inviterId,
         isUser: payload.isUser,
         role: payload.role,
-        tokenHash: payload.tokenHash,
         status: CircleInvitationStatus.PENDING,
       },
     });

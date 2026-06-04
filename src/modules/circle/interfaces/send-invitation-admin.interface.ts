@@ -2,7 +2,7 @@
 import { RoleMembership } from "@prisma/client";
 
 export type SendInvitationEmailAdminInterface = {
-    email: string;
+    username: string;
     role: RoleMembership;
     description?: string;
     inviterId: string;

@@ -1,5 +1,6 @@
 import { authorization } from '@/middlewares/auth';
 import { validate } from '@/middlewares/validate';
+import { sendInvitationManageSchema } from '@/modules/circle/dto/admin-circle.dto';
 import {
     resendInvitationSchema,
     respondJoinRequestSchema,
@@ -7,7 +8,6 @@ import {
 } from '@/modules/circle/dto/response-invitation.dto';
 import { Router } from 'express';
 import { circleController } from './controller/circle.controller';
-import { sendInvitationEmailSchema } from './dto/admin-circle.dto';
 import { createCircleSchema } from './dto/create-circle.dto';
 import {
     banCircleMemberSchema,
@@ -118,7 +118,7 @@ circleRouter.post(
 );
 
 circleRouter.post("/:publicId/send-invitation/manage",
-    validate(sendInvitationEmailSchema),
+    validate(sendInvitationManageSchema),
     validate(circlePublicIdParamsSchema, 'params'),
     circleController.sendInvitationByAdmin);
 circleRouter.post(
