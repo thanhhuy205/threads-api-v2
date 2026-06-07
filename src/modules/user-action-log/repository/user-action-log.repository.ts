@@ -78,6 +78,20 @@ class UserActionLogRepository {
 
     return counts;
   }
+
+  findActionInPost(params: {
+    userId: string | string[];
+    postPublicId: string;
+    actionType: ActionType;
+  }) {
+    return prisma.userActionLog.findMany({
+      where: {
+        userId: Array.isArray(params.userId) ? { in: params.userId } : params.userId,
+        type: params.actionType,
+        targetId: params.postPublicId,
+      },
+    });
+  }
 }
 
 export const userActionLogRepository = new UserActionLogRepository();

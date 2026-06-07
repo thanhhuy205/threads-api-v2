@@ -8,6 +8,12 @@ class LikeRepository {
     });
   }
 
+  async create(payload: { userId: string; postId: string; isLike: boolean }) {
+    return prisma.like.create({
+      data: payload,
+    });
+  }
+
   async deleteMany(payloads: { userId: string; postId: string; }[]) {
     if (payloads.length === 0) {
       return { count: 0 };

@@ -25,6 +25,14 @@ class UserActionLogService {
     );
   }
 
+  findActionInPost(params: {
+    userId: string | string[];
+    postPublicId: string;
+    actionType: ActionType;
+  }) {
+    return userActionLogRepository.findActionInPost(params);
+  }
+
   countActionLog(userId: string, type: ActionType) {
     return userActionLogRepository.countByType(
       {

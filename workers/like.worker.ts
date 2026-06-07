@@ -13,10 +13,6 @@ type LikeResult = {
   userId: string,
 }
 
-const redisReady = redisService.isOpen
-  ? Promise.resolve()
-  : redisService.connect();
-
 
 class LikeWorker {
   private readonly syncLockKey = redisKey.job.likeSyncInitLock();
@@ -52,31 +48,75 @@ class LikeWorker {
   }
 
   async processAddLike() {
-    const results = await this.rPopCustomBatch(QUEUE_NAME.LIKED_ADD_QUEUE, 500);
+    const results = await this.rPopCustomBatch(QUEUE_NAME.POST_LIKE_EVENT_QUEUE, 500);
     if (results.length === 0) return;
     baseLogger.info(`Processing add like jobs...`);
     const grouped = this.groupByPostPublicId(results);
 
     baseLogger.info(`Group item ${JSON.stringify(results)} ${results.length} like jobs into ${grouped.size} groups by postPublicId`);
     baseLogger.info(`Grouped like jobs: ${JSON.stringify(Array.from(grouped.entries()))}`);
-    await Promise.all([
-      likeRepository.createMany(results.map((item) => ({
-        userId: item.userId as string,
-        postId: item.postPublicId as string,
-        isLike: true,
-      }))),
-      ...Array.from(grouped.entries()).map(async ([postPublicId, items]) => {
-        const post = await postRepository.incrementLikedCount(postPublicId, items.length)
-        baseLogger.info(`Decrementing liked count for post ${postPublicId} by ${items.length}, result: ${post.ownerId}`);
-        await notificationService.sendLikeCountUpdateNotification(postPublicId, post.ownerId, items.length, items);
+
+    for (const [postPublicId, items] of grouped.entries()) {
+      const uniqueItems = Array.from(
+        new Map(items.map((item) => [item.userId, item])).values(),
+      );
+
+      const post = await postRepository.findByPublicId(postPublicId);
+
+      if (!post) {
+        baseLogger.warn({ postPublicId }, "Post not found when processing like events");
+        continue;
       }
-      ),
-    ]);
+
+      const insertedActors: typeof uniqueItems = [];
+
+      for (const item of uniqueItems) {
+        try {
+          await likeRepository.create({
+            userId: item.userId,
+            postId: post.publicId,
+            isLike: true,
+          });
+
+          insertedActors.push(item);
+        } catch (error) {
+          baseLogger.warn({
+            postPublicId,
+            userId: item.userId,
+          }, "Like already exists or failed, skip increment");
+        }
+      }
+
+      const insertedCount = insertedActors.length;
+
+      if (insertedCount === 0) {
+        continue;
+      }
+
+      const updatedPost = await postRepository.incrementLikedCount(
+        postPublicId,
+        insertedCount,
+      );
+
+      baseLogger.info({
+        postPublicId,
+        ownerId: updatedPost.ownerId,
+        insertedCount,
+      }, "Incremented liked count");
+
+      await notificationService.sendLikeCountUpdateNotification(
+        postPublicId,
+        updatedPost.ownerId,
+        insertedCount,
+        insertedActors,
+      );
+    }
+
   }
 
   async processRemoveLike() {
-    const results = await this.rPopCustomBatch(QUEUE_NAME.LIKED_REMOVE_QUEUE, 500);
-
+    const results = await this.rPopCustomBatch(QUEUE_NAME.POST_UNLIKE_EVENT_QUEUE, 500);
+    console.log("🚀 ~ file: like.worker.ts:122 ~ LikeWorker ~ processRemoveLike ~ results:", results)
     if (results.length === 0) return;
     // gom nhóm theo postPublicId để giảm số lần gọi postRepository.decrementLikedCount
     const grouped = this.groupByPostPublicId(results);
@@ -98,11 +138,10 @@ class LikeWorker {
 
 
   private async rPopCustomBatch(key: string, count: number): Promise<LikeResult[]> {
-    await redisReady;
     const elements = await redisService.rPopCount(key, count);
     if (!elements) throw new Error(`Failed to RPop batch from ${key}`);
-    baseLogger.info(`RPop batch from ${key}, got ${JSON.stringify(elements)} items`);
 
+    baseLogger.info(`RPop batch from ${key}, got ${JSON.stringify(elements)} items`);
     return elements
       .map((item) => this.safeParseLikeItem(item))
       .filter((item): item is LikeResult => item !== null);
@@ -118,7 +157,6 @@ class LikeWorker {
   }
 
   private async acquireSyncLock(token: string): Promise<boolean> {
-    await redisReady;
     const result = await redisService.set(this.syncLockKey, token, {
       NX: true,
       EX: this.syncLockTtlSeconds,
@@ -127,7 +165,6 @@ class LikeWorker {
   }
 
   private async releaseSyncLock(token: string): Promise<void> {
-    await redisReady;
     const currentToken = await redisService.get(this.syncLockKey);
 
     if (currentToken === token) {

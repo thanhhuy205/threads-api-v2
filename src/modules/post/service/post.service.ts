@@ -905,7 +905,7 @@ class PostService {
         await redisService.incr(countKey);
 
         await redisService.lPush(
-          QUEUE_NAME.LIKED_ADD_QUEUE,
+          QUEUE_NAME.POST_LIKE_EVENT_QUEUE,
           JSON.stringify({
             postPublicId: publicId,
             createdAt: new Date().toISOString(),
@@ -920,17 +920,24 @@ class PostService {
             postPublicId: publicId,
           },
         });
+
+
       }
     } else {
+
       const removed = await redisService.sRem(likeKey, userId);
       baseLogger.info(`Removed like for post ${publicId} by user ${userId}`);
-
+      baseLogger.info({
+        removed,
+        likeKey,
+        userId,
+      }, "SREM result");
       if (removed === 1) {
         await redisService.decr(countKey);
 
         baseLogger.info(`Decrementing like count for post ${publicId}`);
         await redisService.lPush(
-          QUEUE_NAME.LIKED_REMOVE_QUEUE,
+          QUEUE_NAME.POST_UNLIKE_EVENT_QUEUE,
           JSON.stringify({
             postPublicId: publicId,
             createdAt: new Date().toISOString(),
@@ -941,7 +948,7 @@ class PostService {
       }
     }
     const likeCount = await redisService.sCard(likeKey);
-    
+
     return likeCount;
   }
 

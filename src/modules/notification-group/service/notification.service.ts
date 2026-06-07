@@ -223,15 +223,20 @@ class NotificationService {
 
   }
 
-  async sendLikeCountUpdateNotification(postPublicId: string, recipientId: string, likeCount: number, itemLike: { userId: string, likeCount: number }[]) {
+  async sendLikeCountUpdateNotification(postPublicId: string, recipientId: string, likeCount: number, itemLike: {
+    postPublicId: string,
+    createdAt: Date,
+    userId: string,
+  }[]) {
     const lastActorId = itemLike?.[itemLike.length - 1]?.userId ?? null;
+    const actorIds = itemLike.map((item) => item.userId);
     const user = itemLike?.[0]?.userId ? await userService.findByUserId(lastActorId) : null;
     const notificationData = {
       groupPublicId: `like-count-update:${postPublicId}`,
       name: "Cập nhật lượt thích",
       recipientId,
       lastActorId: lastActorId,
-      actorIds: itemLike.map((item) => item.userId),
+      actorIds,
       content: likeCount >= 2 ? `${user?.username} và ${likeCount - 1} người khác đã thích bài viết của bạn` : `${user?.username ?? "Một người dùng"} đã thích bài viết của bạn`,
       avatar: user?.avatar ?? "",
       type: NotificationType.LIKE,
@@ -251,7 +256,6 @@ class NotificationService {
         lastEventAt: new Date(),
       }),
       pusherService.trigger(`private-user-notification-${recipientId}`, 'like-count-update', notificationData)]);
-    console.log(notificationData);
   }
 }
 export const notificationService = new NotificationService();
