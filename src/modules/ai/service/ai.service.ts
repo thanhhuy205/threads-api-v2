@@ -1,3 +1,4 @@
+import { BadRequestException } from "@/errors/error";
 import {
   FORMAT_MARKDOWN_PROMPT,
   GENERATE_IMAGE_PROMPT,
@@ -12,7 +13,7 @@ import { generateJob } from "@/providers/leonardo.provider";
 import type { LeonardoGenerationJob } from "@/providers/leonardo.types";
 import { openrouter } from "@/providers/openrouter.provider";
 import { ActionType, ReportTargetType } from "@prisma/client";
-import { BadRequestException } from "@/errors/error";
+import { randomUUID } from "node:crypto";
 
 type GenerateImageCaptionInput = {
   content: string;
@@ -54,6 +55,7 @@ class AiService {
     await userActionLogService.logAction({
       userId,
       type: ActionType.GENERATE_CAPTION_MD,
+      targetId: randomUUID(),
       metadata: {
         inputLength: content.length,
         outputLength: markdown.length,
@@ -94,6 +96,7 @@ class AiService {
     await userActionLogService.logAction({
       userId,
       type: ActionType.GENERATE_IMAGE,
+      targetId: sdGenerationJob.generationId,
       metadata: {
         inputLength: content.length,
       },

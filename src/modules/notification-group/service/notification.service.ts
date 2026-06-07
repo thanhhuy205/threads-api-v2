@@ -10,6 +10,8 @@ import type {
   PendingCommentNotificationRedisPayload,
 } from "@/modules/notification-group/interface/notification.types";
 import { notificationRepository } from "@/modules/notification-group/repository/notification.repository";
+import { pusherService } from "@/modules/pusher/service/pusher.service";
+import { userService } from "@/modules/user/service/user.service";
 import { redisService } from "@/providers/redis.provider";
 import {
   buildCursorPagination,
@@ -208,7 +210,7 @@ class NotificationService {
 
     pipeline.expire(messageKey, 30);
 
-    // debounce trong 3s để tránh gửi quá nhiều notification khi
+    // gom lại trong 3s để tránh gửi quá nhiều notification khi
     // có nhiều tin nhắn được gửi trong cùng một cuộc trò chuyện
     redisService.zAdd(NOTIFICATION_JOB_KEY.REALTIME_CHAT_NOTIFICATION, {
       score: Date.now() + 3000,
@@ -219,6 +221,37 @@ class NotificationService {
     await pipeline.exec();
 
 
+  }
+
+  async sendLikeCountUpdateNotification(postPublicId: string, recipientId: string, likeCount: number, itemLike: { userId: string, likeCount: number }[]) {
+    const lastActorId = itemLike?.[itemLike.length - 1]?.userId ?? null;
+    const user = itemLike?.[0]?.userId ? await userService.findByUserId(lastActorId) : null;
+    const notificationData = {
+      groupPublicId: `like-count-update:${postPublicId}`,
+      name: "Cập nhật lượt thích",
+      recipientId,
+      lastActorId: lastActorId,
+      actorIds: itemLike.map((item) => item.userId),
+      content: likeCount >= 2 ? `${user?.username} và ${likeCount - 1} người khác đã thích bài viết của bạn` : `${user?.username ?? "Một người dùng"} đã thích bài viết của bạn`,
+      avatar: user?.avatar ?? "",
+      type: NotificationType.LIKE,
+      targetType: "POST",
+    };
+
+    baseLogger.info(`Enqueuing like count update notification for recipient ${recipientId} for post ${postPublicId} with like count ${likeCount}`);
+    await Promise.all([
+      notificationRepository.create({
+        recipientId,
+        type: NotificationType.LIKE,
+        targetType: "POST",
+        targetId: postPublicId,
+        actorIds: itemLike.map((item) => item.userId),
+        count: likeCount,
+        lastActorId: itemLike?.[0]?.userId,
+        lastEventAt: new Date(),
+      }),
+      pusherService.trigger(`private-user-notification-${recipientId}`, 'like-count-update', notificationData)]);
+    console.log(notificationData);
   }
 }
 export const notificationService = new NotificationService();

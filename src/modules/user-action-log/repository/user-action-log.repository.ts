@@ -6,32 +6,29 @@ type UserActionLogDbClient = Prisma.TransactionClient | typeof prisma;
 export type CreateUserActionLogInput = {
   userId: string;
   type: ActionType;
-  targetId?: string;
+  targetId: string;
   metadata?: Prisma.InputJsonValue;
 };
 
-const userActionLogSelect = {
-  id: true,
-  userId: true,
-  type: true,
-  targetId: true,
-  metadata: true,
-  createdAt: true,
-} satisfies Prisma.UserActionLogSelect;
-
 class UserActionLogRepository {
-  create(
-    input: CreateUserActionLogInput,
-    tx: UserActionLogDbClient = prisma,
-  ) {
-    return tx.userActionLog.create({
-      data: {
+  create(input: CreateUserActionLogInput, tx: UserActionLogDbClient = prisma) {
+    return tx.userActionLog.upsert({
+      where: {
+        userId_type_targetId: {
+          userId: input.userId,
+          type: input.type,
+          targetId: input.targetId,
+        },
+      },
+      create: {
         userId: input.userId,
         type: input.type,
         targetId: input.targetId,
-        ...(input.metadata !== undefined ? { metadata: input.metadata } : {}),
+        metadata: input.metadata,
       },
-      select: userActionLogSelect,
+      update: {
+        metadata: input.metadata,
+      },
     });
   }
 

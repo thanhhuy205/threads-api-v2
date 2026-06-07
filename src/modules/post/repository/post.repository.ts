@@ -490,22 +490,32 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
       data: { isHidden },
     });
   }
-
-  // Tăng count ở bảng post
-  async incrementLikedCount(publicId: string, count: number): Promise<void> {
-    await prisma.$executeRaw`
-    UPDATE posts
-    SET likes_count = GREATEST(likes_count + ${count}, 0)
-    WHERE public_id = ${publicId}
-  `;
+  // TĂNG count + lấy chủ post
+  async incrementLikedCount(publicId: string, count: number): Promise<{ likesCount: number; ownerId: string }> {
+    return prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`
+      UPDATE posts
+      SET likes_count = GREATEST(likes_count + ${count}, 0)
+      WHERE public_id = ${publicId}
+    `
+      const rows = await tx.$queryRaw<{ likes_count: number; user_id: string }[]>`
+      SELECT likes_count, user_id
+      FROM posts
+      WHERE public_id = ${publicId}
+    `
+      return { likesCount: rows[0].likes_count, ownerId: rows[0].user_id }
+    })
   }
-  // Tăng count ở bảng post
+
+  // GIẢM count + lấy chủ post (tương tự)
   async decrementLikedCount(publicId: string, count: number): Promise<void> {
     await prisma.$executeRaw`
-    UPDATE posts
-    SET likes_count = GREATEST(likes_count - ${count}, 0)
-    WHERE public_id = ${publicId}
-  `;
+      UPDATE posts
+      SET likes_count = GREATEST(likes_count - ${count}, 0)
+      WHERE public_id = ${publicId}
+    `
+
+
   }
 
   async updateIsDisinformation(publicId: string, isDisinformation: boolean): Promise<void> {

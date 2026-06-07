@@ -3,7 +3,7 @@ import { userActionLogRepository } from "../repository/user-action-log.repositor
 
 type LogActionInput = {
   userId: string;
-  targetId?: string;
+  targetId: string;
   metadata?: Prisma.InputJsonValue;
   tx?: Prisma.TransactionClient;
 };

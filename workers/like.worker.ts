@@ -1,4 +1,5 @@
 import { baseLogger } from "@/middlewares/logger";
+import { notificationService } from "@/modules/notification-group/service/notification.service";
 import { LIKE_JOB_NAME, QUEUE_NAME } from "../src/constants/queue";
 import { redisKey } from "../src/constants/resolve-key/redis-key";
 import { likeRepository } from '../src/modules/post/repository/like.repository';
@@ -64,8 +65,11 @@ class LikeWorker {
         postId: item.postPublicId as string,
         isLike: true,
       }))),
-      ...Array.from(grouped.entries()).map(([postPublicId, items]) =>
-        postRepository.incrementLikedCount(postPublicId, items.length)
+      ...Array.from(grouped.entries()).map(async ([postPublicId, items]) => {
+        const post = await postRepository.incrementLikedCount(postPublicId, items.length)
+        baseLogger.info(`Decrementing liked count for post ${postPublicId} by ${items.length}, result: ${post.ownerId}`);
+        await notificationService.sendLikeCountUpdateNotification(postPublicId, post.ownerId, items.length, items);
+      }
       ),
     ]);
   }

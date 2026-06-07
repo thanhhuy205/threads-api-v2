@@ -751,12 +751,13 @@ model UserActionLog {
   id        Int        @id @default(autoincrement())
   userId    String     @map("user_id")
   type      ActionType @map("type_enum")
-  targetId  String?
+  targetId  String
   metadata  Json?
   createdAt DateTime   @default(now()) @map("created_at")
 
   user User @relation(fields: [userId], references: [id])
 
+  @@unique([userId, type, targetId], map: "uq_user_action_logs_user_type_target")
   @@index([userId], map: "idx_user_action_logs_user_id")
   @@index([type], map: "idx_user_action_logs_type")
   @@index([createdAt], map: "idx_user_action_logs_created_at")
