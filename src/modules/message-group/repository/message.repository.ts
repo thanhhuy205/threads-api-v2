@@ -125,7 +125,7 @@ class MessageRepository
       },
       data: {
         statusMessage: status,
-        lastReadAt: new Date(),
+        lastSeenAt: new Date(),
       },
 
     });

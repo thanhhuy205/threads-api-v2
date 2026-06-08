@@ -117,11 +117,16 @@ class MemberMessageGroupRepository {
     return tx.message.updateMany({
       where: {
         messageGroupId,
-        userId,
+        senderId: {
+          not: userId,
+        },
+        statusMessage: {
+          notIn: [StatusMessage.READ, StatusMessage.FAILED],
+        },
       },
       data: {
         statusMessage: StatusMessage.READ,
-        lastReadAt: new Date(),
+        lastSeenAt: new Date(),
       },
     });
   }

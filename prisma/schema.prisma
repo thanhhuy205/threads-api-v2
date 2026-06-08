@@ -420,6 +420,7 @@ model Message {
   createdAt      DateTime      @default(now()) @map("created_at")
   updatedAt      DateTime      @updatedAt @map("updated_at")
   statusMessage  StatusMessage @default(PENDING) @map("status_message_enum")
+  lastSeenAt     DateTime?     @map("last_seen_at")
 
   sender       User         @relation(fields: [senderId], references: [id])
   messageGroup MessageGroup @relation("MessageGroupMessages", fields: [messageGroupId], references: [id])
