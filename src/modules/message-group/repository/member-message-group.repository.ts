@@ -1,6 +1,6 @@
 import prisma from "@/config/prisma";
 import { buildPagination } from "@/shared/pagination/cursor-pagination";
-import { Prisma } from "@prisma/client";
+import { Prisma, StatusMessage } from "@prisma/client";
 
 const memberMessageGroupSelect = {
   id: true,
@@ -110,6 +110,18 @@ class MemberMessageGroupRepository {
       },
       data: {
         unreadCount: 0,
+      },
+    });
+  }
+  updateMessageStatusReadAll(messageGroupId: number, userId: string, tx: Prisma.TransactionClient = prisma) {
+    return tx.message.updateMany({
+      where: {
+        messageGroupId,
+        userId,
+      },
+      data: {
+        statusMessage: StatusMessage.READ,
+        lastReadAt: new Date(),
       },
     });
   }

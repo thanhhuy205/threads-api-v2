@@ -1,4 +1,5 @@
 import { messageGroupRepository } from "@/modules/message-group/repository/message-group.repository";
+import { messageService } from "@/modules/message-group/service/message.service";
 import {
   buildCursorPagination,
   type PaginationResponse,
@@ -63,13 +64,19 @@ class MessageGroupService {
     });
   }
 
-  countUnreadGroupsByUserId(userId: string) {
-    return messageGroupRepository.countUnreadGroupsByUserId(userId);
+  async countUnreadGroupsByUserId(userId: string) {
+    const count = await messageGroupRepository.countUnreadGroupsByUserId(userId);
+    if (count > 0) {
+      await messageService.updateReadStatusByUser(userId);
+    }
+    return count;
   }
 
   async findExistingPrivateGroup(groupPublicId: string, userId: string, tx?: Prisma.TransactionClient) {
     return messageGroupRepository.findUserExistingPrivateGroup(userId, groupPublicId, tx);
   }
+
+
 }
 
 export const messageGroupService = new MessageGroupService();

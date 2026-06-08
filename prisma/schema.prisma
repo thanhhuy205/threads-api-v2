@@ -212,6 +212,14 @@ enum ExpReason {
   CPR_FAIL
 }
 
+enum StatusMessage {
+  PENDING
+  SENT
+  DELIVERED
+  READ
+  FAILED
+}
+
 model Role {
   id              String           @id @default(cuid())
   name            String           @unique @db.VarChar(20)
@@ -404,13 +412,14 @@ model MemberMessageGroup {
 }
 
 model Message {
-  id             Int      @id @default(autoincrement())
-  publicId       String   @unique @default(cuid()) @map("public_id")
-  messageGroupId Int      @map("message_group_id")
-  senderId       String   @map("sender_id")
-  content        String   @db.Text
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  id             Int           @id @default(autoincrement())
+  publicId       String        @unique @default(cuid()) @map("public_id")
+  messageGroupId Int           @map("message_group_id")
+  senderId       String        @map("sender_id")
+  content        String        @db.Text
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+  statusMessage  StatusMessage @default(PENDING) @map("status_message_enum")
 
   sender       User         @relation(fields: [senderId], references: [id])
   messageGroup MessageGroup @relation("MessageGroupMessages", fields: [messageGroupId], references: [id])

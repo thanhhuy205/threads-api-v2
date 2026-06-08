@@ -10,3 +10,12 @@ export const createMessageSchema = z.object({
 });
 
 export type CreateMessageDto = z.infer<typeof createMessageSchema>;
+
+export const updateMessageStatusSchema = z.object({
+  isDelivery: z.boolean({
+    required_error: "isDelivery is required",
+    invalid_type_error: "isDelivery must be a boolean",
+  }),
+});
+
+export type UpdateMessageStatusDto = z.infer<typeof updateMessageStatusSchema>;

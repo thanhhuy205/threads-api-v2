@@ -5,7 +5,7 @@ import {
   type PaginationResponse,
 } from "@/shared/pagination/cursor-pagination";
 import { transactionService } from "@/shared/transaction/transaction.service";
-import { Prisma } from "@prisma/client";
+import { Prisma, StatusMessage } from "@prisma/client";
 
 type MessageListRow = Awaited<
   ReturnType<typeof messageRepository.findMessagesByGroupIdAndPublicId>
@@ -20,8 +20,14 @@ class MessageService {
     },
     tx?: Prisma.TransactionClient,
   ) {
-    const message = await transactionService.doInTransaction(async (tx) => {
-      const result = await messageRepository.create(data, tx);
+    const createMessage = async (tx: Prisma.TransactionClient) => {
+      const result = await messageRepository.create(
+        {
+          ...data,
+          statusMessage: StatusMessage.SENT,
+        },
+        tx,
+      );
 
       await memberMessageGroupRepository.incrementUnreadCountByGroupId(
         data.messageGroupId,
@@ -30,13 +36,33 @@ class MessageService {
       );
 
       return result;
-    });
+    };
+
+    const message = tx
+      ? await createMessage(tx)
+      : await transactionService.doInTransaction(createMessage);
 
     return message;
   }
 
   findMessageByPublicIdAndGroupId(publicId: string, messageGroupId: number) {
     return messageRepository.findByPublicIdAndGroupId(publicId, messageGroupId);
+  }
+
+  updateMessageStatus({
+    messageGroupId,
+    messagePublicId,
+    statusMessage,
+  }: {
+    messageGroupId: number;
+    messagePublicId: string;
+    statusMessage: StatusMessage;
+  }) {
+    return messageRepository.updateStatusByPublicIdAndGroupId(
+      messagePublicId,
+      messageGroupId,
+      statusMessage,
+    );
   }
 
   async getMessagesByGroupId({
@@ -69,6 +95,16 @@ class MessageService {
       messageGroupId,
       recipientId,
     )
+  }
+  updateReadStatus(messageGroupId: number, recipientId: string) {
+    return memberMessageGroupRepository.updateMessageStatusReadAll(
+      messageGroupId,
+      recipientId,
+    )
+  }
+
+  updateReadStatusByUser(userId: string) {
+    return messageRepository.updateMessageStatusByUserId(userId, StatusMessage.READ);
   }
 }
 

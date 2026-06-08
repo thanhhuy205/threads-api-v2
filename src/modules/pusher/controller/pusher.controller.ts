@@ -37,6 +37,19 @@ class PusherController {
       return res.json(pusherService.authorizeChannel(socketId, channelName));
     }
 
+    if (channelName.startsWith("private-room-")) {
+      console.log("Authorizing private chat room channel:", channelName);
+      const parts = channelName.split("private-room-");
+      const conversationId = parts[1];
+      const messageGroup = await messageGroupService.findByPublicId(conversationId);
+      console.log(conversationId, messageGroup);
+      if (!messageGroup) {
+        throw new ForbiddenException("Channel is not accessible");
+      }
+      await messageMemberService.assertMemberOrThrow(messageGroup.id, userId);
+
+      return res.json(pusherService.authorizeChannel(socketId, channelName));
+    }
     if (channelName === pusherChannel.privateNotification(userId)) {
       return res.json(pusherService.authorizeChannel(socketId, channelName));
     }

@@ -1,6 +1,9 @@
 import { UnauthorizedException } from "@/errors/error";
 import { CreateMessageGroupDto } from "@/modules/message-group/dto/create-message-group.dto";
-import { CreateMessageDto } from "@/modules/message-group/dto/create-message.dto";
+import {
+  CreateMessageDto,
+  UpdateMessageStatusDto,
+} from "@/modules/message-group/dto/create-message.dto";
 import { messageGroupFacadeService } from "@/modules/message-group/service/message-group-facade.service";
 import { getPagination } from "@/shared/pagination/cursor-pagination";
 import type { Request, Response } from "express";
@@ -60,6 +63,30 @@ class MessageGroupController {
     });
 
     return res.paginate(messages);
+  }
+
+  async updateMessageStatus(
+    req: Request<
+      { publicId: string; messagePublicId: string },
+      {},
+      UpdateMessageStatusDto
+    >,
+    res: Response,
+  ) {
+    const userId = req.user?.sub;
+
+    if (!userId) {
+      throw new UnauthorizedException();
+    }
+
+    const message = await messageGroupFacadeService.updateMessageStatus({
+      groupPublicId: req.params.publicId,
+      messagePublicId: req.params.messagePublicId,
+      userId,
+      isDelivery: req.body.isDelivery,
+    });
+
+    return res.success(200, "Message status updated successfully", message);
   }
 
   async getMessageGroups(req: Request, res: Response) {

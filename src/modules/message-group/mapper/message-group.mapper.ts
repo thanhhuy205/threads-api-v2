@@ -1,4 +1,4 @@
-import { GroupType } from "@prisma/client";
+import { GroupType, StatusMessage } from "@prisma/client";
 
 type MessageResponseInput = {
   publicId: string;
@@ -7,6 +7,7 @@ type MessageResponseInput = {
   },
   senderId: string;
   content: string;
+  statusMessage: StatusMessage;
   createdAt: Date;
 };
 
@@ -37,6 +38,7 @@ export const mapMessageResponse = (message: MessageResponseInput) => ({
   messageGroupId: message.messageGroup.publicId,
   senderId: message.senderId,
   content: message.content,
+  statusMessage: message.statusMessage,
   createdAt: message.createdAt,
 });
 

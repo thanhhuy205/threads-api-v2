@@ -38,6 +38,19 @@ const publicIdPathParameter = [
   },
 ];
 
+const messagePublicIdPathParameter = [
+  {
+    name: "messagePublicId",
+    in: "path",
+    required: true,
+    schema: {
+      type: "string",
+      example: "cmx8j6h0w0001f4tk7n2v8k9p",
+    },
+    description: "Message public id",
+  },
+];
+
 export const messageGroupSwaggerSchemas = {
   MessageGroupPagination: {
     type: "object",
@@ -79,6 +92,16 @@ export const messageGroupSwaggerSchemas = {
       },
     },
     required: ["content", "clientMessageId"],
+  },
+  MessageStatusUpdateRequest: {
+    type: "object",
+    properties: {
+      isDelivery: {
+        type: "boolean",
+        example: true,
+      },
+    },
+    required: ["isDelivery"],
   },
   MessageGroupMemberUser: {
     type: "object",
@@ -124,9 +147,14 @@ export const messageGroupSwaggerSchemas = {
     type: "object",
     properties: {
       publicId: { type: "string" },
-      messageGroupId: { type: "integer" },
+      messageGroupId: { type: "string" },
       senderId: { type: "string" },
       content: { type: "string" },
+      statusMessage: {
+        type: "string",
+        enum: ["PENDING", "SENT", "DELIVERED", "READ", "FAILED"],
+        example: "SENT",
+      },
       createdAt: { type: "string", format: "date-time" },
     },
     required: [
@@ -134,6 +162,7 @@ export const messageGroupSwaggerSchemas = {
       "messageGroupId",
       "senderId",
       "content",
+      "statusMessage",
       "createdAt",
     ],
   },
@@ -151,6 +180,18 @@ export const messageGroupSwaggerSchemas = {
     properties: {
       success: { type: "boolean", example: true },
       message: { type: "string", example: "Message sent successfully" },
+      data: { $ref: "#/components/schemas/MessageItem" },
+    },
+    required: ["success", "message", "data"],
+  },
+  MessageStatusSuccessResponse: {
+    type: "object",
+    properties: {
+      success: { type: "boolean", example: true },
+      message: {
+        type: "string",
+        example: "Message status updated successfully",
+      },
       data: { $ref: "#/components/schemas/MessageItem" },
     },
     required: ["success", "message", "data"],
@@ -285,6 +326,40 @@ export const messageGroupSwaggerPaths = {
         },
         401: {
           description: AUTH_MESSAGE.TOKEN_INVALID,
+        },
+      },
+    },
+  },
+  "/message-groups/{publicId}/messages/{messagePublicId}/status": {
+    patch: {
+      tags: ["MessageGroup"],
+      summary: "Update message delivery status",
+      security: bearerAuthSecurity,
+      parameters: [...publicIdPathParameter, ...messagePublicIdPathParameter],
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: { $ref: "#/components/schemas/MessageStatusUpdateRequest" },
+          },
+        },
+      },
+      responses: {
+        200: {
+          description: "Message status updated successfully",
+          content: {
+            "application/json": {
+              schema: {
+                $ref: "#/components/schemas/MessageStatusSuccessResponse",
+              },
+            },
+          },
+        },
+        401: {
+          description: AUTH_MESSAGE.TOKEN_INVALID,
+        },
+        404: {
+          description: "Message group or message not found",
         },
       },
     },

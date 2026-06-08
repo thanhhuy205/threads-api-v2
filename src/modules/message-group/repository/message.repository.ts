@@ -1,6 +1,6 @@
 import prisma from "@/config/prisma";
 import { buildPagination } from "@/shared/pagination/cursor-pagination";
-import { Prisma } from "@prisma/client";
+import { Prisma, StatusMessage } from "@prisma/client";
 
 const messageSelect = {
   publicId: true,
@@ -11,6 +11,7 @@ const messageSelect = {
   },
   senderId: true,
   content: true,
+  statusMessage: true,
   createdAt: true,
 
 } satisfies Prisma.MessageSelect;
@@ -45,6 +46,7 @@ class MessageRepository
       messageGroupId: number;
       senderId: string;
       content: string;
+      statusMessage: StatusMessage;
     },
     tx: Prisma.TransactionClient = prisma,
   ) {
@@ -67,6 +69,37 @@ class MessageRepository
     });
   }
 
+  async updateStatusByPublicIdAndGroupId(
+    publicId: string,
+    messageGroupId: number,
+    statusMessage: StatusMessage,
+    tx: Prisma.TransactionClient = prisma,
+  ) {
+    const message = await tx.message.findFirst({
+      where: {
+        publicId,
+        messageGroupId,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!message) {
+      return null;
+    }
+
+    return tx.message.update({
+      where: {
+        id: message.id,
+      },
+      data: {
+        statusMessage,
+      },
+      select: messageSelect,
+    });
+  }
+
   findMessagesByGroupIdAndPublicId(
     messageGroupId: number,
     messagePublicId: string | undefined,
@@ -81,6 +114,23 @@ class MessageRepository
       cursor: messagePublicId ? { publicId: messagePublicId } : undefined,
     });
   }
+
+  updateMessageStatusByUserId(userId: string, status: StatusMessage, tx: Prisma.TransactionClient = prisma) {
+    return tx.message.updateMany({
+      where: {
+        senderId: userId,
+        statusMessage: {
+          notIn: [StatusMessage.READ, StatusMessage.FAILED],
+        },
+      },
+      data: {
+        statusMessage: status,
+        lastReadAt: new Date(),
+      },
+
+    });
+  }
+
 }
 
 export const messageRepository = new MessageRepository();

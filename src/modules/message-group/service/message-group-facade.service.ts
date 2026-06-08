@@ -12,7 +12,7 @@ import { pusherChannel } from "@/modules/pusher/channel/pusher-channel";
 import { pusherService } from "@/modules/pusher/service/pusher.service";
 import { userService } from "@/modules/user/service/user.service";
 import { transactionService } from "@/shared/transaction/transaction.service";
-import { GroupType, Prisma } from "@prisma/client";
+import { GroupType, Prisma, StatusMessage } from "@prisma/client";
 import { messageGroupService } from "./message-group.service";
 import { messageMemberService } from "./message-member.service";
 import { messageService } from "./message.service";
@@ -176,11 +176,39 @@ class MessageGroupFacadeService {
     });
 
     await messageService.markMessagesRead(messageGroup.id, userId);
+    await messageService.updateReadStatus(messageGroup.id, userId);
 
     return {
       ...messages,
       rows: messages.rows.map((message) => mapMessageResponse(message)),
     };
+  }
+
+  async updateMessageStatus({
+    groupPublicId,
+    messagePublicId,
+    userId,
+    isDelivery,
+  }: {
+    groupPublicId: string;
+    messagePublicId: string;
+    userId: string;
+    isDelivery: boolean;
+  }) {
+    const messageGroup = await this.findMessageGroupOrThrow(groupPublicId);
+    await messageMemberService.assertMemberOrThrow(messageGroup.id, userId);
+
+    const message = await messageService.updateMessageStatus({
+      messageGroupId: messageGroup.id,
+      messagePublicId,
+      statusMessage: isDelivery ? StatusMessage.DELIVERED : StatusMessage.FAILED,
+    });
+
+    if (!message) {
+      throw new NotFoundException(`Message ${messagePublicId} not found`);
+    }
+
+    return mapMessageResponse(message);
   }
 
   async getMessageGroups({
@@ -197,6 +225,9 @@ class MessageGroupFacadeService {
       after,
       take,
     });
+
+
+
 
     return {
       ...groups,
