@@ -1177,6 +1177,7 @@ class CircleService {
       publicId: circle.publicId,
       name: circle.name,
       description: circle.description,
+      avatarEmoji: circle.avatarEmoji,
       visibility: circle.visibility,
       memberCount: circle._count.circleMembers,
       energy,
@@ -1200,6 +1201,7 @@ class CircleService {
       visibility: data.visibility,
       createById: data.createById,
       description: data.description,
+      avatarEmoji: data.avatarEmoji,
     });
 
     await this.bumpCircleListCacheVersion();

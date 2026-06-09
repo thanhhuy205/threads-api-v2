@@ -7,15 +7,18 @@ export const circleSwaggerSchemas = {
         type: 'object',
         properties: {
             name: { type: 'string', example: 'my-circle' },
+            description: { type: 'string', example: 'A circle for sharing useful experiences and ideas.' },
+            avatarEmoji: { type: 'string', example: '🔥', description: 'Optional single emoji used as the circle avatar.' },
             visibility: { type: 'string', example: 'PUBLIC' },
         },
-        required: ['name'],
+        required: ['name', 'description'],
     },
     CircleItem: {
         type: 'object',
         properties: {
             id: { type: 'number', example: 1 },
             name: { type: 'string', example: 'my-circle' },
+            avatarEmoji: { type: ['string', 'null'], example: '🔥' },
             userId: { type: 'string', example: 'user_123' },
             visibility: { type: 'string', example: 'PUBLIC' },
             createById: { type: 'string', example: 'user_123' },
@@ -41,6 +44,7 @@ export const circleSwaggerSchemas = {
             publicId: { type: 'string', example: 'clr_123' },
             name: { type: 'string', example: 'Vòng tròn' },
             description: { type: 'string', example: 'Một circle mẫu để xem chi tiết' },
+            avatarEmoji: { type: ['string', 'null'], example: '🔥' },
             visibility: { type: 'string', example: 'PUBLIC' },
             memberCount: { type: 'number', example: 0 },
             energy: { $ref: '#/components/schemas/CircleEnergyItem' },

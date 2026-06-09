@@ -39,6 +39,7 @@ class CircleRepository implements ICursorPagination<
         publicId: true,
         description: true,
         name: true,
+        avatarEmoji: true,
         createById: true,
         createdAt: true,
         visibility: true,
@@ -91,6 +92,7 @@ class CircleRepository implements ICursorPagination<
       data: {
         name: data.name,
         description: data.description,
+        avatarEmoji: data.avatarEmoji,
         visibility: data.visibility,
         createById: data.createById,
         circleMembers: {
@@ -112,6 +114,7 @@ class CircleRepository implements ICursorPagination<
         publicId: true,
         name: true,
         description: true,
+        avatarEmoji: true,
         visibility: true,
         createdAt: true,
         updatedAt: true,
@@ -145,6 +148,7 @@ class CircleRepository implements ICursorPagination<
         publicId: true,
         name: true,
         description: true,
+        avatarEmoji: true,
         visibility: true,
         createdAt: true,
         updatedAt: true,
