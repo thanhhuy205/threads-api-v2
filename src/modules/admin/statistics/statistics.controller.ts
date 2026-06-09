@@ -4,15 +4,13 @@ import { statisticsService } from "./statistics.service";
 
 class StatisticsController {
   getOverview = async (
-    req: Request<{}, {}, {}, AdminStatsQueryDto>,
+    req: Request,
     res: Response,
   ) => {
-    const result = await statisticsService.getOverview({
-      startDate: req.query.startDate ? new Date(req.query.startDate) : undefined,
-      endDate: req.query.endDate ? new Date(req.query.endDate) : undefined,
-    });
+    const query = req.query_parsed as AdminStatsQueryDto;
+    const result = await statisticsService.getOverview(query);
 
-    return res.success(200, "Admin statistics route ready", result);
+    return res.success(200, "Admin statistics retrieved successfully", result);
   };
 }
 

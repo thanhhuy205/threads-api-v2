@@ -59,6 +59,7 @@ class HashtagTrendingRepository
         orderBy: [
           { count: "desc" },
           { updatedAt: "desc" },
+          { id: "asc" },
         ],
       },
     });

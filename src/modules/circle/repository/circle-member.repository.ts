@@ -1,7 +1,7 @@
 import prisma from "@/config/prisma";
 import { buildPagination } from "@/shared/pagination/cursor-pagination";
 import { buildPagination as buildOffsetPagination } from "@/shared/pagination/pagination";
-import { $Enums, CircleMember, Prisma } from "@prisma/client";
+import { $Enums, CircleMember, Prisma, RoleMembership } from "@prisma/client";
 
 class CircleMemberRepository implements ICursorPagination<Prisma.CircleMemberWhereInput, CircleMember> {
     findAll({ after, take, where, cursor }: {
@@ -98,7 +98,7 @@ class CircleMemberRepository implements ICursorPagination<Prisma.CircleMemberWhe
         });
     }
 
-    findMembersByCircleIdPaginated({
+    findManagersByCircleIdPaginated({
         circleId,
         page,
         limit,
@@ -112,38 +112,32 @@ class CircleMemberRepository implements ICursorPagination<Prisma.CircleMemberWhe
         return prisma.circleMember.findMany({
             where: {
                 circleId,
+                role: {
+                    in: [RoleMembership.OWNER, RoleMembership.ADMIN],
+                },
             },
             skip: offset,
             take: currentLimit,
             orderBy: [{ createdAt: "desc" }, { id: "desc" }],
             select: {
-                id: true,
-                circleId: true,
-                userId: true,
                 createdAt: true,
                 role: true,
-                _count: {
-                    select: {
-                        circlePostQuantity: true,
-                    },
-                },
                 user: {
                     select: {
-                        name: true,
                         username: true,
-                        avatar: true,
-                        bio: true,
-                        status: true
                     },
                 },
             },
         });
     }
 
-    countMembersByCircleId(circleId: number) {
+    countManagersByCircleId(circleId: number) {
         return prisma.circleMember.count({
             where: {
                 circleId,
+                role: {
+                    in: [RoleMembership.OWNER, RoleMembership.ADMIN],
+                },
             },
         });
     }

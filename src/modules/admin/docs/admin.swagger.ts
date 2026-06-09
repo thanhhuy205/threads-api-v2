@@ -176,7 +176,7 @@ export const adminSwaggerSchemas = {
         type: 'object',
         properties: {
             success: { type: 'boolean', example: true },
-            message: { type: 'string', example: 'Admin trending hashtags route ready' },
+            message: { type: 'string', example: 'Trending hashtags retrieved successfully' },
             data: { type: 'array', items: { $ref: '#/components/schemas/AdminTrendingHashtagItem' } },
             pagination: { $ref: '#/components/schemas/AdminOffsetPagination' },
         },
@@ -196,9 +196,53 @@ export const adminSwaggerSchemas = {
         type: 'object',
         properties: {
             success: { type: 'boolean', example: true },
-            message: { type: 'string', example: 'Admin statistics route ready' },
-            data: { type: 'object' },
+            message: { type: 'string', example: 'Admin statistics retrieved successfully' },
+            data: {
+                type: 'object',
+                properties: {
+                    period: {
+                        type: 'object',
+                        properties: {
+                            startAt: { type: 'string', format: 'date-time' },
+                            endAt: { type: 'string', format: 'date-time' },
+                        },
+                        required: ['startAt', 'endAt'],
+                    },
+                    postsPerDay: {
+                        type: 'array',
+                        items: {
+                            type: 'object',
+                            properties: {
+                                day: { type: 'string', format: 'date', example: '2026-06-09' },
+                                total: { type: 'integer', example: 24 },
+                            },
+                            required: ['day', 'total'],
+                        },
+                    },
+                    activeUsers: {
+                        type: 'integer',
+                        description: 'Distinct users with an action log or a non-deleted post in the selected period.',
+                        example: 18,
+                    },
+                    hotTopic: {
+                        oneOf: [
+                            {
+                                type: 'object',
+                                properties: {
+                                    id: { type: 'integer', example: 1 },
+                                    name: { type: 'string', example: 'typescript' },
+                                    count: { type: 'integer', example: 8 },
+                                },
+                                required: ['id', 'name', 'count'],
+                            },
+                            { type: 'null' },
+                        ],
+                    },
+                },
+                required: ['period', 'postsPerDay', 'activeUsers', 'hotTopic'],
+            },
         },
+        required: ['success', 'message', 'data'],
     },
     AdminDailyQuestCreateRequest: {
         type: 'object',
@@ -393,10 +437,11 @@ export const adminSwaggerPaths = {
         get: {
             tags: ['Admin'],
             summary: 'Get trending hashtags for admin',
+            description: 'Returns topics ordered by their stored usage count, highest first.',
             security: bearerAuthSecurity,
             parameters: [
-                { name: 'page', in: 'query', schema: { type: 'number', example: 1 } },
-                { name: 'limit', in: 'query', schema: { type: 'number', example: 10 } },
+                { name: 'page', in: 'query', schema: { type: 'integer', minimum: 1, default: 1 } },
+                { name: 'limit', in: 'query', schema: { type: 'integer', minimum: 1, maximum: 100, default: 10 } },
             ],
             responses: {
                 200: {
@@ -411,8 +456,23 @@ export const adminSwaggerPaths = {
     '/admin/stats': {
         get: {
             tags: ['Admin'],
-            summary: 'Get system statistics overview',
+            summary: 'Get daily post, active user, and hot topic statistics',
+            description: 'Defaults to today. A date-only endDate is inclusive; the returned period.endAt is the exclusive upper bound.',
             security: bearerAuthSecurity,
+            parameters: [
+                {
+                    name: 'startDate',
+                    in: 'query',
+                    schema: { type: 'string', format: 'date' },
+                    example: '2026-06-09',
+                },
+                {
+                    name: 'endDate',
+                    in: 'query',
+                    schema: { type: 'string', format: 'date' },
+                    example: '2026-06-09',
+                },
+            ],
             responses: {
                 200: {
                     description: 'Statistics retrieved',

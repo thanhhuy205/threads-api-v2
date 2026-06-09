@@ -2097,3 +2097,1099 @@
 //         process.exit(1);
 //     })
 //     .finally(() => prisma.$disconnect());
+
+
+
+
+
+
+import { PrismaMariaDb } from "@prisma/adapter-mariadb";
+import {
+    PostMediaStatus,
+    PostMediaType,
+    PostType,
+    PrismaClient,
+    ReplyPermission,
+    VisibilityPost,
+} from "@prisma/client";
+import dotenv from "dotenv";
+dotenv.config();
+
+// ─── Prisma setup ─────────────────────────────────────────────────────────────
+const adapter = new PrismaMariaDb({
+    port: Number(process.env.DB_PORT) || 3306,
+    host: process.env.DB_HOST || "localhost",
+    user: process.env.DB_USER || "root",
+    password: process.env.DB_PASSWORD || "password",
+    database: process.env.DB_NAME || "threads_api",
+});
+const prisma = new PrismaClient({ adapter } as any);
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function pick<T>(arr: T[]): T {
+    return arr[Math.floor(Math.random() * arr.length)];
+}
+function rand(min: number, max: number) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+function randomDate(daysAgo: number): Date {
+    return new Date(Date.now() - Math.random() * daysAgo * 86_400_000);
+}
+function shuffle<T>(arr: T[]): T[] {
+    return [...arr].sort(() => Math.random() - 0.5);
+}
+
+// ─── 200+ Hashtags (thực tế Việt Nam, phân theo chủ đề) ──────────────────────
+export const ALL_HASHTAGS: string[] = [
+    // Ẩm thực (30 tags)
+    "amthuc",
+    "foodie",
+    "xuhuongamthuc",
+    "saigonfood",
+    "hanoidishes",
+    "comtam",
+    "bunbo",
+    "pho",
+    "banhmi",
+    "cafesaigon",
+    "trasuavietnam",
+    "streetfood",
+    "homecooking",
+    "naucuoi",
+    "reviewquanan",
+    "banhngot",
+    "lauphat",
+    "nuongbbq",
+    "doanhnhan",       // sẽ dùng lại nếu cần nhưng tách riêng chủ đề
+    "hatieu",
+    "raumam",
+    "banhcuon",
+    "chebavien",
+    "cahepho",
+    "nuocep",
+    "bakery",
+    "dessertlover",
+    "vietfood",
+    "anngon",
+    "foodphotography",
+
+    // Du lịch (30 tags)
+    "dulichvietnam",
+    "travel",
+    "xuhuongdulich",
+    "phuquoc",
+    "dalat",
+    "sapa",
+    "halong",
+    "hoian",
+    "danang",
+    "nhatrang",
+    "cantho",
+    "hue",
+    "buonmathuot",
+    "phanthiet",
+    "condao",
+    "muicne",
+    "laocai",
+    "hagiang",
+    "backpacker",
+    "solotraveler",
+    "dulichbalo",
+    "checkin",
+    "sunrisevietnam",
+    "nongnghiep",
+    "homestay",
+    "campingvn",
+    "roadtrip",
+    "phongnhatourist",
+    "trekking",
+    "mountainlife",
+
+    // Thời trang & Làm đẹp (30 tags)
+    "ootd",
+    "fashion",
+    "streetstyle",
+    "skincare",
+    "beauty",
+    "trangdiem",
+    "chamsocda",
+    "hairstyle",
+    "nail",
+    "makeup",
+    "thoitrang",
+    "vintage",
+    "thrifted",
+    "outfit",
+    "mensfashion",
+    "womensfashion",
+    "summerlook",
+    "casualfit",
+    "luxuryfashion",
+    "koreanskincare",
+    "routine",
+    "glowup",
+    "lipstick",
+    "eyeshadow",
+    "sundress",
+    "denim",
+    "sneakers",
+    "handbag",
+    "accessories",
+    "watchlover",
+
+    // Công nghệ & Lập trình (25 tags)
+    "coding",
+    "developer",
+    "tech",
+    "laptrinh",
+    "javascript",
+    "typescript",
+    "reactjs",
+    "nextjs",
+    "nodejs",
+    "python",
+    "ai",
+    "machinelearning",
+    "startup",
+    "saas",
+    "webdev",
+    "devlife",
+    "programmerhumor",
+    "opensource",
+    "database",
+    "api",
+    "deployment",
+    "docker",
+    "github",
+    "freelancer",
+    "remote",
+
+    // Sức khỏe & Thể thao (20 tags)
+    "fitness",
+    "gym",
+    "yoga",
+    "chaybo",
+    "suckhoe",
+    "workout",
+    "healthyeating",
+    "weightloss",
+    "muscle",
+    "running",
+    "cycling",
+    "swimming",
+    "bongda",
+    "tennis",
+    "badminton",
+    "marathon",
+    "wellbeing",
+    "mentalhealth",
+    "meditation",
+    "pilates",
+
+    // Đời sống & Cảm xúc (20 tags)
+    "tamsu",
+    "cuocsong",
+    "nghimoi",
+    "sachvahoa",
+    "sohoc",
+    "langman",
+    "docsach",
+    "music",
+    "nhacviet",
+    "vpop",
+    "kpop",
+    "phim",
+    "series",
+    "anime",
+    "gaming",
+    "booklover",
+    "artlover",
+    "photography",
+    "sunrise",
+    "livelife",
+
+    // Động vật cưng (10 tags)
+    "meocon",
+    "cuncung",
+    "doglife",
+    "catlife",
+    "petlover",
+    "thucung",
+    "rescuedog",
+    "rescuecat",
+    "cutepet",
+    "fluffycat",
+
+    // Môi trường & Bền vững (10 tags)
+    "zerowaste",
+    "sustainable",
+    "xanhlacay",
+    "moitruong",
+    "recycling",
+    "vegancooking",
+    "plantbased",
+    "solarpanel",
+    "gogreen",
+    "ecofriendly",
+
+    // Tài chính & Đầu tư (10 tags)
+    "taichinhhcanhan",
+    "dautu",
+    "chungkhoan",
+    "realestate",
+    "batdongsan",
+    "tiettiem",
+    "muagold",
+    "crypto",
+    "financelife",
+    "sidehustle",
+
+    // Gen Z / Viral (20 tags)
+    "genzlife",
+    "viral",
+    "trending",
+    "xuhuong",
+    "funny",
+    "meme",
+    "relatable",
+    "randomthoughts",
+    "nightowl",
+    "overthinking",
+    "introvert",
+    "coffeeaddict",
+    "mondaymotivation",
+    "fridayvibes",
+    "weekendplans",
+    "nofilter",
+    "dailyvlog",
+    "asmr",
+    "satisfying",
+    "diy",
+];
+
+// ─── Image pool ───────────────────────────────────────────────────────────────
+const IMAGE_POOL: string[] = [
+    "https://i.pinimg.com/originals/88/e0/6e/88e06ede2822923413088897af065b03.jpg",
+    "https://i.pinimg.com/originals/38/5e/15/385e15ed827b40a02b4734edde8cfa8a.jpg",
+    "https://i.pinimg.com/originals/f2/58/29/f25829d5213996ef3bf765c67ed68fbb.jpg",
+    "https://i.pinimg.com/originals/0b/66/9a/0b669aa31c8781da6010960c6e1012b0.jpg",
+    "https://i.pinimg.com/originals/15/dd/c3/15ddc353abf305016f88cc6dba86fde1.jpg",
+    "https://i.pinimg.com/originals/b1/af/cf/b1afcfaf70963daaa6c2786ec7f6f2eb.jpg",
+    "https://i.pinimg.com/originals/68/f4/db/68f4db72ab2c505a01c5de443c4315fd.jpg",
+    "https://i.pinimg.com/originals/c4/71/0e/c4710ee2d312d2bf2a5bc1b478013bce.jpg",
+    "https://i.pinimg.com/originals/0a/da/bd/0adabd591af61a5f3c18d2252ccb9de4.jpg",
+    "https://i.pinimg.com/originals/98/10/47/98104778fe1e452538306d7d736284c2.png",
+    "https://i.pinimg.com/originals/a0/1d/d6/a01dd625cab0b709548f7cc6a5313283.jpg",
+    "https://i.pinimg.com/originals/47/ba/58/47ba587905d613fee12e5880066b63f6.jpg",
+    "https://i.pinimg.com/originals/ea/9b/b3/ea9bb30e50ab6ce72f93b85e4d2e04fd.jpg",
+    "https://i.pinimg.com/originals/b5/b6/49/b5b649d6ccc9591cbba28504bc7f590d.jpg",
+    "https://i.pinimg.com/originals/31/66/d4/3166d4b65811830f66c075eb73c1e012.png",
+    "https://i.pinimg.com/originals/64/a9/6f/64a96f5bb5c87b3a0820d38b19866a72.jpg",
+    "https://i.pinimg.com/originals/36/94/3d/36943d474097deeb81184928ec77528b.jpg",
+    "https://i.pinimg.com/originals/9c/b2/62/9cb262438a90c8c07984fcd4d728ef3b.jpg",
+    "https://i.pinimg.com/originals/fa/79/9f/fa799f519b2a73164993ca359209e99e.jpg",
+    "https://i.pinimg.com/originals/ea/89/2b/ea892bb809352c4dbb67b3cb68d2a11c.jpg",
+    "https://i.pinimg.com/originals/f3/ae/43/f3ae4388515cd35bcc405a91d6fce50b.jpg",
+    "https://i.pinimg.com/originals/99/a6/55/99a655ac3326ba1f6b0f9e9d5aedbbcd.jpg",
+    "https://i.pinimg.com/originals/eb/d8/03/ebd80398f0a65be8e6d224b0f3bb0893.jpg",
+    "https://i.pinimg.com/originals/3b/7c/71/3b7c719b72b34623d522dc8fca4f87ab.webp",
+    "https://i.pinimg.com/originals/ee/a9/8e/eea98e09c408ad37a44d796a51d70a1a.jpg",
+    "https://i.pinimg.com/originals/0d/7c/73/0d7c73b4e20a4fc8a99e8be866374e38.jpg",
+    "https://i.pinimg.com/originals/bf/9c/1e/bf9c1e8ab9b00118c1ff763e10566141.jpg",
+    "https://i.pinimg.com/originals/7e/02/f1/7e02f15a302b42865eca7572a5b5915f.jpg",
+    "https://i.pinimg.com/originals/28/77/c9/2877c9a6e74bccfa81b622ed46b34665.jpg",
+    "https://i.pinimg.com/originals/b1/11/7a/b1117af52695b493113d480a57029f95.jpg",
+    "https://i.pinimg.com/originals/e2/33/fa/e233fa2b27c3e6d404d955cde2541958.jpg",
+    "https://i.pinimg.com/originals/84/b5/a1/84b5a152ca0ed18d5e953005f6395e11.jpg",
+    "https://i.pinimg.com/originals/c9/bc/86/c9bc86729d1d75332adfb76c97eb064d.jpg",
+    "https://i.pinimg.com/originals/00/fd/4f/00fd4f3628a65d825138e1a2de583934.jpg",
+    "https://i.pinimg.com/originals/91/90/26/919026794d43466ec1d5a6e2fdcbbba8.jpg",
+    "https://i.pinimg.com/originals/ae/15/5a/ae155a7f304d44e7c27a38600c29af44.jpg",
+    "https://i.pinimg.com/originals/26/4d/53/264d539f2fd7313989809b3779c88483.jpg",
+    "https://i.pinimg.com/originals/94/9d/1c/949d1cf0e0890ef81f21746768f2d431.jpg",
+    "https://i.pinimg.com/originals/c9/0a/a2/c90aa2fc9a6036ead806bfca9dc3575c.jpg",
+    "https://i.pinimg.com/originals/e3/98/86/e3988646d3a8390dd6b242e3ea722d61.jpg",
+];
+
+// ─── Video pool (placeholder URLs – replace với CDN thực) ─────────────────────
+const VIDEO_POOL: string[] = [
+    "https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+    "https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+    "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+    "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+    "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
+    "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
+    "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4",
+    "https://storage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
+    "https://storage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4",
+    "https://storage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
+];
+
+// ─── Content templates theo hashtag ──────────────────────────────────────────
+type PostMediaDef =
+    | { kind: "images"; count: number }
+    | { kind: "video" }
+    | { kind: "images+video"; imgCount: number };
+
+interface PostTemplate {
+    content: string;
+    hashtag: string;
+    media: PostMediaDef;
+}
+
+/**
+ * Sinh nội dung bài viết đủ đa dạng.
+ * Mỗi hashtag được gán ít nhất 1 bài, nhiều hashtag hot được gán nhiều bài hơn
+ * để dữ liệu trending có nghĩa thống kê.
+ */
+function buildPostTemplates(): PostTemplate[] {
+    // Định nghĩa weight: hashtag hot → xuất hiện nhiều lần hơn
+    const HOT_HASHTAGS: Record<string, number> = {
+        amthuc: 8,
+        ootd: 7,
+        travel: 7,
+        dulichvietnam: 6,
+        fitness: 6,
+        skincare: 6,
+        coding: 5,
+        viral: 5,
+        genzlife: 5,
+        kpop: 5,
+        foodie: 5,
+        streetfood: 4,
+        dalat: 4,
+        saigonfood: 4,
+        meme: 4,
+        photography: 4,
+        makeup: 4,
+        gym: 4,
+        yoga: 4,
+        relatable: 4,
+        trending: 4,
+        vpop: 3,
+        mentalhealth: 3,
+        remotework: 3,
+        startup: 3,
+        petlover: 3,
+    };
+
+    const CONTENT_BY_HASHTAG: Record<string, string[]> = {
+        amthuc: [
+            "Sáng nay thức dậy làm tô bún bò tự tay. Nước dùng hầm 4 tiếng, đậm đà không kém ngoài tiệm 🍜 #amthuc",
+            "Review quán cơm tấm mới mở cuối phố – sườn than thơm, bì dai, giá chỉ 45k. Ủng hộ quán Việt nha! #amthuc",
+            "Cuối tuần làm bánh cuốn nhân tôm thịt cho cả nhà. Bí quyết: bột gạo pha theo tỉ lệ 4:1 với bột năng 🥢 #amthuc",
+        ],
+        foodie: [
+            "Hành trình ăn sập Sài Gòn tập 3: Bắt đầu từ bánh mì đặc biệt Huynh Hoa rồi kết thúc bằng kem dừa Bến Thành 😋 #foodie",
+            "Không cần đi Nhật vẫn ăn được ramen ngon ở Sài Gòn. Chỗ mình hay ghé: quán nhỏ trong hẻm Lê Thánh Tôn 🍜 #foodie",
+        ],
+        xuhuongamthuc: [
+            "Xu hướng ẩm thực 2025: Trà matcha kết hợp với đủ thứ – từ bánh mì đến lẩu. Bạn đã thử chưa? #xuhuongamthuc",
+        ],
+        saigonfood: [
+            "Sài Gòn có một điều tuyệt vời: 2h sáng vẫn kiếm được tô phở nóng hổi ở góc đường 🌙 #saigonfood",
+            "Cơm tấm Sài Gòn với cái bì thái đều, mỡ hành vàng ươm – không đâu ngon bằng 🍚 #saigonfood",
+        ],
+        hanoidishes: [
+            "Bún chả Hà Nội chuẩn: chả viên tròn đều, nước chấm thanh ngọt, ăn kèm rau thơm Hà Nội 🌿 #hanoidishes",
+        ],
+        comtam: [
+            "Chủ nhật không cần nghĩ – cơm tấm sườn bì chả, ly cà phê sữa đá là xong cuộc đời ☀️ #comtam",
+        ],
+        bunbo: [
+            "Bún bò Huế chuẩn phải có mắm ruốc và sả – hai thứ này thiếu là mất hồn hoàn toàn 🌶️ #bunbo",
+        ],
+        pho: [
+            "Phở bò Hà Nội nước trong leo lẻo, thịt tái hồng hào – ký ức mỗi sáng mùa đông tuổi thơ ❄️ #pho",
+        ],
+        banhmi: [
+            "Bánh mì Sài Gòn: vỏ giòn, nhân đầy, giá 20k – biểu tượng ẩm thực đường phố thế giới công nhận 🥖 #banhmi",
+        ],
+        cafesaigon: [
+            "Cà phê rang xay Sài Gòn buổi sáng: đắng, thơm, đậm – không cần fancy latte gì thêm ☕ #cafesaigon",
+        ],
+        trasuavietnam: [
+            "Trà sữa truyền thống không bằng cái này: trân châu đường đen, kem phô mai mặn ngọt 🧋 #trasuavietnam",
+        ],
+        streetfood: [
+            "Bánh tráng trộn vỉa hè Sài Gòn 15k – ăn xong không thể dừng được. Nghiện nặng rồi 😅 #streetfood",
+            "Street food tour Hội An sáng sớm: cao lầu, mì Quảng, bánh xèo – ăn no từ 7h sáng 🌄 #streetfood",
+        ],
+        homecooking: [
+            "Tự nấu ăn ở nhà tiết kiệm được 2-3 triệu/tháng mà còn ngon hơn, sạch hơn ngoài tiệm. Win-win! 👨‍🍳 #homecooking",
+        ],
+        naucuoi: [
+            "Hôm nay thử nấu canh chua cá lóc lần đầu. Không fail thì không phải mình 😂 nhưng lần 2 ra chuẩn nha! #naucuoi",
+        ],
+        reviewquanan: [
+            "Review nhà hàng mới thử: view đẹp 10/10, đồ ăn 7/10, service 8/10. Tổng thể đáng đi một lần #reviewquanan",
+        ],
+        banhngot: [
+            "Bánh flan cà phê tự làm: lớp kem mịn như lụa, không bọt, không tanh. Công thức đơn giản mà ai cũng làm được 🍮 #banhngot",
+        ],
+        lauphat: [
+            "Lẩu Thái hải sản mùa mưa: vừa cay vừa chua, ngồi ăn cả buổi tối. Hạnh phúc giản đơn nhất! 🌧️ #lauphat",
+        ],
+        nuongbbq: [
+            "BBQ cuối tuần ở ban công: thịt bò nướng than hoa, rau thơm, và bạn bè – không cần đi đâu xa 🥩 #nuongbbq",
+        ],
+        vietfood: [
+            "Ẩm thực Việt Nam đã lên BBC, NYT, CNN – không phải tự hào suông mà thực sự xứng đáng 🇻🇳 #vietfood",
+        ],
+        anngon: [
+            "Bí quyết ăn ngon không tốn nhiều tiền: chợ tươi mỗi sáng, nấu đủ bữa, không đặt ship liên tục 😌 #anngon",
+        ],
+        foodphotography: [
+            "Chụp ảnh đồ ăn không cần đèn studio: ánh sáng tự nhiên buổi sáng + góc 45 độ = ảnh đẹp tự nhiên 📸 #foodphotography",
+        ],
+        bakery: [
+            "Tiệm bánh nhỏ đầu hẻm mở được 3 năm, croissant bơ mỗi sáng cháy trong 30 phút – đặt trước mới có! 🥐 #bakery",
+        ],
+        dessertlover: [
+            "Chè bà ba Sài Gòn đầy đủ topping: khoai lang, bột báng, nước cốt dừa béo ngậy 🍵 #dessertlover",
+        ],
+        hatieu: [
+            "Hủ tiếu Nam Vang chuẩn vị: nước trong, ngọt thanh, thịt bằm mềm, ăn sáng không cần suy nghĩ 🍜 #hatieu",
+        ],
+        raumam: [
+            "Trồng rau mầm tại nhà 7 ngày là thu hoạch. Vừa sạch vừa rẻ, chỉ cần khay và hạt giống 🌱 #raumam",
+        ],
+        banhcuon: [
+            "Bánh cuốn Hà Nội buổi sáng: nhân thịt mộc nhĩ, chan nước mắm cà chua, điểm chút hành phi 😍 #banhcuon",
+        ],
+        chebavien: [
+            "Chè 3 màu vỉa hè Sài Gòn đúng là món bình dân nhưng cái vị đậu xanh + cốt dừa không đâu thay thế được #chebavien",
+        ],
+        nuocep: [
+            "Nước ép dứa + dưa hấu buổi sáng: detox nhanh, ngon, rẻ hơn mua chai ngoài 10 lần 🍍 #nuocep",
+        ],
+
+        // Du lịch
+        dulichvietnam: [
+            "Việt Nam từ Bắc vào Nam: mỗi vùng một tính cách, một hương vị, một nhịp sống riêng. Không bao giờ hết khám phá 🗺️ #dulichvietnam",
+            "3 ngày 2 đêm Đà Nẵng budget 3 triệu/người: xe máy, biển, phố cổ và đồ ăn đường phố. Chi tiết trong comment! #dulichvietnam",
+        ],
+        travel: [
+            "Pack đồ cho 1 tuần trong 1 chiếc ba lô 25L – không check-in, không chờ hành lý, không lo mất đồ ✈️ #travel",
+            "Du lịch không cần kế hoạch quá chi tiết: book vé, tìm chỗ ngủ, còn lại cứ để trải nghiệm dẫn đường 🧭 #travel",
+        ],
+        phuquoc: [
+            "Phú Quốc mùa khô (tháng 11 - tháng 4): biển lặng, nước xanh ngọc, lặn ngắm san hô đẹp nhất 🐠 #phuquoc",
+        ],
+        dalat: [
+            "Đà Lạt tháng 11: hoa dã quỳ vàng trên đồi, sương mù buổi sáng, cà phê nóng trong tay – hoàn hảo 🌸 #dalat",
+            "Đà Lạt không cần tour: thuê xe máy, tự chạy qua thung lũng Tình Yêu, hồ Xuân Hương – tự do hơn nhiều 🛵 #dalat",
+        ],
+        sapa: [
+            "Sapa mùa lúa chín tháng 9: ruộng bậc thang vàng ươm trải dài – đẹp hơn mọi tấm hình đã thấy 🌾 #sapa",
+        ],
+        halong: [
+            "Vịnh Hạ Long lúc bình minh, chỉ có tiếng mái chèo và sương sớm – tĩnh lặng đến khó tin 🌅 #halong",
+        ],
+        hoian: [
+            "Hội An sáng sớm 6h: đường vắng, đèn lồng hắt ánh sáng vàng, không một bóng khách du lịch. Đây là Hội An thật sự 🏮 #hoian",
+        ],
+        danang: [
+            "Đà Nẵng: thành phố cầu đẹp, biển sạch, đồ ăn ngon và người dân hiền lành. Lý do mình quay lại lần 4 rồi 🌊 #danang",
+        ],
+        nhatrang: [
+            "Nha Trang 4N3Đ: lặn ngắm san hô, tắm bùn khoáng, ăn hải sản tươi ngay bờ biển 🦞 #nhatrang",
+        ],
+        cantho: [
+            "Chợ nổi Cái Răng Cần Thơ: dậy sớm 5h sáng, thuyền đầy trái cây, không khí miền Tây không nơi nào có 🌊 #cantho",
+        ],
+        hue: [
+            "Huế – thành phố của những buổi chiều mưa, cơm Hến, và kiến trúc Nguyễn triều. Lần nào đến cũng thấy bình yên lạ thường 🌧️ #hue",
+        ],
+        hagiang: [
+            "Hà Giang tháng 10: tam giác mạch nở hoa tím hồng trên cao nguyên đá. Cung đường Mã Pí Lèng hùng vĩ không thể diễn tả 🏔️ #hagiang",
+        ],
+        backpacker: [
+            "Bí quyết backpack dài ngày: ngủ hostel, ăn chợ địa phương, di chuyển xe đêm – tiết kiệm 60% mà trải nghiệm phong phú hơn 🎒 #backpacker",
+        ],
+        solotraveler: [
+            "Solo travel không phải cô đơn – đó là tự do. Tự quyết định mọi thứ từ giờ dậy đến chỗ ăn tối 🗺️ #solotraveler",
+        ],
+        dulichbalo: [
+            "3 tuần xuyên Việt bằng xe máy: 2.500km, 15 tỉnh thành, 400k xăng. Chuyến đi rẻ nhất và đáng nhất đời 🛵 #dulichbalo",
+        ],
+        checkin: [
+            "Góc check-in Sài Gòn ít người biết: con hẻm cà phê Phùng Khắc Khoan – bức tường rêu xanh cổ kính mà đẹp xuất sắc 📸 #checkin",
+        ],
+        homestay: [
+            "Homestay ven ruộng bậc thang Mù Cang Chải: ngủ nghe tiếng suối, dậy nhìn ra mây mù. 200k/đêm, đặt sớm hết liền 🏡 #homestay",
+        ],
+        roadtrip: [
+            "Road trip Hà Nội → Hội An 10 ngày theo QL1A: ăn sập từng tỉnh, chụp ảnh dọc đường, không tour nào thay thế được 🚗 #roadtrip",
+        ],
+        trekking: [
+            "Trek Fansipan không cáp treo: 2 ngày 1 đêm, đường rừng nguyên sinh, đỉnh mây bao phủ. Kiệt sức nhưng đáng từng bước 🏔️ #trekking",
+        ],
+
+        // Thời trang & Làm đẹp
+        ootd: [
+            "Outfit hôm nay: áo linen trắng + quần linen be + dép thô. Mặc gì cũng cần thở được mùa hè Sài Gòn 😅 #ootd",
+            "Thrift flip: mua áo blazer cũ 30k, sửa vai và tay áo, đính thêm nút – ra lò chuẩn blazer 500k 🧥 #ootd",
+        ],
+        fashion: [
+            "Xu hướng thời trang Việt Nam 2025: local brand ngày càng chất, không cần international để mặc đẹp 👗 #fashion",
+        ],
+        streetstyle: [
+            "Street style Hà Nội mùa thu: tông màu đất, layer nhẹ, giày da vintage – không cần theo trend vẫn đẹp 🍂 #streetstyle",
+        ],
+        skincare: [
+            "Routine buổi sáng 5 bước cho da nhạy cảm: Cleanser → Toner → Serum HA → Kem dưỡng → Kem chống nắng. Đơn giản nhưng hiệu quả 🌿 #skincare",
+            "Review serum Vitamin C giá rẻ dưới 200k: dùng 8 tuần, da sáng lên rõ rệt, không kích ứng. Mọi người hỏi mình dùng gì nhiều quá 😄 #skincare",
+        ],
+        beauty: [
+            "Makeup tự nhiên cho ngày đi làm: BB cream, blush nhẹ, lip balm màu hồng đất – xong trong 10 phút 💄 #beauty",
+        ],
+        trangdiem: [
+            "Trang điểm cô dâu tự làm: lớp nền mỏng, má hồng gradient, mắt khói nhẹ nhàng – đơn giản mà đẹp hơn make-up rườm rà 👰 #trangdiem",
+        ],
+        chamsocda: [
+            "Chăm sóc da 0 đồng: ngủ đủ giấc, uống đủ nước, ăn nhiều rau quả. Trước khi dùng serum thì thử cái này trước 🌙 #chamsocda",
+        ],
+        hairstyle: [
+            "Cắt tóc ngắn lần đầu sau 3 năm. Nhẹ cả đầu lẫn tâm hồn 💇‍♀️ #hairstyle",
+        ],
+        nail: [
+            "Nail tự làm ở nhà: gel nail kit 300k dùng được 50 lần, tiết kiệm hơn đi tiệm 10 lần 💅 #nail",
+        ],
+        makeup: [
+            "Tip makeup cho người mới: đầu tư vào kem chống nắng tốt và blush. Hai thứ này nâng hạng sắc diện nhiều nhất 💋 #makeup",
+        ],
+        vintage: [
+            "Thrift shop buổi sáng thứ 7: tìm được áo vintage năm 90 còn nguyên tag, chất vải dày dặn không thua hàng mới 👕 #vintage",
+        ],
+        outfit: [
+            "Outfit buổi tối: áo croptop đen basic + quần ống rộng trắng + mules. Capsule wardrobe đơn giản nhưng versatile 🖤 #outfit",
+        ],
+        glowup: [
+            "6 tháng glow up: từ da mụn sần sùi đến da thủy tinh. Không magic, chỉ cần kiên trì routine và ngủ đủ giấc ✨ #glowup",
+        ],
+        sneakers: [
+            "Sneakers trắng basic: combo không bao giờ sai với bất kỳ outfit nào. Đầu tư 1 đôi tốt xài 5 năm còn rẻ hơn mua 5 đôi rẻ 👟 #sneakers",
+        ],
+        accessories: [
+            "Phụ kiện nâng outfit: một chiếc nhẫn bạc mảnh, dây chuyền layered, túi tote vải – không cần chi nhiều mà vẫn có look cuốn 💍 #accessories",
+        ],
+
+        // Công nghệ
+        coding: [
+            "Sau 1 năm tự học: từ 0 code đến có job junior dev. Không cần bootcamp, chỉ cần roadmap đúng và kỷ luật 💻 #coding",
+            "Bug 3 tiếng mới ra: thiếu dấu ; . Cuộc đời lập trình viên là vậy đó 😭 #coding",
+        ],
+        developer: [
+            "Làm developer không phải chỉ code: đọc docs, debug, communicate, review, estimate. Code chỉ chiếm 40% thôi 🧑‍💻 #developer",
+        ],
+        tech: [
+            "AI đang thay đổi cách làm việc, không phải thay thế người. Ai biết dùng AI tool đúng cách sẽ productive hơn 10 lần 🤖 #tech",
+        ],
+        javascript: [
+            "JavaScript async/await: giải thích cho người mới bằng ví dụ gọi ship đồ ăn. Không await = không biết đồ đến chưa 📦 #javascript",
+        ],
+        typescript: [
+            "Chuyển từ JS sang TS: tuần đầu khó chịu, tháng 2 thấy quen, tháng 3 không muốn về JS nữa. Type safety nghiện rồi 🔒 #typescript",
+        ],
+        ai: [
+            "Dùng AI để viết PR description, tóm tắt meeting, draft email – tiết kiệm 2 tiếng/ngày. Bạn đang dùng AI cho việc gì? 🤖 #ai",
+        ],
+        startup: [
+            "Startup lesson học xương máu: validate idea trước khi code. 6 tháng build xong mới biết không ai cần. Đau thiệt sự 💀 #startup",
+        ],
+        webdev: [
+            "Web performance: 1 giây load chậm hơn = 7% conversion giảm. Optimize ảnh, lazy load, CDN – không khó nhưng ít ai làm 🚀 #webdev",
+        ],
+        freelancer: [
+            "Freelance 2 năm: thu nhập ổn hơn đi làm công ty, nhưng tự kỷ luật và find client mới là phần khó nhất 💼 #freelancer",
+        ],
+        remote: [
+            "Work from coffee shop: tìm được quán wifi tốt, yên tĩnh, giá cà phê hợp lý ở Sài Gòn – đây là công thức hạnh phúc 🏖️ #remote",
+        ],
+        opensource: [
+            "Contribute open source lần đầu: sợ vãi nhưng maintain rất tử tế, được merge PR sau 3 lần sửa. Cảm giác đỉnh lắm! 🌟 #opensource",
+        ],
+        github: [
+            "GitHub green squares: không phải để flex, mà để nhìn lại mình đã làm gì trong 365 ngày qua 📊 #github",
+        ],
+
+        // Sức khỏe
+        fitness: [
+            "Tuần 12 tập gym liên tiếp: chưa thấy cơ bắp đâu nhưng ngủ ngon hơn, ít stress hơn, năng lượng tốt hơn. Đó là kết quả đầu tiên 💪 #fitness",
+            "Gym không cần gương selfie: tập đúng form, đủ volume, ăn đủ protein. Đơn giản vậy thôi 🏋️ #fitness",
+        ],
+        gym: [
+            "Home gym setup 5 triệu: 1 tạ điều chỉnh, 1 thảm yoga, dây kéo kháng lực. Tập được 80% bài như ngoài phòng gym 🏠 #gym",
+        ],
+        yoga: [
+            "Yoga buổi sáng 20 phút: không cần 1 tiếng, chỉ cần đều đặn. 30 ngày liên tiếp, lưng hết đau, ngủ sâu hơn 🧘‍♀️ #yoga",
+        ],
+        chaybo: [
+            "Chạy bộ sáng sớm Sài Gòn: 5h30 sáng, công viên Lê Văn Tám, không khí mát, ít xe cộ – khoảng thời gian đỉnh nhất ngày 🏃 #chaybo",
+        ],
+        suckhoe: [
+            "Không cần diet phức tạp: ăn đủ 4 nhóm, bớt đường và muối, uống 2L nước, ngủ 7-8 tiếng. Công thức sức khỏe không tốn tiền 🌿 #suckhoe",
+        ],
+        running: [
+            "Tham gia VM Hanoi Marathon lần đầu: 5km hạng mục fun run. Không cần nhanh, chỉ cần về đích và không ân hận 🏅 #running",
+        ],
+        mentalhealth: [
+            "Sức khỏe tâm thần quan trọng như thể chất: đặt giới hạn, nói không khi cần, tìm người tin tưởng để nói chuyện 🧡 #mentalhealth",
+            "Digital detox 24h: tắt điện thoại sau 9 tối. Ngủ ngon hơn, ít lo âu hơn. Thử đi sẽ thấy khác biệt 📵 #mentalhealth",
+        ],
+        meditation: [
+            "10 phút thiền mỗi sáng: không cần hướng dẫn phức tạp, chỉ cần ngồi yên, theo dõi hơi thở. 21 ngày đầu khó, sau đó nghiện 🕯️ #meditation",
+        ],
+        wellbeing: [
+            "Wellbeing không phải là spa hay retreat đắt tiền: là tập thể dục, ăn tươi, ngủ đủ, có kết nối xã hội. Bốn thứ cơ bản đó đã đủ 🌱 #wellbeing",
+        ],
+
+        // Đời sống & Cảm xúc
+        tamsu: [
+            "Đôi khi cứ nhắn tin đến nửa đêm với người không hỏi thăm ban ngày. Cô đơn có hình dạng kỳ lạ lắm 🌙 #tamsu",
+        ],
+        cuocsong: [
+            "Cuộc sống không cần phải perfect. Chỉ cần đủ tốt, đủ ý nghĩa, và đủ bình yên cho bản thân mình là được 🍃 #cuocsong",
+        ],
+        docsach: [
+            "Đọc 1 cuốn/tháng nghe nhỏ nhưng cộng lại 12 cuốn/năm. Sau 3 năm tư duy thay đổi hơn bất kỳ khoá học nào 📚 #docsach",
+        ],
+        music: [
+            "Playlist chill làm việc: lo-fi hip hop, jazz bossa nova, ambient piano. Không có lời = không bị distract 🎵 #music",
+        ],
+        vpop: [
+            "V-pop năm 2024-2025 đỉnh thật: Tùng Dương, Hoàng Thùy Linh, HIEUTHUHAI, tlinh – đủ mọi genre, chất lượng không kém K-pop 🎤 #vpop",
+        ],
+        kpop: [
+            "Concert K-pop ở Việt Nam ngày càng nhiều: không cần bay sang Hàn nữa. Fan Việt cháy hết mình 🔥 #kpop",
+            "Album mới của nhóm vừa drop: đang nghe loop không ngừng được, ai cùng stan thì cmt xuống dưới 🎧 #kpop",
+        ],
+        phim: [
+            "Phim Việt đang trên đà tăng chất: Cô Gái Từ Quá Khứ, Đất Rừng Phương Nam, Kẻ Cắp Mặt Trăng – không cần xem Hollywood! 🎬 #phim",
+        ],
+        gaming: [
+            "Gaming session cuối tuần: không cần console xịn, chỉ cần PC ổn và team bạn thân là đủ vui 🎮 #gaming",
+        ],
+        photography: [
+            "Chụp ảnh bằng điện thoại đẹp: ánh sáng tự nhiên + rule of thirds + không zoom digital. Ba điều này thôi là đủ 📱 #photography",
+            "Golden hour Sài Gòn: 17h-18h, ánh sáng cam ấm, mọi thứ đều photogenic kể cả con hẻm bình thường nhất 🌇 #photography",
+        ],
+
+        // Thú cưng
+        meocon: [
+            "Bé mèo vào nhà lạ lẫm tuần đầu, tuần 3 đã nằm trên laptop mình làm việc 😭 mèo là boss thiệt rồi 🐱 #meocon",
+        ],
+        cuncung: [
+            "Chú chó nhà mình mỗi sáng đều đứng canh cửa đợi mình dắt đi dạo. Nghĩa vụ vui nhất ngày 🐶 #cuncung",
+        ],
+        petlover: [
+            "Nuôi thú cưng dạy mình: kiên nhẫn, yêu thương vô điều kiện, và biết rằng ai đó luôn chờ mình về nhà 🐾 #petlover",
+        ],
+        catlife: [
+            "Mèo: ngủ 16 tiếng, ăn, nhìn vào hư không, đặt ngồi lên keyboard. Cuộc sống hoàn hảo không cần giải thích 😸 #catlife",
+        ],
+
+        // Gen Z Viral
+        genzlife: [
+            "Gen Z không lười, chỉ đang redefined productivity: không phải làm 12 tiếng/ngày mới là chăm chỉ 💁 #genzlife",
+            "Ký ức tuổi thơ Gen Z: Yahoo chat, Audition, chép bài nhau ở lớp rồi nạp thẻ điện thoại cuối tuần 📲 #genzlife",
+        ],
+        viral: [
+            "Video này đạt 1M view trong 24h. Bài học: authentic content + right timing > production value cao 📱 #viral",
+        ],
+        trending: [
+            "Trend ẩm thực đang hot nhất: matcha + gì cũng được, cold brew với mọi vị, và bánh mì kiểu fusion. Bạn thấy trend nào tiếp theo? 👀 #trending",
+        ],
+        xuhuong: [
+            "Xu hướng sống tối giản đang lan rộng ở giới trẻ: ít đồ hơn, ít cam kết hơn, nhiều trải nghiệm hơn. Bạn có đang theo không? ✨ #xuhuong",
+        ],
+        meme: [
+            "Meme Việt Nam 2025 hình thức mới nhất: blend pop culture quốc tế với slang địa phương – hài hơn meme nước ngoài nhiều 😂 #meme",
+        ],
+        relatable: [
+            "Cái cảm giác mở app, cuộn 30 giây rồi quên mình vào app để làm gì. Này là trauma bình thường của thế kỷ 21 😅 #relatable",
+        ],
+        overthinking: [
+            "Overthinking lúc 2h sáng: replay lại cuộc hội thoại 5 năm trước và nghĩ xem mình nên nói gì khác 🌙 #overthinking",
+        ],
+        coffeeaddict: [
+            "Số ly cà phê/ngày: 1 để tỉnh táo, 2 để productive, 3 để tồn tại. Hôm nay mình đang ở level 3 ☕ #coffeeaddict",
+        ],
+        dailyvlog: [
+            "Day in my life: dậy 6h, gym, làm việc từ quán café, chiều chạy bộ, tối nấu cơm. Routine nhàm nhưng happy 📹 #dailyvlog",
+        ],
+        diy: [
+            "DIY kệ sách từ pallet gỗ cũ: chi phí 150k, 3 tiếng làm, kết quả chuẩn nội thất Bắc Âu 🪵 #diy",
+        ],
+
+        // Môi trường
+        zerowaste: [
+            "Zero waste không cần perfect: bắt đầu từ mang túi vải, bình nước, hộp đựng đồ ăn riêng. 3 thứ này giảm được 80% rác nhựa 🌿 #zerowaste",
+        ],
+        sustainable: [
+            "Mua đồ secondhand không phải nghèo – đó là lựa chọn có trách nhiệm với môi trường và ví tiền 🌱 #sustainable",
+        ],
+        ecofriendly: [
+            "Sản phẩm eco-friendly Việt Nam đang nở rộ: ống hút tre, túi giấy kraft, hộp bã mía – không thua kém hàng ngoại nhập 🌍 #ecofriendly",
+        ],
+        gogreen: [
+            "Trồng cây ban công: sả, rau húng, ớt, cà chua cherry – vừa xanh nhà vừa có rau sạch ăn. Ai ở chung cư cũng làm được 🌿 #gogreen",
+        ],
+
+        // Tài chính
+        taichinhhcanhan: [
+            "Quy tắc 50-30-20: 50% thiết yếu, 30% muốn có, 20% tiết kiệm. Đơn giản nhưng hiệu quả hơn bất kỳ app tài chính nào 💰 #taichinhhcanhan",
+        ],
+        dautu: [
+            "Đầu tư chứng khoán 2 năm: lỗ năm đầu vì không biết gì, lãi năm 2 vì đã học. Trường phí đắt nhưng bài học xứng đáng 📈 #dautu",
+        ],
+        tiettiem: [
+            "Mẹo tiết kiệm của mình: chuyển 20% lương vào tài khoản khác ngay khi nhận lương. Không thấy = không xài được 💳 #tiettiem",
+        ],
+        sidehustle: [
+            "Side hustle của mình: dạy tiếng Anh online buổi tối, 2 học sinh/ngày = thêm 4-5 triệu/tháng không ảnh hưởng công việc chính 💼 #sidehustle",
+        ],
+
+        // Các tag còn lại
+        sunrisevietnam: ["Bình minh trên biển Mũi Né: không có gì hơn – nước yên, trời hồng, không một bóng người 🌅 #sunrisevietnam"],
+        nongnghiep: ["Về quê học nấu rượu gạo truyền thống với ông ngoại: bí quyết 50 năm, không sách nào dạy được 🌾 #nongnghiep"],
+        campingvn: ["Camping Đà Lạt trong rừng thông: dựng lều lúc 4 chiều, nướng xúc xích lúc 7 tối, ngắm sao từ 9 đến 12 ⛺ #campingvn"],
+        phongnhatourist: ["Phong Nha hệ thống hang động dài nhất thế giới – mà đến giờ vẫn còn hang chưa khám phá hết 🕯️ #phongnhatourist"],
+        mountainlife: ["Sống ở vùng núi Tây Bắc: sáng sương mù, trưa nắng vàng, tối lạnh trong chăn dày. Nhịp sống không nơi nào có 🏔️ #mountainlife"],
+        watchlover: ["Đồng hồ vintage Seiko từ những năm 80: máy cơ, kính sapphire, dây da thật. Giá 2 triệu mà chất hơn đồng hồ mới 3-4 lần 🕐 #watchlover"],
+        koreanskincare: ["10-step Korean skincare không cần dùng hết 10 bước: chọn 5 bước phù hợp với da mình là hiệu quả hơn #koreanskincare"],
+        routine: ["Morning routine của mình: 6h dậy, không điện thoại 30 phút, tập thể dục, ăn sáng nhẹ. 30 ngày đầu khó, sau đó auto 🌅 #routine"],
+        lipstick: ["Son đất Việt Nam làm tốt không kém son ngoại: màu đẹp, bền màu, giá 80-150k. Local brand xứng đáng được ủng hộ 💄 #lipstick"],
+        eyeshadow: ["Tutorial eyeshadow smoky eye cho người mới: 3 màu cơ bản là đủ, blend đều tay là xong 🎨 #eyeshadow"],
+        sundress: ["Váy hoa mùa hè: vải thoáng, màu sáng, cổ V thấp. Một chiếc versatile đi biển, đi cà phê, đi chơi đều được 🌺 #sundress"],
+        denim: ["Quần jeans washed cũ từ thập niên 90 đang comeback: vintage wash, baggy fit, không cần ủi. Mua secondhand giá 100-200k #denim"],
+        handbag: ["Túi da thật handmade Việt Nam: thợ lành nghề, chất liệu tốt, giá bằng 30% hàng ngoại cùng chất lượng 👜 #handbag"],
+        luxuryfashion: ["Luxury fashion thật sự không nằm ở logo: nằm ở chất vải, đường may, và sự vừa vặn. Đó là lý do French wardrobe minimal vẫn đẹp 🪡 #luxuryfashion"],
+        summerlook: ["Look mùa hè Sài Gòn: thoáng, sáng màu, chịu nhiệt. Linen + cotton = combo không cần nghĩ nhiều ☀️ #summerlook"],
+        casualfit: ["Casual fit không cần đắt: tee trắng basic + jeans straight + sneakers trắng. Công thức 3 món vẫn luôn đúng 👕 #casualfit"],
+        mensfashion: ["Nam mặc đẹp không cần phức tạp: fit tốt + màu trung tính + 1 điểm nhấn. Đó là toàn bộ bí quyết 👔 #mensfashion"],
+        womensfashion: ["Tủ quần áo minimalist nữ: 10 món cơ bản phối được 30+ outfit. Ít hơn, nghĩ ít hơn, mặc đẹp hơn 👗 #womensfashion"],
+        nodejs: ["Node.js với Express: backend đơn giản dựng nhanh. 3 ngày là có REST API cơ bản. Tốt cho beginner bắt đầu 🖥️ #nodejs"],
+        reactjs: ["React hooks vẫn là powerful nhất khi hiểu flow: useState → useEffect → useContext → custom hooks. Học theo thứ tự này 🔄 #reactjs"],
+        nextjs: ["Next.js App Router vs Pages Router: App Router phức tạp hơn nhưng powerful hơn. Dự án mới nên dùng App Router 🗂️ #nextjs"],
+        python: ["Python cho người không phải dev: tự động hoá Excel, xử lý file PDF, scraping data. 3 tháng học là dùng được 🐍 #python"],
+        machinelearning: ["ML không cần PhD: học sklearn, pandas, matplotlib là có thể làm được project thực tế. Bắt đầu từ linear regression #machinelearning"],
+        saas: ["Build SaaS đầu tiên: không cần tech stack fancy. Django + PostgreSQL + Stripe là đủ để ship MVP trong 2 tuần 🚀 #saas"],
+        devlife: ["Developer life: đọc code 3 tiếng, viết code 1 tiếng, attend meeting 2 tiếng, debug 2 tiếng. Đó là 1 ngày làm việc thật 🤓 #devlife"],
+        programmerhumor: ["Print('hello world') vẫn là đoạn code đầu tiên mình viết được. 5 năm sau: vẫn dùng print để debug 😂 #programmerhumor"],
+        database: ["Database indexing: đừng để sau optimize, làm ngay từ đầu. Câu query 5s → 0.1s chỉ bằng thêm 1 index đúng chỗ ⚡ #database"],
+        api: ["REST API design: resource-based URL, HTTP verbs đúng, response format nhất quán. Ba điều này là 80% của API tốt 🔌 #api"],
+        deployment: ["Deploy lần đầu lên production: nhiều thứ crash hơn local. Nhưng đó là bài học không sách nào dạy được 🖥️ #deployment"],
+        docker: ["Docker giải quyết 'works on my machine': containerise app 1 lần, chạy mọi nơi. Học Docker = tăng 30% giá trị CV 🐋 #docker"],
+        workout: ["Workout split cho người bận: Push/Pull/Legs 3 ngày/tuần. Đủ frequency, đủ volume, không cần 6 ngày gym #workout"],
+        healthyeating: ["Ăn healthy không cần khó: thêm rau vào mọi bữa ăn, giảm đường trong đồ uống, ăn đủ protein. Đơn giản hoá đi #healthyeating"],
+        weightloss: ["Giảm cân bền vững: không cần diet cực đoan. Deficit calo nhỏ + vận động đều đặn = kết quả ổn định theo tháng 📉 #weightloss"],
+        muscle: ["Tăng cơ cần 2 thứ: progressive overload và đủ protein. Bao nhiêu thứ khác chỉ là optimization 💪 #muscle"],
+        cycling: ["Đạp xe đi làm sáng sớm: 7km, 25 phút, không kẹt xe, tiết kiệm xăng, tập thể dục miễn phí. Win all round 🚴 #cycling"],
+        swimming: ["Bơi lội: bài tập toàn thân, không impact khớp, mát mẻ mùa hè. Quân sự nhất là free style 100m × 10 reps 🏊 #swimming"],
+        bongda: ["Xem bóng đá cùng bạn bè: không quan tâm đội nào thắng bằng cái không khí la hét cùng nhau 🥅 #bongda"],
+        tennis: ["Học tennis người lớn tuổi mới tập: kiên nhẫn và footwork là quan trọng nhất, không phải tay mạnh 🎾 #tennis"],
+        badminton: ["Cầu lông tối thứ 4 với đồng nghiệp: vừa tập vừa bond team tốt hơn bất kỳ team building nào trả tiền 🏸 #badminton"],
+        marathon: ["Tập marathon lần đầu: build up từ 5km, không bỏ qua long run cuối tuần, và tìm running group để có động lực 🏃‍♂️ #marathon"],
+        pilates: ["Pilates reformer sau 8 tuần: core mạnh hơn, lưng hết đau, tư thế cải thiện rõ rệt. Đắt hơn gym nhưng xứng đáng 🧘‍♀️ #pilates"],
+        nghimoi: ["Suy nghĩ mới học được: so sánh mình với version hôm qua, không phải với người khác. Ít khổ hơn rất nhiều 💭 #nghimoi"],
+        sachvahoa: ["Đọc sách giúp mình hiểu người khác hơn trước: không phải vì sách dạy cách xử lý, mà vì thấy mình trong nhân vật 📖 #sachvahoa"],
+        sohoc: ["Học sơ học tập: spaced repetition + active recall đánh bại highlight màu mè. Anki app + luyện đề = combo không fail 📝 #sohoc"],
+        langman: ["Lãng mạn giản đơn: bữa cơm nhà nấu cùng nhau, đi dạo buổi tối, ngủ sớm không điện thoại. Không cần fancy 🌙 #langman"],
+        series: ["Series Việt Nam đang ngày càng chất: 'Người Vợ Cuối Cùng', 'Biệt Dội Rồng Đen' – không cần Netflix xịn 📺 #series"],
+        anime: ["Anime 2025 hay nhất đang xem: Frieren Beyond Journey's End. Không phải action nhưng mà sâu sắc lạ 🌸 #anime"],
+        booklover: ["Thư viện Hà Nội mở cửa miễn phí: ngày lên đây đọc 2 tiếng yên tĩnh là cách mình recharge tốt nhất 📚 #booklover"],
+        artlover: ["Triển lãm nghệ thuật Sài Gòn đang mở: nghệ sĩ trẻ Việt Nam với concept đương đại – đẹp và đáng suy nghĩ 🎨 #artlover"],
+        livelife: ["Sống thật sự: không phải perfect, không phải instagrammable. Chỉ cần present, grateful, và honest 🌿 #livelife"],
+        sunrise: ["Bình minh ở bãi biển không cần diễn: chỉ cần dậy sớm và ra đứng đó. Không filter nào cần thiết 🌅 #sunrise"],
+        rescuedog: ["Nhận nuôi chó rescue: 2 tuần sợ hãi mọi thứ, tháng 2 bắt đầu vẫy đuôi, tháng 3 ngủ trên giường mình 🐕 #rescuedog"],
+        rescuecat: ["Mèo rescue nhà mình từng bị bỏ trong thùng giấy mưa. Giờ: 4kg, hay cắn, và là trung tâm vũ trụ nhà mình 🐈 #rescuecat"],
+        cutepet: ["Khoảnh khắc thú cưng: con mèo ngủ úp mặt vào lòng bàn tay. Không cần gì hơn nữa trong cuộc đời 🐾 #cutepet"],
+        fluffycat: ["Mèo Anh lông ngắn nhà mình: mặt tưởng cáu nhưng không bao giờ cắn. Judge book by cover thật 😸 #fluffycat"],
+        doglife: ["Chó Golden của mình vẫy đuôi dù đi ra ngoài 5 phút hay 5 tiếng. Loài vật trung thành nhất đúng là không phải ví von 🐕‍🦺 #doglife"],
+        thucung: ["Nuôi thú cưng responsibility lớn hơn người ta nghĩ: vet, grooming, training, không bỏ lại khi chán. Cần suy nghĩ kỹ trước khi nhận 🐾 #thucung"],
+        recycling: ["Tái chế tại nhà dễ hơn bạn nghĩ: phân loại rác vào 3 thùng: hữu cơ, tái chế, rác thải thông thường. 10 phút học là làm được ♻️ #recycling"],
+        vegancooking: ["Nấu chay không nhạt: dùng nước tương, dầu mè, ớt tươi, và rau thơm đúng cách. Bát canh rau không cần thịt vẫn có umami 🌿 #vegancooking"],
+        plantbased: ["Plant-based diet không cần full vegan: giảm thịt 50%, tăng đậu hũ, nấm, rau lá. Sức khỏe cải thiện, chi phí giảm #plantbased"],
+        moitruong: ["Thay bóng đèn LED, tắt điện khi ra khỏi phòng, không để TV standby – 3 thói quen giảm điện 15-20%/tháng 🌍 #moitruong"],
+        xanhlacay: ["Trồng cây trong nhà không cần đất: thủy canh với pothos, thị trường, lưỡi hổ. Lọc không khí và trang trí cùng lúc 🌱 #xanhlacay"],
+        solarpanel: ["Pin mặt trời mái nhà: đầu tư 80 triệu, hoàn vốn 6-7 năm, dùng 20 năm. Toán học rõ ràng, chỉ cần quyết tâm ☀️ #solarpanel"],
+        batdongsan: ["Mua nhà lần đầu ở Sài Gòn: 2 tỷ tầm tay với chung cư 60m2 ngoại ô + xe bus kết nối. Khó nhưng không impossible 🏠 #batdongsan"],
+        realestate: ["Real estate Việt Nam 2025: thị trường đang điều chỉnh, cơ hội cho người mua ở thực. Đừng mua để lướt sóng lúc này 📊 #realestate"],
+        muagold: ["Vàng tích luỹ hàng tháng: không cần mua đủ 1 chỉ, mua 0.5 chỉ/tháng cũng tích luỹ được qua năm tháng 🥇 #muagold"],
+        crypto: ["Crypto 2025: Bitcoin ETF approval, ít biến động hơn. Vẫn không phải trò chơi cho người không hiểu rủi ro ₿ #crypto"],
+        financelife: ["Không giàu = không biết quản lý tiền, không phải không có tiền. Học tài chính cá nhân ngay từ hôm nay 💸 #financelife"],
+        chungkhoan: ["Chứng khoán Việt Nam cho người mới: bắt đầu với ETF index fund, đều đặn mỗi tháng, không cần chọn cổ phiếu 📈 #chungkhoan"],
+        nightowl: ["3h sáng productivity kỳ lạ: không ai nhắn tin, não hoạt động khác lạ, code chạy mượt hơn ban ngày. Night owl life 🌙 #nightowl"],
+        introvert: ["Recharge cách của người introvert: ở nhà 1 ngày một mình, không nghe nhạc, không mạng xã hội. Sau đó ready gặp người 🤫 #introvert"],
+        mondaymotivation: ["Thứ 2 không cần ghét: nó giống như bất kỳ ngày nào khác. Cái ghét là attitude của mình với nó thôi 🌟 #mondaymotivation"],
+        fridayvibes: ["Thứ 6 office: mọi người bỗng nhiên creative, productive, và vui hơn. Tâm lý học thú vị không? 🎉 #fridayvibes"],
+        weekendplans: ["Kế hoạch cuối tuần lý tưởng: sáng tập thể dục, trưa ăn ngon cùng gia đình, chiều đọc sách, tối không điện thoại 🌅 #weekendplans"],
+        nofilter: ["Cuộc sống thật không có filter: bừa bộn, mệt mỏi, không hoàn hảo – nhưng đó là thật và đó là đủ 💙 #nofilter"],
+        asmr: ["ASMR mưa rơi ngoài cửa sổ + cà phê nóng + sách hay = combo ngủ ngon tự nhiên không cần thuốc 🌧️ #asmr"],
+        satisfying: ["Xem video sắp xếp đồ, cắt slime, và dọn dẹp xong thấy não nhẹ hẳn. Dopamine đến từ những thứ kỳ lạ nhất 😌 #satisfying"],
+        randomthoughts: ["Tại sao ngồi chờ 5 phút dài hơn làm việc 5 phút? Não người vẫn là bí ẩn chưa giải thích hết 🤔 #randomthoughts"],
+    };
+
+    const templates: PostTemplate[] = [];
+
+    // Đảm bảo mỗi hashtag có ít nhất 1 bài, và hashtag hot có nhiều bài hơn
+    for (const tag of ALL_HASHTAGS) {
+        const contents = CONTENT_BY_HASHTAG[tag];
+        if (!contents || contents.length === 0) {
+            // Fallback cho các tag chưa có content
+            templates.push({
+                content: `Chia sẻ về chủ đề #${tag} hôm nay. Bạn có suy nghĩ gì về điều này không? 💭 #${tag}`,
+                hashtag: tag,
+                media: { kind: "images", count: rand(1, 2) },
+            });
+            continue;
+        }
+
+        // Thêm tất cả content có sẵn
+        for (const content of contents) {
+            templates.push({
+                content,
+                hashtag: tag,
+                media: pickMedia(),
+            });
+        }
+
+        // Hashtag hot → thêm bài extra
+        const extraCount = (HOT_HASHTAGS[tag] ?? 1) - 1;
+        for (let e = 0; e < extraCount; e++) {
+            templates.push({
+                content: contents[e % contents.length],
+                hashtag: tag,
+                media: pickMedia(),
+            });
+        }
+    }
+
+    return templates;
+}
+
+function pickMedia(): PostMediaDef {
+    const r = Math.random();
+    if (r < 0.40) return { kind: "images", count: rand(1, 3) };
+    if (r < 0.55) return { kind: "images", count: rand(1, 5) };    // nhiều ảnh
+    if (r < 0.75) return { kind: "video" };
+    if (r < 0.90) return { kind: "images+video", imgCount: rand(1, 2) };
+    return { kind: "images", count: 1 };
+}
+
+// ─── MAIN SEED ────────────────────────────────────────────────────────────────
+async function seedHashtagPosts() {
+    console.log("\n🌱 ===== SEED HASHTAG POSTS =====\n");
+
+    // 1. Load users
+    const users = await prisma.user.findMany({
+        where: { deletedAt: null },
+        select: {
+            id: true,
+            username: true,
+            name: true,
+            avatar: true,
+            bio: true,
+        },
+        orderBy: { createdAt: "desc" },
+        take: 200,
+    });
+
+    if (users.length === 0) {
+        throw new Error("Không tìm thấy user nào. Hãy chạy seed gốc trước!");
+    }
+    console.log(`👤 Tìm thấy ${users.length} users\n`);
+
+    // 2. Load hoặc tạo Topics cho tất cả hashtag
+    console.log(`🏷️  Đảm bảo ${ALL_HASHTAGS.length} topics tồn tại...`);
+    const topicMap = new Map<string, number>(); // hashtag → topic.id
+
+    for (const tag of ALL_HASHTAGS) {
+        const topic = await prisma.topic.upsert({
+            where: { name: tag },
+            create: { name: tag, count: 0 },
+            update: {},
+            select: { id: true, name: true },
+        });
+        topicMap.set(tag, topic.id);
+    }
+    console.log(`   ✅ ${topicMap.size} topics sẵn sàng\n`);
+
+    // 3. Build templates
+    const templates = buildPostTemplates();
+    const shuffled = shuffle(templates);
+    console.log(`📋 Tổng số bài sẽ tạo: ${shuffled.length}\n`);
+
+    // 4. Tạo bài viết
+    let totalPosts = 0;
+    let totalImages = 0;
+    let totalVideos = 0;
+    let totalTopicLinks = 0;
+    const hashtagCount = new Map<string, number>();
+    let imgIdx = 0;
+    let videoIdx = 0;
+
+    for (let i = 0; i < shuffled.length; i++) {
+        const tmpl = shuffled[i];
+        const author = users[i % users.length];
+        const createdAt = randomDate(90);
+
+        // Tạo post
+        const post = await prisma.post.create({
+            data: {
+                userId: author.id,
+                content: tmpl.content,
+                type: PostType.POST,
+                visibility: VisibilityPost.PUBLIC,
+                replyPermission: pick([
+                    ReplyPermission.EVERYONE,
+                    ReplyPermission.EVERYONE,
+                    ReplyPermission.EVERYONE,
+                    ReplyPermission.FOLLOWERS,
+                ]),
+                userSnapshot: {
+                    id: author.id,
+                    username: author.username,
+                    name: author.name,
+                    avatar: author.avatar,
+                    bio: author.bio,
+                },
+                likesCount: rand(0, 800),
+                repliesCount: rand(0, 60),
+                repostsCountAndQuoteCount: rand(0, 40),
+                viewsCount: rand(100, 30000),
+                createdAt,
+                updatedAt: createdAt,
+            },
+            select: { id: true, publicId: true },
+        });
+        totalPosts++;
+
+        // Tạo media
+        const mediaDef = tmpl.media;
+        const mediaRows: {
+            postId: number;
+            url: string;
+            type: PostMediaType;
+            width?: number;
+            height?: number;
+            key: string;
+            status: PostMediaStatus;
+        }[] = [];
+
+        if (mediaDef.kind === "images") {
+            for (let m = 0; m < mediaDef.count; m++) {
+                const url = IMAGE_POOL[imgIdx++ % IMAGE_POOL.length];
+                mediaRows.push({
+                    postId: post.id,
+                    url,
+                    type: PostMediaType.IMAGE,
+                    width: pick([720, 1080, 1280]),
+                    height: pick([720, 1080, 1350]),
+                    key: `htag_img_${post.id}_${m}_${Date.now() + m}`,
+                    status: PostMediaStatus.UPLOADED,
+                });
+                totalImages++;
+            }
+        } else if (mediaDef.kind === "video") {
+            const url = VIDEO_POOL[videoIdx++ % VIDEO_POOL.length];
+            mediaRows.push({
+                postId: post.id,
+                url,
+                type: PostMediaType.VIDEO,
+                width: 1920,
+                height: 1080,
+                key: `htag_vid_${post.id}_${Date.now()}`,
+                status: PostMediaStatus.UPLOADED,
+            });
+            totalVideos++;
+        } else if (mediaDef.kind === "images+video") {
+            // Ảnh trước
+            for (let m = 0; m < mediaDef.imgCount; m++) {
+                const url = IMAGE_POOL[imgIdx++ % IMAGE_POOL.length];
+                mediaRows.push({
+                    postId: post.id,
+                    url,
+                    type: PostMediaType.IMAGE,
+                    width: pick([720, 1080, 1280]),
+                    height: pick([720, 1080, 1350]),
+                    key: `htag_img2_${post.id}_${m}_${Date.now() + m}`,
+                    status: PostMediaStatus.UPLOADED,
+                });
+                totalImages++;
+            }
+            // Video sau
+            const url = VIDEO_POOL[videoIdx++ % VIDEO_POOL.length];
+            mediaRows.push({
+                postId: post.id,
+                url,
+                type: PostMediaType.VIDEO,
+                width: 1920,
+                height: 1080,
+                key: `htag_vid2_${post.id}_${Date.now() + 999}`,
+                status: PostMediaStatus.UPLOADED,
+            });
+            totalVideos++;
+        }
+
+        if (mediaRows.length > 0) {
+            await prisma.postMedia.createMany({ data: mediaRows });
+        }
+
+        // Gắn hashtag vào TopicsPost (1 hashtag / bài)
+        const topicId = topicMap.get(tmpl.hashtag);
+        if (topicId) {
+            await prisma.topicsPost.upsert({
+                where: { postId: post.id },
+                create: {
+                    postId: post.id,
+                    topicId,
+                    isPublic: true,
+                },
+                update: { topicId },
+            });
+
+            // Tăng count cho topic
+            await prisma.topic.update({
+                where: { id: topicId },
+                data: { count: { increment: 1 } },
+            });
+
+            totalTopicLinks++;
+            hashtagCount.set(tmpl.hashtag, (hashtagCount.get(tmpl.hashtag) ?? 0) + 1);
+        }
+
+        if ((i + 1) % 50 === 0 || i === shuffled.length - 1) {
+            process.stdout.write(
+                `\r   → ${i + 1}/${shuffled.length} bài | 🖼️ ${totalImages} ảnh | 🎬 ${totalVideos} video | 🏷️ ${totalTopicLinks} hashtag`
+            );
+        }
+    }
+
+    // 5. Thống kê top trending
+    console.log("\n\n📊 ===== TOP 20 HASHTAG TRENDING =====");
+    const sorted = [...hashtagCount.entries()].sort((a, b) => b[1] - a[1]);
+    sorted.slice(0, 20).forEach(([tag, count], idx) => {
+        const bar = "█".repeat(Math.ceil(count / 2));
+        console.log(`  ${String(idx + 1).padStart(2)}. #${tag.padEnd(25)} ${count.toString().padStart(3)} bài  ${bar}`);
+    });
+
+    console.log(`
+🎉 ===== SEED HASHTAG POSTS HOÀN THÀNH =====
+   📝 Tổng posts       : ${totalPosts}
+   🖼️  Ảnh (IMAGE)      : ${totalImages}
+   🎬 Video            : ${totalVideos}
+   🏷️  Hashtag links    : ${totalTopicLinks}
+   🔢 Hashtag unique   : ${hashtagCount.size} / ${ALL_HASHTAGS.length}
+=============================================`);
+}
+
+// ─── ENTRY POINT ──────────────────────────────────────────────────────────────
+seedHashtagPosts()
+    .catch((e) => {
+        console.error("\n❌ Seed thất bại:", e);
+        process.exit(1);
+    })
+    .finally(() => prisma.$disconnect());

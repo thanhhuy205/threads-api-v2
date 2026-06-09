@@ -856,12 +856,13 @@ class PostService {
     if (!post) {
       throw new Error("Post not found");
     }
-
+    if (post.visibility === VisibilityPost.CIRCLE) {
+      throw new Error("Circle posts cannot be hidden");
+    }
     if (post.userId === userId) {
       throw new Error("Users cannot hide their own posts");
     }
 
-    // await postRepository.updateIsGhost(publicId, !post.isGhost);
     await this.bumpPostListCacheVersion();
   }
 

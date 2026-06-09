@@ -52,8 +52,9 @@ export function buildPagination({
 export function buildPaginationResponse(totalItems: number, currentPage: number, perPage: number): PaginationResponse {
     const total = totalItems;
     const lastPage = Math.ceil(total / perPage);
-    const from = (currentPage - 1) * perPage + 1;
-    const to = Math.min(currentPage * perPage, total);
+    const offset = (currentPage - 1) * perPage;
+    const from = total === 0 || offset >= total ? 0 : offset + 1;
+    const to = from === 0 ? 0 : Math.min(currentPage * perPage, total);
 
     return {
         currentPage,

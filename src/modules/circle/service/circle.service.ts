@@ -865,14 +865,20 @@ class CircleService {
       userId,
       CirclePermission.KICK_MEMBER,
     );
-    const [rows, total] = await Promise.all([
-      circleMemberService.findMembersByCircleIdPaginated({
+    const [members, total] = await Promise.all([
+      circleMemberService.findManagersByCircleIdPaginated({
         circleId: circle.id,
         page: query.page,
         limit: query.limit,
       }),
-      circleMemberService.countMembersByCircleId(circle.id),
+      circleMemberService.countManagersByCircleId(circle.id),
     ]);
+
+    const rows = members.map((member) => ({
+      username: member.user.username,
+      role: member.role,
+      joinedAt: member.createdAt,
+    }));
 
     return {
       rows,

@@ -1,56 +1,40 @@
 import prisma from "@/config/prisma";
-import { Prisma, ReportStatus, UserStatus } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import type { GetAdminStatsInput } from "./interfaces/get-admin-stats.input";
+
+type CountRow = {
+  total: bigint | number;
+};
+
+type HotTopicRow = {
+  id: number;
+  name: string;
+  usage_count: bigint | number;
+};
 
 class StatisticsRepository {
   async getOverview(input: GetAdminStatsInput) {
-    const [postsPerDay, activeUsers, totalUsers, totalPosts, pendingReports, topHashtags] =
-      await Promise.all([
-        this.countPostsPerDay(input),
-        prisma.user.count({ where: { status: UserStatus.ACTIVE } }),
-        prisma.user.count(),
-        prisma.post.count({ where: { isDeleted: false } }),
-        prisma.report.count({ where: { status: ReportStatus.PENDING } }),
-        prisma.topic.findMany({
-          take: 10,
-          orderBy: [
-            { count: "desc" },
-            { updatedAt: "desc" },
-          ],
-          select: {
-            id: true,
-            name: true,
-            count: true,
-          },
-        }),
-      ]);
+    const [postsPerDay, activeUsers, hotTopic] = await Promise.all([
+      this.countPostsPerDay(input),
+      this.countActiveUsers(input),
+      this.findHotTopic(input),
+    ]);
 
     return {
       postsPerDay,
       activeUsers,
-      totalUsers,
-      totalPosts,
-      pendingReports,
-      topHashtags,
+      hotTopic,
     };
   }
 
   private async countPostsPerDay(input: GetAdminStatsInput) {
-    const conditions = [Prisma.sql`is_deleted = false`];
-
-    if (input.startDate) {
-      conditions.push(Prisma.sql`created_at >= ${input.startDate}`);
-    }
-
-    if (input.endDate) {
-      conditions.push(Prisma.sql`created_at <= ${input.endDate}`);
-    }
-
     const rows = await prisma.$queryRaw<Array<{ day: string; total: bigint | number }>>(
       Prisma.sql`
         SELECT DATE_FORMAT(created_at, '%Y-%m-%d') AS day, COUNT(*) AS total
         FROM posts
-        WHERE ${Prisma.join(conditions, " AND ")}
+        WHERE is_deleted = false
+          AND created_at >= ${input.startAt}
+          AND created_at < ${input.endAt}
         GROUP BY DATE_FORMAT(created_at, '%Y-%m-%d')
         ORDER BY day ASC
       `,
@@ -60,6 +44,58 @@ class StatisticsRepository {
       day: row.day,
       total: Number(row.total),
     }));
+  }
+
+  private async countActiveUsers(input: GetAdminStatsInput) {
+    const rows = await prisma.$queryRaw<CountRow[]>(
+      Prisma.sql`
+        SELECT COUNT(DISTINCT activity.user_id) AS total
+        FROM (
+          SELECT user_id
+          FROM user_action_logs
+          WHERE created_at >= ${input.startAt}
+            AND created_at < ${input.endAt}
+
+          UNION
+
+          SELECT user_id
+          FROM posts
+          WHERE is_deleted = false
+            AND created_at >= ${input.startAt}
+            AND created_at < ${input.endAt}
+        ) AS activity
+      `,
+    );
+
+    return Number(rows[0]?.total ?? 0);
+  }
+
+  private async findHotTopic(input: GetAdminStatsInput) {
+    const rows = await prisma.$queryRaw<HotTopicRow[]>(
+      Prisma.sql`
+        SELECT topics.id, topics.name, COUNT(*) AS usage_count
+        FROM topics
+        INNER JOIN topics_posts ON topics_posts.topic_id = topics.id
+        INNER JOIN posts ON posts.id = topics_posts.post_id
+        WHERE posts.is_deleted = false
+          AND posts.created_at >= ${input.startAt}
+          AND posts.created_at < ${input.endAt}
+        GROUP BY topics.id, topics.name
+        ORDER BY usage_count DESC, topics.id ASC
+        LIMIT 1
+      `,
+    );
+
+    const hotTopic = rows[0];
+    if (!hotTopic) {
+      return null;
+    }
+
+    return {
+      id: hotTopic.id,
+      name: hotTopic.name,
+      count: Number(hotTopic.usage_count),
+    };
   }
 }
 

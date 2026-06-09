@@ -46,10 +46,7 @@ class CirclePostQualityLogRepository {
       take: currentLimit,
       orderBy: [{ createdAt: "desc" }, { id: "desc" }],
       select: {
-        id: true,
-        circleId: true,
         circleMemberId: true,
-        postId: true,
         score: true,
         label: true,
         hpDelta: true,
@@ -57,6 +54,20 @@ class CirclePostQualityLogRepository {
         reason: true,
         confidence: true,
         createdAt: true,
+        post: {
+          select: {
+            publicId: true,
+            userId: true,
+            content: true,
+            contentJson: true,
+            createdAt: true,
+            visibility: true,
+            replyPermission: true,
+            userSnapshot: true,
+            media: postFeedSelect.media,
+          },
+        },
+
         circleMember: {
           select: {
             id: true,

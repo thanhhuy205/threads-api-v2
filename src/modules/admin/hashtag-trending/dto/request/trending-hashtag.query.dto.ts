@@ -1,14 +1,11 @@
-/**
- * External query string for GET /admin/hashtags/trending.
- */
-export type TrendingHashtagQueryDto = {
-  /**
-   * Raw page from ?page=1.
-   */
-  page?: string | number;
+import { MAX_LIMIT } from "@/constants/pagination";
+import { z } from "zod";
 
-  /**
-   * Raw limit from ?limit=10.
-   */
-  limit?: string | number;
-};
+export const trendingHashtagQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(MAX_LIMIT).default(10),
+});
+
+export type TrendingHashtagQueryDto = z.infer<
+  typeof trendingHashtagQuerySchema
+>;

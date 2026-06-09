@@ -156,6 +156,40 @@ export const circleSwaggerSchemas = {
         },
         required: ['take', 'hasMore'],
     },
+    OffsetPagination: {
+        type: 'object',
+        properties: {
+            currentPage: { type: 'integer', example: 1 },
+            perPage: { type: 'integer', example: 10 },
+            total: { type: 'integer', example: 2 },
+            lastPage: { type: 'integer', example: 1 },
+            from: { type: 'integer', example: 1 },
+            to: { type: 'integer', example: 2 },
+        },
+        required: ['currentPage', 'perPage', 'total', 'lastPage', 'from', 'to'],
+    },
+    CircleManageMemberItem: {
+        type: 'object',
+        properties: {
+            username: { type: 'string', example: 'jane_doe' },
+            role: { type: 'string', enum: ['OWNER', 'ADMIN'], example: 'ADMIN' },
+            joinedAt: { type: 'string', format: 'date-time' },
+        },
+        required: ['username', 'role', 'joinedAt'],
+    },
+    CircleManageMembersResponse: {
+        type: 'object',
+        properties: {
+            success: { type: 'boolean', example: true },
+            message: { type: 'string', example: 'Circle members retrieved successfully' },
+            data: {
+                type: 'array',
+                items: { $ref: '#/components/schemas/CircleManageMemberItem' },
+            },
+            pagination: { $ref: '#/components/schemas/OffsetPagination' },
+        },
+        required: ['success', 'message', 'data', 'pagination'],
+    },
     CreateCircleResponse: {
         type: 'object',
         properties: {
@@ -589,6 +623,28 @@ export const circleSwaggerPaths = {
                 400: { description: COMMON_MESSAGE.BAD_REQUEST },
                 401: { description: COMMON_MESSAGE.UNAUTHORIZED },
                 403: { description: 'Requires ACCEPT_USE_JOIN permission' },
+                404: { description: COMMON_MESSAGE.NOT_FOUND },
+            },
+        },
+    },
+    '/circle/{publicId}/manage/members': {
+        get: {
+            tags: ['Circle'],
+            summary: 'Get circle owners and admins',
+            description: 'Returns paginated circle members whose role is OWNER or ADMIN. Only circle owners and admins can access this endpoint.',
+            security: bearerAuthSecurity,
+            parameters: [
+                { name: 'publicId', in: 'path', required: true, schema: { type: 'string' }, description: 'Circle public ID' },
+                { name: 'page', in: 'query', schema: { type: 'integer', minimum: 1, example: 1 } },
+                { name: 'limit', in: 'query', schema: { type: 'integer', minimum: 1, maximum: 100, example: 10 } },
+            ],
+            responses: {
+                200: {
+                    description: 'Circle owners and admins retrieved',
+                    content: { 'application/json': { schema: { $ref: '#/components/schemas/CircleManageMembersResponse' } } },
+                },
+                401: { description: COMMON_MESSAGE.UNAUTHORIZED },
+                403: { description: COMMON_MESSAGE.FORBIDDEN },
                 404: { description: COMMON_MESSAGE.NOT_FOUND },
             },
         },

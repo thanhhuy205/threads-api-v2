@@ -26,7 +26,7 @@ class CircleMemberService {
     );
   }
 
-  findMembersByCircleIdPaginated({
+  findManagersByCircleIdPaginated({
     circleId,
     page,
     limit,
@@ -35,15 +35,15 @@ class CircleMemberService {
     page: number;
     limit: number;
   }) {
-    return circleMemberRepository.findMembersByCircleIdPaginated({
+    return circleMemberRepository.findManagersByCircleIdPaginated({
       circleId,
       page,
       limit,
     });
   }
 
-  countMembersByCircleId(circleId: number) {
-    return circleMemberRepository.countMembersByCircleId(circleId);
+  countManagersByCircleId(circleId: number) {
+    return circleMemberRepository.countManagersByCircleId(circleId);
   }
 
   countMembersByCircleIdWithinRange(circleId: number, from: Date) {

@@ -5,9 +5,11 @@ import { checkRole } from "../access-control/middleware";
 import { dailyQuestController } from "./daily-quest/daily-quest.controller";
 import { createDailyQuestRequestSchema } from "./daily-quest/dto/request/create-daily-quest.request.dto";
 import { disableDailyQuestParamsSchema } from "./daily-quest/dto/request/disable-daily-quest.params.dto";
+import { trendingHashtagQuerySchema } from "./hashtag-trending/dto/request/trending-hashtag.query.dto";
 import { hashtagTrendingController } from "./hashtag-trending/hashtag-trending.controller";
 import { listReportsQuerySchema } from "./report-management/dto/request/list-reports.query.dto";
 import { reportManagementController } from "./report-management/report-management.controller";
+import { adminStatsQuerySchema } from "./statistics/dto/request/admin-stats.query.dto";
 import { statisticsController } from "./statistics/statistics.controller";
 import { userManagementController } from "./user-management/user-management.controller";
 
@@ -47,12 +49,14 @@ adminRouter.patch(
 adminRouter.get(
   "/hashtags/trending",
   checkRole(UserRoleType.ADMIN),
+  validate(trendingHashtagQuerySchema, "query"),
   hashtagTrendingController.listTrendingHashtags,
 );
 
 adminRouter.get(
   "/stats",
   checkRole(UserRoleType.ADMIN),
+  validate(adminStatsQuerySchema, "query"),
   statisticsController.getOverview,
 );
 
