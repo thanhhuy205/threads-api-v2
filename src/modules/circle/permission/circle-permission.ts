@@ -37,6 +37,8 @@ export const CIRCLE_ROLE_PERMISSIONS: Record<RoleMembership, CirclePermission[]>
         CirclePermission.START_CPR,
         CirclePermission.POST,
         CirclePermission.COMMENT,
+        CirclePermission.UPDATE_LEVEL,
+
     ],
     [RoleMembership.MEMBER]: [
         CirclePermission.POST,

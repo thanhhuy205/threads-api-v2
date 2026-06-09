@@ -54,6 +54,16 @@ class CircleEnergyService {
     await circleEnergyRepository.updateEnergy(circleId, newExp, newHp, tx);
     return { newExp, newHp };
   }
+
+  upLevel(
+    circleId: number,
+    exp: number,
+    hp: number,
+    tx?: Prisma.TransactionClient,
+    levelUpOnly = false,
+  ) {
+    return circleEnergyRepository.upLevel(circleId, exp, hp, tx, levelUpOnly);
+  }
 }
 
 export const circleEnergyService = new CircleEnergyService();

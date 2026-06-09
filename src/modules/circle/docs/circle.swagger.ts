@@ -31,11 +31,22 @@ export const circleSwaggerSchemas = {
         type: 'object',
         properties: {
             current: { type: 'number', example: 500 },
-            max: { type: 'number', example: 1000 },
+            max: { type: 'number', example: 500 },
             peak: { type: 'number', example: 500 },
             createdAt: { type: 'string', format: 'date-time' },
         },
         required: ['current', 'max', 'peak', 'createdAt'],
+    },
+    CircleLevelConfigItem: {
+        type: 'object',
+        properties: {
+            level: { type: 'number', example: 2 },
+            name: { type: 'string', example: 'Growing' },
+            requiredExp: { type: 'number', example: 200 },
+            maxHp: { type: 'number', example: 650 },
+            drainPerHour: { type: 'number', example: 9 },
+        },
+        required: ['level', 'name', 'requiredExp', 'maxHp', 'drainPerHour'],
     },
     CircleDetailItem: {
         type: 'object',
@@ -48,6 +59,10 @@ export const circleSwaggerSchemas = {
             visibility: { type: 'string', example: 'PUBLIC' },
             memberCount: { type: 'number', example: 0 },
             energy: { $ref: '#/components/schemas/CircleEnergyItem' },
+            nextLevelConfig: {
+                allOf: [{ $ref: '#/components/schemas/CircleLevelConfigItem' }],
+                nullable: true,
+            },
             isJoined: { type: 'boolean', example: false },
             isAdmin: { type: 'boolean', example: false },
             permission: {
@@ -68,6 +83,7 @@ export const circleSwaggerSchemas = {
             'visibility',
             'memberCount',
             'energy',
+            'nextLevelConfig',
             'isJoined',
             'isAdmin',
             'permission',

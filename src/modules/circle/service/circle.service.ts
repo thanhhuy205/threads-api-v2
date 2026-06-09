@@ -7,6 +7,7 @@ import { SendInvitationEmailAdminInterface } from "@/modules/circle/interfaces/s
 import { SendInvitationInput } from "@/modules/circle/interfaces/send-invitation.interface";
 import { CIRCLE_ROLE_PERMISSIONS, CirclePermission } from "@/modules/circle/permission/circle-permission";
 import { checkCirclePermission } from "@/modules/circle/policy/check-circle-permission";
+import { CIRCLE_LEVEL_CONFIG, toCircleLevel } from "@/modules/circle/policy/check-level-up";
 import { emailProducer } from "@/modules/job/email/producer/email.producer";
 import { notificationService } from "@/modules/notification-group/service/notification.service";
 import { postService } from "@/modules/post/service/post.service";
@@ -46,8 +47,8 @@ import { circleRepository } from "../repository/circle.repository";
 import { circleEnergyService } from "./circle-enery.service";
 import { circleExpLogService } from "./circle-exp-log.service";
 import { circleInvitationService } from "./circle-invitation.service";
-import { circleKarmaService } from "./circle-karma.service";
 import { circleJoinRequestService } from "./circle-join-request.service";
+import { circleKarmaService } from "./circle-karma.service";
 import { circleMemberBanService } from "./circle-member-ban.service";
 import { circleMemberService } from "./circle-member.service";
 import { circlePostQualityLogService } from "./circle-post-quality-log.service";
@@ -1171,6 +1172,10 @@ class CircleService {
       createdAt: energyRecord.createdAt,
     };
 
+    const nextLevelConfig =
+      energyRecord.level < 5
+        ? CIRCLE_LEVEL_CONFIG[toCircleLevel(energyRecord.level + 1)]
+        : null;
 
     return {
       id: circle.id,
@@ -1181,6 +1186,7 @@ class CircleService {
       visibility: circle.visibility,
       memberCount: circle._count.circleMembers,
       energy,
+      nextLevelConfig,
       isJoined: !!role,
       isAdmin: role
         ? role.role === RoleMembership.ADMIN || role.role === RoleMembership.OWNER
@@ -1660,6 +1666,57 @@ class CircleService {
     return {
       userId: result.userId,
       circlePublicId: publicId,
+    }
+  }
+
+
+  async levelUpCircle(publicId: string, userId: string) {
+    const circle = await circleRepository.findByPublicId(publicId);
+    if (!circle) {
+      throw new NotFoundException(`Circle ${publicId} not found`);
+    }
+
+    if (circle.circleEnergies.length === 0) {
+      await circleEnergyService.getOrCreateCircleEnergy(circle.id);
+      throw new BadRequestException(`Circle energy record initialized. Please try leveling up again.`);
+    }
+
+    const member = await circleMemberService.findRoleByCircleId(circle.id, userId);
+    if (!member) {
+      throw new ForbiddenException(`User ${userId} is not a member of circle ${publicId}`);
+    }
+
+    const checkPermission = checkCirclePermission(
+      CIRCLE_ROLE_PERMISSIONS[member.role] ?? [],
+      CirclePermission.UPDATE_LEVEL,
+    );
+
+    if (!checkPermission) {
+      throw new ForbiddenException(`User ${userId} does not have permission to level up circle`);
+    }
+    const energyRecord = circle.circleEnergies[0];
+    const checkLevelUp = CIRCLE_LEVEL_CONFIG[toCircleLevel(energyRecord.level + 1)];
+
+    if (!checkLevelUp) {
+      throw new BadRequestException(`Circle has reached max level`);
+    }
+
+    if (checkLevelUp.requiredExp > energyRecord.exp) {
+      throw new BadRequestException(`Not enough exp to level up. Current exp: ${energyRecord.exp}, exp needed: ${checkLevelUp.requiredExp}`);
+    }
+
+    await circleEnergyService.upLevel(
+      circle.id,
+      circle.circleEnergies[0].exp,
+      checkLevelUp.maxHp,
+      undefined,
+      false,
+    );
+
+    return {
+      circlePublicId: publicId,
+      newLevel: checkLevelUp.level,
+      expToNextLevel: checkLevelUp.requiredExp - energyRecord.exp,
     }
   }
 

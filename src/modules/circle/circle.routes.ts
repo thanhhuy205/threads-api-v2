@@ -44,7 +44,7 @@ circleRouter.get(
 circleRouter.post('/', validate(createCircleSchema), circleController.createCircle);
 circleRouter.post('/send-invitation', validate(sendInvitationSchema), circleController.sendInvitation);
 circleRouter.post('/response-invitation', validate(responseInvitationSchema), circleController.acceptInvitation);
-
+circleRouter.post("/:publicId/level-up" , validate(circlePublicIdParamsSchema, 'params'), circleController.levelUpCircle);
 circleRouter.get(
     '/:publicId/energy',
     validate(circlePublicIdParamsSchema, 'params'),

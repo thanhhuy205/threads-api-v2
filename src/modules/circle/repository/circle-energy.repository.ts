@@ -63,6 +63,26 @@ class CircleEnergyRepository {
       },
     });
   }
+
+  upLevel(
+    circleId: number,
+    exp: number,
+    hp: number,
+    tx: Prisma.TransactionClient = prisma,
+    levelUpOnly = false,
+  ) {
+    return tx.circleEnergy.updateMany({
+      where: { circleId },
+      data: {
+        exp,
+        current: levelUpOnly ? undefined : hp,
+        max: levelUpOnly ? undefined : hp,
+        level: {
+          increment: 1,
+        },
+      },
+    });
+  }
 }
 
 export const circleEnergyRepository = new CircleEnergyRepository();

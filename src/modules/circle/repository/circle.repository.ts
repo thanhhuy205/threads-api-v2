@@ -104,7 +104,7 @@ class CircleRepository implements ICursorPagination<
         circleEnergies: {
           create: {
             current: 500,
-            max: 1000,
+            max: 500,
             peak: 500,
           },
         },

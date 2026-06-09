@@ -327,6 +327,19 @@ class CircleController {
     return res.success(200, "Circle invitation detail retrieved successfully", data);
   }
 
+  async levelUpCircle(
+    req: Request<CirclePublicIdParamsDto>,
+    res: Response,
+  ) {
+    const userId = req.user?.sub;
+    if (!userId) {
+      return res.error(401, "Unauthorized");
+    }
+    const { publicId } = req.params;
+    const data = await circleService.levelUpCircle(publicId, userId);
+    return res.success(200, "Circle leveled up successfully", data);
+  }
+
   async sendInvitation(
     req: Request<{}, {}, SendInvitationDto, {}>,
     res: Response,
