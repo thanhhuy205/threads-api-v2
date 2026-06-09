@@ -2103,13 +2103,1105 @@
 
 
 
+// import { PrismaMariaDb } from "@prisma/adapter-mariadb";
+// import {
+//     PostMediaStatus,
+//     PostMediaType,
+//     PostType,
+//     PrismaClient,
+//     ReplyPermission,
+//     VisibilityPost,
+// } from "@prisma/client";
+// import dotenv from "dotenv";
+// dotenv.config();
+
+// // ─── Prisma setup ─────────────────────────────────────────────────────────────
+// const adapter = new PrismaMariaDb({
+//     port: Number(process.env.DB_PORT) || 3306,
+//     host: process.env.DB_HOST || "localhost",
+//     user: process.env.DB_USER || "root",
+//     password: process.env.DB_PASSWORD || "password",
+//     database: process.env.DB_NAME || "threads_api",
+// });
+// const prisma = new PrismaClient({ adapter } as any);
+
+// // ─── Helpers ──────────────────────────────────────────────────────────────────
+// function pick<T>(arr: T[]): T {
+//     return arr[Math.floor(Math.random() * arr.length)];
+// }
+// function rand(min: number, max: number) {
+//     return Math.floor(Math.random() * (max - min + 1)) + min;
+// }
+// function randomDate(daysAgo: number): Date {
+//     return new Date(Date.now() - Math.random() * daysAgo * 86_400_000);
+// }
+// function shuffle<T>(arr: T[]): T[] {
+//     return [...arr].sort(() => Math.random() - 0.5);
+// }
+
+// // ─── 200+ Hashtags (thực tế Việt Nam, phân theo chủ đề) ──────────────────────
+// export const ALL_HASHTAGS: string[] = [
+//     // Ẩm thực (30 tags)
+//     "amthuc",
+//     "foodie",
+//     "xuhuongamthuc",
+//     "saigonfood",
+//     "hanoidishes",
+//     "comtam",
+//     "bunbo",
+//     "pho",
+//     "banhmi",
+//     "cafesaigon",
+//     "trasuavietnam",
+//     "streetfood",
+//     "homecooking",
+//     "naucuoi",
+//     "reviewquanan",
+//     "banhngot",
+//     "lauphat",
+//     "nuongbbq",
+//     "doanhnhan",       // sẽ dùng lại nếu cần nhưng tách riêng chủ đề
+//     "hatieu",
+//     "raumam",
+//     "banhcuon",
+//     "chebavien",
+//     "cahepho",
+//     "nuocep",
+//     "bakery",
+//     "dessertlover",
+//     "vietfood",
+//     "anngon",
+//     "foodphotography",
+
+//     // Du lịch (30 tags)
+//     "dulichvietnam",
+//     "travel",
+//     "xuhuongdulich",
+//     "phuquoc",
+//     "dalat",
+//     "sapa",
+//     "halong",
+//     "hoian",
+//     "danang",
+//     "nhatrang",
+//     "cantho",
+//     "hue",
+//     "buonmathuot",
+//     "phanthiet",
+//     "condao",
+//     "muicne",
+//     "laocai",
+//     "hagiang",
+//     "backpacker",
+//     "solotraveler",
+//     "dulichbalo",
+//     "checkin",
+//     "sunrisevietnam",
+//     "nongnghiep",
+//     "homestay",
+//     "campingvn",
+//     "roadtrip",
+//     "phongnhatourist",
+//     "trekking",
+//     "mountainlife",
+
+//     // Thời trang & Làm đẹp (30 tags)
+//     "ootd",
+//     "fashion",
+//     "streetstyle",
+//     "skincare",
+//     "beauty",
+//     "trangdiem",
+//     "chamsocda",
+//     "hairstyle",
+//     "nail",
+//     "makeup",
+//     "thoitrang",
+//     "vintage",
+//     "thrifted",
+//     "outfit",
+//     "mensfashion",
+//     "womensfashion",
+//     "summerlook",
+//     "casualfit",
+//     "luxuryfashion",
+//     "koreanskincare",
+//     "routine",
+//     "glowup",
+//     "lipstick",
+//     "eyeshadow",
+//     "sundress",
+//     "denim",
+//     "sneakers",
+//     "handbag",
+//     "accessories",
+//     "watchlover",
+
+//     // Công nghệ & Lập trình (25 tags)
+//     "coding",
+//     "developer",
+//     "tech",
+//     "laptrinh",
+//     "javascript",
+//     "typescript",
+//     "reactjs",
+//     "nextjs",
+//     "nodejs",
+//     "python",
+//     "ai",
+//     "machinelearning",
+//     "startup",
+//     "saas",
+//     "webdev",
+//     "devlife",
+//     "programmerhumor",
+//     "opensource",
+//     "database",
+//     "api",
+//     "deployment",
+//     "docker",
+//     "github",
+//     "freelancer",
+//     "remote",
+
+//     // Sức khỏe & Thể thao (20 tags)
+//     "fitness",
+//     "gym",
+//     "yoga",
+//     "chaybo",
+//     "suckhoe",
+//     "workout",
+//     "healthyeating",
+//     "weightloss",
+//     "muscle",
+//     "running",
+//     "cycling",
+//     "swimming",
+//     "bongda",
+//     "tennis",
+//     "badminton",
+//     "marathon",
+//     "wellbeing",
+//     "mentalhealth",
+//     "meditation",
+//     "pilates",
+
+//     // Đời sống & Cảm xúc (20 tags)
+//     "tamsu",
+//     "cuocsong",
+//     "nghimoi",
+//     "sachvahoa",
+//     "sohoc",
+//     "langman",
+//     "docsach",
+//     "music",
+//     "nhacviet",
+//     "vpop",
+//     "kpop",
+//     "phim",
+//     "series",
+//     "anime",
+//     "gaming",
+//     "booklover",
+//     "artlover",
+//     "photography",
+//     "sunrise",
+//     "livelife",
+
+//     // Động vật cưng (10 tags)
+//     "meocon",
+//     "cuncung",
+//     "doglife",
+//     "catlife",
+//     "petlover",
+//     "thucung",
+//     "rescuedog",
+//     "rescuecat",
+//     "cutepet",
+//     "fluffycat",
+
+//     // Môi trường & Bền vững (10 tags)
+//     "zerowaste",
+//     "sustainable",
+//     "xanhlacay",
+//     "moitruong",
+//     "recycling",
+//     "vegancooking",
+//     "plantbased",
+//     "solarpanel",
+//     "gogreen",
+//     "ecofriendly",
+
+//     // Tài chính & Đầu tư (10 tags)
+//     "taichinhhcanhan",
+//     "dautu",
+//     "chungkhoan",
+//     "realestate",
+//     "batdongsan",
+//     "tiettiem",
+//     "muagold",
+//     "crypto",
+//     "financelife",
+//     "sidehustle",
+
+//     // Gen Z / Viral (20 tags)
+//     "genzlife",
+//     "viral",
+//     "trending",
+//     "xuhuong",
+//     "funny",
+//     "meme",
+//     "relatable",
+//     "randomthoughts",
+//     "nightowl",
+//     "overthinking",
+//     "introvert",
+//     "coffeeaddict",
+//     "mondaymotivation",
+//     "fridayvibes",
+//     "weekendplans",
+//     "nofilter",
+//     "dailyvlog",
+//     "asmr",
+//     "satisfying",
+//     "diy",
+// ];
+
+// // ─── Image pool ───────────────────────────────────────────────────────────────
+// const IMAGE_POOL: string[] = [
+//     "https://i.pinimg.com/originals/88/e0/6e/88e06ede2822923413088897af065b03.jpg",
+//     "https://i.pinimg.com/originals/38/5e/15/385e15ed827b40a02b4734edde8cfa8a.jpg",
+//     "https://i.pinimg.com/originals/f2/58/29/f25829d5213996ef3bf765c67ed68fbb.jpg",
+//     "https://i.pinimg.com/originals/0b/66/9a/0b669aa31c8781da6010960c6e1012b0.jpg",
+//     "https://i.pinimg.com/originals/15/dd/c3/15ddc353abf305016f88cc6dba86fde1.jpg",
+//     "https://i.pinimg.com/originals/b1/af/cf/b1afcfaf70963daaa6c2786ec7f6f2eb.jpg",
+//     "https://i.pinimg.com/originals/68/f4/db/68f4db72ab2c505a01c5de443c4315fd.jpg",
+//     "https://i.pinimg.com/originals/c4/71/0e/c4710ee2d312d2bf2a5bc1b478013bce.jpg",
+//     "https://i.pinimg.com/originals/0a/da/bd/0adabd591af61a5f3c18d2252ccb9de4.jpg",
+//     "https://i.pinimg.com/originals/98/10/47/98104778fe1e452538306d7d736284c2.png",
+//     "https://i.pinimg.com/originals/a0/1d/d6/a01dd625cab0b709548f7cc6a5313283.jpg",
+//     "https://i.pinimg.com/originals/47/ba/58/47ba587905d613fee12e5880066b63f6.jpg",
+//     "https://i.pinimg.com/originals/ea/9b/b3/ea9bb30e50ab6ce72f93b85e4d2e04fd.jpg",
+//     "https://i.pinimg.com/originals/b5/b6/49/b5b649d6ccc9591cbba28504bc7f590d.jpg",
+//     "https://i.pinimg.com/originals/31/66/d4/3166d4b65811830f66c075eb73c1e012.png",
+//     "https://i.pinimg.com/originals/64/a9/6f/64a96f5bb5c87b3a0820d38b19866a72.jpg",
+//     "https://i.pinimg.com/originals/36/94/3d/36943d474097deeb81184928ec77528b.jpg",
+//     "https://i.pinimg.com/originals/9c/b2/62/9cb262438a90c8c07984fcd4d728ef3b.jpg",
+//     "https://i.pinimg.com/originals/fa/79/9f/fa799f519b2a73164993ca359209e99e.jpg",
+//     "https://i.pinimg.com/originals/ea/89/2b/ea892bb809352c4dbb67b3cb68d2a11c.jpg",
+//     "https://i.pinimg.com/originals/f3/ae/43/f3ae4388515cd35bcc405a91d6fce50b.jpg",
+//     "https://i.pinimg.com/originals/99/a6/55/99a655ac3326ba1f6b0f9e9d5aedbbcd.jpg",
+//     "https://i.pinimg.com/originals/eb/d8/03/ebd80398f0a65be8e6d224b0f3bb0893.jpg",
+//     "https://i.pinimg.com/originals/3b/7c/71/3b7c719b72b34623d522dc8fca4f87ab.webp",
+//     "https://i.pinimg.com/originals/ee/a9/8e/eea98e09c408ad37a44d796a51d70a1a.jpg",
+//     "https://i.pinimg.com/originals/0d/7c/73/0d7c73b4e20a4fc8a99e8be866374e38.jpg",
+//     "https://i.pinimg.com/originals/bf/9c/1e/bf9c1e8ab9b00118c1ff763e10566141.jpg",
+//     "https://i.pinimg.com/originals/7e/02/f1/7e02f15a302b42865eca7572a5b5915f.jpg",
+//     "https://i.pinimg.com/originals/28/77/c9/2877c9a6e74bccfa81b622ed46b34665.jpg",
+//     "https://i.pinimg.com/originals/b1/11/7a/b1117af52695b493113d480a57029f95.jpg",
+//     "https://i.pinimg.com/originals/e2/33/fa/e233fa2b27c3e6d404d955cde2541958.jpg",
+//     "https://i.pinimg.com/originals/84/b5/a1/84b5a152ca0ed18d5e953005f6395e11.jpg",
+//     "https://i.pinimg.com/originals/c9/bc/86/c9bc86729d1d75332adfb76c97eb064d.jpg",
+//     "https://i.pinimg.com/originals/00/fd/4f/00fd4f3628a65d825138e1a2de583934.jpg",
+//     "https://i.pinimg.com/originals/91/90/26/919026794d43466ec1d5a6e2fdcbbba8.jpg",
+//     "https://i.pinimg.com/originals/ae/15/5a/ae155a7f304d44e7c27a38600c29af44.jpg",
+//     "https://i.pinimg.com/originals/26/4d/53/264d539f2fd7313989809b3779c88483.jpg",
+//     "https://i.pinimg.com/originals/94/9d/1c/949d1cf0e0890ef81f21746768f2d431.jpg",
+//     "https://i.pinimg.com/originals/c9/0a/a2/c90aa2fc9a6036ead806bfca9dc3575c.jpg",
+//     "https://i.pinimg.com/originals/e3/98/86/e3988646d3a8390dd6b242e3ea722d61.jpg",
+// ];
+
+// // ─── Video pool (placeholder URLs – replace với CDN thực) ─────────────────────
+// const VIDEO_POOL: string[] = [
+//     "https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+//     "https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+//     "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+//     "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+//     "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
+//     "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
+//     "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4",
+//     "https://storage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
+//     "https://storage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4",
+//     "https://storage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
+// ];
+
+// // ─── Content templates theo hashtag ──────────────────────────────────────────
+// type PostMediaDef =
+//     | { kind: "images"; count: number }
+//     | { kind: "video" }
+//     | { kind: "images+video"; imgCount: number };
+
+// interface PostTemplate {
+//     content: string;
+//     hashtag: string;
+//     media: PostMediaDef;
+// }
+
+// /**
+//  * Sinh nội dung bài viết đủ đa dạng.
+//  * Mỗi hashtag được gán ít nhất 1 bài, nhiều hashtag hot được gán nhiều bài hơn
+//  * để dữ liệu trending có nghĩa thống kê.
+//  */
+// function buildPostTemplates(): PostTemplate[] {
+//     // Định nghĩa weight: hashtag hot → xuất hiện nhiều lần hơn
+//     const HOT_HASHTAGS: Record<string, number> = {
+//         amthuc: 8,
+//         ootd: 7,
+//         travel: 7,
+//         dulichvietnam: 6,
+//         fitness: 6,
+//         skincare: 6,
+//         coding: 5,
+//         viral: 5,
+//         genzlife: 5,
+//         kpop: 5,
+//         foodie: 5,
+//         streetfood: 4,
+//         dalat: 4,
+//         saigonfood: 4,
+//         meme: 4,
+//         photography: 4,
+//         makeup: 4,
+//         gym: 4,
+//         yoga: 4,
+//         relatable: 4,
+//         trending: 4,
+//         vpop: 3,
+//         mentalhealth: 3,
+//         remotework: 3,
+//         startup: 3,
+//         petlover: 3,
+//     };
+
+//     const CONTENT_BY_HASHTAG: Record<string, string[]> = {
+//         amthuc: [
+//             "Sáng nay thức dậy làm tô bún bò tự tay. Nước dùng hầm 4 tiếng, đậm đà không kém ngoài tiệm 🍜 #amthuc",
+//             "Review quán cơm tấm mới mở cuối phố – sườn than thơm, bì dai, giá chỉ 45k. Ủng hộ quán Việt nha! #amthuc",
+//             "Cuối tuần làm bánh cuốn nhân tôm thịt cho cả nhà. Bí quyết: bột gạo pha theo tỉ lệ 4:1 với bột năng 🥢 #amthuc",
+//         ],
+//         foodie: [
+//             "Hành trình ăn sập Sài Gòn tập 3: Bắt đầu từ bánh mì đặc biệt Huynh Hoa rồi kết thúc bằng kem dừa Bến Thành 😋 #foodie",
+//             "Không cần đi Nhật vẫn ăn được ramen ngon ở Sài Gòn. Chỗ mình hay ghé: quán nhỏ trong hẻm Lê Thánh Tôn 🍜 #foodie",
+//         ],
+//         xuhuongamthuc: [
+//             "Xu hướng ẩm thực 2025: Trà matcha kết hợp với đủ thứ – từ bánh mì đến lẩu. Bạn đã thử chưa? #xuhuongamthuc",
+//         ],
+//         saigonfood: [
+//             "Sài Gòn có một điều tuyệt vời: 2h sáng vẫn kiếm được tô phở nóng hổi ở góc đường 🌙 #saigonfood",
+//             "Cơm tấm Sài Gòn với cái bì thái đều, mỡ hành vàng ươm – không đâu ngon bằng 🍚 #saigonfood",
+//         ],
+//         hanoidishes: [
+//             "Bún chả Hà Nội chuẩn: chả viên tròn đều, nước chấm thanh ngọt, ăn kèm rau thơm Hà Nội 🌿 #hanoidishes",
+//         ],
+//         comtam: [
+//             "Chủ nhật không cần nghĩ – cơm tấm sườn bì chả, ly cà phê sữa đá là xong cuộc đời ☀️ #comtam",
+//         ],
+//         bunbo: [
+//             "Bún bò Huế chuẩn phải có mắm ruốc và sả – hai thứ này thiếu là mất hồn hoàn toàn 🌶️ #bunbo",
+//         ],
+//         pho: [
+//             "Phở bò Hà Nội nước trong leo lẻo, thịt tái hồng hào – ký ức mỗi sáng mùa đông tuổi thơ ❄️ #pho",
+//         ],
+//         banhmi: [
+//             "Bánh mì Sài Gòn: vỏ giòn, nhân đầy, giá 20k – biểu tượng ẩm thực đường phố thế giới công nhận 🥖 #banhmi",
+//         ],
+//         cafesaigon: [
+//             "Cà phê rang xay Sài Gòn buổi sáng: đắng, thơm, đậm – không cần fancy latte gì thêm ☕ #cafesaigon",
+//         ],
+//         trasuavietnam: [
+//             "Trà sữa truyền thống không bằng cái này: trân châu đường đen, kem phô mai mặn ngọt 🧋 #trasuavietnam",
+//         ],
+//         streetfood: [
+//             "Bánh tráng trộn vỉa hè Sài Gòn 15k – ăn xong không thể dừng được. Nghiện nặng rồi 😅 #streetfood",
+//             "Street food tour Hội An sáng sớm: cao lầu, mì Quảng, bánh xèo – ăn no từ 7h sáng 🌄 #streetfood",
+//         ],
+//         homecooking: [
+//             "Tự nấu ăn ở nhà tiết kiệm được 2-3 triệu/tháng mà còn ngon hơn, sạch hơn ngoài tiệm. Win-win! 👨‍🍳 #homecooking",
+//         ],
+//         naucuoi: [
+//             "Hôm nay thử nấu canh chua cá lóc lần đầu. Không fail thì không phải mình 😂 nhưng lần 2 ra chuẩn nha! #naucuoi",
+//         ],
+//         reviewquanan: [
+//             "Review nhà hàng mới thử: view đẹp 10/10, đồ ăn 7/10, service 8/10. Tổng thể đáng đi một lần #reviewquanan",
+//         ],
+//         banhngot: [
+//             "Bánh flan cà phê tự làm: lớp kem mịn như lụa, không bọt, không tanh. Công thức đơn giản mà ai cũng làm được 🍮 #banhngot",
+//         ],
+//         lauphat: [
+//             "Lẩu Thái hải sản mùa mưa: vừa cay vừa chua, ngồi ăn cả buổi tối. Hạnh phúc giản đơn nhất! 🌧️ #lauphat",
+//         ],
+//         nuongbbq: [
+//             "BBQ cuối tuần ở ban công: thịt bò nướng than hoa, rau thơm, và bạn bè – không cần đi đâu xa 🥩 #nuongbbq",
+//         ],
+//         vietfood: [
+//             "Ẩm thực Việt Nam đã lên BBC, NYT, CNN – không phải tự hào suông mà thực sự xứng đáng 🇻🇳 #vietfood",
+//         ],
+//         anngon: [
+//             "Bí quyết ăn ngon không tốn nhiều tiền: chợ tươi mỗi sáng, nấu đủ bữa, không đặt ship liên tục 😌 #anngon",
+//         ],
+//         foodphotography: [
+//             "Chụp ảnh đồ ăn không cần đèn studio: ánh sáng tự nhiên buổi sáng + góc 45 độ = ảnh đẹp tự nhiên 📸 #foodphotography",
+//         ],
+//         bakery: [
+//             "Tiệm bánh nhỏ đầu hẻm mở được 3 năm, croissant bơ mỗi sáng cháy trong 30 phút – đặt trước mới có! 🥐 #bakery",
+//         ],
+//         dessertlover: [
+//             "Chè bà ba Sài Gòn đầy đủ topping: khoai lang, bột báng, nước cốt dừa béo ngậy 🍵 #dessertlover",
+//         ],
+//         hatieu: [
+//             "Hủ tiếu Nam Vang chuẩn vị: nước trong, ngọt thanh, thịt bằm mềm, ăn sáng không cần suy nghĩ 🍜 #hatieu",
+//         ],
+//         raumam: [
+//             "Trồng rau mầm tại nhà 7 ngày là thu hoạch. Vừa sạch vừa rẻ, chỉ cần khay và hạt giống 🌱 #raumam",
+//         ],
+//         banhcuon: [
+//             "Bánh cuốn Hà Nội buổi sáng: nhân thịt mộc nhĩ, chan nước mắm cà chua, điểm chút hành phi 😍 #banhcuon",
+//         ],
+//         chebavien: [
+//             "Chè 3 màu vỉa hè Sài Gòn đúng là món bình dân nhưng cái vị đậu xanh + cốt dừa không đâu thay thế được #chebavien",
+//         ],
+//         nuocep: [
+//             "Nước ép dứa + dưa hấu buổi sáng: detox nhanh, ngon, rẻ hơn mua chai ngoài 10 lần 🍍 #nuocep",
+//         ],
+
+//         // Du lịch
+//         dulichvietnam: [
+//             "Việt Nam từ Bắc vào Nam: mỗi vùng một tính cách, một hương vị, một nhịp sống riêng. Không bao giờ hết khám phá 🗺️ #dulichvietnam",
+//             "3 ngày 2 đêm Đà Nẵng budget 3 triệu/người: xe máy, biển, phố cổ và đồ ăn đường phố. Chi tiết trong comment! #dulichvietnam",
+//         ],
+//         travel: [
+//             "Pack đồ cho 1 tuần trong 1 chiếc ba lô 25L – không check-in, không chờ hành lý, không lo mất đồ ✈️ #travel",
+//             "Du lịch không cần kế hoạch quá chi tiết: book vé, tìm chỗ ngủ, còn lại cứ để trải nghiệm dẫn đường 🧭 #travel",
+//         ],
+//         phuquoc: [
+//             "Phú Quốc mùa khô (tháng 11 - tháng 4): biển lặng, nước xanh ngọc, lặn ngắm san hô đẹp nhất 🐠 #phuquoc",
+//         ],
+//         dalat: [
+//             "Đà Lạt tháng 11: hoa dã quỳ vàng trên đồi, sương mù buổi sáng, cà phê nóng trong tay – hoàn hảo 🌸 #dalat",
+//             "Đà Lạt không cần tour: thuê xe máy, tự chạy qua thung lũng Tình Yêu, hồ Xuân Hương – tự do hơn nhiều 🛵 #dalat",
+//         ],
+//         sapa: [
+//             "Sapa mùa lúa chín tháng 9: ruộng bậc thang vàng ươm trải dài – đẹp hơn mọi tấm hình đã thấy 🌾 #sapa",
+//         ],
+//         halong: [
+//             "Vịnh Hạ Long lúc bình minh, chỉ có tiếng mái chèo và sương sớm – tĩnh lặng đến khó tin 🌅 #halong",
+//         ],
+//         hoian: [
+//             "Hội An sáng sớm 6h: đường vắng, đèn lồng hắt ánh sáng vàng, không một bóng khách du lịch. Đây là Hội An thật sự 🏮 #hoian",
+//         ],
+//         danang: [
+//             "Đà Nẵng: thành phố cầu đẹp, biển sạch, đồ ăn ngon và người dân hiền lành. Lý do mình quay lại lần 4 rồi 🌊 #danang",
+//         ],
+//         nhatrang: [
+//             "Nha Trang 4N3Đ: lặn ngắm san hô, tắm bùn khoáng, ăn hải sản tươi ngay bờ biển 🦞 #nhatrang",
+//         ],
+//         cantho: [
+//             "Chợ nổi Cái Răng Cần Thơ: dậy sớm 5h sáng, thuyền đầy trái cây, không khí miền Tây không nơi nào có 🌊 #cantho",
+//         ],
+//         hue: [
+//             "Huế – thành phố của những buổi chiều mưa, cơm Hến, và kiến trúc Nguyễn triều. Lần nào đến cũng thấy bình yên lạ thường 🌧️ #hue",
+//         ],
+//         hagiang: [
+//             "Hà Giang tháng 10: tam giác mạch nở hoa tím hồng trên cao nguyên đá. Cung đường Mã Pí Lèng hùng vĩ không thể diễn tả 🏔️ #hagiang",
+//         ],
+//         backpacker: [
+//             "Bí quyết backpack dài ngày: ngủ hostel, ăn chợ địa phương, di chuyển xe đêm – tiết kiệm 60% mà trải nghiệm phong phú hơn 🎒 #backpacker",
+//         ],
+//         solotraveler: [
+//             "Solo travel không phải cô đơn – đó là tự do. Tự quyết định mọi thứ từ giờ dậy đến chỗ ăn tối 🗺️ #solotraveler",
+//         ],
+//         dulichbalo: [
+//             "3 tuần xuyên Việt bằng xe máy: 2.500km, 15 tỉnh thành, 400k xăng. Chuyến đi rẻ nhất và đáng nhất đời 🛵 #dulichbalo",
+//         ],
+//         checkin: [
+//             "Góc check-in Sài Gòn ít người biết: con hẻm cà phê Phùng Khắc Khoan – bức tường rêu xanh cổ kính mà đẹp xuất sắc 📸 #checkin",
+//         ],
+//         homestay: [
+//             "Homestay ven ruộng bậc thang Mù Cang Chải: ngủ nghe tiếng suối, dậy nhìn ra mây mù. 200k/đêm, đặt sớm hết liền 🏡 #homestay",
+//         ],
+//         roadtrip: [
+//             "Road trip Hà Nội → Hội An 10 ngày theo QL1A: ăn sập từng tỉnh, chụp ảnh dọc đường, không tour nào thay thế được 🚗 #roadtrip",
+//         ],
+//         trekking: [
+//             "Trek Fansipan không cáp treo: 2 ngày 1 đêm, đường rừng nguyên sinh, đỉnh mây bao phủ. Kiệt sức nhưng đáng từng bước 🏔️ #trekking",
+//         ],
+
+//         // Thời trang & Làm đẹp
+//         ootd: [
+//             "Outfit hôm nay: áo linen trắng + quần linen be + dép thô. Mặc gì cũng cần thở được mùa hè Sài Gòn 😅 #ootd",
+//             "Thrift flip: mua áo blazer cũ 30k, sửa vai và tay áo, đính thêm nút – ra lò chuẩn blazer 500k 🧥 #ootd",
+//         ],
+//         fashion: [
+//             "Xu hướng thời trang Việt Nam 2025: local brand ngày càng chất, không cần international để mặc đẹp 👗 #fashion",
+//         ],
+//         streetstyle: [
+//             "Street style Hà Nội mùa thu: tông màu đất, layer nhẹ, giày da vintage – không cần theo trend vẫn đẹp 🍂 #streetstyle",
+//         ],
+//         skincare: [
+//             "Routine buổi sáng 5 bước cho da nhạy cảm: Cleanser → Toner → Serum HA → Kem dưỡng → Kem chống nắng. Đơn giản nhưng hiệu quả 🌿 #skincare",
+//             "Review serum Vitamin C giá rẻ dưới 200k: dùng 8 tuần, da sáng lên rõ rệt, không kích ứng. Mọi người hỏi mình dùng gì nhiều quá 😄 #skincare",
+//         ],
+//         beauty: [
+//             "Makeup tự nhiên cho ngày đi làm: BB cream, blush nhẹ, lip balm màu hồng đất – xong trong 10 phút 💄 #beauty",
+//         ],
+//         trangdiem: [
+//             "Trang điểm cô dâu tự làm: lớp nền mỏng, má hồng gradient, mắt khói nhẹ nhàng – đơn giản mà đẹp hơn make-up rườm rà 👰 #trangdiem",
+//         ],
+//         chamsocda: [
+//             "Chăm sóc da 0 đồng: ngủ đủ giấc, uống đủ nước, ăn nhiều rau quả. Trước khi dùng serum thì thử cái này trước 🌙 #chamsocda",
+//         ],
+//         hairstyle: [
+//             "Cắt tóc ngắn lần đầu sau 3 năm. Nhẹ cả đầu lẫn tâm hồn 💇‍♀️ #hairstyle",
+//         ],
+//         nail: [
+//             "Nail tự làm ở nhà: gel nail kit 300k dùng được 50 lần, tiết kiệm hơn đi tiệm 10 lần 💅 #nail",
+//         ],
+//         makeup: [
+//             "Tip makeup cho người mới: đầu tư vào kem chống nắng tốt và blush. Hai thứ này nâng hạng sắc diện nhiều nhất 💋 #makeup",
+//         ],
+//         vintage: [
+//             "Thrift shop buổi sáng thứ 7: tìm được áo vintage năm 90 còn nguyên tag, chất vải dày dặn không thua hàng mới 👕 #vintage",
+//         ],
+//         outfit: [
+//             "Outfit buổi tối: áo croptop đen basic + quần ống rộng trắng + mules. Capsule wardrobe đơn giản nhưng versatile 🖤 #outfit",
+//         ],
+//         glowup: [
+//             "6 tháng glow up: từ da mụn sần sùi đến da thủy tinh. Không magic, chỉ cần kiên trì routine và ngủ đủ giấc ✨ #glowup",
+//         ],
+//         sneakers: [
+//             "Sneakers trắng basic: combo không bao giờ sai với bất kỳ outfit nào. Đầu tư 1 đôi tốt xài 5 năm còn rẻ hơn mua 5 đôi rẻ 👟 #sneakers",
+//         ],
+//         accessories: [
+//             "Phụ kiện nâng outfit: một chiếc nhẫn bạc mảnh, dây chuyền layered, túi tote vải – không cần chi nhiều mà vẫn có look cuốn 💍 #accessories",
+//         ],
+
+//         // Công nghệ
+//         coding: [
+//             "Sau 1 năm tự học: từ 0 code đến có job junior dev. Không cần bootcamp, chỉ cần roadmap đúng và kỷ luật 💻 #coding",
+//             "Bug 3 tiếng mới ra: thiếu dấu ; . Cuộc đời lập trình viên là vậy đó 😭 #coding",
+//         ],
+//         developer: [
+//             "Làm developer không phải chỉ code: đọc docs, debug, communicate, review, estimate. Code chỉ chiếm 40% thôi 🧑‍💻 #developer",
+//         ],
+//         tech: [
+//             "AI đang thay đổi cách làm việc, không phải thay thế người. Ai biết dùng AI tool đúng cách sẽ productive hơn 10 lần 🤖 #tech",
+//         ],
+//         javascript: [
+//             "JavaScript async/await: giải thích cho người mới bằng ví dụ gọi ship đồ ăn. Không await = không biết đồ đến chưa 📦 #javascript",
+//         ],
+//         typescript: [
+//             "Chuyển từ JS sang TS: tuần đầu khó chịu, tháng 2 thấy quen, tháng 3 không muốn về JS nữa. Type safety nghiện rồi 🔒 #typescript",
+//         ],
+//         ai: [
+//             "Dùng AI để viết PR description, tóm tắt meeting, draft email – tiết kiệm 2 tiếng/ngày. Bạn đang dùng AI cho việc gì? 🤖 #ai",
+//         ],
+//         startup: [
+//             "Startup lesson học xương máu: validate idea trước khi code. 6 tháng build xong mới biết không ai cần. Đau thiệt sự 💀 #startup",
+//         ],
+//         webdev: [
+//             "Web performance: 1 giây load chậm hơn = 7% conversion giảm. Optimize ảnh, lazy load, CDN – không khó nhưng ít ai làm 🚀 #webdev",
+//         ],
+//         freelancer: [
+//             "Freelance 2 năm: thu nhập ổn hơn đi làm công ty, nhưng tự kỷ luật và find client mới là phần khó nhất 💼 #freelancer",
+//         ],
+//         remote: [
+//             "Work from coffee shop: tìm được quán wifi tốt, yên tĩnh, giá cà phê hợp lý ở Sài Gòn – đây là công thức hạnh phúc 🏖️ #remote",
+//         ],
+//         opensource: [
+//             "Contribute open source lần đầu: sợ vãi nhưng maintain rất tử tế, được merge PR sau 3 lần sửa. Cảm giác đỉnh lắm! 🌟 #opensource",
+//         ],
+//         github: [
+//             "GitHub green squares: không phải để flex, mà để nhìn lại mình đã làm gì trong 365 ngày qua 📊 #github",
+//         ],
+
+//         // Sức khỏe
+//         fitness: [
+//             "Tuần 12 tập gym liên tiếp: chưa thấy cơ bắp đâu nhưng ngủ ngon hơn, ít stress hơn, năng lượng tốt hơn. Đó là kết quả đầu tiên 💪 #fitness",
+//             "Gym không cần gương selfie: tập đúng form, đủ volume, ăn đủ protein. Đơn giản vậy thôi 🏋️ #fitness",
+//         ],
+//         gym: [
+//             "Home gym setup 5 triệu: 1 tạ điều chỉnh, 1 thảm yoga, dây kéo kháng lực. Tập được 80% bài như ngoài phòng gym 🏠 #gym",
+//         ],
+//         yoga: [
+//             "Yoga buổi sáng 20 phút: không cần 1 tiếng, chỉ cần đều đặn. 30 ngày liên tiếp, lưng hết đau, ngủ sâu hơn 🧘‍♀️ #yoga",
+//         ],
+//         chaybo: [
+//             "Chạy bộ sáng sớm Sài Gòn: 5h30 sáng, công viên Lê Văn Tám, không khí mát, ít xe cộ – khoảng thời gian đỉnh nhất ngày 🏃 #chaybo",
+//         ],
+//         suckhoe: [
+//             "Không cần diet phức tạp: ăn đủ 4 nhóm, bớt đường và muối, uống 2L nước, ngủ 7-8 tiếng. Công thức sức khỏe không tốn tiền 🌿 #suckhoe",
+//         ],
+//         running: [
+//             "Tham gia VM Hanoi Marathon lần đầu: 5km hạng mục fun run. Không cần nhanh, chỉ cần về đích và không ân hận 🏅 #running",
+//         ],
+//         mentalhealth: [
+//             "Sức khỏe tâm thần quan trọng như thể chất: đặt giới hạn, nói không khi cần, tìm người tin tưởng để nói chuyện 🧡 #mentalhealth",
+//             "Digital detox 24h: tắt điện thoại sau 9 tối. Ngủ ngon hơn, ít lo âu hơn. Thử đi sẽ thấy khác biệt 📵 #mentalhealth",
+//         ],
+//         meditation: [
+//             "10 phút thiền mỗi sáng: không cần hướng dẫn phức tạp, chỉ cần ngồi yên, theo dõi hơi thở. 21 ngày đầu khó, sau đó nghiện 🕯️ #meditation",
+//         ],
+//         wellbeing: [
+//             "Wellbeing không phải là spa hay retreat đắt tiền: là tập thể dục, ăn tươi, ngủ đủ, có kết nối xã hội. Bốn thứ cơ bản đó đã đủ 🌱 #wellbeing",
+//         ],
+
+//         // Đời sống & Cảm xúc
+//         tamsu: [
+//             "Đôi khi cứ nhắn tin đến nửa đêm với người không hỏi thăm ban ngày. Cô đơn có hình dạng kỳ lạ lắm 🌙 #tamsu",
+//         ],
+//         cuocsong: [
+//             "Cuộc sống không cần phải perfect. Chỉ cần đủ tốt, đủ ý nghĩa, và đủ bình yên cho bản thân mình là được 🍃 #cuocsong",
+//         ],
+//         docsach: [
+//             "Đọc 1 cuốn/tháng nghe nhỏ nhưng cộng lại 12 cuốn/năm. Sau 3 năm tư duy thay đổi hơn bất kỳ khoá học nào 📚 #docsach",
+//         ],
+//         music: [
+//             "Playlist chill làm việc: lo-fi hip hop, jazz bossa nova, ambient piano. Không có lời = không bị distract 🎵 #music",
+//         ],
+//         vpop: [
+//             "V-pop năm 2024-2025 đỉnh thật: Tùng Dương, Hoàng Thùy Linh, HIEUTHUHAI, tlinh – đủ mọi genre, chất lượng không kém K-pop 🎤 #vpop",
+//         ],
+//         kpop: [
+//             "Concert K-pop ở Việt Nam ngày càng nhiều: không cần bay sang Hàn nữa. Fan Việt cháy hết mình 🔥 #kpop",
+//             "Album mới của nhóm vừa drop: đang nghe loop không ngừng được, ai cùng stan thì cmt xuống dưới 🎧 #kpop",
+//         ],
+//         phim: [
+//             "Phim Việt đang trên đà tăng chất: Cô Gái Từ Quá Khứ, Đất Rừng Phương Nam, Kẻ Cắp Mặt Trăng – không cần xem Hollywood! 🎬 #phim",
+//         ],
+//         gaming: [
+//             "Gaming session cuối tuần: không cần console xịn, chỉ cần PC ổn và team bạn thân là đủ vui 🎮 #gaming",
+//         ],
+//         photography: [
+//             "Chụp ảnh bằng điện thoại đẹp: ánh sáng tự nhiên + rule of thirds + không zoom digital. Ba điều này thôi là đủ 📱 #photography",
+//             "Golden hour Sài Gòn: 17h-18h, ánh sáng cam ấm, mọi thứ đều photogenic kể cả con hẻm bình thường nhất 🌇 #photography",
+//         ],
+
+//         // Thú cưng
+//         meocon: [
+//             "Bé mèo vào nhà lạ lẫm tuần đầu, tuần 3 đã nằm trên laptop mình làm việc 😭 mèo là boss thiệt rồi 🐱 #meocon",
+//         ],
+//         cuncung: [
+//             "Chú chó nhà mình mỗi sáng đều đứng canh cửa đợi mình dắt đi dạo. Nghĩa vụ vui nhất ngày 🐶 #cuncung",
+//         ],
+//         petlover: [
+//             "Nuôi thú cưng dạy mình: kiên nhẫn, yêu thương vô điều kiện, và biết rằng ai đó luôn chờ mình về nhà 🐾 #petlover",
+//         ],
+//         catlife: [
+//             "Mèo: ngủ 16 tiếng, ăn, nhìn vào hư không, đặt ngồi lên keyboard. Cuộc sống hoàn hảo không cần giải thích 😸 #catlife",
+//         ],
+
+//         // Gen Z Viral
+//         genzlife: [
+//             "Gen Z không lười, chỉ đang redefined productivity: không phải làm 12 tiếng/ngày mới là chăm chỉ 💁 #genzlife",
+//             "Ký ức tuổi thơ Gen Z: Yahoo chat, Audition, chép bài nhau ở lớp rồi nạp thẻ điện thoại cuối tuần 📲 #genzlife",
+//         ],
+//         viral: [
+//             "Video này đạt 1M view trong 24h. Bài học: authentic content + right timing > production value cao 📱 #viral",
+//         ],
+//         trending: [
+//             "Trend ẩm thực đang hot nhất: matcha + gì cũng được, cold brew với mọi vị, và bánh mì kiểu fusion. Bạn thấy trend nào tiếp theo? 👀 #trending",
+//         ],
+//         xuhuong: [
+//             "Xu hướng sống tối giản đang lan rộng ở giới trẻ: ít đồ hơn, ít cam kết hơn, nhiều trải nghiệm hơn. Bạn có đang theo không? ✨ #xuhuong",
+//         ],
+//         meme: [
+//             "Meme Việt Nam 2025 hình thức mới nhất: blend pop culture quốc tế với slang địa phương – hài hơn meme nước ngoài nhiều 😂 #meme",
+//         ],
+//         relatable: [
+//             "Cái cảm giác mở app, cuộn 30 giây rồi quên mình vào app để làm gì. Này là trauma bình thường của thế kỷ 21 😅 #relatable",
+//         ],
+//         overthinking: [
+//             "Overthinking lúc 2h sáng: replay lại cuộc hội thoại 5 năm trước và nghĩ xem mình nên nói gì khác 🌙 #overthinking",
+//         ],
+//         coffeeaddict: [
+//             "Số ly cà phê/ngày: 1 để tỉnh táo, 2 để productive, 3 để tồn tại. Hôm nay mình đang ở level 3 ☕ #coffeeaddict",
+//         ],
+//         dailyvlog: [
+//             "Day in my life: dậy 6h, gym, làm việc từ quán café, chiều chạy bộ, tối nấu cơm. Routine nhàm nhưng happy 📹 #dailyvlog",
+//         ],
+//         diy: [
+//             "DIY kệ sách từ pallet gỗ cũ: chi phí 150k, 3 tiếng làm, kết quả chuẩn nội thất Bắc Âu 🪵 #diy",
+//         ],
+
+//         // Môi trường
+//         zerowaste: [
+//             "Zero waste không cần perfect: bắt đầu từ mang túi vải, bình nước, hộp đựng đồ ăn riêng. 3 thứ này giảm được 80% rác nhựa 🌿 #zerowaste",
+//         ],
+//         sustainable: [
+//             "Mua đồ secondhand không phải nghèo – đó là lựa chọn có trách nhiệm với môi trường và ví tiền 🌱 #sustainable",
+//         ],
+//         ecofriendly: [
+//             "Sản phẩm eco-friendly Việt Nam đang nở rộ: ống hút tre, túi giấy kraft, hộp bã mía – không thua kém hàng ngoại nhập 🌍 #ecofriendly",
+//         ],
+//         gogreen: [
+//             "Trồng cây ban công: sả, rau húng, ớt, cà chua cherry – vừa xanh nhà vừa có rau sạch ăn. Ai ở chung cư cũng làm được 🌿 #gogreen",
+//         ],
+
+//         // Tài chính
+//         taichinhhcanhan: [
+//             "Quy tắc 50-30-20: 50% thiết yếu, 30% muốn có, 20% tiết kiệm. Đơn giản nhưng hiệu quả hơn bất kỳ app tài chính nào 💰 #taichinhhcanhan",
+//         ],
+//         dautu: [
+//             "Đầu tư chứng khoán 2 năm: lỗ năm đầu vì không biết gì, lãi năm 2 vì đã học. Trường phí đắt nhưng bài học xứng đáng 📈 #dautu",
+//         ],
+//         tiettiem: [
+//             "Mẹo tiết kiệm của mình: chuyển 20% lương vào tài khoản khác ngay khi nhận lương. Không thấy = không xài được 💳 #tiettiem",
+//         ],
+//         sidehustle: [
+//             "Side hustle của mình: dạy tiếng Anh online buổi tối, 2 học sinh/ngày = thêm 4-5 triệu/tháng không ảnh hưởng công việc chính 💼 #sidehustle",
+//         ],
+
+//         // Các tag còn lại
+//         sunrisevietnam: ["Bình minh trên biển Mũi Né: không có gì hơn – nước yên, trời hồng, không một bóng người 🌅 #sunrisevietnam"],
+//         nongnghiep: ["Về quê học nấu rượu gạo truyền thống với ông ngoại: bí quyết 50 năm, không sách nào dạy được 🌾 #nongnghiep"],
+//         campingvn: ["Camping Đà Lạt trong rừng thông: dựng lều lúc 4 chiều, nướng xúc xích lúc 7 tối, ngắm sao từ 9 đến 12 ⛺ #campingvn"],
+//         phongnhatourist: ["Phong Nha hệ thống hang động dài nhất thế giới – mà đến giờ vẫn còn hang chưa khám phá hết 🕯️ #phongnhatourist"],
+//         mountainlife: ["Sống ở vùng núi Tây Bắc: sáng sương mù, trưa nắng vàng, tối lạnh trong chăn dày. Nhịp sống không nơi nào có 🏔️ #mountainlife"],
+//         watchlover: ["Đồng hồ vintage Seiko từ những năm 80: máy cơ, kính sapphire, dây da thật. Giá 2 triệu mà chất hơn đồng hồ mới 3-4 lần 🕐 #watchlover"],
+//         koreanskincare: ["10-step Korean skincare không cần dùng hết 10 bước: chọn 5 bước phù hợp với da mình là hiệu quả hơn #koreanskincare"],
+//         routine: ["Morning routine của mình: 6h dậy, không điện thoại 30 phút, tập thể dục, ăn sáng nhẹ. 30 ngày đầu khó, sau đó auto 🌅 #routine"],
+//         lipstick: ["Son đất Việt Nam làm tốt không kém son ngoại: màu đẹp, bền màu, giá 80-150k. Local brand xứng đáng được ủng hộ 💄 #lipstick"],
+//         eyeshadow: ["Tutorial eyeshadow smoky eye cho người mới: 3 màu cơ bản là đủ, blend đều tay là xong 🎨 #eyeshadow"],
+//         sundress: ["Váy hoa mùa hè: vải thoáng, màu sáng, cổ V thấp. Một chiếc versatile đi biển, đi cà phê, đi chơi đều được 🌺 #sundress"],
+//         denim: ["Quần jeans washed cũ từ thập niên 90 đang comeback: vintage wash, baggy fit, không cần ủi. Mua secondhand giá 100-200k #denim"],
+//         handbag: ["Túi da thật handmade Việt Nam: thợ lành nghề, chất liệu tốt, giá bằng 30% hàng ngoại cùng chất lượng 👜 #handbag"],
+//         luxuryfashion: ["Luxury fashion thật sự không nằm ở logo: nằm ở chất vải, đường may, và sự vừa vặn. Đó là lý do French wardrobe minimal vẫn đẹp 🪡 #luxuryfashion"],
+//         summerlook: ["Look mùa hè Sài Gòn: thoáng, sáng màu, chịu nhiệt. Linen + cotton = combo không cần nghĩ nhiều ☀️ #summerlook"],
+//         casualfit: ["Casual fit không cần đắt: tee trắng basic + jeans straight + sneakers trắng. Công thức 3 món vẫn luôn đúng 👕 #casualfit"],
+//         mensfashion: ["Nam mặc đẹp không cần phức tạp: fit tốt + màu trung tính + 1 điểm nhấn. Đó là toàn bộ bí quyết 👔 #mensfashion"],
+//         womensfashion: ["Tủ quần áo minimalist nữ: 10 món cơ bản phối được 30+ outfit. Ít hơn, nghĩ ít hơn, mặc đẹp hơn 👗 #womensfashion"],
+//         nodejs: ["Node.js với Express: backend đơn giản dựng nhanh. 3 ngày là có REST API cơ bản. Tốt cho beginner bắt đầu 🖥️ #nodejs"],
+//         reactjs: ["React hooks vẫn là powerful nhất khi hiểu flow: useState → useEffect → useContext → custom hooks. Học theo thứ tự này 🔄 #reactjs"],
+//         nextjs: ["Next.js App Router vs Pages Router: App Router phức tạp hơn nhưng powerful hơn. Dự án mới nên dùng App Router 🗂️ #nextjs"],
+//         python: ["Python cho người không phải dev: tự động hoá Excel, xử lý file PDF, scraping data. 3 tháng học là dùng được 🐍 #python"],
+//         machinelearning: ["ML không cần PhD: học sklearn, pandas, matplotlib là có thể làm được project thực tế. Bắt đầu từ linear regression #machinelearning"],
+//         saas: ["Build SaaS đầu tiên: không cần tech stack fancy. Django + PostgreSQL + Stripe là đủ để ship MVP trong 2 tuần 🚀 #saas"],
+//         devlife: ["Developer life: đọc code 3 tiếng, viết code 1 tiếng, attend meeting 2 tiếng, debug 2 tiếng. Đó là 1 ngày làm việc thật 🤓 #devlife"],
+//         programmerhumor: ["Print('hello world') vẫn là đoạn code đầu tiên mình viết được. 5 năm sau: vẫn dùng print để debug 😂 #programmerhumor"],
+//         database: ["Database indexing: đừng để sau optimize, làm ngay từ đầu. Câu query 5s → 0.1s chỉ bằng thêm 1 index đúng chỗ ⚡ #database"],
+//         api: ["REST API design: resource-based URL, HTTP verbs đúng, response format nhất quán. Ba điều này là 80% của API tốt 🔌 #api"],
+//         deployment: ["Deploy lần đầu lên production: nhiều thứ crash hơn local. Nhưng đó là bài học không sách nào dạy được 🖥️ #deployment"],
+//         docker: ["Docker giải quyết 'works on my machine': containerise app 1 lần, chạy mọi nơi. Học Docker = tăng 30% giá trị CV 🐋 #docker"],
+//         workout: ["Workout split cho người bận: Push/Pull/Legs 3 ngày/tuần. Đủ frequency, đủ volume, không cần 6 ngày gym #workout"],
+//         healthyeating: ["Ăn healthy không cần khó: thêm rau vào mọi bữa ăn, giảm đường trong đồ uống, ăn đủ protein. Đơn giản hoá đi #healthyeating"],
+//         weightloss: ["Giảm cân bền vững: không cần diet cực đoan. Deficit calo nhỏ + vận động đều đặn = kết quả ổn định theo tháng 📉 #weightloss"],
+//         muscle: ["Tăng cơ cần 2 thứ: progressive overload và đủ protein. Bao nhiêu thứ khác chỉ là optimization 💪 #muscle"],
+//         cycling: ["Đạp xe đi làm sáng sớm: 7km, 25 phút, không kẹt xe, tiết kiệm xăng, tập thể dục miễn phí. Win all round 🚴 #cycling"],
+//         swimming: ["Bơi lội: bài tập toàn thân, không impact khớp, mát mẻ mùa hè. Quân sự nhất là free style 100m × 10 reps 🏊 #swimming"],
+//         bongda: ["Xem bóng đá cùng bạn bè: không quan tâm đội nào thắng bằng cái không khí la hét cùng nhau 🥅 #bongda"],
+//         tennis: ["Học tennis người lớn tuổi mới tập: kiên nhẫn và footwork là quan trọng nhất, không phải tay mạnh 🎾 #tennis"],
+//         badminton: ["Cầu lông tối thứ 4 với đồng nghiệp: vừa tập vừa bond team tốt hơn bất kỳ team building nào trả tiền 🏸 #badminton"],
+//         marathon: ["Tập marathon lần đầu: build up từ 5km, không bỏ qua long run cuối tuần, và tìm running group để có động lực 🏃‍♂️ #marathon"],
+//         pilates: ["Pilates reformer sau 8 tuần: core mạnh hơn, lưng hết đau, tư thế cải thiện rõ rệt. Đắt hơn gym nhưng xứng đáng 🧘‍♀️ #pilates"],
+//         nghimoi: ["Suy nghĩ mới học được: so sánh mình với version hôm qua, không phải với người khác. Ít khổ hơn rất nhiều 💭 #nghimoi"],
+//         sachvahoa: ["Đọc sách giúp mình hiểu người khác hơn trước: không phải vì sách dạy cách xử lý, mà vì thấy mình trong nhân vật 📖 #sachvahoa"],
+//         sohoc: ["Học sơ học tập: spaced repetition + active recall đánh bại highlight màu mè. Anki app + luyện đề = combo không fail 📝 #sohoc"],
+//         langman: ["Lãng mạn giản đơn: bữa cơm nhà nấu cùng nhau, đi dạo buổi tối, ngủ sớm không điện thoại. Không cần fancy 🌙 #langman"],
+//         series: ["Series Việt Nam đang ngày càng chất: 'Người Vợ Cuối Cùng', 'Biệt Dội Rồng Đen' – không cần Netflix xịn 📺 #series"],
+//         anime: ["Anime 2025 hay nhất đang xem: Frieren Beyond Journey's End. Không phải action nhưng mà sâu sắc lạ 🌸 #anime"],
+//         booklover: ["Thư viện Hà Nội mở cửa miễn phí: ngày lên đây đọc 2 tiếng yên tĩnh là cách mình recharge tốt nhất 📚 #booklover"],
+//         artlover: ["Triển lãm nghệ thuật Sài Gòn đang mở: nghệ sĩ trẻ Việt Nam với concept đương đại – đẹp và đáng suy nghĩ 🎨 #artlover"],
+//         livelife: ["Sống thật sự: không phải perfect, không phải instagrammable. Chỉ cần present, grateful, và honest 🌿 #livelife"],
+//         sunrise: ["Bình minh ở bãi biển không cần diễn: chỉ cần dậy sớm và ra đứng đó. Không filter nào cần thiết 🌅 #sunrise"],
+//         rescuedog: ["Nhận nuôi chó rescue: 2 tuần sợ hãi mọi thứ, tháng 2 bắt đầu vẫy đuôi, tháng 3 ngủ trên giường mình 🐕 #rescuedog"],
+//         rescuecat: ["Mèo rescue nhà mình từng bị bỏ trong thùng giấy mưa. Giờ: 4kg, hay cắn, và là trung tâm vũ trụ nhà mình 🐈 #rescuecat"],
+//         cutepet: ["Khoảnh khắc thú cưng: con mèo ngủ úp mặt vào lòng bàn tay. Không cần gì hơn nữa trong cuộc đời 🐾 #cutepet"],
+//         fluffycat: ["Mèo Anh lông ngắn nhà mình: mặt tưởng cáu nhưng không bao giờ cắn. Judge book by cover thật 😸 #fluffycat"],
+//         doglife: ["Chó Golden của mình vẫy đuôi dù đi ra ngoài 5 phút hay 5 tiếng. Loài vật trung thành nhất đúng là không phải ví von 🐕‍🦺 #doglife"],
+//         thucung: ["Nuôi thú cưng responsibility lớn hơn người ta nghĩ: vet, grooming, training, không bỏ lại khi chán. Cần suy nghĩ kỹ trước khi nhận 🐾 #thucung"],
+//         recycling: ["Tái chế tại nhà dễ hơn bạn nghĩ: phân loại rác vào 3 thùng: hữu cơ, tái chế, rác thải thông thường. 10 phút học là làm được ♻️ #recycling"],
+//         vegancooking: ["Nấu chay không nhạt: dùng nước tương, dầu mè, ớt tươi, và rau thơm đúng cách. Bát canh rau không cần thịt vẫn có umami 🌿 #vegancooking"],
+//         plantbased: ["Plant-based diet không cần full vegan: giảm thịt 50%, tăng đậu hũ, nấm, rau lá. Sức khỏe cải thiện, chi phí giảm #plantbased"],
+//         moitruong: ["Thay bóng đèn LED, tắt điện khi ra khỏi phòng, không để TV standby – 3 thói quen giảm điện 15-20%/tháng 🌍 #moitruong"],
+//         xanhlacay: ["Trồng cây trong nhà không cần đất: thủy canh với pothos, thị trường, lưỡi hổ. Lọc không khí và trang trí cùng lúc 🌱 #xanhlacay"],
+//         solarpanel: ["Pin mặt trời mái nhà: đầu tư 80 triệu, hoàn vốn 6-7 năm, dùng 20 năm. Toán học rõ ràng, chỉ cần quyết tâm ☀️ #solarpanel"],
+//         batdongsan: ["Mua nhà lần đầu ở Sài Gòn: 2 tỷ tầm tay với chung cư 60m2 ngoại ô + xe bus kết nối. Khó nhưng không impossible 🏠 #batdongsan"],
+//         realestate: ["Real estate Việt Nam 2025: thị trường đang điều chỉnh, cơ hội cho người mua ở thực. Đừng mua để lướt sóng lúc này 📊 #realestate"],
+//         muagold: ["Vàng tích luỹ hàng tháng: không cần mua đủ 1 chỉ, mua 0.5 chỉ/tháng cũng tích luỹ được qua năm tháng 🥇 #muagold"],
+//         crypto: ["Crypto 2025: Bitcoin ETF approval, ít biến động hơn. Vẫn không phải trò chơi cho người không hiểu rủi ro ₿ #crypto"],
+//         financelife: ["Không giàu = không biết quản lý tiền, không phải không có tiền. Học tài chính cá nhân ngay từ hôm nay 💸 #financelife"],
+//         chungkhoan: ["Chứng khoán Việt Nam cho người mới: bắt đầu với ETF index fund, đều đặn mỗi tháng, không cần chọn cổ phiếu 📈 #chungkhoan"],
+//         nightowl: ["3h sáng productivity kỳ lạ: không ai nhắn tin, não hoạt động khác lạ, code chạy mượt hơn ban ngày. Night owl life 🌙 #nightowl"],
+//         introvert: ["Recharge cách của người introvert: ở nhà 1 ngày một mình, không nghe nhạc, không mạng xã hội. Sau đó ready gặp người 🤫 #introvert"],
+//         mondaymotivation: ["Thứ 2 không cần ghét: nó giống như bất kỳ ngày nào khác. Cái ghét là attitude của mình với nó thôi 🌟 #mondaymotivation"],
+//         fridayvibes: ["Thứ 6 office: mọi người bỗng nhiên creative, productive, và vui hơn. Tâm lý học thú vị không? 🎉 #fridayvibes"],
+//         weekendplans: ["Kế hoạch cuối tuần lý tưởng: sáng tập thể dục, trưa ăn ngon cùng gia đình, chiều đọc sách, tối không điện thoại 🌅 #weekendplans"],
+//         nofilter: ["Cuộc sống thật không có filter: bừa bộn, mệt mỏi, không hoàn hảo – nhưng đó là thật và đó là đủ 💙 #nofilter"],
+//         asmr: ["ASMR mưa rơi ngoài cửa sổ + cà phê nóng + sách hay = combo ngủ ngon tự nhiên không cần thuốc 🌧️ #asmr"],
+//         satisfying: ["Xem video sắp xếp đồ, cắt slime, và dọn dẹp xong thấy não nhẹ hẳn. Dopamine đến từ những thứ kỳ lạ nhất 😌 #satisfying"],
+//         randomthoughts: ["Tại sao ngồi chờ 5 phút dài hơn làm việc 5 phút? Não người vẫn là bí ẩn chưa giải thích hết 🤔 #randomthoughts"],
+//     };
+
+//     const templates: PostTemplate[] = [];
+
+//     // Đảm bảo mỗi hashtag có ít nhất 1 bài, và hashtag hot có nhiều bài hơn
+//     for (const tag of ALL_HASHTAGS) {
+//         const contents = CONTENT_BY_HASHTAG[tag];
+//         if (!contents || contents.length === 0) {
+//             // Fallback cho các tag chưa có content
+//             templates.push({
+//                 content: `Chia sẻ về chủ đề #${tag} hôm nay. Bạn có suy nghĩ gì về điều này không? 💭 #${tag}`,
+//                 hashtag: tag,
+//                 media: { kind: "images", count: rand(1, 2) },
+//             });
+//             continue;
+//         }
+
+//         // Thêm tất cả content có sẵn
+//         for (const content of contents) {
+//             templates.push({
+//                 content,
+//                 hashtag: tag,
+//                 media: pickMedia(),
+//             });
+//         }
+
+//         // Hashtag hot → thêm bài extra
+//         const extraCount = (HOT_HASHTAGS[tag] ?? 1) - 1;
+//         for (let e = 0; e < extraCount; e++) {
+//             templates.push({
+//                 content: contents[e % contents.length],
+//                 hashtag: tag,
+//                 media: pickMedia(),
+//             });
+//         }
+//     }
+
+//     return templates;
+// }
+
+// function pickMedia(): PostMediaDef {
+//     const r = Math.random();
+//     if (r < 0.40) return { kind: "images", count: rand(1, 3) };
+//     if (r < 0.55) return { kind: "images", count: rand(1, 5) };    // nhiều ảnh
+//     if (r < 0.75) return { kind: "video" };
+//     if (r < 0.90) return { kind: "images+video", imgCount: rand(1, 2) };
+//     return { kind: "images", count: 1 };
+// }
+
+// // ─── MAIN SEED ────────────────────────────────────────────────────────────────
+// async function seedHashtagPosts() {
+//     console.log("\n🌱 ===== SEED HASHTAG POSTS =====\n");
+
+//     // 1. Load users
+//     const users = await prisma.user.findMany({
+//         where: { deletedAt: null },
+//         select: {
+//             id: true,
+//             username: true,
+//             name: true,
+//             avatar: true,
+//             bio: true,
+//         },
+//         orderBy: { createdAt: "desc" },
+//         take: 200,
+//     });
+
+//     if (users.length === 0) {
+//         throw new Error("Không tìm thấy user nào. Hãy chạy seed gốc trước!");
+//     }
+//     console.log(`👤 Tìm thấy ${users.length} users\n`);
+
+//     // 2. Load hoặc tạo Topics cho tất cả hashtag
+//     console.log(`🏷️  Đảm bảo ${ALL_HASHTAGS.length} topics tồn tại...`);
+//     const topicMap = new Map<string, number>(); // hashtag → topic.id
+
+//     for (const tag of ALL_HASHTAGS) {
+//         const topic = await prisma.topic.upsert({
+//             where: { name: tag },
+//             create: { name: tag, count: 0 },
+//             update: {},
+//             select: { id: true, name: true },
+//         });
+//         topicMap.set(tag, topic.id);
+//     }
+//     console.log(`   ✅ ${topicMap.size} topics sẵn sàng\n`);
+
+//     // 3. Build templates
+//     const templates = buildPostTemplates();
+//     const shuffled = shuffle(templates);
+//     console.log(`📋 Tổng số bài sẽ tạo: ${shuffled.length}\n`);
+
+//     // 4. Tạo bài viết
+//     let totalPosts = 0;
+//     let totalImages = 0;
+//     let totalVideos = 0;
+//     let totalTopicLinks = 0;
+//     const hashtagCount = new Map<string, number>();
+//     let imgIdx = 0;
+//     let videoIdx = 0;
+
+//     for (let i = 0; i < shuffled.length; i++) {
+//         const tmpl = shuffled[i];
+//         const author = users[i % users.length];
+//         const createdAt = randomDate(90);
+
+//         // Tạo post
+//         const post = await prisma.post.create({
+//             data: {
+//                 userId: author.id,
+//                 content: tmpl.content,
+//                 type: PostType.POST,
+//                 visibility: VisibilityPost.PUBLIC,
+//                 replyPermission: pick([
+//                     ReplyPermission.EVERYONE,
+//                     ReplyPermission.EVERYONE,
+//                     ReplyPermission.EVERYONE,
+//                     ReplyPermission.FOLLOWERS,
+//                 ]),
+//                 userSnapshot: {
+//                     id: author.id,
+//                     username: author.username,
+//                     name: author.name,
+//                     avatar: author.avatar,
+//                     bio: author.bio,
+//                 },
+//                 likesCount: rand(0, 800),
+//                 repliesCount: rand(0, 60),
+//                 repostsCountAndQuoteCount: rand(0, 40),
+//                 viewsCount: rand(100, 30000),
+//                 createdAt,
+//                 updatedAt: createdAt,
+//             },
+//             select: { id: true, publicId: true },
+//         });
+//         totalPosts++;
+
+//         // Tạo media
+//         const mediaDef = tmpl.media;
+//         const mediaRows: {
+//             postId: number;
+//             url: string;
+//             type: PostMediaType;
+//             width?: number;
+//             height?: number;
+//             key: string;
+//             status: PostMediaStatus;
+//         }[] = [];
+
+//         if (mediaDef.kind === "images") {
+//             for (let m = 0; m < mediaDef.count; m++) {
+//                 const url = IMAGE_POOL[imgIdx++ % IMAGE_POOL.length];
+//                 mediaRows.push({
+//                     postId: post.id,
+//                     url,
+//                     type: PostMediaType.IMAGE,
+//                     width: pick([720, 1080, 1280]),
+//                     height: pick([720, 1080, 1350]),
+//                     key: `htag_img_${post.id}_${m}_${Date.now() + m}`,
+//                     status: PostMediaStatus.UPLOADED,
+//                 });
+//                 totalImages++;
+//             }
+//         } else if (mediaDef.kind === "video") {
+//             const url = VIDEO_POOL[videoIdx++ % VIDEO_POOL.length];
+//             mediaRows.push({
+//                 postId: post.id,
+//                 url,
+//                 type: PostMediaType.VIDEO,
+//                 width: 1920,
+//                 height: 1080,
+//                 key: `htag_vid_${post.id}_${Date.now()}`,
+//                 status: PostMediaStatus.UPLOADED,
+//             });
+//             totalVideos++;
+//         } else if (mediaDef.kind === "images+video") {
+//             // Ảnh trước
+//             for (let m = 0; m < mediaDef.imgCount; m++) {
+//                 const url = IMAGE_POOL[imgIdx++ % IMAGE_POOL.length];
+//                 mediaRows.push({
+//                     postId: post.id,
+//                     url,
+//                     type: PostMediaType.IMAGE,
+//                     width: pick([720, 1080, 1280]),
+//                     height: pick([720, 1080, 1350]),
+//                     key: `htag_img2_${post.id}_${m}_${Date.now() + m}`,
+//                     status: PostMediaStatus.UPLOADED,
+//                 });
+//                 totalImages++;
+//             }
+//             // Video sau
+//             const url = VIDEO_POOL[videoIdx++ % VIDEO_POOL.length];
+//             mediaRows.push({
+//                 postId: post.id,
+//                 url,
+//                 type: PostMediaType.VIDEO,
+//                 width: 1920,
+//                 height: 1080,
+//                 key: `htag_vid2_${post.id}_${Date.now() + 999}`,
+//                 status: PostMediaStatus.UPLOADED,
+//             });
+//             totalVideos++;
+//         }
+
+//         if (mediaRows.length > 0) {
+//             await prisma.postMedia.createMany({ data: mediaRows });
+//         }
+
+//         // Gắn hashtag vào TopicsPost (1 hashtag / bài)
+//         const topicId = topicMap.get(tmpl.hashtag);
+//         if (topicId) {
+//             await prisma.topicsPost.upsert({
+//                 where: { postId: post.id },
+//                 create: {
+//                     postId: post.id,
+//                     topicId,
+//                     isPublic: true,
+//                 },
+//                 update: { topicId },
+//             });
+
+//             // Tăng count cho topic
+//             await prisma.topic.update({
+//                 where: { id: topicId },
+//                 data: { count: { increment: 1 } },
+//             });
+
+//             totalTopicLinks++;
+//             hashtagCount.set(tmpl.hashtag, (hashtagCount.get(tmpl.hashtag) ?? 0) + 1);
+//         }
+
+//         if ((i + 1) % 50 === 0 || i === shuffled.length - 1) {
+//             process.stdout.write(
+//                 `\r   → ${i + 1}/${shuffled.length} bài | 🖼️ ${totalImages} ảnh | 🎬 ${totalVideos} video | 🏷️ ${totalTopicLinks} hashtag`
+//             );
+//         }
+//     }
+
+//     // 5. Thống kê top trending
+//     console.log("\n\n📊 ===== TOP 20 HASHTAG TRENDING =====");
+//     const sorted = [...hashtagCount.entries()].sort((a, b) => b[1] - a[1]);
+//     sorted.slice(0, 20).forEach(([tag, count], idx) => {
+//         const bar = "█".repeat(Math.ceil(count / 2));
+//         console.log(`  ${String(idx + 1).padStart(2)}. #${tag.padEnd(25)} ${count.toString().padStart(3)} bài  ${bar}`);
+//     });
+
+//     console.log(`
+// 🎉 ===== SEED HASHTAG POSTS HOÀN THÀNH =====
+//    📝 Tổng posts       : ${totalPosts}
+//    🖼️  Ảnh (IMAGE)      : ${totalImages}
+//    🎬 Video            : ${totalVideos}
+//    🏷️  Hashtag links    : ${totalTopicLinks}
+//    🔢 Hashtag unique   : ${hashtagCount.size} / ${ALL_HASHTAGS.length}
+// =============================================`);
+// }
+
+// // ─── ENTRY POINT ──────────────────────────────────────────────────────────────
+// seedHashtagPosts()
+//     .catch((e) => {
+//         console.error("\n❌ Seed thất bại:", e);
+//         process.exit(1);
+//     })
+//     .finally(() => prisma.$disconnect());
+
+
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 import {
-    PostMediaStatus,
-    PostMediaType,
     PostType,
     PrismaClient,
     ReplyPermission,
+    ReportStatus,
+    ReportTargetType,
     VisibilityPost,
 } from "@prisma/client";
 import dotenv from "dotenv";
@@ -2139,912 +3231,2062 @@ function shuffle<T>(arr: T[]): T[] {
     return [...arr].sort(() => Math.random() - 0.5);
 }
 
-// ─── 200+ Hashtags (thực tế Việt Nam, phân theo chủ đề) ──────────────────────
-export const ALL_HASHTAGS: string[] = [
-    // Ẩm thực (30 tags)
-    "amthuc",
-    "foodie",
-    "xuhuongamthuc",
-    "saigonfood",
-    "hanoidishes",
-    "comtam",
-    "bunbo",
-    "pho",
-    "banhmi",
-    "cafesaigon",
-    "trasuavietnam",
-    "streetfood",
-    "homecooking",
-    "naucuoi",
-    "reviewquanan",
-    "banhngot",
-    "lauphat",
-    "nuongbbq",
-    "doanhnhan",       // sẽ dùng lại nếu cần nhưng tách riêng chủ đề
-    "hatieu",
-    "raumam",
-    "banhcuon",
-    "chebavien",
-    "cahepho",
-    "nuocep",
-    "bakery",
-    "dessertlover",
-    "vietfood",
-    "anngon",
-    "foodphotography",
-
-    // Du lịch (30 tags)
-    "dulichvietnam",
-    "travel",
-    "xuhuongdulich",
-    "phuquoc",
-    "dalat",
-    "sapa",
-    "halong",
-    "hoian",
-    "danang",
-    "nhatrang",
-    "cantho",
-    "hue",
-    "buonmathuot",
-    "phanthiet",
-    "condao",
-    "muicne",
-    "laocai",
-    "hagiang",
-    "backpacker",
-    "solotraveler",
-    "dulichbalo",
-    "checkin",
-    "sunrisevietnam",
-    "nongnghiep",
-    "homestay",
-    "campingvn",
-    "roadtrip",
-    "phongnhatourist",
-    "trekking",
-    "mountainlife",
-
-    // Thời trang & Làm đẹp (30 tags)
-    "ootd",
-    "fashion",
-    "streetstyle",
-    "skincare",
-    "beauty",
-    "trangdiem",
-    "chamsocda",
-    "hairstyle",
-    "nail",
-    "makeup",
-    "thoitrang",
-    "vintage",
-    "thrifted",
-    "outfit",
-    "mensfashion",
-    "womensfashion",
-    "summerlook",
-    "casualfit",
-    "luxuryfashion",
-    "koreanskincare",
-    "routine",
-    "glowup",
-    "lipstick",
-    "eyeshadow",
-    "sundress",
-    "denim",
-    "sneakers",
-    "handbag",
-    "accessories",
-    "watchlover",
-
-    // Công nghệ & Lập trình (25 tags)
-    "coding",
-    "developer",
-    "tech",
-    "laptrinh",
-    "javascript",
-    "typescript",
-    "reactjs",
-    "nextjs",
-    "nodejs",
-    "python",
-    "ai",
-    "machinelearning",
-    "startup",
-    "saas",
-    "webdev",
-    "devlife",
-    "programmerhumor",
-    "opensource",
-    "database",
-    "api",
-    "deployment",
-    "docker",
-    "github",
-    "freelancer",
-    "remote",
-
-    // Sức khỏe & Thể thao (20 tags)
-    "fitness",
-    "gym",
-    "yoga",
-    "chaybo",
-    "suckhoe",
-    "workout",
-    "healthyeating",
-    "weightloss",
-    "muscle",
-    "running",
-    "cycling",
-    "swimming",
-    "bongda",
-    "tennis",
-    "badminton",
-    "marathon",
-    "wellbeing",
-    "mentalhealth",
-    "meditation",
-    "pilates",
-
-    // Đời sống & Cảm xúc (20 tags)
-    "tamsu",
-    "cuocsong",
-    "nghimoi",
-    "sachvahoa",
-    "sohoc",
-    "langman",
-    "docsach",
-    "music",
-    "nhacviet",
-    "vpop",
-    "kpop",
-    "phim",
-    "series",
-    "anime",
-    "gaming",
-    "booklover",
-    "artlover",
-    "photography",
-    "sunrise",
-    "livelife",
-
-    // Động vật cưng (10 tags)
-    "meocon",
-    "cuncung",
-    "doglife",
-    "catlife",
-    "petlover",
-    "thucung",
-    "rescuedog",
-    "rescuecat",
-    "cutepet",
-    "fluffycat",
-
-    // Môi trường & Bền vững (10 tags)
-    "zerowaste",
-    "sustainable",
-    "xanhlacay",
-    "moitruong",
-    "recycling",
-    "vegancooking",
-    "plantbased",
-    "solarpanel",
-    "gogreen",
-    "ecofriendly",
-
-    // Tài chính & Đầu tư (10 tags)
-    "taichinhhcanhan",
-    "dautu",
-    "chungkhoan",
-    "realestate",
-    "batdongsan",
-    "tiettiem",
-    "muagold",
-    "crypto",
-    "financelife",
-    "sidehustle",
-
-    // Gen Z / Viral (20 tags)
-    "genzlife",
-    "viral",
-    "trending",
-    "xuhuong",
-    "funny",
-    "meme",
-    "relatable",
-    "randomthoughts",
-    "nightowl",
-    "overthinking",
-    "introvert",
-    "coffeeaddict",
-    "mondaymotivation",
-    "fridayvibes",
-    "weekendplans",
-    "nofilter",
-    "dailyvlog",
-    "asmr",
-    "satisfying",
-    "diy",
-];
-
-// ─── Image pool ───────────────────────────────────────────────────────────────
-const IMAGE_POOL: string[] = [
-    "https://i.pinimg.com/originals/88/e0/6e/88e06ede2822923413088897af065b03.jpg",
-    "https://i.pinimg.com/originals/38/5e/15/385e15ed827b40a02b4734edde8cfa8a.jpg",
-    "https://i.pinimg.com/originals/f2/58/29/f25829d5213996ef3bf765c67ed68fbb.jpg",
-    "https://i.pinimg.com/originals/0b/66/9a/0b669aa31c8781da6010960c6e1012b0.jpg",
-    "https://i.pinimg.com/originals/15/dd/c3/15ddc353abf305016f88cc6dba86fde1.jpg",
-    "https://i.pinimg.com/originals/b1/af/cf/b1afcfaf70963daaa6c2786ec7f6f2eb.jpg",
-    "https://i.pinimg.com/originals/68/f4/db/68f4db72ab2c505a01c5de443c4315fd.jpg",
-    "https://i.pinimg.com/originals/c4/71/0e/c4710ee2d312d2bf2a5bc1b478013bce.jpg",
-    "https://i.pinimg.com/originals/0a/da/bd/0adabd591af61a5f3c18d2252ccb9de4.jpg",
-    "https://i.pinimg.com/originals/98/10/47/98104778fe1e452538306d7d736284c2.png",
-    "https://i.pinimg.com/originals/a0/1d/d6/a01dd625cab0b709548f7cc6a5313283.jpg",
-    "https://i.pinimg.com/originals/47/ba/58/47ba587905d613fee12e5880066b63f6.jpg",
-    "https://i.pinimg.com/originals/ea/9b/b3/ea9bb30e50ab6ce72f93b85e4d2e04fd.jpg",
-    "https://i.pinimg.com/originals/b5/b6/49/b5b649d6ccc9591cbba28504bc7f590d.jpg",
-    "https://i.pinimg.com/originals/31/66/d4/3166d4b65811830f66c075eb73c1e012.png",
-    "https://i.pinimg.com/originals/64/a9/6f/64a96f5bb5c87b3a0820d38b19866a72.jpg",
-    "https://i.pinimg.com/originals/36/94/3d/36943d474097deeb81184928ec77528b.jpg",
-    "https://i.pinimg.com/originals/9c/b2/62/9cb262438a90c8c07984fcd4d728ef3b.jpg",
-    "https://i.pinimg.com/originals/fa/79/9f/fa799f519b2a73164993ca359209e99e.jpg",
-    "https://i.pinimg.com/originals/ea/89/2b/ea892bb809352c4dbb67b3cb68d2a11c.jpg",
-    "https://i.pinimg.com/originals/f3/ae/43/f3ae4388515cd35bcc405a91d6fce50b.jpg",
-    "https://i.pinimg.com/originals/99/a6/55/99a655ac3326ba1f6b0f9e9d5aedbbcd.jpg",
-    "https://i.pinimg.com/originals/eb/d8/03/ebd80398f0a65be8e6d224b0f3bb0893.jpg",
-    "https://i.pinimg.com/originals/3b/7c/71/3b7c719b72b34623d522dc8fca4f87ab.webp",
-    "https://i.pinimg.com/originals/ee/a9/8e/eea98e09c408ad37a44d796a51d70a1a.jpg",
-    "https://i.pinimg.com/originals/0d/7c/73/0d7c73b4e20a4fc8a99e8be866374e38.jpg",
-    "https://i.pinimg.com/originals/bf/9c/1e/bf9c1e8ab9b00118c1ff763e10566141.jpg",
-    "https://i.pinimg.com/originals/7e/02/f1/7e02f15a302b42865eca7572a5b5915f.jpg",
-    "https://i.pinimg.com/originals/28/77/c9/2877c9a6e74bccfa81b622ed46b34665.jpg",
-    "https://i.pinimg.com/originals/b1/11/7a/b1117af52695b493113d480a57029f95.jpg",
-    "https://i.pinimg.com/originals/e2/33/fa/e233fa2b27c3e6d404d955cde2541958.jpg",
-    "https://i.pinimg.com/originals/84/b5/a1/84b5a152ca0ed18d5e953005f6395e11.jpg",
-    "https://i.pinimg.com/originals/c9/bc/86/c9bc86729d1d75332adfb76c97eb064d.jpg",
-    "https://i.pinimg.com/originals/00/fd/4f/00fd4f3628a65d825138e1a2de583934.jpg",
-    "https://i.pinimg.com/originals/91/90/26/919026794d43466ec1d5a6e2fdcbbba8.jpg",
-    "https://i.pinimg.com/originals/ae/15/5a/ae155a7f304d44e7c27a38600c29af44.jpg",
-    "https://i.pinimg.com/originals/26/4d/53/264d539f2fd7313989809b3779c88483.jpg",
-    "https://i.pinimg.com/originals/94/9d/1c/949d1cf0e0890ef81f21746768f2d431.jpg",
-    "https://i.pinimg.com/originals/c9/0a/a2/c90aa2fc9a6036ead806bfca9dc3575c.jpg",
-    "https://i.pinimg.com/originals/e3/98/86/e3988646d3a8390dd6b242e3ea722d61.jpg",
-];
-
-// ─── Video pool (placeholder URLs – replace với CDN thực) ─────────────────────
-const VIDEO_POOL: string[] = [
-    "https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-    "https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-    "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-    "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
-    "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
-    "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
-    "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4",
-    "https://storage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
-    "https://storage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4",
-    "https://storage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
-];
-
-// ─── Content templates theo hashtag ──────────────────────────────────────────
-type PostMediaDef =
-    | { kind: "images"; count: number }
-    | { kind: "video" }
-    | { kind: "images+video"; imgCount: number };
-
-interface PostTemplate {
-    content: string;
-    hashtag: string;
-    media: PostMediaDef;
-}
+// ─── Kiểu dữ liệu ─────────────────────────────────────────────────────────────
 
 /**
- * Sinh nội dung bài viết đủ đa dạng.
- * Mỗi hashtag được gán ít nhất 1 bài, nhiều hashtag hot được gán nhiều bài hơn
- * để dữ liệu trending có nghĩa thống kê.
+ * Mô tả một kịch bản báo cáo hoàn chỉnh.
+ *
+ * scenario: tên kịch bản (để dễ đọc log)
+ * content:  nội dung bài post
+ * isDisinformation: bot/AI đã đánh dấu có khả năng sai sự thật
+ * isHidden: bot tự ẩn bài khỏi feed
+ * reportCount: số người báo cáo bài này
+ * reports[]: mảng các report với lý do + trạng thái khác nhau
+ * aiNote: ghi chú tự động của assistant (có thể null)
+ * aiConfidence: độ tin cậy AI (0–1, null = chưa chạy AI)
+ * adminNote: ghi chú admin nếu đã xử lý
+ * reportStatus: trạng thái chung của các report
+ * postVisibility: PUBLIC / PRIVATE / v.v.
  */
-function buildPostTemplates(): PostTemplate[] {
-    // Định nghĩa weight: hashtag hot → xuất hiện nhiều lần hơn
-    const HOT_HASHTAGS: Record<string, number> = {
-        amthuc: 8,
-        ootd: 7,
-        travel: 7,
-        dulichvietnam: 6,
-        fitness: 6,
-        skincare: 6,
-        coding: 5,
-        viral: 5,
-        genzlife: 5,
-        kpop: 5,
-        foodie: 5,
-        streetfood: 4,
-        dalat: 4,
-        saigonfood: 4,
-        meme: 4,
-        photography: 4,
-        makeup: 4,
-        gym: 4,
-        yoga: 4,
-        relatable: 4,
-        trending: 4,
-        vpop: 3,
-        mentalhealth: 3,
-        remotework: 3,
-        startup: 3,
-        petlover: 3,
-    };
-
-    const CONTENT_BY_HASHTAG: Record<string, string[]> = {
-        amthuc: [
-            "Sáng nay thức dậy làm tô bún bò tự tay. Nước dùng hầm 4 tiếng, đậm đà không kém ngoài tiệm 🍜 #amthuc",
-            "Review quán cơm tấm mới mở cuối phố – sườn than thơm, bì dai, giá chỉ 45k. Ủng hộ quán Việt nha! #amthuc",
-            "Cuối tuần làm bánh cuốn nhân tôm thịt cho cả nhà. Bí quyết: bột gạo pha theo tỉ lệ 4:1 với bột năng 🥢 #amthuc",
-        ],
-        foodie: [
-            "Hành trình ăn sập Sài Gòn tập 3: Bắt đầu từ bánh mì đặc biệt Huynh Hoa rồi kết thúc bằng kem dừa Bến Thành 😋 #foodie",
-            "Không cần đi Nhật vẫn ăn được ramen ngon ở Sài Gòn. Chỗ mình hay ghé: quán nhỏ trong hẻm Lê Thánh Tôn 🍜 #foodie",
-        ],
-        xuhuongamthuc: [
-            "Xu hướng ẩm thực 2025: Trà matcha kết hợp với đủ thứ – từ bánh mì đến lẩu. Bạn đã thử chưa? #xuhuongamthuc",
-        ],
-        saigonfood: [
-            "Sài Gòn có một điều tuyệt vời: 2h sáng vẫn kiếm được tô phở nóng hổi ở góc đường 🌙 #saigonfood",
-            "Cơm tấm Sài Gòn với cái bì thái đều, mỡ hành vàng ươm – không đâu ngon bằng 🍚 #saigonfood",
-        ],
-        hanoidishes: [
-            "Bún chả Hà Nội chuẩn: chả viên tròn đều, nước chấm thanh ngọt, ăn kèm rau thơm Hà Nội 🌿 #hanoidishes",
-        ],
-        comtam: [
-            "Chủ nhật không cần nghĩ – cơm tấm sườn bì chả, ly cà phê sữa đá là xong cuộc đời ☀️ #comtam",
-        ],
-        bunbo: [
-            "Bún bò Huế chuẩn phải có mắm ruốc và sả – hai thứ này thiếu là mất hồn hoàn toàn 🌶️ #bunbo",
-        ],
-        pho: [
-            "Phở bò Hà Nội nước trong leo lẻo, thịt tái hồng hào – ký ức mỗi sáng mùa đông tuổi thơ ❄️ #pho",
-        ],
-        banhmi: [
-            "Bánh mì Sài Gòn: vỏ giòn, nhân đầy, giá 20k – biểu tượng ẩm thực đường phố thế giới công nhận 🥖 #banhmi",
-        ],
-        cafesaigon: [
-            "Cà phê rang xay Sài Gòn buổi sáng: đắng, thơm, đậm – không cần fancy latte gì thêm ☕ #cafesaigon",
-        ],
-        trasuavietnam: [
-            "Trà sữa truyền thống không bằng cái này: trân châu đường đen, kem phô mai mặn ngọt 🧋 #trasuavietnam",
-        ],
-        streetfood: [
-            "Bánh tráng trộn vỉa hè Sài Gòn 15k – ăn xong không thể dừng được. Nghiện nặng rồi 😅 #streetfood",
-            "Street food tour Hội An sáng sớm: cao lầu, mì Quảng, bánh xèo – ăn no từ 7h sáng 🌄 #streetfood",
-        ],
-        homecooking: [
-            "Tự nấu ăn ở nhà tiết kiệm được 2-3 triệu/tháng mà còn ngon hơn, sạch hơn ngoài tiệm. Win-win! 👨‍🍳 #homecooking",
-        ],
-        naucuoi: [
-            "Hôm nay thử nấu canh chua cá lóc lần đầu. Không fail thì không phải mình 😂 nhưng lần 2 ra chuẩn nha! #naucuoi",
-        ],
-        reviewquanan: [
-            "Review nhà hàng mới thử: view đẹp 10/10, đồ ăn 7/10, service 8/10. Tổng thể đáng đi một lần #reviewquanan",
-        ],
-        banhngot: [
-            "Bánh flan cà phê tự làm: lớp kem mịn như lụa, không bọt, không tanh. Công thức đơn giản mà ai cũng làm được 🍮 #banhngot",
-        ],
-        lauphat: [
-            "Lẩu Thái hải sản mùa mưa: vừa cay vừa chua, ngồi ăn cả buổi tối. Hạnh phúc giản đơn nhất! 🌧️ #lauphat",
-        ],
-        nuongbbq: [
-            "BBQ cuối tuần ở ban công: thịt bò nướng than hoa, rau thơm, và bạn bè – không cần đi đâu xa 🥩 #nuongbbq",
-        ],
-        vietfood: [
-            "Ẩm thực Việt Nam đã lên BBC, NYT, CNN – không phải tự hào suông mà thực sự xứng đáng 🇻🇳 #vietfood",
-        ],
-        anngon: [
-            "Bí quyết ăn ngon không tốn nhiều tiền: chợ tươi mỗi sáng, nấu đủ bữa, không đặt ship liên tục 😌 #anngon",
-        ],
-        foodphotography: [
-            "Chụp ảnh đồ ăn không cần đèn studio: ánh sáng tự nhiên buổi sáng + góc 45 độ = ảnh đẹp tự nhiên 📸 #foodphotography",
-        ],
-        bakery: [
-            "Tiệm bánh nhỏ đầu hẻm mở được 3 năm, croissant bơ mỗi sáng cháy trong 30 phút – đặt trước mới có! 🥐 #bakery",
-        ],
-        dessertlover: [
-            "Chè bà ba Sài Gòn đầy đủ topping: khoai lang, bột báng, nước cốt dừa béo ngậy 🍵 #dessertlover",
-        ],
-        hatieu: [
-            "Hủ tiếu Nam Vang chuẩn vị: nước trong, ngọt thanh, thịt bằm mềm, ăn sáng không cần suy nghĩ 🍜 #hatieu",
-        ],
-        raumam: [
-            "Trồng rau mầm tại nhà 7 ngày là thu hoạch. Vừa sạch vừa rẻ, chỉ cần khay và hạt giống 🌱 #raumam",
-        ],
-        banhcuon: [
-            "Bánh cuốn Hà Nội buổi sáng: nhân thịt mộc nhĩ, chan nước mắm cà chua, điểm chút hành phi 😍 #banhcuon",
-        ],
-        chebavien: [
-            "Chè 3 màu vỉa hè Sài Gòn đúng là món bình dân nhưng cái vị đậu xanh + cốt dừa không đâu thay thế được #chebavien",
-        ],
-        nuocep: [
-            "Nước ép dứa + dưa hấu buổi sáng: detox nhanh, ngon, rẻ hơn mua chai ngoài 10 lần 🍍 #nuocep",
-        ],
-
-        // Du lịch
-        dulichvietnam: [
-            "Việt Nam từ Bắc vào Nam: mỗi vùng một tính cách, một hương vị, một nhịp sống riêng. Không bao giờ hết khám phá 🗺️ #dulichvietnam",
-            "3 ngày 2 đêm Đà Nẵng budget 3 triệu/người: xe máy, biển, phố cổ và đồ ăn đường phố. Chi tiết trong comment! #dulichvietnam",
-        ],
-        travel: [
-            "Pack đồ cho 1 tuần trong 1 chiếc ba lô 25L – không check-in, không chờ hành lý, không lo mất đồ ✈️ #travel",
-            "Du lịch không cần kế hoạch quá chi tiết: book vé, tìm chỗ ngủ, còn lại cứ để trải nghiệm dẫn đường 🧭 #travel",
-        ],
-        phuquoc: [
-            "Phú Quốc mùa khô (tháng 11 - tháng 4): biển lặng, nước xanh ngọc, lặn ngắm san hô đẹp nhất 🐠 #phuquoc",
-        ],
-        dalat: [
-            "Đà Lạt tháng 11: hoa dã quỳ vàng trên đồi, sương mù buổi sáng, cà phê nóng trong tay – hoàn hảo 🌸 #dalat",
-            "Đà Lạt không cần tour: thuê xe máy, tự chạy qua thung lũng Tình Yêu, hồ Xuân Hương – tự do hơn nhiều 🛵 #dalat",
-        ],
-        sapa: [
-            "Sapa mùa lúa chín tháng 9: ruộng bậc thang vàng ươm trải dài – đẹp hơn mọi tấm hình đã thấy 🌾 #sapa",
-        ],
-        halong: [
-            "Vịnh Hạ Long lúc bình minh, chỉ có tiếng mái chèo và sương sớm – tĩnh lặng đến khó tin 🌅 #halong",
-        ],
-        hoian: [
-            "Hội An sáng sớm 6h: đường vắng, đèn lồng hắt ánh sáng vàng, không một bóng khách du lịch. Đây là Hội An thật sự 🏮 #hoian",
-        ],
-        danang: [
-            "Đà Nẵng: thành phố cầu đẹp, biển sạch, đồ ăn ngon và người dân hiền lành. Lý do mình quay lại lần 4 rồi 🌊 #danang",
-        ],
-        nhatrang: [
-            "Nha Trang 4N3Đ: lặn ngắm san hô, tắm bùn khoáng, ăn hải sản tươi ngay bờ biển 🦞 #nhatrang",
-        ],
-        cantho: [
-            "Chợ nổi Cái Răng Cần Thơ: dậy sớm 5h sáng, thuyền đầy trái cây, không khí miền Tây không nơi nào có 🌊 #cantho",
-        ],
-        hue: [
-            "Huế – thành phố của những buổi chiều mưa, cơm Hến, và kiến trúc Nguyễn triều. Lần nào đến cũng thấy bình yên lạ thường 🌧️ #hue",
-        ],
-        hagiang: [
-            "Hà Giang tháng 10: tam giác mạch nở hoa tím hồng trên cao nguyên đá. Cung đường Mã Pí Lèng hùng vĩ không thể diễn tả 🏔️ #hagiang",
-        ],
-        backpacker: [
-            "Bí quyết backpack dài ngày: ngủ hostel, ăn chợ địa phương, di chuyển xe đêm – tiết kiệm 60% mà trải nghiệm phong phú hơn 🎒 #backpacker",
-        ],
-        solotraveler: [
-            "Solo travel không phải cô đơn – đó là tự do. Tự quyết định mọi thứ từ giờ dậy đến chỗ ăn tối 🗺️ #solotraveler",
-        ],
-        dulichbalo: [
-            "3 tuần xuyên Việt bằng xe máy: 2.500km, 15 tỉnh thành, 400k xăng. Chuyến đi rẻ nhất và đáng nhất đời 🛵 #dulichbalo",
-        ],
-        checkin: [
-            "Góc check-in Sài Gòn ít người biết: con hẻm cà phê Phùng Khắc Khoan – bức tường rêu xanh cổ kính mà đẹp xuất sắc 📸 #checkin",
-        ],
-        homestay: [
-            "Homestay ven ruộng bậc thang Mù Cang Chải: ngủ nghe tiếng suối, dậy nhìn ra mây mù. 200k/đêm, đặt sớm hết liền 🏡 #homestay",
-        ],
-        roadtrip: [
-            "Road trip Hà Nội → Hội An 10 ngày theo QL1A: ăn sập từng tỉnh, chụp ảnh dọc đường, không tour nào thay thế được 🚗 #roadtrip",
-        ],
-        trekking: [
-            "Trek Fansipan không cáp treo: 2 ngày 1 đêm, đường rừng nguyên sinh, đỉnh mây bao phủ. Kiệt sức nhưng đáng từng bước 🏔️ #trekking",
-        ],
-
-        // Thời trang & Làm đẹp
-        ootd: [
-            "Outfit hôm nay: áo linen trắng + quần linen be + dép thô. Mặc gì cũng cần thở được mùa hè Sài Gòn 😅 #ootd",
-            "Thrift flip: mua áo blazer cũ 30k, sửa vai và tay áo, đính thêm nút – ra lò chuẩn blazer 500k 🧥 #ootd",
-        ],
-        fashion: [
-            "Xu hướng thời trang Việt Nam 2025: local brand ngày càng chất, không cần international để mặc đẹp 👗 #fashion",
-        ],
-        streetstyle: [
-            "Street style Hà Nội mùa thu: tông màu đất, layer nhẹ, giày da vintage – không cần theo trend vẫn đẹp 🍂 #streetstyle",
-        ],
-        skincare: [
-            "Routine buổi sáng 5 bước cho da nhạy cảm: Cleanser → Toner → Serum HA → Kem dưỡng → Kem chống nắng. Đơn giản nhưng hiệu quả 🌿 #skincare",
-            "Review serum Vitamin C giá rẻ dưới 200k: dùng 8 tuần, da sáng lên rõ rệt, không kích ứng. Mọi người hỏi mình dùng gì nhiều quá 😄 #skincare",
-        ],
-        beauty: [
-            "Makeup tự nhiên cho ngày đi làm: BB cream, blush nhẹ, lip balm màu hồng đất – xong trong 10 phút 💄 #beauty",
-        ],
-        trangdiem: [
-            "Trang điểm cô dâu tự làm: lớp nền mỏng, má hồng gradient, mắt khói nhẹ nhàng – đơn giản mà đẹp hơn make-up rườm rà 👰 #trangdiem",
-        ],
-        chamsocda: [
-            "Chăm sóc da 0 đồng: ngủ đủ giấc, uống đủ nước, ăn nhiều rau quả. Trước khi dùng serum thì thử cái này trước 🌙 #chamsocda",
-        ],
-        hairstyle: [
-            "Cắt tóc ngắn lần đầu sau 3 năm. Nhẹ cả đầu lẫn tâm hồn 💇‍♀️ #hairstyle",
-        ],
-        nail: [
-            "Nail tự làm ở nhà: gel nail kit 300k dùng được 50 lần, tiết kiệm hơn đi tiệm 10 lần 💅 #nail",
-        ],
-        makeup: [
-            "Tip makeup cho người mới: đầu tư vào kem chống nắng tốt và blush. Hai thứ này nâng hạng sắc diện nhiều nhất 💋 #makeup",
-        ],
-        vintage: [
-            "Thrift shop buổi sáng thứ 7: tìm được áo vintage năm 90 còn nguyên tag, chất vải dày dặn không thua hàng mới 👕 #vintage",
-        ],
-        outfit: [
-            "Outfit buổi tối: áo croptop đen basic + quần ống rộng trắng + mules. Capsule wardrobe đơn giản nhưng versatile 🖤 #outfit",
-        ],
-        glowup: [
-            "6 tháng glow up: từ da mụn sần sùi đến da thủy tinh. Không magic, chỉ cần kiên trì routine và ngủ đủ giấc ✨ #glowup",
-        ],
-        sneakers: [
-            "Sneakers trắng basic: combo không bao giờ sai với bất kỳ outfit nào. Đầu tư 1 đôi tốt xài 5 năm còn rẻ hơn mua 5 đôi rẻ 👟 #sneakers",
-        ],
-        accessories: [
-            "Phụ kiện nâng outfit: một chiếc nhẫn bạc mảnh, dây chuyền layered, túi tote vải – không cần chi nhiều mà vẫn có look cuốn 💍 #accessories",
-        ],
-
-        // Công nghệ
-        coding: [
-            "Sau 1 năm tự học: từ 0 code đến có job junior dev. Không cần bootcamp, chỉ cần roadmap đúng và kỷ luật 💻 #coding",
-            "Bug 3 tiếng mới ra: thiếu dấu ; . Cuộc đời lập trình viên là vậy đó 😭 #coding",
-        ],
-        developer: [
-            "Làm developer không phải chỉ code: đọc docs, debug, communicate, review, estimate. Code chỉ chiếm 40% thôi 🧑‍💻 #developer",
-        ],
-        tech: [
-            "AI đang thay đổi cách làm việc, không phải thay thế người. Ai biết dùng AI tool đúng cách sẽ productive hơn 10 lần 🤖 #tech",
-        ],
-        javascript: [
-            "JavaScript async/await: giải thích cho người mới bằng ví dụ gọi ship đồ ăn. Không await = không biết đồ đến chưa 📦 #javascript",
-        ],
-        typescript: [
-            "Chuyển từ JS sang TS: tuần đầu khó chịu, tháng 2 thấy quen, tháng 3 không muốn về JS nữa. Type safety nghiện rồi 🔒 #typescript",
-        ],
-        ai: [
-            "Dùng AI để viết PR description, tóm tắt meeting, draft email – tiết kiệm 2 tiếng/ngày. Bạn đang dùng AI cho việc gì? 🤖 #ai",
-        ],
-        startup: [
-            "Startup lesson học xương máu: validate idea trước khi code. 6 tháng build xong mới biết không ai cần. Đau thiệt sự 💀 #startup",
-        ],
-        webdev: [
-            "Web performance: 1 giây load chậm hơn = 7% conversion giảm. Optimize ảnh, lazy load, CDN – không khó nhưng ít ai làm 🚀 #webdev",
-        ],
-        freelancer: [
-            "Freelance 2 năm: thu nhập ổn hơn đi làm công ty, nhưng tự kỷ luật và find client mới là phần khó nhất 💼 #freelancer",
-        ],
-        remote: [
-            "Work from coffee shop: tìm được quán wifi tốt, yên tĩnh, giá cà phê hợp lý ở Sài Gòn – đây là công thức hạnh phúc 🏖️ #remote",
-        ],
-        opensource: [
-            "Contribute open source lần đầu: sợ vãi nhưng maintain rất tử tế, được merge PR sau 3 lần sửa. Cảm giác đỉnh lắm! 🌟 #opensource",
-        ],
-        github: [
-            "GitHub green squares: không phải để flex, mà để nhìn lại mình đã làm gì trong 365 ngày qua 📊 #github",
-        ],
-
-        // Sức khỏe
-        fitness: [
-            "Tuần 12 tập gym liên tiếp: chưa thấy cơ bắp đâu nhưng ngủ ngon hơn, ít stress hơn, năng lượng tốt hơn. Đó là kết quả đầu tiên 💪 #fitness",
-            "Gym không cần gương selfie: tập đúng form, đủ volume, ăn đủ protein. Đơn giản vậy thôi 🏋️ #fitness",
-        ],
-        gym: [
-            "Home gym setup 5 triệu: 1 tạ điều chỉnh, 1 thảm yoga, dây kéo kháng lực. Tập được 80% bài như ngoài phòng gym 🏠 #gym",
-        ],
-        yoga: [
-            "Yoga buổi sáng 20 phút: không cần 1 tiếng, chỉ cần đều đặn. 30 ngày liên tiếp, lưng hết đau, ngủ sâu hơn 🧘‍♀️ #yoga",
-        ],
-        chaybo: [
-            "Chạy bộ sáng sớm Sài Gòn: 5h30 sáng, công viên Lê Văn Tám, không khí mát, ít xe cộ – khoảng thời gian đỉnh nhất ngày 🏃 #chaybo",
-        ],
-        suckhoe: [
-            "Không cần diet phức tạp: ăn đủ 4 nhóm, bớt đường và muối, uống 2L nước, ngủ 7-8 tiếng. Công thức sức khỏe không tốn tiền 🌿 #suckhoe",
-        ],
-        running: [
-            "Tham gia VM Hanoi Marathon lần đầu: 5km hạng mục fun run. Không cần nhanh, chỉ cần về đích và không ân hận 🏅 #running",
-        ],
-        mentalhealth: [
-            "Sức khỏe tâm thần quan trọng như thể chất: đặt giới hạn, nói không khi cần, tìm người tin tưởng để nói chuyện 🧡 #mentalhealth",
-            "Digital detox 24h: tắt điện thoại sau 9 tối. Ngủ ngon hơn, ít lo âu hơn. Thử đi sẽ thấy khác biệt 📵 #mentalhealth",
-        ],
-        meditation: [
-            "10 phút thiền mỗi sáng: không cần hướng dẫn phức tạp, chỉ cần ngồi yên, theo dõi hơi thở. 21 ngày đầu khó, sau đó nghiện 🕯️ #meditation",
-        ],
-        wellbeing: [
-            "Wellbeing không phải là spa hay retreat đắt tiền: là tập thể dục, ăn tươi, ngủ đủ, có kết nối xã hội. Bốn thứ cơ bản đó đã đủ 🌱 #wellbeing",
-        ],
-
-        // Đời sống & Cảm xúc
-        tamsu: [
-            "Đôi khi cứ nhắn tin đến nửa đêm với người không hỏi thăm ban ngày. Cô đơn có hình dạng kỳ lạ lắm 🌙 #tamsu",
-        ],
-        cuocsong: [
-            "Cuộc sống không cần phải perfect. Chỉ cần đủ tốt, đủ ý nghĩa, và đủ bình yên cho bản thân mình là được 🍃 #cuocsong",
-        ],
-        docsach: [
-            "Đọc 1 cuốn/tháng nghe nhỏ nhưng cộng lại 12 cuốn/năm. Sau 3 năm tư duy thay đổi hơn bất kỳ khoá học nào 📚 #docsach",
-        ],
-        music: [
-            "Playlist chill làm việc: lo-fi hip hop, jazz bossa nova, ambient piano. Không có lời = không bị distract 🎵 #music",
-        ],
-        vpop: [
-            "V-pop năm 2024-2025 đỉnh thật: Tùng Dương, Hoàng Thùy Linh, HIEUTHUHAI, tlinh – đủ mọi genre, chất lượng không kém K-pop 🎤 #vpop",
-        ],
-        kpop: [
-            "Concert K-pop ở Việt Nam ngày càng nhiều: không cần bay sang Hàn nữa. Fan Việt cháy hết mình 🔥 #kpop",
-            "Album mới của nhóm vừa drop: đang nghe loop không ngừng được, ai cùng stan thì cmt xuống dưới 🎧 #kpop",
-        ],
-        phim: [
-            "Phim Việt đang trên đà tăng chất: Cô Gái Từ Quá Khứ, Đất Rừng Phương Nam, Kẻ Cắp Mặt Trăng – không cần xem Hollywood! 🎬 #phim",
-        ],
-        gaming: [
-            "Gaming session cuối tuần: không cần console xịn, chỉ cần PC ổn và team bạn thân là đủ vui 🎮 #gaming",
-        ],
-        photography: [
-            "Chụp ảnh bằng điện thoại đẹp: ánh sáng tự nhiên + rule of thirds + không zoom digital. Ba điều này thôi là đủ 📱 #photography",
-            "Golden hour Sài Gòn: 17h-18h, ánh sáng cam ấm, mọi thứ đều photogenic kể cả con hẻm bình thường nhất 🌇 #photography",
-        ],
-
-        // Thú cưng
-        meocon: [
-            "Bé mèo vào nhà lạ lẫm tuần đầu, tuần 3 đã nằm trên laptop mình làm việc 😭 mèo là boss thiệt rồi 🐱 #meocon",
-        ],
-        cuncung: [
-            "Chú chó nhà mình mỗi sáng đều đứng canh cửa đợi mình dắt đi dạo. Nghĩa vụ vui nhất ngày 🐶 #cuncung",
-        ],
-        petlover: [
-            "Nuôi thú cưng dạy mình: kiên nhẫn, yêu thương vô điều kiện, và biết rằng ai đó luôn chờ mình về nhà 🐾 #petlover",
-        ],
-        catlife: [
-            "Mèo: ngủ 16 tiếng, ăn, nhìn vào hư không, đặt ngồi lên keyboard. Cuộc sống hoàn hảo không cần giải thích 😸 #catlife",
-        ],
-
-        // Gen Z Viral
-        genzlife: [
-            "Gen Z không lười, chỉ đang redefined productivity: không phải làm 12 tiếng/ngày mới là chăm chỉ 💁 #genzlife",
-            "Ký ức tuổi thơ Gen Z: Yahoo chat, Audition, chép bài nhau ở lớp rồi nạp thẻ điện thoại cuối tuần 📲 #genzlife",
-        ],
-        viral: [
-            "Video này đạt 1M view trong 24h. Bài học: authentic content + right timing > production value cao 📱 #viral",
-        ],
-        trending: [
-            "Trend ẩm thực đang hot nhất: matcha + gì cũng được, cold brew với mọi vị, và bánh mì kiểu fusion. Bạn thấy trend nào tiếp theo? 👀 #trending",
-        ],
-        xuhuong: [
-            "Xu hướng sống tối giản đang lan rộng ở giới trẻ: ít đồ hơn, ít cam kết hơn, nhiều trải nghiệm hơn. Bạn có đang theo không? ✨ #xuhuong",
-        ],
-        meme: [
-            "Meme Việt Nam 2025 hình thức mới nhất: blend pop culture quốc tế với slang địa phương – hài hơn meme nước ngoài nhiều 😂 #meme",
-        ],
-        relatable: [
-            "Cái cảm giác mở app, cuộn 30 giây rồi quên mình vào app để làm gì. Này là trauma bình thường của thế kỷ 21 😅 #relatable",
-        ],
-        overthinking: [
-            "Overthinking lúc 2h sáng: replay lại cuộc hội thoại 5 năm trước và nghĩ xem mình nên nói gì khác 🌙 #overthinking",
-        ],
-        coffeeaddict: [
-            "Số ly cà phê/ngày: 1 để tỉnh táo, 2 để productive, 3 để tồn tại. Hôm nay mình đang ở level 3 ☕ #coffeeaddict",
-        ],
-        dailyvlog: [
-            "Day in my life: dậy 6h, gym, làm việc từ quán café, chiều chạy bộ, tối nấu cơm. Routine nhàm nhưng happy 📹 #dailyvlog",
-        ],
-        diy: [
-            "DIY kệ sách từ pallet gỗ cũ: chi phí 150k, 3 tiếng làm, kết quả chuẩn nội thất Bắc Âu 🪵 #diy",
-        ],
-
-        // Môi trường
-        zerowaste: [
-            "Zero waste không cần perfect: bắt đầu từ mang túi vải, bình nước, hộp đựng đồ ăn riêng. 3 thứ này giảm được 80% rác nhựa 🌿 #zerowaste",
-        ],
-        sustainable: [
-            "Mua đồ secondhand không phải nghèo – đó là lựa chọn có trách nhiệm với môi trường và ví tiền 🌱 #sustainable",
-        ],
-        ecofriendly: [
-            "Sản phẩm eco-friendly Việt Nam đang nở rộ: ống hút tre, túi giấy kraft, hộp bã mía – không thua kém hàng ngoại nhập 🌍 #ecofriendly",
-        ],
-        gogreen: [
-            "Trồng cây ban công: sả, rau húng, ớt, cà chua cherry – vừa xanh nhà vừa có rau sạch ăn. Ai ở chung cư cũng làm được 🌿 #gogreen",
-        ],
-
-        // Tài chính
-        taichinhhcanhan: [
-            "Quy tắc 50-30-20: 50% thiết yếu, 30% muốn có, 20% tiết kiệm. Đơn giản nhưng hiệu quả hơn bất kỳ app tài chính nào 💰 #taichinhhcanhan",
-        ],
-        dautu: [
-            "Đầu tư chứng khoán 2 năm: lỗ năm đầu vì không biết gì, lãi năm 2 vì đã học. Trường phí đắt nhưng bài học xứng đáng 📈 #dautu",
-        ],
-        tiettiem: [
-            "Mẹo tiết kiệm của mình: chuyển 20% lương vào tài khoản khác ngay khi nhận lương. Không thấy = không xài được 💳 #tiettiem",
-        ],
-        sidehustle: [
-            "Side hustle của mình: dạy tiếng Anh online buổi tối, 2 học sinh/ngày = thêm 4-5 triệu/tháng không ảnh hưởng công việc chính 💼 #sidehustle",
-        ],
-
-        // Các tag còn lại
-        sunrisevietnam: ["Bình minh trên biển Mũi Né: không có gì hơn – nước yên, trời hồng, không một bóng người 🌅 #sunrisevietnam"],
-        nongnghiep: ["Về quê học nấu rượu gạo truyền thống với ông ngoại: bí quyết 50 năm, không sách nào dạy được 🌾 #nongnghiep"],
-        campingvn: ["Camping Đà Lạt trong rừng thông: dựng lều lúc 4 chiều, nướng xúc xích lúc 7 tối, ngắm sao từ 9 đến 12 ⛺ #campingvn"],
-        phongnhatourist: ["Phong Nha hệ thống hang động dài nhất thế giới – mà đến giờ vẫn còn hang chưa khám phá hết 🕯️ #phongnhatourist"],
-        mountainlife: ["Sống ở vùng núi Tây Bắc: sáng sương mù, trưa nắng vàng, tối lạnh trong chăn dày. Nhịp sống không nơi nào có 🏔️ #mountainlife"],
-        watchlover: ["Đồng hồ vintage Seiko từ những năm 80: máy cơ, kính sapphire, dây da thật. Giá 2 triệu mà chất hơn đồng hồ mới 3-4 lần 🕐 #watchlover"],
-        koreanskincare: ["10-step Korean skincare không cần dùng hết 10 bước: chọn 5 bước phù hợp với da mình là hiệu quả hơn #koreanskincare"],
-        routine: ["Morning routine của mình: 6h dậy, không điện thoại 30 phút, tập thể dục, ăn sáng nhẹ. 30 ngày đầu khó, sau đó auto 🌅 #routine"],
-        lipstick: ["Son đất Việt Nam làm tốt không kém son ngoại: màu đẹp, bền màu, giá 80-150k. Local brand xứng đáng được ủng hộ 💄 #lipstick"],
-        eyeshadow: ["Tutorial eyeshadow smoky eye cho người mới: 3 màu cơ bản là đủ, blend đều tay là xong 🎨 #eyeshadow"],
-        sundress: ["Váy hoa mùa hè: vải thoáng, màu sáng, cổ V thấp. Một chiếc versatile đi biển, đi cà phê, đi chơi đều được 🌺 #sundress"],
-        denim: ["Quần jeans washed cũ từ thập niên 90 đang comeback: vintage wash, baggy fit, không cần ủi. Mua secondhand giá 100-200k #denim"],
-        handbag: ["Túi da thật handmade Việt Nam: thợ lành nghề, chất liệu tốt, giá bằng 30% hàng ngoại cùng chất lượng 👜 #handbag"],
-        luxuryfashion: ["Luxury fashion thật sự không nằm ở logo: nằm ở chất vải, đường may, và sự vừa vặn. Đó là lý do French wardrobe minimal vẫn đẹp 🪡 #luxuryfashion"],
-        summerlook: ["Look mùa hè Sài Gòn: thoáng, sáng màu, chịu nhiệt. Linen + cotton = combo không cần nghĩ nhiều ☀️ #summerlook"],
-        casualfit: ["Casual fit không cần đắt: tee trắng basic + jeans straight + sneakers trắng. Công thức 3 món vẫn luôn đúng 👕 #casualfit"],
-        mensfashion: ["Nam mặc đẹp không cần phức tạp: fit tốt + màu trung tính + 1 điểm nhấn. Đó là toàn bộ bí quyết 👔 #mensfashion"],
-        womensfashion: ["Tủ quần áo minimalist nữ: 10 món cơ bản phối được 30+ outfit. Ít hơn, nghĩ ít hơn, mặc đẹp hơn 👗 #womensfashion"],
-        nodejs: ["Node.js với Express: backend đơn giản dựng nhanh. 3 ngày là có REST API cơ bản. Tốt cho beginner bắt đầu 🖥️ #nodejs"],
-        reactjs: ["React hooks vẫn là powerful nhất khi hiểu flow: useState → useEffect → useContext → custom hooks. Học theo thứ tự này 🔄 #reactjs"],
-        nextjs: ["Next.js App Router vs Pages Router: App Router phức tạp hơn nhưng powerful hơn. Dự án mới nên dùng App Router 🗂️ #nextjs"],
-        python: ["Python cho người không phải dev: tự động hoá Excel, xử lý file PDF, scraping data. 3 tháng học là dùng được 🐍 #python"],
-        machinelearning: ["ML không cần PhD: học sklearn, pandas, matplotlib là có thể làm được project thực tế. Bắt đầu từ linear regression #machinelearning"],
-        saas: ["Build SaaS đầu tiên: không cần tech stack fancy. Django + PostgreSQL + Stripe là đủ để ship MVP trong 2 tuần 🚀 #saas"],
-        devlife: ["Developer life: đọc code 3 tiếng, viết code 1 tiếng, attend meeting 2 tiếng, debug 2 tiếng. Đó là 1 ngày làm việc thật 🤓 #devlife"],
-        programmerhumor: ["Print('hello world') vẫn là đoạn code đầu tiên mình viết được. 5 năm sau: vẫn dùng print để debug 😂 #programmerhumor"],
-        database: ["Database indexing: đừng để sau optimize, làm ngay từ đầu. Câu query 5s → 0.1s chỉ bằng thêm 1 index đúng chỗ ⚡ #database"],
-        api: ["REST API design: resource-based URL, HTTP verbs đúng, response format nhất quán. Ba điều này là 80% của API tốt 🔌 #api"],
-        deployment: ["Deploy lần đầu lên production: nhiều thứ crash hơn local. Nhưng đó là bài học không sách nào dạy được 🖥️ #deployment"],
-        docker: ["Docker giải quyết 'works on my machine': containerise app 1 lần, chạy mọi nơi. Học Docker = tăng 30% giá trị CV 🐋 #docker"],
-        workout: ["Workout split cho người bận: Push/Pull/Legs 3 ngày/tuần. Đủ frequency, đủ volume, không cần 6 ngày gym #workout"],
-        healthyeating: ["Ăn healthy không cần khó: thêm rau vào mọi bữa ăn, giảm đường trong đồ uống, ăn đủ protein. Đơn giản hoá đi #healthyeating"],
-        weightloss: ["Giảm cân bền vững: không cần diet cực đoan. Deficit calo nhỏ + vận động đều đặn = kết quả ổn định theo tháng 📉 #weightloss"],
-        muscle: ["Tăng cơ cần 2 thứ: progressive overload và đủ protein. Bao nhiêu thứ khác chỉ là optimization 💪 #muscle"],
-        cycling: ["Đạp xe đi làm sáng sớm: 7km, 25 phút, không kẹt xe, tiết kiệm xăng, tập thể dục miễn phí. Win all round 🚴 #cycling"],
-        swimming: ["Bơi lội: bài tập toàn thân, không impact khớp, mát mẻ mùa hè. Quân sự nhất là free style 100m × 10 reps 🏊 #swimming"],
-        bongda: ["Xem bóng đá cùng bạn bè: không quan tâm đội nào thắng bằng cái không khí la hét cùng nhau 🥅 #bongda"],
-        tennis: ["Học tennis người lớn tuổi mới tập: kiên nhẫn và footwork là quan trọng nhất, không phải tay mạnh 🎾 #tennis"],
-        badminton: ["Cầu lông tối thứ 4 với đồng nghiệp: vừa tập vừa bond team tốt hơn bất kỳ team building nào trả tiền 🏸 #badminton"],
-        marathon: ["Tập marathon lần đầu: build up từ 5km, không bỏ qua long run cuối tuần, và tìm running group để có động lực 🏃‍♂️ #marathon"],
-        pilates: ["Pilates reformer sau 8 tuần: core mạnh hơn, lưng hết đau, tư thế cải thiện rõ rệt. Đắt hơn gym nhưng xứng đáng 🧘‍♀️ #pilates"],
-        nghimoi: ["Suy nghĩ mới học được: so sánh mình với version hôm qua, không phải với người khác. Ít khổ hơn rất nhiều 💭 #nghimoi"],
-        sachvahoa: ["Đọc sách giúp mình hiểu người khác hơn trước: không phải vì sách dạy cách xử lý, mà vì thấy mình trong nhân vật 📖 #sachvahoa"],
-        sohoc: ["Học sơ học tập: spaced repetition + active recall đánh bại highlight màu mè. Anki app + luyện đề = combo không fail 📝 #sohoc"],
-        langman: ["Lãng mạn giản đơn: bữa cơm nhà nấu cùng nhau, đi dạo buổi tối, ngủ sớm không điện thoại. Không cần fancy 🌙 #langman"],
-        series: ["Series Việt Nam đang ngày càng chất: 'Người Vợ Cuối Cùng', 'Biệt Dội Rồng Đen' – không cần Netflix xịn 📺 #series"],
-        anime: ["Anime 2025 hay nhất đang xem: Frieren Beyond Journey's End. Không phải action nhưng mà sâu sắc lạ 🌸 #anime"],
-        booklover: ["Thư viện Hà Nội mở cửa miễn phí: ngày lên đây đọc 2 tiếng yên tĩnh là cách mình recharge tốt nhất 📚 #booklover"],
-        artlover: ["Triển lãm nghệ thuật Sài Gòn đang mở: nghệ sĩ trẻ Việt Nam với concept đương đại – đẹp và đáng suy nghĩ 🎨 #artlover"],
-        livelife: ["Sống thật sự: không phải perfect, không phải instagrammable. Chỉ cần present, grateful, và honest 🌿 #livelife"],
-        sunrise: ["Bình minh ở bãi biển không cần diễn: chỉ cần dậy sớm và ra đứng đó. Không filter nào cần thiết 🌅 #sunrise"],
-        rescuedog: ["Nhận nuôi chó rescue: 2 tuần sợ hãi mọi thứ, tháng 2 bắt đầu vẫy đuôi, tháng 3 ngủ trên giường mình 🐕 #rescuedog"],
-        rescuecat: ["Mèo rescue nhà mình từng bị bỏ trong thùng giấy mưa. Giờ: 4kg, hay cắn, và là trung tâm vũ trụ nhà mình 🐈 #rescuecat"],
-        cutepet: ["Khoảnh khắc thú cưng: con mèo ngủ úp mặt vào lòng bàn tay. Không cần gì hơn nữa trong cuộc đời 🐾 #cutepet"],
-        fluffycat: ["Mèo Anh lông ngắn nhà mình: mặt tưởng cáu nhưng không bao giờ cắn. Judge book by cover thật 😸 #fluffycat"],
-        doglife: ["Chó Golden của mình vẫy đuôi dù đi ra ngoài 5 phút hay 5 tiếng. Loài vật trung thành nhất đúng là không phải ví von 🐕‍🦺 #doglife"],
-        thucung: ["Nuôi thú cưng responsibility lớn hơn người ta nghĩ: vet, grooming, training, không bỏ lại khi chán. Cần suy nghĩ kỹ trước khi nhận 🐾 #thucung"],
-        recycling: ["Tái chế tại nhà dễ hơn bạn nghĩ: phân loại rác vào 3 thùng: hữu cơ, tái chế, rác thải thông thường. 10 phút học là làm được ♻️ #recycling"],
-        vegancooking: ["Nấu chay không nhạt: dùng nước tương, dầu mè, ớt tươi, và rau thơm đúng cách. Bát canh rau không cần thịt vẫn có umami 🌿 #vegancooking"],
-        plantbased: ["Plant-based diet không cần full vegan: giảm thịt 50%, tăng đậu hũ, nấm, rau lá. Sức khỏe cải thiện, chi phí giảm #plantbased"],
-        moitruong: ["Thay bóng đèn LED, tắt điện khi ra khỏi phòng, không để TV standby – 3 thói quen giảm điện 15-20%/tháng 🌍 #moitruong"],
-        xanhlacay: ["Trồng cây trong nhà không cần đất: thủy canh với pothos, thị trường, lưỡi hổ. Lọc không khí và trang trí cùng lúc 🌱 #xanhlacay"],
-        solarpanel: ["Pin mặt trời mái nhà: đầu tư 80 triệu, hoàn vốn 6-7 năm, dùng 20 năm. Toán học rõ ràng, chỉ cần quyết tâm ☀️ #solarpanel"],
-        batdongsan: ["Mua nhà lần đầu ở Sài Gòn: 2 tỷ tầm tay với chung cư 60m2 ngoại ô + xe bus kết nối. Khó nhưng không impossible 🏠 #batdongsan"],
-        realestate: ["Real estate Việt Nam 2025: thị trường đang điều chỉnh, cơ hội cho người mua ở thực. Đừng mua để lướt sóng lúc này 📊 #realestate"],
-        muagold: ["Vàng tích luỹ hàng tháng: không cần mua đủ 1 chỉ, mua 0.5 chỉ/tháng cũng tích luỹ được qua năm tháng 🥇 #muagold"],
-        crypto: ["Crypto 2025: Bitcoin ETF approval, ít biến động hơn. Vẫn không phải trò chơi cho người không hiểu rủi ro ₿ #crypto"],
-        financelife: ["Không giàu = không biết quản lý tiền, không phải không có tiền. Học tài chính cá nhân ngay từ hôm nay 💸 #financelife"],
-        chungkhoan: ["Chứng khoán Việt Nam cho người mới: bắt đầu với ETF index fund, đều đặn mỗi tháng, không cần chọn cổ phiếu 📈 #chungkhoan"],
-        nightowl: ["3h sáng productivity kỳ lạ: không ai nhắn tin, não hoạt động khác lạ, code chạy mượt hơn ban ngày. Night owl life 🌙 #nightowl"],
-        introvert: ["Recharge cách của người introvert: ở nhà 1 ngày một mình, không nghe nhạc, không mạng xã hội. Sau đó ready gặp người 🤫 #introvert"],
-        mondaymotivation: ["Thứ 2 không cần ghét: nó giống như bất kỳ ngày nào khác. Cái ghét là attitude của mình với nó thôi 🌟 #mondaymotivation"],
-        fridayvibes: ["Thứ 6 office: mọi người bỗng nhiên creative, productive, và vui hơn. Tâm lý học thú vị không? 🎉 #fridayvibes"],
-        weekendplans: ["Kế hoạch cuối tuần lý tưởng: sáng tập thể dục, trưa ăn ngon cùng gia đình, chiều đọc sách, tối không điện thoại 🌅 #weekendplans"],
-        nofilter: ["Cuộc sống thật không có filter: bừa bộn, mệt mỏi, không hoàn hảo – nhưng đó là thật và đó là đủ 💙 #nofilter"],
-        asmr: ["ASMR mưa rơi ngoài cửa sổ + cà phê nóng + sách hay = combo ngủ ngon tự nhiên không cần thuốc 🌧️ #asmr"],
-        satisfying: ["Xem video sắp xếp đồ, cắt slime, và dọn dẹp xong thấy não nhẹ hẳn. Dopamine đến từ những thứ kỳ lạ nhất 😌 #satisfying"],
-        randomthoughts: ["Tại sao ngồi chờ 5 phút dài hơn làm việc 5 phút? Não người vẫn là bí ẩn chưa giải thích hết 🤔 #randomthoughts"],
-    };
-
-    const templates: PostTemplate[] = [];
-
-    // Đảm bảo mỗi hashtag có ít nhất 1 bài, và hashtag hot có nhiều bài hơn
-    for (const tag of ALL_HASHTAGS) {
-        const contents = CONTENT_BY_HASHTAG[tag];
-        if (!contents || contents.length === 0) {
-            // Fallback cho các tag chưa có content
-            templates.push({
-                content: `Chia sẻ về chủ đề #${tag} hôm nay. Bạn có suy nghĩ gì về điều này không? 💭 #${tag}`,
-                hashtag: tag,
-                media: { kind: "images", count: rand(1, 2) },
-            });
-            continue;
-        }
-
-        // Thêm tất cả content có sẵn
-        for (const content of contents) {
-            templates.push({
-                content,
-                hashtag: tag,
-                media: pickMedia(),
-            });
-        }
-
-        // Hashtag hot → thêm bài extra
-        const extraCount = (HOT_HASHTAGS[tag] ?? 1) - 1;
-        for (let e = 0; e < extraCount; e++) {
-            templates.push({
-                content: contents[e % contents.length],
-                hashtag: tag,
-                media: pickMedia(),
-            });
-        }
-    }
-
-    return templates;
+interface ReportScenario {
+    scenario: string;
+    content: string;
+    isDisinformation: boolean;
+    isHidden: boolean;
+    reports: {
+        reason: string;
+        status: ReportStatus;
+        isDisinformation: boolean;
+        assistantNote: string | null;
+        confidence: number | null;
+        adminNote: string | null;
+    }[];
 }
 
-function pickMedia(): PostMediaDef {
-    const r = Math.random();
-    if (r < 0.40) return { kind: "images", count: rand(1, 3) };
-    if (r < 0.55) return { kind: "images", count: rand(1, 5) };    // nhiều ảnh
-    if (r < 0.75) return { kind: "video" };
-    if (r < 0.90) return { kind: "images+video", imgCount: rand(1, 2) };
-    return { kind: "images", count: 1 };
-}
+// ─── 100 kịch bản báo cáo ─────────────────────────────────────────────────────
+// Phân loại:
+//   A. Thông tin sai / fake news (isDisinformation = true)
+//   B. Nội dung độc hại / hate speech / bạo lực
+//   C. Spam / quảng cáo trá hình
+//   D. AI đánh giá sai → cần admin duyệt
+//   E. Lạm dụng hệ thống report (báo cáo oan)
+//   F. Vi phạm nhẹ đã tự giải quyết
+//   G. Đa report từ nhiều người
+//   H. Nội dung nhạy cảm nhưng hợp lệ
+//   I. Quấy rối cá nhân
+//   J. Vi phạm bản quyền / phishing
 
-// ─── MAIN SEED ────────────────────────────────────────────────────────────────
-async function seedHashtagPosts() {
-    console.log("\n🌱 ===== SEED HASHTAG POSTS =====\n");
+const SCENARIOS: ReportScenario[] = [
+    // ══════════════════════════════════════════════
+    // A. THÔNG TIN SAI / FAKE NEWS (15 bài)
+    // ══════════════════════════════════════════════
+    {
+        scenario: "A1 – Fake news y tế nghiêm trọng, AI tự tin cao",
+        content:
+            "KHẨN: Vắc-xin COVID-19 gây ung thư máu sau 2 năm đã được WHO xác nhận! Bộ Y tế VN đang che giấu thông tin. Chia sẻ ngay trước khi bị xóa!! Nguồn: bbc-news-health.info",
+        isDisinformation: true,
+        isHidden: true,
+        reports: [
+            {
+                reason: "Thông tin y tế sai lệch, link giả mạo BBC, gây hoang mang cộng đồng",
+                status: ReportStatus.PENDING,
+                isDisinformation: true,
+                assistantNote:
+                    "Tuyên bố không có cơ sở khoa học. Domain 'bbc-news-health.info' là giả mạo BBC chính thống. Không có tài liệu WHO xác nhận nội dung này. Khuyến nghị: XÓA NGAY và hạn chế tài khoản.",
+                confidence: 0.97,
+                adminNote: null,
+            },
+            {
+                reason: "Fake news, lừa dối người dùng, link giả mạo",
+                status: ReportStatus.PENDING,
+                isDisinformation: true,
+                assistantNote:
+                    "Report thứ 2 xác nhận cùng vi phạm. Ưu tiên cao.",
+                confidence: 0.95,
+                adminNote: null,
+            },
+        ],
+    },
+    {
+        scenario: "A2 – Sai sự thật về thiên tai, đã resolved",
+        content:
+            "Động đất 7.8 độ richter vừa xảy ra tại Hà Nội lúc 3h sáng, hàng trăm tòa nhà sập. Sơ tán ngay!! Video clip phía dưới. #hanoi #dongdat #khancap",
+        isDisinformation: true,
+        isHidden: true,
+        reports: [
+            {
+                reason: "Tin giả gây hoảng loạn, video clip thực ra ở Thổ Nhĩ Kỳ 2023",
+                status: ReportStatus.RESOLVED,
+                isDisinformation: true,
+                assistantNote:
+                    "Không có sự kiện động đất tại Hà Nội vào thời điểm này theo USGS và Viện Vật lý Địa cầu VN. Video đính kèm là từ trận động đất Thổ Nhĩ Kỳ 2023. Hành vi tạo nội dung gây hoảng loạn.",
+                confidence: 0.98,
+                adminNote: "Đã xóa bài, cảnh báo người dùng. Tài khoản vi phạm lần 1.",
+            },
+        ],
+    },
+    {
+        scenario: "A3 – Fake news tài chính, AI đánh giá vừa",
+        content:
+            "NÓNG: Ngân hàng Vietcombank sắp phá sản! Insider tiết lộ rằng nợ xấu lên đến 200 nghìn tỷ. Rút tiền ngay trước thứ 2 tuần sau!! Đừng để mất trắng tiết kiệm cả đời.",
+        isDisinformation: true,
+        isHidden: true,
+        reports: [
+            {
+                reason: "Tin thất thiệt về ngân hàng, gây hoảng loạn tài chính",
+                status: ReportStatus.RESOLVED,
+                isDisinformation: true,
+                assistantNote:
+                    "Không có bằng chứng xác thực. Thông tin về tình hình tài chính VCB hoàn toàn trái ngược với báo cáo kiểm toán. Tuy nhiên cần xem xét thêm bối cảnh trước khi kết luận hoàn toàn.",
+                confidence: 0.81,
+                adminNote:
+                    "Xác nhận fake news sau khi liên hệ xác minh. Đã xóa và khóa 3 ngày.",
+            },
+        ],
+    },
+    {
+        scenario: "A4 – Disinformation chính trị, AI không chắc chắn",
+        content:
+            "Thủ tướng vừa ký lệnh cấm tất cả mạng xã hội từ ngày 1/1/2026. Facebook, TikTok, Zalo đều bị chặn. Cài VPN ngay hôm nay trước khi quá muộn! 📢",
+        isDisinformation: true,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Thông tin sai về chính sách nhà nước, gây bất ổn xã hội",
+                status: ReportStatus.PENDING,
+                isDisinformation: true,
+                assistantNote:
+                    "Không tìm thấy văn bản pháp lý xác nhận. Tuy nhiên đây là tuyên bố về chính sách – cần admin kiểm tra nguồn chính thống từ cổng thông tin Chính phủ trước khi xử lý.",
+                confidence: 0.72,
+                adminNote: null,
+            },
+        ],
+    },
+    {
+        scenario: "A5 – Fake news sức khỏe thay thế, nhiều người report",
+        content:
+            "Uống nước chanh pha muối biển mỗi sáng CÓ THỂ CHỮA KHỎI HOÀN TOÀN ung thư giai đoạn 1-2. Bác sĩ Nhật Bản đã chứng minh qua 1000 ca. Đừng để big pharma lừa dối bạn!",
+        isDisinformation: true,
+        isHidden: true,
+        reports: [
+            {
+                reason: "Thông tin y tế nguy hiểm, có thể khiến bệnh nhân từ chối điều trị thật",
+                status: ReportStatus.RESOLVED,
+                isDisinformation: true,
+                assistantNote:
+                    "Tuyên bố không có bằng chứng khoa học. Nguy hiểm cao vì khuyến khích bỏ điều trị y tế. Không tìm thấy nghiên cứu nào từ Nhật Bản xác nhận. Khuyến nghị: xóa ngay.",
+                confidence: 0.96,
+                adminNote: "Xóa bài. Hạn chế đăng nội dung y tế 30 ngày.",
+            },
+            {
+                reason: "Pseudoscience nguy hiểm",
+                status: ReportStatus.RESOLVED,
+                isDisinformation: true,
+                assistantNote: null,
+                confidence: null,
+                adminNote: "Xử lý theo report trước.",
+            },
+            {
+                reason: "Lừa dối người bệnh ung thư dễ bị tổn thương",
+                status: ReportStatus.RESOLVED,
+                isDisinformation: true,
+                assistantNote: null,
+                confidence: null,
+                adminNote: "Xử lý theo report trước.",
+            },
+        ],
+    },
+    {
+        scenario: "A6 – Tin giả về celebrity",
+        content:
+            "SỐC: Ca sĩ Sơn Tùng MTP vừa bị bắt vì tội rửa tiền và buôn bán ma túy sáng nay. Công an TP.HCM xác nhận. 😱 #sontung #shocking",
+        isDisinformation: true,
+        isHidden: true,
+        reports: [
+            {
+                reason: "Tin giả về người nổi tiếng, vu khống nghiêm trọng",
+                status: ReportStatus.PENDING,
+                isDisinformation: true,
+                assistantNote:
+                    "Không có thông tin từ Công an TP.HCM. Tuyên bố không có nguồn. Đây là hành vi phỉ báng cá nhân kết hợp fake news. Ưu tiên cao.",
+                confidence: 0.94,
+                adminNote: null,
+            },
+        ],
+    },
+    {
+        scenario: "A7 – Fake news dịch bệnh mới",
+        content:
+            "CẢNH BÁO: Virus mới nguy hiểm hơn COVID đang lây lan từ Q7 Sài Gòn. Triệu chứng: sốt + nổi ban đỏ. BV Chợ Rẫy đã quá tải, không nhận bệnh nhân. Ở nhà ngay!",
+        isDisinformation: true,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Thông tin dịch bệnh sai, gây hoảng loạn",
+                status: ReportStatus.PENDING,
+                isDisinformation: true,
+                assistantNote:
+                    "Không có thông báo chính thức nào từ Bộ Y tế hoặc BV Chợ Rẫy. Tuy nhiên cần admin xác minh nhanh do tính chất nhạy cảm về y tế công cộng.",
+                confidence: 0.78,
+                adminNote: null,
+            },
+        ],
+    },
+    {
+        scenario: "A8 – Sai sự thật nhưng AI đánh giá nhầm là bình thường",
+        content:
+            "Nghiên cứu mới từ ĐH Harvard: Người Việt Nam có IQ trung bình 94, đứng thứ 2 Đông Nam Á. Người Nhật 106, người Singapore 108. Chúng ta vẫn còn nhiều tiềm năng! 🇻🇳",
+        isDisinformation: true,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Số liệu IQ quốc gia này là pseudo-science, bị các nhà khoa học bác bỏ",
+                status: ReportStatus.PENDING,
+                isDisinformation: false, // AI chưa đánh dấu
+                assistantNote:
+                    "Nội dung mang tính chia sẻ thông tin học thuật. Không phát hiện vi phạm rõ ràng. Tuy nhiên reporter có chỉ ra vấn đề phương pháp luận – admin nên review.",
+                confidence: 0.41, // AI không chắc chắn → cần người xem
+                adminNote: null,
+            },
+        ],
+    },
+    {
+        scenario: "A9 – Disinformation kinh tế, AI confidence thấp",
+        content:
+            "Chính phủ sắp đổi tiền, đồng 500k và 200k cũ sẽ không còn giá trị sau 31/12. Đổi ngay ở Vietinbank trước khi hết hạn. Lan truyền để mọi người biết!",
+        isDisinformation: true,
+        isHidden: true,
+        reports: [
+            {
+                reason: "Tin giả về đổi tiền gây hoảng loạn, lừa đảo tài chính",
+                status: ReportStatus.PENDING,
+                isDisinformation: true,
+                assistantNote:
+                    "Không có thông báo chính thức từ NHNN Việt Nam. Dạng tin này thường xuất hiện định kỳ và luôn là giả. Đề nghị xóa.",
+                confidence: 0.88,
+                adminNote: null,
+            },
+        ],
+    },
+    {
+        scenario: "A10 – Fake screenshot từ nguồn uy tín",
+        content:
+            "[Ảnh chụp màn hình] VnExpress đưa tin: 'Bộ Giáo dục hủy kết quả thi THPT 2025 toàn quốc do phát hiện sai đề'. Chia sẻ ngay cho phụ huynh và học sinh!",
+        isDisinformation: true,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Screenshot giả mạo, bài gốc không tồn tại trên VnExpress",
+                status: ReportStatus.PENDING,
+                isDisinformation: true,
+                assistantNote:
+                    "Không tìm thấy bài viết tương ứng trên VnExpress. Đây có thể là screenshot chỉnh sửa. Cần admin xác minh trực tiếp với nguồn.",
+                confidence: 0.69,
+                adminNote: null,
+            },
+        ],
+    },
+    {
+        scenario: "A11 – Fake news tôn giáo",
+        content:
+            "ĐẠO PHẬT CẤM ĂN TRỨNG: Hội đồng Phật giáo VN vừa ra thông báo chính thức cấm Phật tử ăn trứng từ tháng 9. Ai không biết thì lưu lại đây.",
+        isDisinformation: true,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Thông tin sai về tôn giáo, chưa có thông báo chính thức từ Giáo hội",
+                status: ReportStatus.DISMISSED,
+                isDisinformation: false,
+                assistantNote:
+                    "Không tìm thấy văn bản xác nhận. Tuy nhiên đây là quan điểm tranh luận trong Phật giáo, không hẳn là disinformation. Ít nguy hại.",
+                confidence: 0.43,
+                adminNote:
+                    "Review: Không đủ bằng chứng vi phạm nghiêm trọng. Dismiss report, để bài tồn tại.",
+            },
+        ],
+    },
+    {
+        scenario: "A12 – Disinformation kép: fake news + spam",
+        content:
+            "SỰ THẬT về app Shopee: thu thập dữ liệu ngân hàng khi bạn ngủ. 3 triệu người Việt đã bị trừ tiền tự động. Xóa ngay + dùng app TRUSTSHOP của chúng tôi an toàn hơn! Link: trustshop.vn",
+        isDisinformation: true,
+        isHidden: true,
+        reports: [
+            {
+                reason: "Fake news + quảng cáo cạnh tranh xấu, link dẫn đến trang lừa đảo",
+                status: ReportStatus.RESOLVED,
+                isDisinformation: true,
+                assistantNote:
+                    "Kết hợp disinformation và spam thương mại. Link trustshop.vn không có thông tin pháp lý. Hành vi cạnh tranh không lành mạnh. Xóa ngay.",
+                confidence: 0.95,
+                adminNote:
+                    "Xóa, blacklist domain trustshop.vn, khóa tài khoản 7 ngày.",
+            },
+        ],
+    },
+    {
+        scenario: "A13 – Fake news về ô nhiễm môi trường",
+        content:
+            "Nước máy Hà Nội đã bị nhiễm chất gây ung thư cao gấp 1000 lần ngưỡng cho phép! Kết quả xét nghiệm độc lập phía dưới. Không được uống nước máy nữa!!! 🚨",
+        isDisinformation: true,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Thông tin môi trường sai, file đính kèm là giả mạo",
+                status: ReportStatus.PENDING,
+                isDisinformation: true,
+                assistantNote:
+                    "Kết quả xét nghiệm đính kèm không có tên đơn vị kiểm nghiệm hợp lệ, số liệu bất thường. Chưa có công bố chính thức từ Cục Quản lý Tài nguyên nước.",
+                confidence: 0.82,
+                adminNote: null,
+            },
+        ],
+    },
+    {
+        scenario: "A14 – Tin giả về xe cứu thương bán độ",
+        content:
+            "Mua xe cứu thương đã qua sử dụng của bệnh viện với giá chỉ 150 triệu! Sẵn sàng giao ngay tại Hà Nội. Còn đủ thiết bị y tế bên trong. LH: 0909xxxxxx 🚑",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Mua bán tài sản nhà nước trái phép, đáng ngờ",
+                status: ReportStatus.PENDING,
+                isDisinformation: false,
+                assistantNote:
+                    "Nội dung rao bán có thể vi phạm quy định về tài sản công. Không đủ thông tin để kết luận. Cần admin xem xét và có thể chuyển cơ quan chức năng.",
+                confidence: 0.55,
+                adminNote: null,
+            },
+        ],
+    },
+    {
+        scenario: "A15 – Fake news bầu cử địa phương",
+        content:
+            "KẾT QUẢ BẦU CỬ HỘI ĐỒNG NHÂN DÂN Q.1: Ứng cử viên Nguyễn Văn A đã bị loại do gian lận phiếu. Nguồn tin nội bộ từ ủy ban bầu cử. SHARE để mọi người biết!",
+        isDisinformation: true,
+        isHidden: true,
+        reports: [
+            {
+                reason: "Thông tin bầu cử sai sự thật, gây ảnh hưởng uy tín cá nhân",
+                status: ReportStatus.PENDING,
+                isDisinformation: true,
+                assistantNote:
+                    "Không có thông báo chính thức từ Ủy ban Bầu cử. Tên nhân vật mơ hồ. Đây là dạng nội dung cần ưu tiên xử lý trong bối cảnh bầu cử.",
+                confidence: 0.87,
+                adminNote: null,
+            },
+        ],
+    },
+
+    // ══════════════════════════════════════════════
+    // B. NỘI DUNG ĐỘC HẠI / HATE SPEECH / BẠO LỰC (15 bài)
+    // ══════════════════════════════════════════════
+    {
+        scenario: "B1 – Hate speech nhắm vào nhóm dân tộc",
+        content:
+            "Người [dân tộc thiểu số] không bao giờ có thể hội nhập được, bản chất họ lười biếng và hay trộm cắp. Kinh nghiệm sống 30 năm của mình, ai ở vùng đó đều biết.",
+        isDisinformation: false,
+        isHidden: true,
+        reports: [
+            {
+                reason: "Phân biệt chủng tộc, kỳ thị dân tộc thiểu số",
+                status: ReportStatus.RESOLVED,
+                isDisinformation: false,
+                assistantNote:
+                    "Vi phạm nghiêm trọng điều khoản cộng đồng về hate speech. Nội dung mang định kiến sai về toàn bộ nhóm dân tộc. Xóa ngay.",
+                confidence: 0.97,
+                adminNote: "Xóa bài. Khóa tài khoản vĩnh viễn, lần vi phạm thứ 3.",
+            },
+        ],
+    },
+    {
+        scenario: "B2 – Nội dung kích động bạo lực",
+        content:
+            "Bọn lừa đảo đầu tư online ở tòa nhà Landmark 81 đó ai biết không? Địa chỉ: [địa chỉ cụ thể]. Nhà mình mất 500 triệu rồi. Anh em nào cùng kéo đến đòi nợ tối nay không?",
+        isDisinformation: false,
+        isHidden: true,
+        reports: [
+            {
+                reason: "Kích động tập trung gây bạo lực, doxx địa chỉ cá nhân",
+                status: ReportStatus.RESOLVED,
+                isDisinformation: false,
+                assistantNote:
+                    "Nội dung kêu gọi tập hợp đông người đến địa chỉ cụ thể với ý định đối đầu. Doxx địa chỉ và kêu gọi hành động ngay. Rủi ro bạo lực rất cao. Xóa khẩn.",
+                confidence: 0.96,
+                adminNote: "Xóa. Báo cáo cho đội an toàn nội dung, giữ log để hỗ trợ pháp lý nếu cần.",
+            },
+        ],
+    },
+    {
+        scenario: "B3 – Ngôn ngữ thù địch nhắm cá nhân, AI không phát hiện vì dùng code",
+        content:
+            "Con nhỏ @username kia tưởng giỏi mà óc như cờ quê. Đứng trên sân khấu múa may như con kh*i. Mặt như cái [emoji]. Ai thích nó share bài này để xem mặt nó 😂",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Bắt nạt, xúc phạm cá nhân, gọi người khác bằng từ ngữ miệt thị",
+                status: ReportStatus.PENDING,
+                isDisinformation: false,
+                assistantNote:
+                    "Nội dung chứa từ ngữ xúc phạm được viết tắt/mã hóa để né lọc tự động. Nhắm vào cá nhân cụ thể. Cần admin review – bộ lọc tự động có thể bỏ sót.",
+                confidence: 0.61,
+                adminNote: null,
+            },
+        ],
+    },
+    {
+        scenario: "B4 – Nội dung mô tả bạo lực chi tiết",
+        content:
+            "Mình vừa xử một thằng ăn cắp xe máy của mình: dùng xích sắt đánh liên tục vào đầu nó, máu phun ra như vòi. Không kêu cảnh sát, tự xử kiểu Sài Gòn. Ai cũng nên làm vậy 💪",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Mô tả bạo lực chi tiết, khuyến khích tự xử pháp luật",
+                status: ReportStatus.PENDING,
+                isDisinformation: false,
+                assistantNote:
+                    "Nội dung mô tả hành vi bạo lực chi tiết và glorify tự xử pháp luật. Vi phạm điều khoản về nội dung bạo lực. Ẩn khỏi feed, chờ admin xem xét.",
+                confidence: 0.83,
+                adminNote: null,
+            },
+            {
+                reason: "Kêu gọi tự xử, bạo lực",
+                status: ReportStatus.PENDING,
+                isDisinformation: false,
+                assistantNote: null,
+                confidence: null,
+                adminNote: null,
+            },
+        ],
+    },
+    {
+        scenario: "B5 – Kỳ thị giới tính, nhiều report",
+        content:
+            "Phụ nữ đi làm quản lý chỉ toàn xài nước mắt và giường. Không có cô nào lên được chức cao nhờ thực lực cả. Đây là sự thật phũ phàng mà ai cũng biết nhưng không dám nói.",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Kỳ thị giới tính, misogyny rõ ràng",
+                status: ReportStatus.PENDING,
+                isDisinformation: false,
+                assistantNote:
+                    "Nội dung thể hiện định kiến giới tính tiêu cực có hệ thống. Mức độ vi phạm vừa – không kêu gọi hành động bạo lực nhưng có hại cho cộng đồng.",
+                confidence: 0.74,
+                adminNote: null,
+            },
+            {
+                reason: "Sexist, có hại cho phụ nữ trong môi trường công sở",
+                status: ReportStatus.PENDING,
+                isDisinformation: false,
+                assistantNote: null,
+                confidence: null,
+                adminNote: null,
+            },
+            {
+                reason: "Nội dung kỳ thị",
+                status: ReportStatus.PENDING,
+                isDisinformation: false,
+                assistantNote: null,
+                confidence: null,
+                adminNote: null,
+            },
+        ],
+    },
+    {
+        scenario: "B6 – Nội dung nhắm vào cộng đồng LGBTQ+",
+        content:
+            "Người LGBT là bệnh tâm thần, không nên cho họ làm giáo viên hay chăm sóc trẻ em. WHO đã bỏ ra khỏi danh sách nhưng thực tế ai cũng biết đó là lỗi xã hội.",
+        isDisinformation: true,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Hate speech LGBTQ+, thông tin y tế sai về tâm thần học",
+                status: ReportStatus.PENDING,
+                isDisinformation: true,
+                assistantNote:
+                    "Kết hợp disinformation y tế và hate speech. WHO/APA không còn phân loại đồng tính là rối loạn tâm thần từ 1990/1973. Nội dung có thể gây hại cho nhóm thiểu số.",
+                confidence: 0.89,
+                adminNote: null,
+            },
+        ],
+    },
+    {
+        scenario: "B7 – Ngôn ngữ thù địch bình thường hóa dần dần",
+        content:
+            "Sau 3 năm sống cạnh hàng xóm miền Bắc vào Nam làm ăn: ồn ào, không biết ý tứ, thích chiếm đất, hay kèn cựa. Không phải tất cả nhưng mà đa số thật. #hanoivn",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Kỳ thị vùng miền, gây chia rẽ Bắc-Nam",
+                status: ReportStatus.PENDING,
+                isDisinformation: false,
+                assistantNote:
+                    "Nội dung thể hiện định kiến vùng miền nhưng có disclaimer 'không phải tất cả'. Ranh giới giữa ý kiến cá nhân và hate speech. Admin cần phán xét theo ngữ cảnh.",
+                confidence: 0.52,
+                adminNote: null,
+            },
+        ],
+    },
+    {
+        scenario: "B8 – Kêu gọi tẩy chay và doxxing",
+        content:
+            "Đây là thông tin chủ tiệm nail ở địa chỉ [ABC] đã lừa khách 3 triệu. Tên thật: [Tên]. SĐT: [SĐT]. Địa chỉ nhà riêng: [địa chỉ]. Kéo nhau vào review 1 sao và báo cáo nhé!",
+        isDisinformation: false,
+        isHidden: true,
+        reports: [
+            {
+                reason: "Doxxing thông tin cá nhân, kêu gọi review bombing",
+                status: ReportStatus.RESOLVED,
+                isDisinformation: false,
+                assistantNote:
+                    "Vi phạm nghiêm trọng quyền riêng tư: đăng địa chỉ nhà riêng, số điện thoại cá nhân. Kêu gọi hành động tập thể nhắm vào cá nhân. Xóa khẩn.",
+                confidence: 0.98,
+                adminNote: "Xóa, ẩn thông tin cá nhân, cảnh cáo tài khoản.",
+            },
+        ],
+    },
+    {
+        scenario: "B9 – Nội dung bạo lực nhắm vào động vật",
+        content:
+            "Mình vừa xử con chó hàng xóm cứ sủa đêm: đặt bẫy điện ở bờ rào. Chết êm rồi. Ai có chó sủa đêm làm phiền thì làm theo cách này, hiệu quả 100% và không để lại dấu vết.",
+        isDisinformation: false,
+        isHidden: true,
+        reports: [
+            {
+                reason: "Hướng dẫn bạo hành động vật, có thể vi phạm pháp luật",
+                status: ReportStatus.RESOLVED,
+                isDisinformation: false,
+                assistantNote:
+                    "Nội dung mô tả và hướng dẫn hành vi bạo hành động vật. Vi phạm điều khoản bạo lực. Xóa.",
+                confidence: 0.91,
+                adminNote: "Xóa bài. Cảnh cáo.",
+            },
+        ],
+    },
+    {
+        scenario: "B10 – Nội dung tự hại, disguise dưới dạng chia sẻ",
+        content:
+            "Mình đã dùng phương pháp này được 8 tháng rồi: khi stress quá thì cắt nhẹ vào tay, đau vật lý giúp não quên đau tinh thần. Ai muốn thử thì inbox mình chia sẻ cách làm an toàn.",
+        isDisinformation: false,
+        isHidden: true,
+        reports: [
+            {
+                reason: "Nội dung tự hại, hướng dẫn self-harm, nguy hiểm cho người dùng dễ bị tổn thương",
+                status: ReportStatus.RESOLVED,
+                isDisinformation: false,
+                assistantNote:
+                    "Nội dung mô tả và kêu gọi chia sẻ phương pháp tự làm đau bản thân. Đặc biệt nguy hiểm do targeting người đang stress. Xóa ngay và gửi tài nguyên sức khỏe tâm thần cho tác giả.",
+                confidence: 0.99,
+                adminNote: "Xóa, gửi cảnh báo an toàn + đường dây hỗ trợ tâm lý cho tài khoản.",
+            },
+        ],
+    },
+    {
+        scenario: "B11 – Đe dọa ẩn danh",
+        content:
+            "Tới đứa nào biết nó không? Con nhỏ @username hay đi quán X đường Y. Tao sẽ gặp nó hỏi thăm vài câu. Nếu có ai nhìn thấy nó thì tag tao vào 😊",
+        isDisinformation: false,
+        isHidden: true,
+        reports: [
+            {
+                reason: "Đe dọa ngầm, theo dõi cá nhân, gây lo sợ cho nạn nhân",
+                status: ReportStatus.PENDING,
+                isDisinformation: false,
+                assistantNote:
+                    "Mặc dù không dùng từ ngữ đe dọa trực tiếp, ngữ cảnh và nội dung cho thấy ý định theo dõi và đối đầu cá nhân. Rủi ro an toàn thực sự. Ưu tiên cao.",
+                confidence: 0.84,
+                adminNote: null,
+            },
+        ],
+    },
+    {
+        scenario: "B12 – Kỳ thị người khuyết tật",
+        content:
+            "Tại sao nhà nước lại ưu tiên xe lăn chiếm vỉa hè, dành cả tầng trệt cho mấy người không làm được gì cho xã hội? Tiền thuế của mình đang nuôi đám ăn hại này.",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Kỳ thị người khuyết tật, ngôn ngữ thù địch",
+                status: ReportStatus.PENDING,
+                isDisinformation: false,
+                assistantNote:
+                    "Nội dung sử dụng ngôn ngữ miệt thị ('đám ăn hại') nhắm vào người khuyết tật. Vi phạm điều khoản hate speech dù dưới dạng quan điểm về chính sách.",
+                confidence: 0.77,
+                adminNote: null,
+            },
+        ],
+    },
+    {
+        scenario: "B13 – Nội dung cổ xúy ý thức hệ cực đoan",
+        content:
+            "Chỉ có GIẢI PHÁP DUY NHẤT cho vấn đề nhập cư: thanh lọc. Mọi người nhập cư bất hợp pháp cần bị trục xuất bằng vũ lực. Đây không phải thù địch, đây là bảo vệ chính đáng.",
+        isDisinformation: false,
+        isHidden: true,
+        reports: [
+            {
+                reason: "Kêu gọi bạo lực có hệ thống nhắm vào người nhập cư",
+                status: ReportStatus.RESOLVED,
+                isDisinformation: false,
+                assistantNote:
+                    "Ngôn ngữ 'thanh lọc' và 'vũ lực' nhắm vào nhóm người là dấu hiệu của hate speech cực đoan. Xóa và review tài khoản.",
+                confidence: 0.93,
+                adminNote: "Xóa. Khóa tài khoản 30 ngày chờ review tổng thể nội dung.",
+            },
+        ],
+    },
+    {
+        scenario: "B14 – Ảnh nhạy cảm đính kèm",
+        content:
+            "Hình ảnh phụ nữ mặc áo dài, mình thấy cái này đẹp lắm... [đính kèm ảnh người thật không rõ nguồn gốc bị cắt chỉnh sửa]",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Ảnh đính kèm là ảnh người thật bị cắt ghép không có sự đồng ý",
+                status: ReportStatus.PENDING,
+                isDisinformation: false,
+                assistantNote:
+                    "Nội dung văn bản không vi phạm nhưng ảnh đính kèm có thể là nội dung không có sự đồng ý của đối tượng. Cần admin xem ảnh thực tế để phán xét.",
+                confidence: 0.48,
+                adminNote: null,
+            },
+        ],
+    },
+    {
+        scenario: "B15 – Glorify tội phạm",
+        content:
+            "Anh Tuấn Khỉ là huyền thoại Sài Gòn đích thực: không sợ ai, sống theo luật riêng, bảo vệ người yếu thế theo cách riêng. Xã hội cần nhiều người như vậy hơn là cảnh sát 🐉",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Glorify tội phạm nguy hiểm, ảnh hưởng xấu đến giới trẻ",
+                status: ReportStatus.PENDING,
+                isDisinformation: false,
+                assistantNote:
+                    "Nội dung tôn vinh hành vi tội phạm nhưng không kêu gọi hành động trực tiếp. Ranh giới quan điểm cá nhân và nội dung có hại. Admin cần cân nhắc theo chính sách.",
+                confidence: 0.58,
+                adminNote: null,
+            },
+        ],
+    },
+
+    // ══════════════════════════════════════════════
+    // C. SPAM / QUẢNG CÁO TRÁ HÌNH (10 bài)
+    // ══════════════════════════════════════════════
+    {
+        scenario: "C1 – Đa cấp trá hình, spam link",
+        content:
+            "Mình kiếm được 15 triệu tháng này làm online chỉ 2 tiếng/ngày! Không bán hàng, không vốn, không kinh nghiệm. Công ty uy tín Mỹ đang tuyển người Việt. DM mình ngay hoặc click: bit.ly/xxxxx",
+        isDisinformation: true,
+        isHidden: true,
+        reports: [
+            {
+                reason: "Đa cấp, lừa đảo tuyển dụng, link ngắn đáng ngờ",
+                status: ReportStatus.RESOLVED,
+                isDisinformation: true,
+                assistantNote:
+                    "Pattern điển hình của đa cấp/scam: thu nhập khủng, ít thời gian, không cần kinh nghiệm. Link rút gọn ẩn đích đến thực sự. Spam thương mại vi phạm điều khoản.",
+                confidence: 0.96,
+                adminNote: "Xóa, blacklist link, đánh dấu tài khoản hay spam.",
+            },
+        ],
+    },
+    {
+        scenario: "C2 – Quảng cáo thuốc không rõ nguồn gốc",
+        content:
+            "Thuốc giảm cân THẦN KỲ từ Thái Lan: giảm 10kg trong 2 tuần không cần ăn kiêng, không tập gym! Đã bán 50.000 hộp. 100% tự nhiên, không tác dụng phụ. Order tại: [SĐT]",
+        isDisinformation: true,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Thuốc không rõ nguồn gốc, quảng cáo sai sự thật về tác dụng",
+                status: ReportStatus.PENDING,
+                isDisinformation: true,
+                assistantNote:
+                    "Tuyên bố về hiệu quả thuốc vi phạm quy định quảng cáo dược phẩm. Không có số đăng ký lưu hành. Có thể gây hại sức khỏe.",
+                confidence: 0.88,
+                adminNote: null,
+            },
+        ],
+    },
+    {
+        scenario: "C3 – Bot farm comment thao túng",
+        content:
+            "Dịch vụ TĂNG LIKE, FOLLOW, VIEW giá rẻ nhất VN: 1000 like = 50k, 1000 follow = 80k. Guarantee 30 ngày không tụt. Đã phục vụ 10.000+ khách. Inbox để báo giá!",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Vi phạm điều khoản: bán dịch vụ thao túng nền tảng",
+                status: ReportStatus.RESOLVED,
+                isDisinformation: false,
+                assistantNote:
+                    "Dịch vụ mua like/follow vi phạm trực tiếp điều khoản sử dụng nền tảng. Xóa và cảnh cáo.",
+                confidence: 0.99,
+                adminNote: "Xóa, khóa tài khoản.",
+            },
+        ],
+    },
+    {
+        scenario: "C4 – Phishing trá hình chia sẻ",
+        content:
+            "Viettel đang tặng 50GB miễn phí cho khách hàng VIP! Nhấn vào link này để nhận: viettel-giftdata.com/free50gb - Chia sẻ để người thân cũng nhận được nhé! ⚡",
+        isDisinformation: true,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Link phishing giả mạo Viettel, đánh cắp thông tin tài khoản",
+                status: ReportStatus.PENDING,
+                isDisinformation: true,
+                assistantNote:
+                    "Domain 'viettel-giftdata.com' không phải tên miền chính thức của Viettel. Pattern phishing điển hình: free offer + urgent sharing. Xóa khẩn.",
+                confidence: 0.97,
+                adminNote: null,
+            },
+        ],
+    },
+    {
+        scenario: "C5 – Spam tuyển cộng tác viên lặp lại",
+        content:
+            "Tuyển gấp CTV bán hàng online, làm tại nhà, thu nhập 8-15 triệu/tháng. Không cần vốn, không cần kinh nghiệm. Đào tạo từ đầu. Lương cứng + hoa hồng. Nhắn tin ngay!",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Spam, đây là lần đăng thứ 5 trong tuần từ tài khoản này",
+                status: ReportStatus.PENDING,
+                isDisinformation: false,
+                assistantNote:
+                    "Một bài đơn lẻ không vi phạm rõ ràng nhưng nếu là spam lặp lại thì vi phạm. Cần admin kiểm tra lịch sử đăng bài của tài khoản này.",
+                confidence: 0.52,
+                adminNote: null,
+            },
+        ],
+    },
+    {
+        scenario: "C6 – Quảng cáo trá hình review",
+        content:
+            "Mình vừa dùng thử kem dưỡng trắng của shop XYZ, chỉ sau 7 ngày da trắng bật tông hẳn, mụn biến mất luôn! Chị em nên thử ngay, link order dưới comment 💕 (không phải quảng cáo nhé!)",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Quảng cáo trá hình, không ghi rõ nhãn quảng cáo theo quy định",
+                status: ReportStatus.DISMISSED,
+                isDisinformation: false,
+                assistantNote:
+                    "Đây có thể là user-generated review thật hoặc quảng cáo không được ghi nhãn. Không đủ bằng chứng chắc chắn. Tác hại thấp.",
+                confidence: 0.4,
+                adminNote: "Dismiss. Không đủ cơ sở vi phạm rõ ràng. Nhắn nhở tài khoản nếu có bằng chứng hợp đồng.",
+            },
+        ],
+    },
+    {
+        scenario: "C7 – Lừa đảo đầu tư forex",
+        content:
+            "Tham gia sàn giao dịch [Tên sàn] của mình: lợi nhuận 3-5%/ngày đảm bảo! Đã có 200 thành viên VN đang lãi đều. Nạp tối thiểu 500$. Bảo đảm rút tiền trong 24h.",
+        isDisinformation: true,
+        isHidden: true,
+        reports: [
+            {
+                reason: "Lừa đảo đầu tư, hứa hẹn lợi nhuận phi thực tế",
+                status: ReportStatus.RESOLVED,
+                isDisinformation: true,
+                assistantNote:
+                    "Lợi nhuận 3-5%/ngày (>1000%/năm) là không thể có trên thị trường hợp pháp. Đây là dấu hiệu rõ ràng của Ponzi/scam. Xóa và báo cáo tài khoản.",
+                confidence: 0.98,
+                adminNote: "Xóa, khóa vĩnh viễn, báo cơ quan chức năng nếu có thêm báo cáo.",
+            },
+        ],
+    },
+    {
+        scenario: "C8 – Spam chính trị mùa bầu cử",
+        content:
+            "Hãy vote cho ứng cử viên [Tên] trong cuộc bầu cử sắp tới! Click vào form đăng ký ủng hộ: form.google.com/xxxx - Thu thập thông tin để gửi tài liệu vận động. Quan trọng!",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Thu thập dữ liệu trái phép dưới danh nghĩa chính trị",
+                status: ReportStatus.PENDING,
+                isDisinformation: false,
+                assistantNote:
+                    "Link thu thập thông tin đáng ngờ trong bối cảnh chính trị. Cần admin xem form thực tế để xác định mức độ vi phạm.",
+                confidence: 0.6,
+                adminNote: null,
+            },
+        ],
+    },
+    {
+        scenario: "C9 – Fake giveaway",
+        content:
+            "🎁 GIVEAWAY: iPhone 15 Pro Max x5 từ đội ngũ chúng tôi! Để tham gia: 1) Follow page 2) Like bài này 3) Tag 3 bạn bè 4) Share story. Quay số ngày 30/12. GL! 🍀",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Fake giveaway để tăng follower gian lận, không có giải thưởng thật",
+                status: ReportStatus.PENDING,
+                isDisinformation: false,
+                assistantNote:
+                    "Giveaway có thể hợp lệ hoặc không. Không thể xác định nếu chưa qua ngày 30/12. Tạm giữ, theo dõi xem kết quả có được công bố không.",
+                confidence: 0.44,
+                adminNote: null,
+            },
+        ],
+    },
+    {
+        scenario: "C10 – Spam nhiều post giống nhau",
+        content:
+            "Cần cho thuê căn hộ 2PN quận 7, 12 triệu/tháng, full nội thất. LH: 0901xxxxxx. #chothue #cantho #q7 #saigon #hosochiminhcity #apartment #cho_thue_can_ho",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Spam: đăng bài này 20 lần trong 1 ngày trên nhiều nhóm",
+                status: ReportStatus.PENDING,
+                isDisinformation: false,
+                assistantNote:
+                    "Nội dung đơn lẻ không vi phạm. Nhưng nếu spam số lượng lớn thì vi phạm. Cần admin kiểm tra lịch sử post của tài khoản và xem xét rate limiting.",
+                confidence: 0.5,
+                adminNote: null,
+            },
+        ],
+    },
+
+    // ══════════════════════════════════════════════
+    // D. AI ĐÁNH GIÁ SAI → CẦN ADMIN XEM (15 bài)
+    // ══════════════════════════════════════════════
+    {
+        scenario: "D1 – AI nhầm nội dung hài là thật",
+        content:
+            "Tuyên bố: Mình vừa thành lập Cộng Hòa Độc Lập Ban Công Tầng 7 với dân số 3 người (mình + 2 con mèo). Yêu cầu công nhận từ LHQ. Kế hoạch kinh tế: bán cà phê cho láng giềng.",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Kêu gọi ly khai, thành lập nhà nước phi pháp",
+                status: ReportStatus.DISMISSED,
+                isDisinformation: true, // AI nhầm đánh dấu
+                assistantNote:
+                    "Phát hiện từ khóa 'Cộng Hòa Độc Lập' và 'yêu cầu công nhận từ LHQ'. Có thể là nội dung nhạy cảm về chính trị. Đề nghị admin review.",
+                confidence: 0.67, // AI không chắc nhưng vẫn flag
+                adminNote:
+                    "Review: Đây là nội dung hài hước rõ ràng (ban công + 2 con mèo). AI bị confuse bởi từ khóa. Dismiss. Không vi phạm gì. Cần cải thiện NLP context.",
+            },
+        ],
+    },
+    {
+        scenario: "D2 – AI nhầm bài học lịch sử là nội dung cực đoan",
+        content:
+            "Trong lớp học hôm nay chúng tôi thảo luận về chiến lược quân sự của phát xít Đức trong WWII: tại sao Blitzkrieg ban đầu hiệu quả và tại sao cuối cùng thất bại. Rất thú vị về mặt lịch sử.",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Người dùng thấy bài này trong feed và lo ngại về nội dung quân sự",
+                status: ReportStatus.DISMISSED,
+                isDisinformation: false,
+                assistantNote:
+                    "Phát hiện từ khóa về quân sự và tổ chức cực đoan. Flagged để review. Tuy nhiên ngữ cảnh học thuật rõ ràng – confidence thấp.",
+                confidence: 0.35,
+                adminNote: "Dismiss. Nội dung giáo dục lịch sử hoàn toàn hợp lệ. AI false positive.",
+            },
+        ],
+    },
+    {
+        scenario: "D3 – AI bỏ sót spam tinh vi",
+        content:
+            "Hôm nay mình học được điều thú vị về tư duy tài chính: tiết kiệm nhỏ hàng ngày tạo ra sự khác biệt lớn theo thời gian. Ví dụ: 50k/ngày × 365 = 18.25 triệu/năm. Nhờ mentor của mình chỉ dạy, ai muốn kết nối với mentor này thì inbox mình nha!",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Nội dung có vẻ ổn nhưng phần cuối dẫn dụ vào sơ đồ đa cấp tài chính",
+                status: ReportStatus.PENDING,
+                isDisinformation: false,
+                assistantNote:
+                    "Nội dung phần đầu hoàn toàn bình thường và hữu ích. Phần cuối có thể là marketing network. Không phát hiện vi phạm rõ ràng. Admin review để xác nhận.",
+                confidence: 0.38, // AI bỏ sót
+                adminNote: null,
+            },
+        ],
+    },
+    {
+        scenario: "D4 – AI flag nội dung y tế hợp lệ",
+        content:
+            "Hướng dẫn sơ cứu đúng cách khi bị bỏng nặng: 1) Không dùng nước đá 2) Làm mát bằng nước lạnh 15-20 phút 3) Không bôi kem đánh răng 4) Băng vết thương sạch 5) Đến BV ngay. Tránh những mẹo dân gian sai lầm!",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Thấy bài này về vết thương, lo sợ hướng dẫn sai y tế",
+                status: ReportStatus.DISMISSED,
+                isDisinformation: true, // AI nhầm flag
+                assistantNote:
+                    "Phát hiện từ khóa về chấn thương và điều trị. Flagged để xác minh tính chính xác y tế. Cần admin hoặc chuyên gia y tế xem xét.",
+                confidence: 0.55,
+                adminNote: "Review: Hướng dẫn y tế hoàn toàn chính xác theo chuẩn Hội Chữ Thập Đỏ. AI false positive. Dismiss. Cần train lại model.",
+            },
+        ],
+    },
+    {
+        scenario: "D5 – AI không phát hiện ngôn ngữ code lách filter",
+        content:
+            "Mấy đứa j3w ở cty tao toàn xài ch1nh s4ch ngược đãi nhân viên người kinh. Sếp t0àn ưu tiên d0ng máu khác. Tức thật.",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Hate speech sử dụng leet speak để né bộ lọc, kỳ thị sắc tộc",
+                status: ReportStatus.PENDING,
+                isDisinformation: false,
+                assistantNote:
+                    "Phân tích không phát hiện vi phạm rõ ràng. Nội dung về phàn nàn công ty. Tuy nhiên reporter chỉ ra pattern leet speak. Admin cần đọc kỹ ngữ nghĩa thực tế.",
+                confidence: 0.28, // AI bị lừa bởi encoding
+                adminNote: null,
+            },
+        ],
+    },
+    {
+        scenario: "D6 – AI confident sai về nội dung satire",
+        content:
+            "THÔNG BÁO KHẨN: Chính phủ sẽ đánh thuế không khí từ 2026! Mức thuế: 0.001 VND/lần thở. Người giàu có thể mua gói thở không giới hạn 999k/tháng. #satire #humor #thoistay",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Tin giả về thuế nhà nước",
+                status: ReportStatus.DISMISSED,
+                isDisinformation: true, // AI nhầm
+                assistantNote:
+                    "Phát hiện tuyên bố về chính sách thuế mới chưa được xác nhận. Flagged là disinformation tiềm năng. Đề nghị admin xác minh.",
+                confidence: 0.71,
+                adminNote:
+                    "Review: Có hashtag #satire và nội dung rõ ràng là châm biếm (thuế không khí). AI thiếu context satire. Dismiss. False positive.",
+            },
+        ],
+    },
+    {
+        scenario: "D7 – AI nhầm nghiên cứu học thuật là hướng dẫn nguy hiểm",
+        content:
+            "Bài nghiên cứu mình đọc hôm nay phân tích cách các nhóm extremist tuyển dụng thành viên online: dùng meme, nội dung giải trí, rồi dần escalate. Hiểu cơ chế này quan trọng để counter-messaging.",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Cảm giác không ổn về nội dung liên quan cực đoan",
+                status: ReportStatus.DISMISSED,
+                isDisinformation: false,
+                assistantNote:
+                    "Phát hiện từ ngữ liên quan tuyển dụng cực đoan. Flagged để xem xét. Ngữ cảnh có vẻ học thuật nhưng cần confirm.",
+                confidence: 0.56,
+                adminNote:
+                    "Dismiss. Đây là nội dung nghiên cứu/giáo dục rõ ràng. Từ 'counter-messaging' cho thấy mục tiêu chống cực đoan. False positive của AI.",
+            },
+        ],
+    },
+    {
+        scenario: "D8 – AI bỏ lọt nội dung sexist được code hóa bằng emoji",
+        content:
+            "Đàn bà chỉ nên ở nhà 🍳🧹👶 thôi, đi làm 💼 chỉ là tạo rắc rối cho công ty. Đây là quan điểm thực tế không phải phân biệt 😊",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Nội dung sexist dùng emoji để che giấu ý nghĩa",
+                status: ReportStatus.PENDING,
+                isDisinformation: false,
+                assistantNote:
+                    "Phân tích phát hiện ngôn ngữ có thể gây tranh cãi về vai trò giới tính. Không đủ tín hiệu rõ ràng để phân loại vi phạm. Confidence thấp.",
+                confidence: 0.42,
+                adminNote: null,
+            },
+        ],
+    },
+    {
+        scenario: "D9 – AI confident sai về meme lịch sử",
+        content:
+            "Cầm chịch: Đây là ảnh của Hồ Chí Minh thời trẻ khi còn làm bếp ở Paris. Ít ai biết Bác từng là chef 5 sao trước khi trở thành lãnh tụ. Thú vị không? [ảnh đính kèm]",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Thông tin lịch sử không chính xác về lãnh tụ, ảnh giả",
+                status: ReportStatus.PENDING,
+                isDisinformation: false, // cần admin xác minh
+                assistantNote:
+                    "Tuyên bố về nhân vật lịch sử quan trọng. Thực tế Hồ Chí Minh có thời gian ở Paris nhưng không rõ chi tiết này. Cần admin xác minh tính chính xác lịch sử.",
+                confidence: 0.54,
+                adminNote: null,
+            },
+        ],
+    },
+    {
+        scenario: "D10 – AI bỏ qua nội dung lừa đảo tinh vi",
+        content:
+            "Chia sẻ kinh nghiệm học online: mình học khóa 'Tư duy tài chính nâng cao' 2 triệu và thay đổi hoàn toàn cách nhìn về tiền bạc. Ai muốn tham gia cùng mình inbox, mình có discount code 20%.",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "MLM pyramid scheme dưới dạng khóa học, kiếm hoa hồng từ người đăng ký",
+                status: ReportStatus.PENDING,
+                isDisinformation: false,
+                assistantNote:
+                    "Chia sẻ khóa học và discount code là hành vi marketing thông thường. Không phát hiện vi phạm rõ ràng. Tuy nhiên reporter nêu nghi ngờ MLM – admin có thể kiểm tra thêm.",
+                confidence: 0.33,
+                adminNote: null,
+            },
+        ],
+    },
+    {
+        scenario: "D11 – AI nhầm hướng dẫn nấu ăn là nguy hiểm",
+        content:
+            "Cách làm rượu gạo truyền thống Việt Nam tại nhà: cần nếp cái hoa vàng, men thuốc bắc, bình sành. Ủ 20 ngày ở nhiệt độ phòng. Chắt lấy nước trong, không cần chưng cất.",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Hướng dẫn sản xuất rượu lậu",
+                status: ReportStatus.DISMISSED,
+                isDisinformation: false,
+                assistantNote:
+                    "Phát hiện hướng dẫn sản xuất đồ uống có cồn. Có thể vi phạm quy định tùy theo luật địa phương. Flagged để xem xét.",
+                confidence: 0.61,
+                adminNote:
+                    "Dismiss. Hướng dẫn nấu rượu gạo truyền thống là văn hóa ẩm thực hợp pháp cho mục đích cá nhân. AI overclassified.",
+            },
+        ],
+    },
+    {
+        scenario: "D12 – AI phát hiện đúng nhưng confidence quá thấp",
+        content:
+            "Để tránh bị phát hiện khi chụp ảnh người lạ ngoài đường: tắt âm thanh máy ảnh, dùng chế độ burst, đứng xa dùng zoom. Chụp được nhiều ảnh tự nhiên hơn 😊📸",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Hướng dẫn chụp lén người khác không có sự đồng ý – vi phạm quyền riêng tư",
+                status: ReportStatus.PENDING,
+                isDisinformation: false,
+                assistantNote:
+                    "Nội dung về kỹ thuật nhiếp ảnh. Câu hỏi về quyền riêng tư là chủ quan và phụ thuộc vào ngữ cảnh. Không chắc chắn đây là vi phạm.",
+                confidence: 0.4, // AI quá thấp cho trường hợp này
+                adminNote: null,
+            },
+        ],
+    },
+    {
+        scenario: "D13 – AI flag oan nội dung văn học",
+        content:
+            "Trích đoạn từ tiểu thuyết mình đang viết: 'Nhân vật phản diện nhìn xuống thành phố bừng sáng, lòng ngập tràn căm hận. Một ngày nào đó hắn sẽ làm tất cả chúng trả giá.'",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Đe dọa bạo lực",
+                status: ReportStatus.DISMISSED,
+                isDisinformation: false,
+                assistantNote:
+                    "Phát hiện ngôn ngữ đe dọa và bạo lực. Tuy nhiên context 'tiểu thuyết mình đang viết' và 'nhân vật phản diện' cho thấy đây là sáng tác văn học. Cần admin xác nhận.",
+                confidence: 0.47,
+                adminNote:
+                    "Dismiss. Rõ ràng là trích đoạn sáng tác. Reporter đã đọc không đủ context. AI đúng khi confidence thấp. False report.",
+            },
+        ],
+    },
+    {
+        scenario: "D14 – AI bỏ sót bài phân biệt chủng tộc disguise bằng văn phong lịch sự",
+        content:
+            "Nghiên cứu di truyền học chỉ ra rằng sự khác biệt về trí tuệ giữa các chủng tộc là có cơ sở sinh học. Đây không phải phân biệt chủng tộc, chỉ là khoa học. Cần thảo luận cởi mở về điều này.",
+        isDisinformation: true,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Scientific racism, thông tin sai về di truyền học được dùng để biện minh cho phân biệt chủng tộc",
+                status: ReportStatus.PENDING,
+                isDisinformation: true,
+                assistantNote:
+                    "Nội dung có dạng học thuật và không chứa từ ngữ hate speech rõ ràng. Không phát hiện vi phạm bề mặt. Tuy nhiên reporter nêu vấn đề 'scientific racism' – admin cần đánh giá chuyên sâu.",
+                confidence: 0.39, // AI bị đánh lừa bởi văn phong
+                adminNote: null,
+            },
+        ],
+    },
+    {
+        scenario: "D15 – Nhiều AI flag mâu thuẫn nhau",
+        content:
+            "Review trung thực sau 1 năm dùng thiết bị tập thể dục ở nhà: lười tập hơn phòng gym, không có partner, không có không khí thi đua. Nếu bạn thiếu discipline thì thiết bị nhà không phải giải pháp.",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Nội dung có thể gây nản lòng người đang cố gắng tập thể dục tại nhà",
+                status: ReportStatus.DISMISSED,
+                isDisinformation: false,
+                assistantNote:
+                    "Nội dung mang tính quan điểm cá nhân về tập thể dục. Không phát hiện vi phạm rõ ràng. Tuy nhiên có thể gây discouragement – tác động tâm lý nhẹ.",
+                confidence: 0.22,
+                adminNote:
+                    "Dismiss. Đây là review chủ quan hoàn toàn hợp lệ. Report không có cơ sở. AI confidence đúng là thấp.",
+            },
+        ],
+    },
+
+    // ══════════════════════════════════════════════
+    // E. LẠM DỤNG HỆ THỐNG REPORT / BÁO CÁO OAN (10 bài)
+    // ══════════════════════════════════════════════
+    {
+        scenario: "E1 – Report trả thù sau tranh luận",
+        content:
+            "Mình không đồng ý với quan điểm của @xyz về kinh tế học. Lý do chính: mô hình Keynesian không phải giải pháp duy nhất, các nền kinh tế Bắc Âu dùng kết hợp nhiều mô hình. Hãy thảo luận thêm.",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Nội dung sai về kinh tế học, cần xóa",
+                status: ReportStatus.DISMISSED,
+                isDisinformation: false,
+                assistantNote:
+                    "Đây là quan điểm học thuật có cơ sở về kinh tế học. Không có dấu hiệu disinformation hay vi phạm nào. Có thể là report trả thù.",
+                confidence: 0.15,
+                adminNote:
+                    "Dismiss. Nội dung tranh luận học thuật hợp lệ. Reporter và tác giả có vẻ đang xung đột – reporter đang dùng report button không đúng mục đích.",
+            },
+        ],
+    },
+    {
+        scenario: "E2 – Report vì không đồng ý quan điểm",
+        content:
+            "Mình thấy văn học dòng chảy ý thức (stream of consciousness) không hay, khó đọc và cố tình làm khó người đọc. Virginia Woolf hay James Joyce không phải sở thích của mình dù nhiều người khen.",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Nội dung xúc phạm tác giả nổi tiếng, sai về văn học",
+                status: ReportStatus.DISMISSED,
+                isDisinformation: false,
+                assistantNote:
+                    "Đây là quan điểm văn học cá nhân. Không có nội dung xúc phạm hay disinformation. Report không có cơ sở.",
+                confidence: 0.08,
+                adminNote: "Dismiss rõ ràng. Ý kiến văn học cá nhân không phải vi phạm.",
+            },
+        ],
+    },
+    {
+        scenario: "E3 – Report hàng loạt từ coordinated group",
+        content:
+            "Review nhà hàng XYZ: phục vụ tốt, không gian đẹp, đồ ăn ngon nhưng giá hơi cao. 7/10 sẽ quay lại. #reviewquanan #saigon",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Review sai sự thật gây thiệt hại kinh doanh",
+                status: ReportStatus.DISMISSED,
+                isDisinformation: false,
+                assistantNote:
+                    "Review bình thường, không có ngôn ngữ cực đoan hay tuyên bố sai sự thật rõ ràng. 7/10 là đánh giá trung bình hợp lý.",
+                confidence: 0.12,
+                adminNote:
+                    "Dismiss. Có 8 report giống nhau cho bài này trong 2 giờ – dấu hiệu report bomb từ phía có lợi ích với nhà hàng. Ghi nhận pattern.",
+            },
+            {
+                reason: "Fake review, người này chưa bao giờ đến đây",
+                status: ReportStatus.DISMISSED,
+                isDisinformation: false,
+                assistantNote: null,
+                confidence: null,
+                adminNote: "Xử lý theo report đầu.",
+            },
+        ],
+    },
+    {
+        scenario: "E4 – Report vì ghen tuông",
+        content:
+            "Date night thành công! Anh ấy đặt bàn ở nhà hàng view Bitexco, hoa hồng đỏ, nhạc nhẹ. Hạnh phúc ghê 🌹❤️",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Khoe mẽ, nội dung giả tạo, ảnh hưởng tâm lý người khác",
+                status: ReportStatus.DISMISSED,
+                isDisinformation: false,
+                assistantNote:
+                    "Đây là chia sẻ cuộc sống cá nhân hoàn toàn bình thường. Không có vi phạm nào.",
+                confidence: 0.03,
+                adminNote: "Dismiss. Report không có cơ sở.",
+            },
+        ],
+    },
+    {
+        scenario: "E5 – Report nội dung nhạy cảm nhưng hợp lệ (thảo luận giới tính)",
+        content:
+            "Theo nghiên cứu tâm lý học hiện đại, biểu đồ phân phối chuẩn về các đặc điểm tâm lý ở nam và nữ cho thấy sự chồng lấp lớn. Sự khác biệt giới tính sinh học tồn tại nhưng không nên dùng để stereotype cá nhân.",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Phân biệt giới tính dưới vỏ bọc khoa học",
+                status: ReportStatus.DISMISSED,
+                isDisinformation: false,
+                assistantNote:
+                    "Nội dung trình bày kết luận tâm lý học có bằng chứng và kết luận chống stereotype. Không vi phạm.",
+                confidence: 0.21,
+                adminNote: "Dismiss. Nội dung học thuật cân bằng và chính xác. Reporter hiểu nhầm.",
+            },
+        ],
+    },
+    {
+        scenario: "E6 – Report vì cạnh tranh kinh doanh",
+        content:
+            "Sau khi thử đủ loại trà sữa ở Sài Gòn, mình nhận ra Gong Cha vẫn consistent nhất về chất lượng. Giá hơi cao nhưng đáng. Không nói Tiger Sugar hay The Alley kém, chỉ là taste preference thôi.",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Quảng cáo trá hình cho Gong Cha, gây thiệt hại cho brand khác",
+                status: ReportStatus.DISMISSED,
+                isDisinformation: false,
+                assistantNote:
+                    "Đây là review sản phẩm với ngôn ngữ trung lập và cân nhắc. Không có dấu hiệu được trả tiền hay disinformation.",
+                confidence: 0.14,
+                adminNote: "Dismiss. Report từ tài khoản liên kết với brand cạnh tranh. Không có vi phạm.",
+            },
+        ],
+    },
+    {
+        scenario: "E7 – Report vì tức giận",
+        content:
+            "Trả lời @abc: Mình không đồng ý. Bạn đang dùng confirmation bias để chọn lọc dữ liệu. Các nghiên cứu peer-reviewed đều không hỗ trợ luận điểm đó. Cite nguồn đi nếu muốn tranh luận nghiêm túc.",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Xúc phạm, chỉ trích gay gắt",
+                status: ReportStatus.DISMISSED,
+                isDisinformation: false,
+                assistantNote:
+                    "Đây là phản biện học thuật với yêu cầu dẫn nguồn. Không có ngôn ngữ xúc phạm. Tranh luận trí tuệ bình thường.",
+                confidence: 0.11,
+                adminNote: "Dismiss. Phản biện học thuật không phải vi phạm, dù có thể gây khó chịu.",
+            },
+        ],
+    },
+    {
+        scenario: "E8 – Report chính trị phân cực",
+        content:
+            "Phân tích chính sách kinh tế: tăng thuế doanh nghiệp có thể giảm đầu tư ngắn hạn nhưng nếu dùng để cải thiện hạ tầng và giáo dục thì lợi ích dài hạn vượt trội. Mỗi chính sách có trade-off.",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Tuyên truyền cánh tả, ủng hộ tăng thuế",
+                status: ReportStatus.DISMISSED,
+                isDisinformation: false,
+                assistantNote:
+                    "Đây là phân tích chính sách cân bằng, thừa nhận trade-off. Không phải tuyên truyền. Report mang tính chính trị.",
+                confidence: 0.09,
+                adminNote: "Dismiss. Phân tích chính sách học thuật. Report mang động cơ chính trị.",
+            },
+        ],
+    },
+    {
+        scenario: "E9 – Report nội dung hài nhạy cảm nhưng hợp lệ",
+        content:
+            "Joke của ngày: Tại sao sinh viên IT luôn nhầm Halloween với Christmas? Vì Oct 31 = Dec 25 (octal vs decimal). 🎃🎄 #lập trình #hài #techhumor",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Nội dung ký tự lạ, có thể là mã độc ẩn",
+                status: ReportStatus.DISMISSED,
+                isDisinformation: false,
+                assistantNote:
+                    "Đây là joke lập trình về hệ đếm bát phân và thập phân. Oct 31 = Dec 25 là sự thật toán học. Không có mã độc.",
+                confidence: 0.06,
+                adminNote: "Dismiss. Joke lập trình bình thường. Reporter không hiểu nội dung.",
+            },
+        ],
+    },
+    {
+        scenario: "E10 – Serial reporter lạm dụng hệ thống",
+        content:
+            "Thứ 2 đầu tuần: mình hay dùng Pomodoro technique – tập trung 25 phút, nghỉ 5 phút. Hiệu quả hơn nhiều so với cố làm 3 tiếng liên tục. Ai hay dùng phương pháp quản lý thời gian nào không?",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Quảng bá sản phẩm không được phép",
+                status: ReportStatus.DISMISSED,
+                isDisinformation: false,
+                assistantNote:
+                    "Chia sẻ phương pháp làm việc cá nhân. Không có link sản phẩm hay quảng cáo. Không vi phạm.",
+                confidence: 0.04,
+                adminNote:
+                    "Dismiss. Tài khoản reporter này đã submit 47 report trong 3 ngày – phần lớn không có cơ sở. Đánh dấu là serial reporter, xem xét hạn chế tính năng report.",
+            },
+        ],
+    },
+
+    // ══════════════════════════════════════════════
+    // F. VI PHẠM NHẸ / ĐÃ TỰ GIẢI QUYẾT / ĐANG XỬ LÝ (10 bài)
+    // ══════════════════════════════════════════════
+    {
+        scenario: "F1 – Bài đã xóa trước khi admin xử lý",
+        content:
+            "[Bài đã bị tác giả tự xóa] Nội dung gốc: Mình lỡ share thông tin sai về lịch nghỉ lễ năm 2025. Xin lỗi mọi người, đã kiểm tra lại rồi.",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Thông tin ngày nghỉ sai gây nhầm lẫn cho người đi làm",
+                status: ReportStatus.RESOLVED,
+                isDisinformation: false,
+                assistantNote:
+                    "Tác giả đã tự xóa và xin lỗi trước khi report được xử lý. Tác động thấp.",
+                confidence: 0.6,
+                adminNote: "Resolved. Tác giả đã tự xử lý. Không cần action thêm.",
+            },
+        ],
+    },
+    {
+        scenario: "F2 – Vi phạm bản quyền nhẹ",
+        content:
+            "Đây là đoạn nhạc mình cover bài Trịnh Công Sơn, thu âm tại nhà bằng đàn acoustic. Không kiếm tiền, chỉ để chia sẻ với bạn bè thôi 🎸 [audio clip]",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Vi phạm bản quyền âm nhạc không xin phép",
+                status: ReportStatus.DISMISSED,
+                isDisinformation: false,
+                assistantNote:
+                    "Cover cá nhân phi thương mại thường được bảo vệ bởi fair use. Cần xem xét chính sách cụ thể của nền tảng.",
+                confidence: 0.38,
+                adminNote:
+                    "Dismiss. Cover phi thương mại của tác phẩm âm nhạc Việt Nam trong domain công cộng. Không vi phạm.",
+            },
+        ],
+    },
+    {
+        scenario: "F3 – Thông tin cá nhân vô tình để lộ",
+        content:
+            "Hóa đơn tháng này: tiền thuê nhà 6 triệu, điện nước 800k, internet 200k, ăn uống 3.5 triệu [ảnh hóa đơn đính kèm – có thể thấy địa chỉ nhà và số tài khoản]",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Lộ thông tin tài khoản ngân hàng và địa chỉ nhà trong ảnh",
+                status: ReportStatus.RESOLVED,
+                isDisinformation: false,
+                assistantNote:
+                    "Ảnh đính kèm có thể chứa thông tin cá nhân nhạy cảm. Cần ẩn ảnh ngay và thông báo tác giả.",
+                confidence: 0.82,
+                adminNote: "Ẩn ảnh, nhắn tác giả gỡ thông tin nhạy cảm. Tác giả đã tự xóa sau khi được nhắc.",
+            },
+        ],
+    },
+    {
+        scenario: "F4 – Ngôn ngữ thô tục nhẹ trong context hài",
+        content:
+            "Cái cảm giác compile xong không có lỗi: wtf không lẽ code tao đúng hết lần này? Chờ... 30 giây sau: runtime error. Tất nhiên rồi 🤦‍♂️ #devlife #programmerlife",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Ngôn ngữ thô tục (wtf)",
+                status: ReportStatus.DISMISSED,
+                isDisinformation: false,
+                assistantNote:
+                    "Viết tắt thông dụng trong ngữ cảnh hài hước lập trình. Mức độ thấp, không nhắm đến ai.",
+                confidence: 0.18,
+                adminNote: "Dismiss. Không đủ nghiêm trọng để xử lý.",
+            },
+        ],
+    },
+    {
+        scenario: "F5 – Nội dung nhạy cảm về cờ bạc",
+        content:
+            "Hỏi chuyên gia: chiến lược Martingale trong baccarat có thực sự hiệu quả không? Mình đang học về xác suất và tò mò về tính toán toán học đằng sau.",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Hướng dẫn cờ bạc, có hại cho người nghiện cờ bạc",
+                status: ReportStatus.PENDING,
+                isDisinformation: false,
+                assistantNote:
+                    "Câu hỏi học thuật về xác suất. Không phải hướng dẫn cờ bạc trực tiếp. Tuy nhiên có thể nhạy cảm tùy chính sách nền tảng về cờ bạc.",
+                confidence: 0.34,
+                adminNote: null,
+            },
+        ],
+    },
+    {
+        scenario: "F6 – Bài cũ được report muộn",
+        content:
+            "Năm 2022 mình đã dự đoán Bitcoin sẽ lên 100k USD vào cuối năm 2023. Sai hoàn toàn lol 😂 Ai cũng có thể sai dự đoán thị trường.",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Thông tin sai về crypto đã gây thiệt hại tài chính cho người đọc",
+                status: ReportStatus.DISMISSED,
+                isDisinformation: false,
+                assistantNote:
+                    "Tác giả tự thừa nhận dự đoán sai. Đây không phải disinformation mà là chia sẻ bài học. Không có ý định gian dối.",
+                confidence: 0.16,
+                adminNote: "Dismiss. Nội dung tự phê bình, không có ý định xấu.",
+            },
+        ],
+    },
+    {
+        scenario: "F7 – Vi phạm nhỏ đã được cảnh cáo",
+        content:
+            "Ai muốn mua vé concert BTS không? Mình có 2 vé hàng A1 giá gốc 5 triệu, bán lại 4.5 triệu vì không đi được. LH inbox hoặc SĐT [số điện thoại]",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Bán hàng không được phép trên nền tảng",
+                status: ReportStatus.RESOLVED,
+                isDisinformation: false,
+                assistantNote:
+                    "Bán vé cá nhân có thể vi phạm điều khoản về giao dịch thương mại. Tuy nhiên mức độ thấp và là vé thật.",
+                confidence: 0.55,
+                adminNote: "Ẩn SĐT khỏi bài, nhắn nhở tác giả dùng chức năng marketplace.",
+            },
+        ],
+    },
+    {
+        scenario: "F8 – Nội dung chứa meme có thể bị hiểu sai",
+        content:
+            "Khi sếp hỏi 'tại sao không làm xong deadline hôm qua': [meme ảnh người đang chạy trốn] 💀 #worklife #relatable",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Khuyến khích thái độ tiêu cực với công việc",
+                status: ReportStatus.DISMISSED,
+                isDisinformation: false,
+                assistantNote:
+                    "Meme hài hước về áp lực công việc. Hoàn toàn bình thường và relatable. Không có ý định tiêu cực.",
+                confidence: 0.07,
+                adminNote: "Dismiss ngay. Nội dung hài lành mạnh.",
+            },
+        ],
+    },
+    {
+        scenario: "F9 – Chia sẻ thông tin nhạy cảm về sức khỏe tâm thần",
+        content:
+            "Mình vừa được chẩn đoán ADHD ở tuổi 25. Cảm giác vừa nhẹ nhõm vừa choáng ngợp. Nếu ai đã trải qua điều này cho mình biết với – cần lắng nghe lắm 🙏",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Nội dung về bệnh tâm thần có thể gây ảnh hưởng tiêu cực",
+                status: ReportStatus.DISMISSED,
+                isDisinformation: false,
+                assistantNote:
+                    "Chia sẻ về sức khỏe tâm thần cá nhân với tông tích cực, tìm kiếm hỗ trợ cộng đồng. Rất lành mạnh và cần được khuyến khích.",
+                confidence: 0.05,
+                adminNote: "Dismiss. Report sai hoàn toàn. Nội dung tích cực về sức khỏe tâm thần.",
+            },
+        ],
+    },
+    {
+        scenario: "F10 – Bài hỏi về luật pháp bị hiểu nhầm",
+        content:
+            "Hỏi pháp lý: nếu hàng xóm liên tục để xe chắn cửa nhà mình và từ chối dời xe khi nhờ, mình có quyền gọi cảnh sát hoặc xe kéo không? Đã nhờ nhiều lần không được.",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Hỏi cách trả thù hàng xóm",
+                status: ReportStatus.DISMISSED,
+                isDisinformation: false,
+                assistantNote:
+                    "Đây là câu hỏi pháp lý chính đáng về quyền lợi khi bị cản trở lối đi. Không có ý định bạo lực hay trả thù.",
+                confidence: 0.09,
+                adminNote: "Dismiss. Reporter diễn giải sai. Câu hỏi pháp lý hợp lệ.",
+            },
+        ],
+    },
+
+    // ══════════════════════════════════════════════
+    // G. ĐA REPORT + TRƯỜNG HỢP PHỨC TẠP (15 bài)
+    // ══════════════════════════════════════════════
+    {
+        scenario: "G1 – Bài viral bị report hàng loạt, nội dung hợp lệ",
+        content:
+            "Sau 10 năm làm việc ở Việt Nam, mình – người nước ngoài – thấy người Việt có một điểm yếu lớn: không nói thẳng. Luôn 'có thể', 'để xem', 'ok ok' nhưng thực ra là không. Điều này gây nhiều hiểu lầm trong kinh doanh.",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Xúc phạm người Việt Nam, stereotype tiêu cực",
+                status: ReportStatus.DISMISSED,
+                isDisinformation: false,
+                assistantNote:
+                    "Đây là quan sát cross-cultural từ góc nhìn người nước ngoài có kinh nghiệm thực tế. Không phải hate speech dù có thể gây khó chịu cho một số người.",
+                confidence: 0.31,
+                adminNote: null,
+            },
+            {
+                reason: "Phân biệt văn hóa",
+                status: ReportStatus.DISMISSED,
+                isDisinformation: false,
+                assistantNote: null,
+                confidence: null,
+                adminNote: null,
+            },
+            {
+                reason: "Nội dung thiếu tôn trọng người Việt",
+                status: ReportStatus.DISMISSED,
+                isDisinformation: false,
+                assistantNote: null,
+                confidence: null,
+                adminNote: "Dismiss sau review. Quan sát văn hóa có cơ sở, không phải hate speech.",
+            },
+        ],
+    },
+    {
+        scenario: "G2 – Report từ nhiều nhóm lợi ích khác nhau",
+        content:
+            "Phân tích khách quan: thịt đỏ ăn vừa phải (2-3 lần/tuần) không liên quan đến ung thư đại trực tràng theo meta-analysis gần nhất. Nguy cơ tăng chỉ khi dùng processed meat >50g/ngày. #suckhoenutrition",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Thông tin sai về ung thư và thịt đỏ, WHO đã khẳng định thịt đỏ là carcinogen",
+                status: ReportStatus.PENDING,
+                isDisinformation: false,
+                assistantNote:
+                    "Đây là chủ đề có bằng chứng khoa học phức tạp. Tác giả trích dẫn meta-analysis nhưng không nêu nguồn cụ thể. Cần chuyên gia y tế review – không thể kết luận đơn giản.",
+                confidence: 0.45,
+                adminNote: null,
+            },
+            {
+                reason: "Giải thích sai về phân loại IARC của WHO",
+                status: ReportStatus.PENDING,
+                isDisinformation: false,
+                assistantNote: null,
+                confidence: null,
+                adminNote: null,
+            },
+        ],
+    },
+    {
+        scenario: "G3 – Bài nổi tiếng đột ngột bị mass report",
+        content:
+            "Review sau 6 tháng dùng VinFast VF8: pin thực tế thấp hơn quảng cáo 20%, app hay lỗi, service center chậm. Nhưng lái êm, không gian rộng, giá hợp lý. 6/10 tổng thể. #VinFast #review",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Review sai sự thật, bôi nhọ thương hiệu Việt",
+                status: ReportStatus.DISMISSED,
+                isDisinformation: false,
+                assistantNote:
+                    "Review cân bằng, nêu cả ưu và nhược điểm. Đây là trải nghiệm cá nhân hợp lệ. Không có dấu hiệu disinformation.",
+                confidence: 0.13,
+                adminNote: null,
+            },
+            {
+                reason: "Thông tin pin sai, gây hiểu nhầm",
+                status: ReportStatus.DISMISSED,
+                isDisinformation: false,
+                assistantNote: null,
+                confidence: null,
+                adminNote: null,
+            },
+            {
+                reason: "Anti-Vietnam, phá hoại thương hiệu quốc gia",
+                status: ReportStatus.DISMISSED,
+                isDisinformation: false,
+                assistantNote: null,
+                confidence: null,
+                adminNote:
+                    "Dismiss tất cả reports. Pattern: 12 report trong 1 giờ sau khi bài được 500 like – dấu hiệu report bombing. Review cá nhân hoàn toàn hợp lệ.",
+            },
+        ],
+    },
+    {
+        scenario: "G4 – Report chéo giữa hai bên tranh luận",
+        content:
+            "Bên ủng hộ năng lượng tái tạo cần thừa nhận thực tế: điện gió và mặt trời không thể là baseload nếu không có storage tốt. Đây không phải phủ nhận climate change, chỉ là kỹ thuật.",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Nội dung phủ nhận năng lượng tái tạo, được tài trợ bởi Big Oil",
+                status: ReportStatus.DISMISSED,
+                isDisinformation: false,
+                assistantNote:
+                    "Đây là quan điểm kỹ thuật có cơ sở về thách thức của lưới điện. Không phủ nhận climate change. Không có bằng chứng tài trợ.",
+                confidence: 0.19,
+                adminNote: "Dismiss. Thảo luận kỹ thuật hợp lệ trong tranh luận chính sách năng lượng.",
+            },
+        ],
+    },
+    {
+        scenario: "G5 – Nội dung nhạy cảm nhưng giáo dục về ma túy",
+        content:
+            "Thread về giảm tác hại (harm reduction) khi dùng chất kích thích: nhận biết overdose, cách gọi cấp cứu đúng, không bao giờ dùng một mình. Không khuyến khích dùng – chỉ để cứu mạng nếu ai đó đã dùng.",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Hướng dẫn sử dụng ma túy",
+                status: ReportStatus.PENDING,
+                isDisinformation: false,
+                assistantNote:
+                    "Nội dung harm reduction là lĩnh vực y tế công cộng được WHO công nhận. Tuy nhiên cần admin cân nhắc chính sách nền tảng về nội dung liên quan ma túy.",
+                confidence: 0.48,
+                adminNote: null,
+            },
+            {
+                reason: "Bất hợp pháp, cổ xúy dùng ma túy",
+                status: ReportStatus.PENDING,
+                isDisinformation: false,
+                assistantNote: null,
+                confidence: null,
+                adminNote: null,
+            },
+        ],
+    },
+    {
+        scenario: "G6 – Bài về người nổi tiếng bị report từ fanbase đối lập",
+        content:
+            "Nhận xét chuyên môn: kỹ thuật hát của ca sĩ X đang giảm sút trong album mới so với 5 năm trước. Breath support yếu, vocal runs không clean. Vẫn là nghệ sĩ tài năng nhưng cần chú ý kỹ thuật.",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Nói xấu nghệ sĩ, thông tin sai về giọng hát",
+                status: ReportStatus.DISMISSED,
+                isDisinformation: false,
+                assistantNote:
+                    "Đây là nhận xét chuyên môn về kỹ thuật thanh nhạc. Không phải attack cá nhân hay hate speech. Hoàn toàn hợp lệ.",
+                confidence: 0.11,
+                adminNote: "Dismiss. Phê bình nghệ thuật chuyên nghiệp là quyền tự do biểu đạt.",
+            },
+            {
+                reason: "Gây ảnh hưởng đến sự nghiệp nghệ sĩ",
+                status: ReportStatus.DISMISSED,
+                isDisinformation: false,
+                assistantNote: null,
+                confidence: null,
+                adminNote: null,
+            },
+        ],
+    },
+    {
+        scenario: "G7 – Nội dung gây tranh cãi về chế độ ăn kiêng",
+        content:
+            "Keto diet KHÔNG phải giải pháp lâu dài cho đa số người: hầu hết regain cân sau 1 năm, thiếu chất xơ tăng nguy cơ đường ruột. Khoa học dinh dưỡng ủng hộ balanced diet hơn. Đây là sự thật khó nghe.",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Thông tin sai về keto, gây hại cho người đang theo keto",
+                status: ReportStatus.DISMISSED,
+                isDisinformation: false,
+                assistantNote:
+                    "Nội dung phản ánh consensus khoa học dinh dưỡng hiện tại. Không phải disinformation dù keto community có thể không đồng ý.",
+                confidence: 0.27,
+                adminNote: "Dismiss. Thông tin dinh dưỡng cân bằng và có bằng chứng.",
+            },
+        ],
+    },
+    {
+        scenario: "G8 – Report sau scandal của tác giả",
+        content:
+            "Hướng dẫn đầu tư index fund cho người mới: bắt đầu với ETF, dollar-cost averaging hàng tháng, không cố chọn cổ phiếu cụ thể, time in market > timing the market. Chiến lược đơn giản và hiệu quả.",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Tác giả bài này vừa bị tố cáo lừa đảo tài chính, nội dung không đáng tin",
+                status: ReportStatus.PENDING,
+                isDisinformation: false,
+                assistantNote:
+                    "Nội dung bài viết cụ thể này là thông tin tài chính cơ bản và chính xác. Tuy nhiên nếu tác giả có tiền sử gian lận thì cần xem xét toàn bộ tài khoản.",
+                confidence: 0.4,
+                adminNote: null,
+            },
+        ],
+    },
+    {
+        scenario: "G9 – Bài report vì tranh chấp quyền sở hữu nội dung",
+        content:
+            "Ảnh chụp hoàng hôn Đà Lạt của mình từ năm ngoái. Rất bất ngờ khi thấy ảnh này đang được một tài khoản khác dùng làm ảnh đại diện mà không xin phép 😤 #photography",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Không biết ảnh này có thật thuộc về họ không, có thể là claim giả tạo",
+                status: ReportStatus.PENDING,
+                isDisinformation: false,
+                assistantNote:
+                    "Đây là tranh chấp bản quyền ảnh giữa người dùng. Cần admin xem xét bằng chứng sở hữu từ cả hai phía.",
+                confidence: 0.35,
+                adminNote: null,
+            },
+        ],
+    },
+    {
+        scenario: "G10 – Nội dung chính trị nhạy cảm",
+        content:
+            "Nhìn lại 20 năm đổi mới: kinh tế VN tăng trưởng vượt bậc nhưng bất bình đẳng thu nhập cũng tăng song song. Gini coefficient từ 0.35 lên 0.42 trong giai đoạn này. Cần chính sách phân phối lại.",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Nội dung chống nhà nước, số liệu sai",
+                status: ReportStatus.DISMISSED,
+                isDisinformation: false,
+                assistantNote:
+                    "Đây là phân tích kinh tế dựa trên số liệu Gini coefficient – chỉ số có thể xác minh. Không phải nội dung chống nhà nước mà là phân tích chính sách có cơ sở.",
+                confidence: 0.23,
+                adminNote: "Dismiss. Phân tích kinh tế học thuật hợp lệ. Số liệu Gini VN có thể xác minh qua World Bank.",
+            },
+        ],
+    },
+    {
+        scenario: "G11 – Bài về thuốc, nội dung chính xác nhưng bị report",
+        content:
+            "Melatonin: không phải thuốc ngủ mà là hormone điều tiết chu kỳ ngủ. Liều thấp (0.5-1mg) hiệu quả hơn liều cao (5-10mg). Dùng 30-60 phút trước khi ngủ. Phù hợp để điều chỉnh jet lag hơn là mất ngủ kinh niên.",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Hướng dẫn tự dùng thuốc nguy hiểm không qua bác sĩ",
+                status: ReportStatus.DISMISSED,
+                isDisinformation: false,
+                assistantNote:
+                    "Thông tin về melatonin chính xác theo tài liệu y tế. Không bán OTC tại VN cần kê đơn nhưng nội dung là thông tin chứ không phải bán thuốc.",
+                confidence: 0.36,
+                adminNote: "Dismiss. Thông tin y tế chính xác. Không phải kê đơn. Reporter hiểu nhầm.",
+            },
+        ],
+    },
+    {
+        scenario: "G12 – Post về ranh giới tự do ngôn luận",
+        content:
+            "Theo tôi, một số chính sách kinh tế hiện tại chưa thực sự tối ưu. Tôi nghĩ phân tích kinh tế học so sánh có thể giúp cải thiện. Mong muốn có thêm nghiên cứu chính sách từ phía học giả độc lập.",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Chỉ trích chính sách nhà nước",
+                status: ReportStatus.DISMISSED,
+                isDisinformation: false,
+                assistantNote:
+                    "Ý kiến về chính sách kinh tế được trình bày một cách thận trọng, học thuật và xây dựng. Không phải tuyên truyền hay kêu gọi chống đối.",
+                confidence: 0.17,
+                adminNote: "Dismiss. Phản biện chính sách hợp lệ trong xã hội dân chủ.",
+            },
+        ],
+    },
+    {
+        scenario: "G13 – Nội dung ảnh hưởng tâm lý phức tạp",
+        content:
+            "Sau 3 năm bị người yêu kiểm soát tài chính, cô lập xã hội, và thường xuyên bị xúc phạm – mình cuối cùng đã rời đi. Nếu ai đang trong tình huống tương tự: đây là những nguồn hỗ trợ mình đã dùng [link hotline]",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Nội dung về bạo lực gia đình có thể gây distress",
+                status: ReportStatus.DISMISSED,
+                isDisinformation: false,
+                assistantNote:
+                    "Đây là nội dung về trải nghiệm cá nhân và chia sẻ nguồn hỗ trợ. Rất có giá trị cho cộng đồng. Không vi phạm gì.",
+                confidence: 0.06,
+                adminNote: "Dismiss. Nội dung tích cực, hỗ trợ nạn nhân bạo lực gia đình.",
+            },
+        ],
+    },
+    {
+        scenario: "G14 – Bài bị report vì tranh luận về lịch sử",
+        content:
+            "Lịch sử Chiến tranh Việt Nam nhìn từ nhiều góc độ: góc độ Mỹ (cold war containment), góc độ Bắc Việt (thống nhất dân tộc), góc độ Nam Việt (tự do hóa). Mỗi narrative phản ánh một phần sự thật phức tạp.",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Xuyên tạc lịch sử, đề cao quan điểm nước ngoài",
+                status: ReportStatus.DISMISSED,
+                isDisinformation: false,
+                assistantNote:
+                    "Đây là phân tích lịch sử đa chiều theo chuẩn học thuật. Không xuyên tạc mà trình bày nhiều perspective.",
+                confidence: 0.24,
+                adminNote: "Dismiss sau review. Phân tích lịch sử học thuật cân bằng.",
+            },
+        ],
+    },
+    {
+        scenario: "G15 – Nội dung nghệ thuật bị hiểu nhầm",
+        content:
+            "Ảnh nghệ thuật thân thể: series ảnh đen trắng chụp bàn tay, vai, lưng – khám phá vẻ đẹp cơ thể con người không phụ thuộc vào chuẩn đẹp xã hội. [4 ảnh đính kèm, không explicit]",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Ảnh nhạy cảm",
+                status: ReportStatus.DISMISSED,
+                isDisinformation: false,
+                assistantNote:
+                    "Cần admin xem ảnh thực tế để xác nhận. Mô tả có vẻ là nghệ thuật hợp lệ nhưng cần verify.",
+                confidence: 0.37,
+                adminNote: "Đã review ảnh: hoàn toàn không explicit. Nghệ thuật nhiếp ảnh hợp lệ. Dismiss.",
+            },
+        ],
+    },
+
+    // ══════════════════════════════════════════════
+    // H. VI PHẠM NGHIÊM TRỌNG CẦN HÀNH ĐỘNG NGAY (10 bài)
+    // ══════════════════════════════════════════════
+    {
+        scenario: "H1 – Quấy rối tình dục",
+        content:
+            "Tag @username: em này đẹp ghê, mấy anh có số không chia với 😜. Nhìn ảnh profile thôi là biết loại người như thế nào rồi.",
+        isDisinformation: false,
+        isHidden: true,
+        reports: [
+            {
+                reason: "Quấy rối tình dục, objectify phụ nữ, chia sẻ thông tin liên lạc không đồng ý",
+                status: ReportStatus.RESOLVED,
+                isDisinformation: false,
+                assistantNote:
+                    "Vi phạm nghiêm trọng: quấy rối tình dục kết hợp phán xét character từ ngoại hình. Xóa và bảo vệ tài khoản bị nhắm đến.",
+                confidence: 0.95,
+                adminNote: "Xóa bài. Khóa tài khoản 30 ngày. Gửi thông báo hỗ trợ cho @username.",
+            },
+        ],
+    },
+    {
+        scenario: "H2 – Nội dung liên quan người dưới 18 tuổi",
+        content:
+            "Ảnh con gái 15 tuổi của mình mới chụp hôm nay, mặc áo dài lần đầu. Đẹp quá trời 😍 [ảnh đính kèm]",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Lo ngại về ảnh vị thành niên được đăng công khai",
+                status: ReportStatus.PENDING,
+                isDisinformation: false,
+                assistantNote:
+                    "Có thể là bài đăng của phụ huynh về con cái – bình thường. Tuy nhiên cần admin xem ảnh và bối cảnh tài khoản để xác nhận không có vấn đề bảo vệ trẻ em.",
+                confidence: 0.45,
+                adminNote: null,
+            },
+        ],
+    },
+    {
+        scenario: "H3 – Đăng địa điểm và lịch trình của người khác",
+        content:
+            "Cô @xyz tối nào cũng đi gym ở trung tâm ABC đường DEF lúc 7-8pm. Hôm nay mình vô tình thấy, cô ấy trông rất đẹp. Ai muốn làm quen thì biết chỗ rồi nhé 😊",
+        isDisinformation: false,
+        isHidden: true,
+        reports: [
+            {
+                reason: "Doxxing lịch trình cá nhân, tạo điều kiện cho stalker",
+                status: ReportStatus.RESOLVED,
+                isDisinformation: false,
+                assistantNote:
+                    "Vi phạm nghiêm trọng quyền riêng tư: tiết lộ địa điểm và thói quen hàng ngày của cá nhân mà không có sự đồng ý. Nguy cơ stalking thực sự. Xóa khẩn.",
+                confidence: 0.98,
+                adminNote: "Xóa ngay. Cảnh cáo nghiêm tài khoản. Thông báo @xyz.",
+            },
+        ],
+    },
+    {
+        scenario: "H4 – Nội dung phát tán thông tin sức khỏe nguy hiểm",
+        content:
+            "CÁCH GIẢM SỐT CHO TRẺ EM TẠI NHÀ: chỉ cần đắp khăn tẩm cồn nguyên chất lên người bé. Tuyệt đối KHÔNG dùng thuốc hạ sốt – chúng gây hại thận bé. Phương pháp này an toàn 100%.",
+        isDisinformation: true,
+        isHidden: true,
+        reports: [
+            {
+                reason: "Hướng dẫn y tế SAI NGUY HIỂM cho trẻ em, cồn nguyên chất có thể ngộ độc qua da",
+                status: ReportStatus.RESOLVED,
+                isDisinformation: true,
+                assistantNote:
+                    "Hướng dẫn này đặc biệt nguy hiểm: đắp cồn nguyên chất cho trẻ em có thể gây ngộ độc ethanol qua da. Thông tin về thuốc hạ sốt cũng sai. Xóa khẩn – có nguy cơ gây chết người.",
+                confidence: 0.99,
+                adminNote: "Xóa ngay. Khóa tài khoản. Lưu trữ cho mục đích pháp lý.",
+            },
+        ],
+    },
+    {
+        scenario: "H5 – Rao bán hàng giả",
+        content:
+            "Bán túi LV, Gucci, Chanel authentic 100% giá chỉ bằng 1/10 thị trường! Hàng xách tay từ Paris. Inbox để xem catalog. Ship toàn quốc. [100+ ảnh túi]",
+        isDisinformation: true,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Bán hàng giả nhãn hiệu, lừa dối người tiêu dùng",
+                status: ReportStatus.RESOLVED,
+                isDisinformation: true,
+                assistantNote:
+                    "Giá 1/10 thị trường cho luxury goods là dấu hiệu chắc chắn của hàng giả/nhái. Vi phạm bản quyền thương hiệu và lừa dối người tiêu dùng.",
+                confidence: 0.96,
+                adminNote: "Xóa, khóa tài khoản, báo cáo cho đội xử lý IP infringement.",
+            },
+        ],
+    },
+    {
+        scenario: "H6 – Social engineering attack",
+        content:
+            "Admin hệ thống thông báo: Tài khoản của bạn sẽ bị khóa trong 24h do hoạt động đáng ngờ. Xác minh ngay tại: secure-platform-verify.net/login. Nhập username và password để giữ tài khoản.",
+        isDisinformation: true,
+        isHidden: true,
+        reports: [
+            {
+                reason: "Phishing tài khoản người dùng, giả mạo thông báo hệ thống",
+                status: ReportStatus.RESOLVED,
+                isDisinformation: true,
+                assistantNote:
+                    "Đây là tấn công social engineering điển hình. Domain giả mạo. Xóa khẩn và thông báo toàn bộ người dùng về bài này.",
+                confidence: 0.99,
+                adminNote: "Xóa, blacklist domain, alert security team. Gửi cảnh báo platform-wide.",
+            },
+        ],
+    },
+    {
+        scenario: "H7 – Nội dung tự tử ngầm",
+        content:
+            "Đôi khi nghĩ về việc mình không còn ở đây nữa thì mọi thứ sẽ nhẹ nhàng hơn cho mọi người. Không than vãn, chỉ là suy nghĩ thôi. Thôi không nói nữa.",
+        isDisinformation: false,
+        isHidden: false,
+        reports: [
+            {
+                reason: "Bài viết ngầm về ý định tự tử, cần can thiệp khẩn",
+                status: ReportStatus.PENDING,
+                isDisinformation: false,
+                assistantNote:
+                    "Nội dung thể hiện dấu hiệu ý nghĩ thụ động về cái chết. Đây là trường hợp cần ưu tiên cao nhất. Cần liên hệ tác giả ngay với nguồn hỗ trợ sức khỏe tâm thần.",
+                confidence: 0.88,
+                adminNote: null,
+            },
+        ],
+    },
+    {
+        scenario: "H8 – Lộ dữ liệu người dùng khác",
+        content:
+            "Tìm thấy file excel này trong máy anh đồng nghiệp: [ảnh chụp màn hình database với họ tên, SĐT, địa chỉ 500+ người]. Rò rỉ data kinh điển của công ty. Thật ra có nhiều chỗ bị vậy lắm.",
+        isDisinformation: false,
+        isHidden: true,
+        reports: [
+            {
+                reason: "Đăng dữ liệu cá nhân của hàng trăm người không có sự đồng ý",
+                status: ReportStatus.RESOLVED,
+                isDisinformation: false,
+                assistantNote:
+                    "Vi phạm nghiêm trọng quyền riêng tư: phát tán PII của hàng trăm người. Xóa ngay lập tức và xem xét pháp lý.",
+                confidence: 0.99,
+                adminNote: "Xóa ngay. Báo cáo lên team pháp lý và an toàn dữ liệu.",
+            },
+        ],
+    },
+    {
+        scenario: "H9 – Kêu gọi tẩy chay cá nhân vì nghi oan",
+        content:
+            "Cảnh báo: Giáo viên XYZ trường ABC đang lạm dụng học sinh! Mình nghe nói từ nguồn đáng tin. Hãy pull con ra khỏi lớp này ngay và tẩy chay trường này!!! 😡 Share để cảnh báo phụ huynh!",
+        isDisinformation: true,
+        isHidden: true,
+        reports: [
+            {
+                reason: "Vu khống cá nhân nghiêm trọng, gây hại tên tuổi và nghề nghiệp",
+                status: ReportStatus.RESOLVED,
+                isDisinformation: true,
+                assistantNote:
+                    "Tuyên bố cáo buộc nghiêm trọng không có bằng chứng. 'Nghe nói từ nguồn đáng tin' không phải bằng chứng. Có thể là vu khống gây hại lớn. Xóa khẩn.",
+                confidence: 0.94,
+                adminNote: "Xóa, ẩn tên giáo viên, khóa tài khoản pending review. Có thể cần action pháp lý.",
+            },
+        ],
+    },
+    {
+        scenario: "H10 – Nội dung cực đoan tôn giáo",
+        content:
+            "Ai theo đạo [X] đều là kẻ thù của đất nước và cần bị theo dõi. Họ luôn phục vụ nước ngoài chứ không phải VN. Đây là sự thật lịch sử không thể phủ nhận. Nhà nước cần hành động!",
+        isDisinformation: false,
+        isHidden: true,
+        reports: [
+            {
+                reason: "Kêu gọi theo dõi và phân biệt đối xử tôn giáo, kích động thù ghét",
+                status: ReportStatus.RESOLVED,
+                isDisinformation: false,
+                assistantNote:
+                    "Vi phạm nghiêm trọng: hate speech tôn giáo + kêu gọi theo dõi + kích động nhà nước hành động chống nhóm tôn giáo cụ thể. Xóa ngay.",
+                confidence: 0.97,
+                adminNote: "Xóa, khóa vĩnh viễn tài khoản, giữ log pháp lý.",
+            },
+        ],
+    },
+];
+
+// ─── SEED MAIN ────────────────────────────────────────────────────────────────
+async function seedReportedPosts() {
+    console.log("\n🚨 ===== SEED 100 BÀI POST BỊ BÁO CÁO =====\n");
 
     // 1. Load users
     const users = await prisma.user.findMany({
         where: { deletedAt: null },
-        select: {
-            id: true,
-            username: true,
-            name: true,
-            avatar: true,
-            bio: true,
-        },
+        select: { id: true, username: true, name: true, avatar: true, bio: true },
         orderBy: { createdAt: "desc" },
         take: 200,
     });
 
     if (users.length === 0) {
-        throw new Error("Không tìm thấy user nào. Hãy chạy seed gốc trước!");
+        throw new Error("Không có user! Chạy seed gốc trước.");
     }
     console.log(`👤 Tìm thấy ${users.length} users\n`);
 
-    // 2. Load hoặc tạo Topics cho tất cả hashtag
-    console.log(`🏷️  Đảm bảo ${ALL_HASHTAGS.length} topics tồn tại...`);
-    const topicMap = new Map<string, number>(); // hashtag → topic.id
+    const shuffledUsers = shuffle(users);
 
-    for (const tag of ALL_HASHTAGS) {
-        const topic = await prisma.topic.upsert({
-            where: { name: tag },
-            create: { name: tag, count: 0 },
-            update: {},
-            select: { id: true, name: true },
-        });
-        topicMap.set(tag, topic.id);
-    }
-    console.log(`   ✅ ${topicMap.size} topics sẵn sàng\n`);
-
-    // 3. Build templates
-    const templates = buildPostTemplates();
-    const shuffled = shuffle(templates);
-    console.log(`📋 Tổng số bài sẽ tạo: ${shuffled.length}\n`);
-
-    // 4. Tạo bài viết
     let totalPosts = 0;
-    let totalImages = 0;
-    let totalVideos = 0;
-    let totalTopicLinks = 0;
-    const hashtagCount = new Map<string, number>();
-    let imgIdx = 0;
-    let videoIdx = 0;
+    let totalReports = 0;
+    const statusCount: Record<string, number> = {
+        PENDING: 0,
+        RESOLVED: 0,
+        DISMISSED: 0,
+    };
+    const categoryCount: Record<string, number> = {
+        A_fake_news: 0,
+        B_hate_speech: 0,
+        C_spam: 0,
+        D_ai_error: 0,
+        E_abuse_report: 0,
+        F_minor: 0,
+        G_complex: 0,
+        H_critical: 0,
+    };
 
-    for (let i = 0; i < shuffled.length; i++) {
-        const tmpl = shuffled[i];
-        const author = users[i % users.length];
-        const createdAt = randomDate(90);
+    for (let i = 0; i < SCENARIOS.length; i++) {
+        const scenario = SCENARIOS[i];
+        const author = shuffledUsers[i % shuffledUsers.length];
+        const createdAt = randomDate(60);
 
         // Tạo post
         const post = await prisma.post.create({
             data: {
                 userId: author.id,
-                content: tmpl.content,
+                content: scenario.content,
                 type: PostType.POST,
                 visibility: VisibilityPost.PUBLIC,
                 replyPermission: pick([
-                    ReplyPermission.EVERYONE,
                     ReplyPermission.EVERYONE,
                     ReplyPermission.EVERYONE,
                     ReplyPermission.FOLLOWERS,
@@ -3056,10 +5298,12 @@ async function seedHashtagPosts() {
                     avatar: author.avatar,
                     bio: author.bio,
                 },
-                likesCount: rand(0, 800),
-                repliesCount: rand(0, 60),
-                repostsCountAndQuoteCount: rand(0, 40),
-                viewsCount: rand(100, 30000),
+                likesCount: rand(0, 200),
+                repliesCount: rand(0, 30),
+                repostsCountAndQuoteCount: rand(0, 20),
+                viewsCount: rand(50, 10000),
+                isHidden: scenario.isHidden,
+                isDisinformation: scenario.isDisinformation,
                 createdAt,
                 updatedAt: createdAt,
             },
@@ -3067,128 +5311,91 @@ async function seedHashtagPosts() {
         });
         totalPosts++;
 
-        // Tạo media
-        const mediaDef = tmpl.media;
-        const mediaRows: {
-            postId: number;
-            url: string;
-            type: PostMediaType;
-            width?: number;
-            height?: number;
-            key: string;
-            status: PostMediaStatus;
-        }[] = [];
+        // Tạo reports – người báo cáo ngẫu nhiên, không trùng với tác giả
+        const availableReporters = shuffledUsers.filter(u => u.id !== author.id);
 
-        if (mediaDef.kind === "images") {
-            for (let m = 0; m < mediaDef.count; m++) {
-                const url = IMAGE_POOL[imgIdx++ % IMAGE_POOL.length];
-                mediaRows.push({
-                    postId: post.id,
-                    url,
-                    type: PostMediaType.IMAGE,
-                    width: pick([720, 1080, 1280]),
-                    height: pick([720, 1080, 1350]),
-                    key: `htag_img_${post.id}_${m}_${Date.now() + m}`,
-                    status: PostMediaStatus.UPLOADED,
-                });
-                totalImages++;
-            }
-        } else if (mediaDef.kind === "video") {
-            const url = VIDEO_POOL[videoIdx++ % VIDEO_POOL.length];
-            mediaRows.push({
-                postId: post.id,
-                url,
-                type: PostMediaType.VIDEO,
-                width: 1920,
-                height: 1080,
-                key: `htag_vid_${post.id}_${Date.now()}`,
-                status: PostMediaStatus.UPLOADED,
-            });
-            totalVideos++;
-        } else if (mediaDef.kind === "images+video") {
-            // Ảnh trước
-            for (let m = 0; m < mediaDef.imgCount; m++) {
-                const url = IMAGE_POOL[imgIdx++ % IMAGE_POOL.length];
-                mediaRows.push({
-                    postId: post.id,
-                    url,
-                    type: PostMediaType.IMAGE,
-                    width: pick([720, 1080, 1280]),
-                    height: pick([720, 1080, 1350]),
-                    key: `htag_img2_${post.id}_${m}_${Date.now() + m}`,
-                    status: PostMediaStatus.UPLOADED,
-                });
-                totalImages++;
-            }
-            // Video sau
-            const url = VIDEO_POOL[videoIdx++ % VIDEO_POOL.length];
-            mediaRows.push({
-                postId: post.id,
-                url,
-                type: PostMediaType.VIDEO,
-                width: 1920,
-                height: 1080,
-                key: `htag_vid2_${post.id}_${Date.now() + 999}`,
-                status: PostMediaStatus.UPLOADED,
-            });
-            totalVideos++;
-        }
+        for (let ri = 0; ri < scenario.reports.length; ri++) {
+            const reportDef = scenario.reports[ri];
+            const reporter = availableReporters[(i * 3 + ri * 7) % availableReporters.length];
+            const reportedAt = new Date(createdAt.getTime() + rand(3_600_000, 86_400_000 * 7));
 
-        if (mediaRows.length > 0) {
-            await prisma.postMedia.createMany({ data: mediaRows });
-        }
-
-        // Gắn hashtag vào TopicsPost (1 hashtag / bài)
-        const topicId = topicMap.get(tmpl.hashtag);
-        if (topicId) {
-            await prisma.topicsPost.upsert({
-                where: { postId: post.id },
-                create: {
-                    postId: post.id,
-                    topicId,
-                    isPublic: true,
+            await prisma.report.create({
+                data: {
+                    reporterId: reporter.id,
+                    targetType: ReportTargetType.POST,
+                    targetId: post.publicId,
+                    reason: reportDef.reason,
+                    status: reportDef.status,
+                    isDisinformation: reportDef.isDisinformation,
+                    assistantNote: reportDef.assistantNote,
+                    confidence: reportDef.confidence !== null
+                        ? parseFloat(reportDef.confidence.toFixed(2))
+                        : null,
+                    adminNote: reportDef.adminNote,
+                    createdAt: reportedAt,
                 },
-                update: { topicId },
             });
 
-            // Tăng count cho topic
-            await prisma.topic.update({
-                where: { id: topicId },
-                data: { count: { increment: 1 } },
-            });
-
-            totalTopicLinks++;
-            hashtagCount.set(tmpl.hashtag, (hashtagCount.get(tmpl.hashtag) ?? 0) + 1);
+            totalReports++;
+            statusCount[reportDef.status] = (statusCount[reportDef.status] ?? 0) + 1;
         }
 
-        if ((i + 1) % 50 === 0 || i === shuffled.length - 1) {
-            process.stdout.write(
-                `\r   → ${i + 1}/${shuffled.length} bài | 🖼️ ${totalImages} ảnh | 🎬 ${totalVideos} video | 🏷️ ${totalTopicLinks} hashtag`
-            );
-        }
+        // Thống kê category
+        const cat = scenario.scenario[0];
+        const catKey =
+            cat === "A" ? "A_fake_news" :
+                cat === "B" ? "B_hate_speech" :
+                    cat === "C" ? "C_spam" :
+                        cat === "D" ? "D_ai_error" :
+                            cat === "E" ? "E_abuse_report" :
+                                cat === "F" ? "F_minor" :
+                                    cat === "G" ? "G_complex" :
+                                        "H_critical";
+        categoryCount[catKey] = (categoryCount[catKey] ?? 0) + 1;
+
+        process.stdout.write(
+            `\r   → ${i + 1}/100 scenarios | ${totalReports} reports`
+        );
     }
 
-    // 5. Thống kê top trending
-    console.log("\n\n📊 ===== TOP 20 HASHTAG TRENDING =====");
-    const sorted = [...hashtagCount.entries()].sort((a, b) => b[1] - a[1]);
-    sorted.slice(0, 20).forEach(([tag, count], idx) => {
-        const bar = "█".repeat(Math.ceil(count / 2));
-        console.log(`  ${String(idx + 1).padStart(2)}. #${tag.padEnd(25)} ${count.toString().padStart(3)} bài  ${bar}`);
-    });
+    // ── Thống kê cuối ────────────────────────────────────────────────────────
+    console.log("\n\n📊 ===== THỐNG KÊ SEED =====");
+    console.log("\n📁 Theo danh mục:");
+    const catLabels: Record<string, string> = {
+        A_fake_news: "A. Fake news / Disinformation",
+        B_hate_speech: "B. Hate speech / Bạo lực",
+        C_spam: "C. Spam / Quảng cáo",
+        D_ai_error: "D. AI đánh giá sai",
+        E_abuse_report: "E. Lạm dụng report",
+        F_minor: "F. Vi phạm nhẹ",
+        G_complex: "G. Phức tạp / Nhiều report",
+        H_critical: "H. Nghiêm trọng - Hành động ngay",
+    };
+    for (const [key, count] of Object.entries(categoryCount)) {
+        const bar = "█".repeat(count);
+        console.log(`   ${catLabels[key]}: ${String(count).padStart(2)} bài  ${bar}`);
+    }
+
+    console.log("\n📋 Theo trạng thái report:");
+    for (const [status, count] of Object.entries(statusCount)) {
+        const icon = status === "RESOLVED" ? "✅" : status === "DISMISSED" ? "🚫" : "⏳";
+        console.log(`   ${icon} ${status}: ${count} report`);
+    }
 
     console.log(`
-🎉 ===== SEED HASHTAG POSTS HOÀN THÀNH =====
-   📝 Tổng posts       : ${totalPosts}
-   🖼️  Ảnh (IMAGE)      : ${totalImages}
-   🎬 Video            : ${totalVideos}
-   🏷️  Hashtag links    : ${totalTopicLinks}
-   🔢 Hashtag unique   : ${hashtagCount.size} / ${ALL_HASHTAGS.length}
-=============================================`);
+🎉 ===== SEED BÁO CÁO HOÀN THÀNH =====
+   📝 Posts được tạo  : ${totalPosts}
+   🚨 Tổng reports    : ${totalReports}
+   📊 TB report/post  : ${(totalReports / totalPosts).toFixed(1)}
+   🤖 Có AI note      : ${SCENARIOS.filter(s => s.reports.some(r => r.assistantNote)).length} posts
+   🔴 isHidden=true   : ${SCENARIOS.filter(s => s.isHidden).length} posts
+   ⚠️  isDisinfo=true  : ${SCENARIOS.filter(s => s.isDisinformation).length} posts
+==========================================`);
 }
 
 // ─── ENTRY POINT ──────────────────────────────────────────────────────────────
-seedHashtagPosts()
-    .catch((e) => {
+seedReportedPosts()
+    .catch(e => {
         console.error("\n❌ Seed thất bại:", e);
         process.exit(1);
     })

@@ -457,7 +457,7 @@ export const adminSwaggerPaths = {
         get: {
             tags: ['Admin'],
             summary: 'Get daily post, active user, and hot topic statistics',
-            description: 'Defaults to today. A date-only endDate is inclusive; the returned period.endAt is the exclusive upper bound.',
+            description: 'Defaults to today. To query a range, provide both startDate and endDate in YYYY-MM-DD format. endDate is inclusive; period.endAt is the exclusive upper bound.',
             security: bearerAuthSecurity,
             parameters: [
                 {

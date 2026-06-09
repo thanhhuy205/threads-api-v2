@@ -79,22 +79,6 @@ class ReportManagementRepository {
           },
         },
         targetType: true,
-        post: {
-          select: {
-            publicId: true,
-            userId: true,
-            content: true,
-            media: true,
-            type: true,
-            visibility: true,
-            isDeleted: true,
-            isHidden: true,
-            isDisinformation: true,
-            createdAt: true,
-            userSnapshot: true
-          },
-        },
-
       }
     });
   }
