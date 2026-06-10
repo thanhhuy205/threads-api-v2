@@ -4,10 +4,6 @@ import type { CreateTopicDto, SearchTopicQueryDto } from "../dto/request/topic.r
 import { topicService } from "../service/topic.service";
 
 class TopicController {
-  async listNames(_req: Request, res: Response) {
-    const topics = await topicService.listNames();
-    return res.success(200, "Topics retrieved", topics);
-  }
   async getByName(req: Request<{}, {}, {}, SearchTopicQueryDto>, res: Response) {
     const { after, take } = getPagination(req);
     const { q } = req.query;

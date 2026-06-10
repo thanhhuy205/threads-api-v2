@@ -1,6 +1,6 @@
 import { redisKey } from "@/constants/resolve-key/redis-key";
+import { searchService } from "@/modules/search/service/search.service";
 import { redisService } from "@/providers/redis.provider";
-import { buildCursorPagination } from "@/shared/pagination/cursor-pagination";
 import { topicRepository } from "../repository/topic.repository";
 
 class TopicService {
@@ -19,34 +19,17 @@ class TopicService {
     after?: string;
   }) {
     const normalizedName = this.normalizeTopicName(q);
-    const topic = await topicRepository.searchByName(normalizedName, after ?? undefined);
-
-    return buildCursorPagination(
-      {
-        rows: topic,
-        take: take,
-        getAfter: (item) => (item as { name: string }).name
-      }
-    )
-  }
-
-  async listNames() {
-    const cacheKey = redisKey.topic.listNames();
-    const cached = await redisService.get(cacheKey);
-
-    if (cached) {
-      try {
-        return JSON.parse(cached) as string[];
-      } catch {
-        // Ignore malformed cache and read from DB.
-      }
-    }
-
-    const topics = await topicRepository.listNames();
-    await redisService.set(cacheKey, JSON.stringify(topics), {
-      EX: this.topicListCacheTtlSeconds,
+    const results = await searchService.searchTopic({
+      q: normalizedName,
+      take,
+      after,
     });
 
+    return results;
+  }
+
+  async listNames(topicNames: string[]) {
+    const topics = await topicRepository.listNames(topicNames);
     return topics;
   }
 

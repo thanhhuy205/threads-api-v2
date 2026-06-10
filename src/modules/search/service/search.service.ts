@@ -1,7 +1,9 @@
 import prisma from "@/config/prisma";
 import { postFeedSelect } from "@/modules/post/selector/post.selector";
+import { topicService } from "@/modules/topic/service/topic.service";
 import { elasticSearchClient } from "@/providers/elastic-search.provider";
 import { buildCursorPagination } from "@/shared/pagination/cursor-pagination";
+import { userService } from '../../user/service/user.service';
 
 type SerpType = "default";
 
@@ -134,18 +136,174 @@ class SearchService {
     });
   }
 
-  async searchUsername({ q, after, take }: SearchUserInput) {
-    const docs = await this.searchIndex<UserSearchDoc>({
-      q,
-      type: "user",
-      fields: ["username^3"],
-      sortField: "username.keyword",
-      after,
-      take,
+  private async searchUsernameIndex({
+    q,
+    take,
+    after,
+  }: {
+    q: string;
+    take: number;
+    after?: string;
+  }) {
+    const keyword = q.trim().toLowerCase();
+
+    if (!keyword) return [];
+
+    const response = await elasticSearchClient.search({
+      index: "search",
+      body: {
+        size: take + 1,
+        query: {
+          bool: {
+            filter: [
+              { term: { type: "user" } },
+            ],
+            should: [
+              {
+                term: {
+                  "username.keyword": {
+                    value: keyword,
+                    boost: 100,
+                  },
+                },
+              },
+              {
+                match: {
+                  "username.prefix": {
+                    query: keyword,
+                    boost: 50,
+                  },
+                },
+              },
+              {
+                match: {
+                  name: {
+                    query: keyword,
+                    boost: 5,
+                  },
+                },
+              },
+            ],
+            minimum_should_match: 1,
+          },
+        },
+        sort: [
+          { _score: "desc" },
+          { "username.keyword": "asc" },
+        ],
+        search_after: after ? JSON.parse(after) : undefined,
+      },
     });
 
+    const hits =
+      (response as {
+        body?: {
+          hits?: {
+            hits?: Array<{
+              _source?: UserSearchDoc;
+              sort?: unknown[];
+            }>;
+          };
+        };
+      }).body?.hits?.hits ?? [];
+
+    return hits
+      .filter((hit): hit is { _source: UserSearchDoc; sort: unknown[] } =>
+        Boolean(hit._source && hit.sort),
+      )
+      .map((hit) => ({
+        source: hit._source,
+        sort: hit.sort,
+      }));
+  }
+
+
+  private async searchTopicIndex({
+    q,
+    take,
+    after,
+  }: {
+    q: string;
+    take: number;
+    after?: string;
+  }) {
+    const keyword = q.trim().toLowerCase();
+
+    if (!keyword) return [];
+
+    const response = await elasticSearchClient.search({
+      index: "search",
+      body: {
+        size: take + 1,
+        query: {
+          bool: {
+            filter: [
+              { term: { type: "topic" } },
+            ],
+            should: [
+              {
+                term: {
+                  "topicName.keyword": {
+                    value: keyword,
+                    boost: 100,
+                  },
+                },
+              },
+              {
+                match: {
+                  "topicName.prefix": {
+                    query: keyword,
+                    boost: 50,
+                  },
+                },
+              },
+              {
+                match: {
+                  name: {
+                    query: keyword,
+                    boost: 5,
+                  },
+                },
+              },
+            ],
+            minimum_should_match: 1,
+          },
+        },
+        sort: [
+          { _score: "desc" },
+          { "topicName.keyword": "asc" },
+        ],
+        search_after: after ? JSON.parse(after) : undefined,
+      },
+    });
+
+    const hits =
+      (response as {
+        body?: {
+          hits?: {
+            hits?: Array<{
+              _source?: TopicSearchDoc;
+              sort?: unknown[];
+            }>;
+          };
+        };
+      }).body?.hits?.hits ?? [];
+
+    return hits
+      .filter((hit): hit is { _source: TopicSearchDoc; sort: unknown[] } =>
+        Boolean(hit._source && hit.sort),
+      )
+      .map((hit) => ({
+        source: hit._source,
+        sort: hit.sort,
+      }));
+  }
+
+  async searchUsername({ q, after, take }: SearchUserInput) {
+    const docs = await this.searchUsernameIndex({ q, after, take });
+
     const usernames = docs
-      .map((item) => item.username?.trim())
+      .map((item) => item.source.username?.trim())
       .filter((item): item is string => Boolean(item));
 
     if (!usernames.length) {
@@ -156,28 +314,7 @@ class SearchService {
       });
     }
 
-    const users = await prisma.user.findMany({
-      where: {
-        username: {
-          in: usernames,
-        },
-      },
-      select: {
-        id: true,
-        username: true,
-        name: true,
-        bio: true,
-        avatar: true,
-        verifiedAt: true,
-        followersCount: true,
-        followingCount: true,
-        postsCount: true,
-        isPrivate: true,
-        location: true,
-        website: true,
-      },
-    });
-
+    const users = await userService.findUsersByUsernames(usernames);
     const rows = this.reorderByKeys(users, usernames, (item) => item.username);
 
     return buildCursorPagination({
@@ -188,17 +325,10 @@ class SearchService {
   }
 
   async searchTopic({ q, after, take }: SearchTopicInput) {
-    const docs = await this.searchIndex<TopicSearchDoc>({
-      q,
-      type: "topic",
-      fields: ["topicName^3"],
-      sortField: "topicName.keyword",
-      after,
-      take,
-    });
+    const docs = await this.searchTopicIndex({ q, after, take });
 
     const topicNames = docs
-      .map((item) => item.topicName?.trim())
+      .map((item) => item.source.topicName?.trim())
       .filter((item): item is string => Boolean(item));
 
     if (!topicNames.length) {
@@ -209,19 +339,7 @@ class SearchService {
       });
     }
 
-    const topics = await prisma.topic.findMany({
-      where: {
-        name: {
-          in: topicNames,
-        },
-      },
-      select: {
-        name: true,
-        count: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
+    const topics = await topicService.listNames(topicNames);
 
     const rows = this.reorderByKeys(topics, topicNames, (item) => item.name);
 

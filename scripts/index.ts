@@ -33,46 +33,128 @@ async function createIndex() {
     await elasticSearchClient.indices.create({
         index: INDEX,
         body: {
+            settings: {
+                analysis: {
+                    normalizer: {
+                        lowercase_normalizer: {
+                            type: "custom",
+                            filter: ["lowercase"],
+                        },
+                    },
+                    tokenizer: {
+                        username_edge_tokenizer: {
+                            type: "edge_ngram",
+                            min_gram: 1,
+                            max_gram: 30,
+                            token_chars: ["letter", "digit"],
+                        },
+                        topic_edge_tokenizer: {
+                            type: "edge_ngram",
+                            min_gram: 1,
+                            max_gram: 50,
+                            token_chars: ["letter", "digit"],
+                        },
+                    },
+                    analyzer: {
+                        username_prefix_analyzer: {
+                            type: "custom",
+                            tokenizer: "username_edge_tokenizer",
+                            filter: ["lowercase"],
+                        },
+                        username_search_analyzer: {
+                            type: "custom",
+                            tokenizer: "keyword",
+                            filter: ["lowercase"],
+                        },
+                        topic_prefix_analyzer: {
+                            type: "custom",
+                            tokenizer: "topic_edge_tokenizer",
+                            filter: ["lowercase"],
+                        },
+                    },
+                },
+            },
+
             mappings: {
                 properties: {
                     type: { type: "keyword" }, // "user" | "post" | "topic"
                     createdAt: { type: "date" },
+
                     // ── user ──
                     username: {
+                        type: "text",
+                        analyzer: "username_search_analyzer",
+                        fields: {
+                            keyword: {
+                                type: "keyword",
+                                normalizer: "lowercase_normalizer",
+                            },
+                            prefix: {
+                                type: "text",
+                                analyzer: "username_prefix_analyzer",
+                                search_analyzer: "username_search_analyzer",
+                            },
+                        },
+                    },
+
+                    name: {
                         type: "text",
                         fields: {
                             keyword: {
                                 type: "keyword",
+                                normalizer: "lowercase_normalizer",
                             },
                         },
                     },
-                    name: { type: "text" },
+
                     bio: { type: "text" },
                     avatar: { type: "keyword" },
                     isVerified: { type: "boolean" },
+
+                    followersCount: { type: "integer" },
+                    followingCount: { type: "integer" },
+                    postsCount: { type: "integer" },
+
                     // ── post ──
                     publicId: { type: "keyword" },
                     userId: { type: "keyword" },
                     content: { type: "text" },
+
                     authorUsername: {
                         type: "text",
+                        analyzer: "username_search_analyzer",
                         fields: {
                             keyword: {
                                 type: "keyword",
+                                normalizer: "lowercase_normalizer",
+                            },
+                            prefix: {
+                                type: "text",
+                                analyzer: "username_prefix_analyzer",
+                                search_analyzer: "username_search_analyzer",
                             },
                         },
                     },
+
                     authorName: { type: "text" },
                     authorAvatar: { type: "keyword" },
+
                     // ── topic ──
                     topicName: {
                         type: "text",
                         fields: {
                             keyword: {
                                 type: "keyword",
+                                normalizer: "lowercase_normalizer",
+                            },
+                            prefix: {
+                                type: "text",
+                                analyzer: "topic_prefix_analyzer",
+                                search_analyzer: "standard",
                             },
                         },
                     },
+
                     postCount: { type: "integer" },
                 },
             },

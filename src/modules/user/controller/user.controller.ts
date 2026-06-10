@@ -179,18 +179,12 @@ class UserController {
     req: Request<{}, {}, {}, UserNameMentionQueryDto>,
     res: Response,
   ) {
-    const userId = req.user?.sub;
-    if (!userId) {
-      return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
-    }
-
     const { after, take } = getPagination(req);
 
     const query = req.query_parsed.q?.trim() || undefined;
     baseLogger.info(`Received request to get usernames with query "${query}", after "${after}", take ${take}`);
 
     const { rows, pagination } = await userService.getNetworkUsernames({
-      userId,
       query,
       after: after ?? undefined,
       take,

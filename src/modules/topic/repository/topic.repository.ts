@@ -36,8 +36,13 @@ class TopicRepository implements ICursorPagination<{ q: string }, TopicRecord> {
     });
   }
 
-  async listNames(): Promise<string[]> {
-    const topics = await prisma.topic.findMany({
+  async listNames(topicNames: string[]): Promise<{ name: string; }[]> {
+    return await prisma.topic.findMany({
+      where: {
+        name: {
+          in: topicNames
+        }
+      },
       select: {
         name: true,
       },
@@ -45,8 +50,6 @@ class TopicRepository implements ICursorPagination<{ q: string }, TopicRecord> {
         count: "desc",
       },
     });
-
-    return topics.map((topic) => topic.name);
   }
 
   async upsertByName(name: string): Promise<TopicRecord> {
