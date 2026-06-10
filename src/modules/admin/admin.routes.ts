@@ -11,6 +11,7 @@ import { listReportsQuerySchema } from "./report-management/dto/request/list-rep
 import { reportManagementController } from "./report-management/report-management.controller";
 import { adminStatsQuerySchema } from "./statistics/dto/request/admin-stats.query.dto";
 import { statisticsController } from "./statistics/statistics.controller";
+import { banUserRequestSchema } from "./user-management/dto/request/ban-user.request.dto";
 import { userManagementController } from "./user-management/user-management.controller";
 
 const adminRouter = Router();
@@ -23,8 +24,22 @@ adminRouter.get(
 adminRouter.patch(
   "/users/:userId/ban",
   checkRole(UserRoleType.ADMIN),
+  validate(banUserRequestSchema),
   userManagementController.banUser,
 );
+
+adminRouter.patch(
+  "/users/:userId/unban",
+  checkRole(UserRoleType.ADMIN),
+  userManagementController.unbanUser,
+);
+
+adminRouter.patch(
+  "/users/:userId/ban-unlimited",
+  checkRole(UserRoleType.ADMIN),
+  userManagementController.banUserUnlimited,
+);
+
 
 adminRouter.get(
   "/reports",

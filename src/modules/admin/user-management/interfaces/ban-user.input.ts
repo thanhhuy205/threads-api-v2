@@ -16,14 +16,7 @@ export interface BanUserInput {
   adminId?: string;
 
   /**
-   * Parsed Date version of BanUserRequestDto.bannedUntil.
-   * undefined means caller did not send it; null can be used later to clear it.
+   * Number of hours the user remains banned.
    */
-  bannedUntil?: Date | null;
-
-  /**
-   * Relative number of hours from the external DTO.
-   * Kept here so service logic can choose whether to compute bannedUntil.
-   */
-  durationHours?: number;
+  durationHours: number;
 }

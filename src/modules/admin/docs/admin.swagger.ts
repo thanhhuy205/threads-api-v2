@@ -88,11 +88,34 @@ export const adminSwaggerSchemas = {
             data: {
                 type: 'object',
                 properties: {
-                    id: { type: 'string' },
-                    status: { type: 'string', example: 'BANNED' },
+                    user: {
+                        type: 'object',
+                        properties: {
+                            id: { type: 'string', example: 'user_123' },
+                            name: { type: ['string', 'null'], example: 'John Doe' },
+                            email: { type: 'string', example: 'john@example.com' },
+                            username: { type: 'string', example: 'johndoe' },
+                        },
+                    },
+                    status: { type: 'string', enum: ['ACTIVE', 'BANNED'], example: 'BANNED' },
+                    banType: { type: ['string', 'null'], enum: ['LIMITED', 'UNLIMITED', null], example: 'LIMITED' },
+                    durationHours: { type: ['integer', 'null'], example: 24 },
+                    bannedUntil: { type: ['string', 'null'], format: 'date-time' },
                 },
             },
         },
+    },
+    AdminBanUserRequest: {
+        type: 'object',
+        properties: {
+            durationHours: {
+                type: 'integer',
+                minimum: 1,
+                example: 24,
+                description: 'Number of hours the user remains banned',
+            },
+        },
+        required: ['durationHours'],
     },
     AdminModerateReportRequest: {
         type: 'object',
@@ -376,9 +399,53 @@ export const adminSwaggerPaths = {
             parameters: [
                 { name: 'userId', in: 'path', required: true, schema: { type: 'string' } },
             ],
+            requestBody: {
+                required: true,
+                content: {
+                    'application/json': {
+                        schema: { $ref: '#/components/schemas/AdminBanUserRequest' },
+                    },
+                },
+            },
             responses: {
                 200: {
                     description: 'User banned successfully',
+                    content: { 'application/json': { schema: { $ref: '#/components/schemas/AdminBanUserResponse' } } },
+                },
+                401: { description: COMMON_MESSAGE.UNAUTHORIZED },
+                403: { description: COMMON_MESSAGE.FORBIDDEN },
+            },
+        },
+    },
+    '/admin/users/{userId}/unban': {
+        patch: {
+            tags: ['Admin'],
+            summary: 'Unban a user',
+            security: bearerAuthSecurity,
+            parameters: [
+                { name: 'userId', in: 'path', required: true, schema: { type: 'string' } },
+            ],
+            responses: {
+                200: {
+                    description: 'User unbanned successfully',
+                    content: { 'application/json': { schema: { $ref: '#/components/schemas/AdminBanUserResponse' } } },
+                },
+                401: { description: COMMON_MESSAGE.UNAUTHORIZED },
+                403: { description: COMMON_MESSAGE.FORBIDDEN },
+            },
+        },
+    },
+    '/admin/users/{userId}/ban-unlimited': {
+        patch: {
+            tags: ['Admin'],
+            summary: 'Ban a user indefinitely',
+            security: bearerAuthSecurity,
+            parameters: [
+                { name: 'userId', in: 'path', required: true, schema: { type: 'string' } },
+            ],
+            responses: {
+                200: {
+                    description: 'User banned indefinitely successfully',
                     content: { 'application/json': { schema: { $ref: '#/components/schemas/AdminBanUserResponse' } } },
                 },
                 401: { description: COMMON_MESSAGE.UNAUTHORIZED },

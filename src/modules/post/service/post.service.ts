@@ -949,8 +949,11 @@ class PostService {
       }
     }
     const likeCount = await redisService.sCard(likeKey);
-
-    return likeCount;
+    const post = await postRepository.findByPublicId(publicId);
+    if (!post) {
+      throw new NotFoundException("Post not found");
+    }
+    return likeCount + (post.likesCount ?? 0);
   }
 
   async delete(publicId: string, userId: string): Promise<void> {

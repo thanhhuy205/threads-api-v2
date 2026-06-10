@@ -6,19 +6,10 @@ import { z } from "zod";
  */
 export const banUserRequestSchema = z.object({
   /**
-   * Absolute expiry time for a temporary ban.
-   * Example: "2026-05-20T10:30:00.000Z".
-   * Null/omitted means the current frame treats the ban as open-ended until
-   * service logic decides otherwise.
+   * Number of hours the user remains banned.
+   * The service converts this duration into the internal bannedUntil value.
    */
-  bannedUntil: z.string().datetime().optional(),
-
-  /**
-   * Relative ban length requested by the caller.
-   * This is captured for flexibility, but the service must later convert it
-   * into bannedUntil before writing final business behavior.
-   */
-  durationHours: z.coerce.number().int().positive().optional(),
+  durationHours: z.coerce.number().int().positive(),
 });
 
 /**

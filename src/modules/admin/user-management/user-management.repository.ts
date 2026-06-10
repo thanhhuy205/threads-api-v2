@@ -24,13 +24,21 @@ const adminUserSelect = {
   },
 } satisfies Prisma.UserSelect;
 
+const moderatedUserSelect = {
+  id: true,
+  name: true,
+  email: true,
+  username: true,
+  status: true,
+  bannedUntil: true,
+} satisfies Prisma.UserSelect;
+
 type AdminUserRow = Prisma.UserGetPayload<{
   select: typeof adminUserSelect;
 }>;
 
 class UserManagementRepository
-  implements IPagination<Prisma.UserWhereInput, AdminUserRow>
-{
+  implements IPagination<Prisma.UserWhereInput, AdminUserRow> {
   findAll({
     page,
     limit,
@@ -80,8 +88,6 @@ class UserManagementRepository
 
   async countAllUsers({ where }: { where?: Prisma.UserWhereInput } = {}) {
     return this.count({
-      where,
-      props: {},
     });
   }
 
@@ -114,6 +120,7 @@ class UserManagementRepository
         status: input.status,
         bannedUntil: input.bannedUntil,
       },
+      select: moderatedUserSelect,
     });
   }
 

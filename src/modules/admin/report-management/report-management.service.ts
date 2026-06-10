@@ -40,8 +40,9 @@ class ReportManagementService {
     if (!report) {
       throw new Error("Report not found");
     }
+    const row = await this.attachTargets([{ ...report }], report.targetType);
 
-    return report;
+    return row;
   }
 
 
