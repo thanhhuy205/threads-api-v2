@@ -195,6 +195,30 @@ export const circleSwaggerSchemas = {
         },
         required: ['success', 'message', 'data', 'pagination'],
     },
+    UpdateCircleMemberRoleRequest: {
+        type: 'object',
+        properties: {
+            userId: { type: 'string', example: 'user_456' },
+            role: { type: 'string', enum: ['OWNER', 'ADMIN', 'MEMBER'], example: 'ADMIN' },
+        },
+        required: ['userId', 'role'],
+    },
+    UpdateCircleMemberRoleResponse: {
+        type: 'object',
+        properties: {
+            success: { type: 'boolean', example: true },
+            message: { type: 'string', example: 'Circle member role updated successfully' },
+            data: {
+                type: 'object',
+                properties: {
+                    userId: { type: 'string', example: 'user_456' },
+                    roleMembership: { type: 'string', enum: ['OWNER', 'ADMIN', 'MEMBER'], example: 'ADMIN' },
+                },
+                required: ['userId', 'roleMembership'],
+            },
+        },
+        required: ['success', 'message', 'data'],
+    },
     CreateCircleResponse: {
         type: 'object',
         properties: {
@@ -652,6 +676,31 @@ export const circleSwaggerPaths = {
                 401: { description: COMMON_MESSAGE.UNAUTHORIZED },
                 403: { description: COMMON_MESSAGE.FORBIDDEN },
                 404: { description: COMMON_MESSAGE.NOT_FOUND },
+            },
+        },
+    },
+    '/circle/{publicId}/manage/members/role': {
+        patch: {
+            tags: ['Circle'],
+            summary: 'Update circle member role',
+            description: 'Updates only the membership role. Only a circle OWNER can perform this action.',
+            security: bearerAuthSecurity,
+            parameters: [
+                { name: 'publicId', in: 'path', required: true, schema: { type: 'string' }, description: 'Circle public ID' },
+            ],
+            requestBody: {
+                required: true,
+                content: { 'application/json': { schema: { $ref: '#/components/schemas/UpdateCircleMemberRoleRequest' } } },
+            },
+            responses: {
+                200: {
+                    description: 'Circle member role updated',
+                    content: { 'application/json': { schema: { $ref: '#/components/schemas/UpdateCircleMemberRoleResponse' } } },
+                },
+                400: { description: COMMON_MESSAGE.BAD_REQUEST },
+                401: { description: COMMON_MESSAGE.UNAUTHORIZED },
+                403: { description: 'Only circle owner can update member roles' },
+                404: { description: 'Circle or member not found' },
             },
         },
     },

@@ -1,6 +1,6 @@
-import { circleMemberRepository } from "@/modules/circle/repository/circle-member.repository";
 import type { CircleMemberListType } from "@/modules/circle/repository/circle-member.repository";
-import { Prisma } from "@prisma/client";
+import { circleMemberRepository } from "@/modules/circle/repository/circle-member.repository";
+import { Prisma, RoleMembership } from "@prisma/client";
 
 class CircleMemberService {
   findByCircleId(circleId: number, userId: string) {
@@ -48,6 +48,18 @@ class CircleMemberService {
 
   countMembersByCircleId(circleId: number, type: CircleMemberListType) {
     return circleMemberRepository.countMembersByCircleId(circleId, type);
+  }
+
+  updateRoleByCircleIdAndUserId(
+    circleId: number,
+    userId: string,
+    role: RoleMembership,
+  ) {
+    return circleMemberRepository.updateRoleByCircleIdAndUserId(
+      circleId,
+      userId,
+      role,
+    );
   }
 
   countMembersByCircleIdWithinRange(circleId: number, from: Date) {

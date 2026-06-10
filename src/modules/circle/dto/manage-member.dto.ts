@@ -1,3 +1,4 @@
+import { RoleMembership } from "@prisma/client";
 import z from "zod";
 
 export const kickCircleMemberSchema = z.object({
@@ -12,5 +13,12 @@ export const banCircleMemberSchema = kickCircleMemberSchema.extend({
   expiresAt: z.string().datetime().optional(),
 });
 
+export const updateCircleMemberRoleSchema = kickCircleMemberSchema.extend({
+  role: z.nativeEnum(RoleMembership),
+});
+
 export type KickCircleMemberDto = z.infer<typeof kickCircleMemberSchema>;
 export type BanCircleMemberDto = z.infer<typeof banCircleMemberSchema>;
+export type UpdateCircleMemberRoleDto = z.infer<
+  typeof updateCircleMemberRoleSchema
+>;

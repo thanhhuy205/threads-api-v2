@@ -6,9 +6,9 @@ export type CircleHpConfig = {
 };
 
 export const CIRCLE_LEVEL_CONFIG_HP = {
-  HEALTHY: { tag: "Healthy", minPercent: 30 },
-  SICK: { tag: "Sick", minPercent: 10 },
-  DYING: { tag: "Dying", minPercent: 0 },
+  HEALTHY: { tag: "Healthy", minPercent: 70 },
+  SICK: { tag: "Sick", minPercent: 50 },
+  DYING: { tag: "Dying", minPercent: 20 },
   DEAD: { tag: "Dead", minPercent: 0 },
 } as const satisfies Record<string, CircleHpConfig>;
 

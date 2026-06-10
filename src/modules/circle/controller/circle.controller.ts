@@ -2,6 +2,7 @@ import { SendInvitationManageDto } from "@/modules/circle/dto/admin-circle.dto";
 import {
   BanCircleMemberDto,
   KickCircleMemberDto,
+  UpdateCircleMemberRoleDto,
 } from "@/modules/circle/dto/manage-member.dto";
 import {
   ResendInvitationDto,
@@ -416,6 +417,29 @@ class CircleController {
     return res.success(200, "Circle members retrieved successfully", data.rows, {
       pagination: data.pagination,
     });
+  }
+
+  async updateMemberRole(
+    req: Request<CirclePublicIdParamsDto, {}, UpdateCircleMemberRoleDto>,
+    res: Response,
+  ) {
+    const requesterId = req.user?.sub;
+    if (!requesterId) {
+      return res.error(401, "Unauthorized");
+    }
+
+    const result = await circleService.updateMemberRole({
+      publicId: req.params.publicId,
+      requesterId,
+      userId: req.body.userId,
+      role: req.body.role,
+    });
+
+    return res.success(
+      200,
+      "Circle member role updated successfully",
+      result,
+    );
   }
 
   async banMember(

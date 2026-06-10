@@ -6,8 +6,8 @@ import { ResponseInvitationInput } from "@/modules/circle/interfaces/response-in
 import { SendInvitationEmailAdminInterface } from "@/modules/circle/interfaces/send-invitation-admin.interface";
 import { SendInvitationInput } from "@/modules/circle/interfaces/send-invitation.interface";
 import { CIRCLE_ROLE_PERMISSIONS, CirclePermission } from "@/modules/circle/permission/circle-permission";
-import { checkCirclePermission } from "@/modules/circle/policy/check-circle-permission";
 import { getCircleHpTag } from "@/modules/circle/policy/check-circle-hp";
+import { checkCirclePermission } from "@/modules/circle/policy/check-circle-permission";
 import { CIRCLE_LEVEL_CONFIG, toCircleLevel } from "@/modules/circle/policy/check-level-up";
 import { emailProducer } from "@/modules/job/email/producer/email.producer";
 import { notificationService } from "@/modules/notification-group/service/notification.service";
@@ -895,6 +895,68 @@ class CircleService {
     };
   }
 
+  async updateMemberRole({
+    publicId,
+    requesterId,
+    userId,
+    role,
+  }: {
+    publicId: string;
+    requesterId: string;
+    userId: string;
+    role: RoleMembership;
+  }) {
+    const circle = await circleRepository.findByPublicId(publicId);
+    if (!circle) {
+      throw new NotFoundException(`Circle ${publicId} not found`);
+    }
+
+    const targetMember = await circleMemberService.findRoleByCircleId(
+      circle.id,
+      userId,
+    );
+    if (!targetMember) {
+      throw new NotFoundException(
+        `User ${userId} is not a member of circle ${publicId}`,
+      );
+    }
+
+    const requester = await circleMemberService.findRoleByCircleId(
+      circle.id,
+      requesterId,
+    );
+    if (!requester) {
+      throw new ForbiddenException(
+        "You are not a member of this circle",
+      );
+    }
+
+    const canUpdateRole =
+      requester.role === RoleMembership.OWNER &&
+      checkCirclePermission(
+        CIRCLE_ROLE_PERMISSIONS[requester.role] ?? [],
+        CirclePermission.PROMOTE_DEMOTE,
+      );
+
+    if (!canUpdateRole) {
+      throw new ForbiddenException(
+        "Only circle owner can update member roles",
+      );
+    }
+
+    const updatedMember =
+      await circleMemberService.updateRoleByCircleIdAndUserId(
+        circle.id,
+        userId,
+        role,
+      );
+
+    return {
+      userId: updatedMember.userId,
+      roleMembership: updatedMember.role,
+    };
+  }
+
   async banMember({
     publicId,
     userId,
@@ -1165,6 +1227,37 @@ class CircleService {
       throw new NotFoundException(`Circle ${publicId} not found`);
     }
 
+    const energyRecord =
+      circle.circleEnergies[0] ??
+      (await circleEnergyService.getOrCreateCircleEnergy(circle.id));
+
+    if (energyRecord.current === 0) {
+      const role = await circleMemberService.findRoleByCircleId(circle.id, userId);
+      return {
+        id: circle.id,
+        publicId: circle.publicId,
+        name: circle.name,
+        description: circle.description,
+        avatarEmoji: circle.avatarEmoji,
+        visibility: circle.visibility,
+        memberCount: circle._count.circleMembers,
+        energy: {
+          ...energyRecord,
+          hpTag: getCircleHpTag(energyRecord.current, energyRecord.max),
+        },
+        nextLevelConfig: null,
+        isJoined: !!role,
+        isAdmin: role
+          ? role.role === RoleMembership.ADMIN || role.role === RoleMembership.OWNER
+          : false,
+        permission: CIRCLE_ROLE_PERMISSIONS[RoleMembership.MEMBER] || [],
+        createdAt: circle.createdAt,
+        updatedAt: circle.updatedAt,
+        isRestrictedKarma: false,
+        inInvitation: false,
+      };
+    }
+
     const [role, restriction, invitation] = await Promise.all([
       circleMemberService.findRoleByCircleId(circle.id, userId),
       userRestrictionService.getActiveRestriction(userId),
@@ -1174,9 +1267,6 @@ class CircleService {
       ),
     ]);
 
-    const energyRecord =
-      circle.circleEnergies[0] ??
-      (await circleEnergyService.getOrCreateCircleEnergy(circle.id));
 
     const energy = {
       current: energyRecord.current,

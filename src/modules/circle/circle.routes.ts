@@ -12,6 +12,7 @@ import { createCircleSchema } from './dto/create-circle.dto';
 import {
     banCircleMemberSchema,
     kickCircleMemberSchema,
+    updateCircleMemberRoleSchema,
 } from './dto/manage-member.dto';
 import {
     circlePostsQuerySchema,
@@ -45,7 +46,7 @@ circleRouter.get(
 circleRouter.post('/', validate(createCircleSchema), circleController.createCircle);
 circleRouter.post('/send-invitation', validate(sendInvitationSchema), circleController.sendInvitation);
 circleRouter.post('/response-invitation', validate(responseInvitationSchema), circleController.acceptInvitation);
-circleRouter.post("/:publicId/level-up" , validate(circlePublicIdParamsSchema, 'params'), circleController.levelUpCircle);
+circleRouter.post("/:publicId/level-up", validate(circlePublicIdParamsSchema, 'params'), circleController.levelUpCircle);
 circleRouter.get(
     '/:publicId/energy',
     validate(circlePublicIdParamsSchema, 'params'),
@@ -74,6 +75,12 @@ circleRouter.get(
     validate(circlePublicIdParamsSchema, 'params'),
     validate(manageMembersQuerySchema, 'query'),
     circleController.getManageMembers,
+);
+circleRouter.patch(
+    '/:publicId/manage/members/role',
+    validate(circlePublicIdParamsSchema, 'params'),
+    validate(updateCircleMemberRoleSchema),
+    circleController.updateMemberRole,
 );
 circleRouter.post(
     '/:publicId/manage/members/ban',
