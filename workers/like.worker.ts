@@ -123,7 +123,7 @@ class LikeWorker {
     baseLogger.info(`Grouped remove like jobs: ${JSON.stringify(Array.from(grouped.entries()))}`);
 
     await Promise.all([
-      likeRepository.deleteMany(results.map((item) => ({
+      likeRepository.updateMany(results.map((item) => ({
         userId: item.userId as string,
         postId: item.postPublicId as string,
       }))),

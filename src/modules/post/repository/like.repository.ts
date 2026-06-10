@@ -14,18 +14,22 @@ class LikeRepository {
     });
   }
 
-  async deleteMany(payloads: { userId: string; postId: string; }[]) {
+  async updateMany(payloads: { userId: string; postId: string; }[]) {
     if (payloads.length === 0) {
       return { count: 0 };
     }
 
-    return prisma.like.deleteMany({
+    return prisma.like.updateMany({
       where: {
         OR: payloads.map((item) => ({
           userId: item.userId,
           postId: item.postId,
         })),
-      }
+
+      },
+      data: {
+        isLike: false,
+      },
     });
   }
 
