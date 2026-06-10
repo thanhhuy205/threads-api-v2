@@ -33,9 +33,14 @@ export const circleSwaggerSchemas = {
             current: { type: 'number', example: 500 },
             max: { type: 'number', example: 500 },
             peak: { type: 'number', example: 500 },
+            hpTag: {
+                type: 'string',
+                enum: ['Healthy', 'Sick', 'Dying', 'Dead'],
+                example: 'Healthy',
+            },
             createdAt: { type: 'string', format: 'date-time' },
         },
-        required: ['current', 'max', 'peak', 'createdAt'],
+        required: ['current', 'max', 'peak', 'hpTag', 'createdAt'],
     },
     CircleLevelConfigItem: {
         type: 'object',
@@ -172,7 +177,7 @@ export const circleSwaggerSchemas = {
         type: 'object',
         properties: {
             username: { type: 'string', example: 'jane_doe' },
-            role: { type: 'string', enum: ['OWNER', 'ADMIN'], example: 'ADMIN' },
+            role: { type: 'string', enum: ['OWNER', 'ADMIN', 'MEMBER'], example: 'MEMBER' },
             joinedAt: { type: 'string', format: 'date-time' },
         },
         required: ['username', 'role', 'joinedAt'],
@@ -630,17 +635,18 @@ export const circleSwaggerPaths = {
     '/circle/{publicId}/manage/members': {
         get: {
             tags: ['Circle'],
-            summary: 'Get circle owners and admins',
-            description: 'Returns paginated circle members whose role is OWNER or ADMIN. Only circle owners and admins can access this endpoint.',
+            summary: 'Get circle members for management',
+            description: 'Returns all members for type=default, or only OWNER/ADMIN for type=manage. Only circle owners and admins can access this endpoint.',
             security: bearerAuthSecurity,
             parameters: [
                 { name: 'publicId', in: 'path', required: true, schema: { type: 'string' }, description: 'Circle public ID' },
                 { name: 'page', in: 'query', schema: { type: 'integer', minimum: 1, example: 1 } },
                 { name: 'limit', in: 'query', schema: { type: 'integer', minimum: 1, maximum: 100, example: 10 } },
+                { name: 'type', in: 'query', schema: { type: 'string', enum: ['manage', 'default'], default: 'default' }, description: 'manage returns OWNER/ADMIN only; default returns all members' },
             ],
             responses: {
                 200: {
-                    description: 'Circle owners and admins retrieved',
+                    description: 'Circle members retrieved',
                     content: { 'application/json': { schema: { $ref: '#/components/schemas/CircleManageMembersResponse' } } },
                 },
                 401: { description: COMMON_MESSAGE.UNAUTHORIZED },

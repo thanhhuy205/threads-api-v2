@@ -1,4 +1,5 @@
 import { circleMemberRepository } from "@/modules/circle/repository/circle-member.repository";
+import type { CircleMemberListType } from "@/modules/circle/repository/circle-member.repository";
 import { Prisma } from "@prisma/client";
 
 class CircleMemberService {
@@ -26,24 +27,27 @@ class CircleMemberService {
     );
   }
 
-  findManagersByCircleIdPaginated({
+  findMembersByCircleIdPaginated({
     circleId,
     page,
     limit,
+    type,
   }: {
     circleId: number;
     page: number;
     limit: number;
+    type: CircleMemberListType;
   }) {
-    return circleMemberRepository.findManagersByCircleIdPaginated({
+    return circleMemberRepository.findMembersByCircleIdPaginated({
       circleId,
       page,
       limit,
+      type,
     });
   }
 
-  countManagersByCircleId(circleId: number) {
-    return circleMemberRepository.countManagersByCircleId(circleId);
+  countMembersByCircleId(circleId: number, type: CircleMemberListType) {
+    return circleMemberRepository.countMembersByCircleId(circleId, type);
   }
 
   countMembersByCircleIdWithinRange(circleId: number, from: Date) {

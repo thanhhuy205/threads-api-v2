@@ -3,6 +3,8 @@ import { buildPagination } from "@/shared/pagination/cursor-pagination";
 import { buildPagination as buildOffsetPagination } from "@/shared/pagination/pagination";
 import { $Enums, CircleMember, Prisma, RoleMembership } from "@prisma/client";
 
+export type CircleMemberListType = "manage" | "default";
+
 class CircleMemberRepository implements ICursorPagination<Prisma.CircleMemberWhereInput, CircleMember> {
     findAll({ after, take, where, cursor }: {
         after?: string; take?: number; where?: Prisma.CircleMemberWhereInput | undefined; cursor?: Prisma.CircleMemberWhereUniqueInput | undefined;
@@ -98,23 +100,25 @@ class CircleMemberRepository implements ICursorPagination<Prisma.CircleMemberWhe
         });
     }
 
-    findManagersByCircleIdPaginated({
+    findMembersByCircleIdPaginated({
         circleId,
         page,
         limit,
+        type,
     }: {
         circleId: number;
         page: number;
         limit: number;
+        type: CircleMemberListType;
     }) {
         const { offset, currentLimit } = buildOffsetPagination({ page, limit });
 
         return prisma.circleMember.findMany({
             where: {
                 circleId,
-                role: {
-                    in: [RoleMembership.OWNER, RoleMembership.ADMIN],
-                },
+                role: type === "manage"
+                    ? { in: [RoleMembership.OWNER, RoleMembership.ADMIN] }
+                    : undefined,
             },
             skip: offset,
             take: currentLimit,
@@ -131,13 +135,13 @@ class CircleMemberRepository implements ICursorPagination<Prisma.CircleMemberWhe
         });
     }
 
-    countManagersByCircleId(circleId: number) {
+    countMembersByCircleId(circleId: number, type: CircleMemberListType) {
         return prisma.circleMember.count({
             where: {
                 circleId,
-                role: {
-                    in: [RoleMembership.OWNER, RoleMembership.ADMIN],
-                },
+                role: type === "manage"
+                    ? { in: [RoleMembership.OWNER, RoleMembership.ADMIN] }
+                    : undefined,
             },
         });
     }

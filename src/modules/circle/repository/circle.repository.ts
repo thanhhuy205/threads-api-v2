@@ -54,6 +54,7 @@ class CircleRepository implements ICursorPagination<
           select: {
             current: true,
             level: true,
+            max: true,
           },
         },
         createdBy: {

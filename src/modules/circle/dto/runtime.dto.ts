@@ -37,9 +37,14 @@ export const offsetLimitQuerySchema = z.object({
     limit: z.coerce.number().int('Limit must be an integer').positive('Limit must be a positive number').max(100, 'Limit must be at most 100').optional(),
 });
 
+export const manageMembersQuerySchema = offsetLimitQuerySchema.extend({
+    type: z.enum(['manage', 'default']).default('default'),
+});
+
 export const expLogQuerySchema = offsetLimitQuerySchema;
 export type ExpLogQueryDto = z.infer<typeof expLogQuerySchema>;
 export type OffsetLimitQueryDto = z.infer<typeof offsetLimitQuerySchema>;
+export type ManageMembersQueryDto = z.infer<typeof manageMembersQuerySchema>;
 
 export const circleStatsQuerySchema = z.object({
     type: z.enum(['7days', '30days', '90days']).optional(),

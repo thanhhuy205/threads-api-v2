@@ -5,7 +5,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
-import { PostType, PrismaClient } from "@prisma/client";
+import { PostType, PrismaClient, VisibilityPost } from "@prisma/client";
 import { elasticSearchClient } from '../src/providers/elastic-search.provider';
 
 // ─── Prisma ───────────────────────────────────────────────────────────────────
@@ -223,6 +223,7 @@ async function seedPosts() {
     const posts = await prisma.post.findMany({
         where: {
             type: PostType.POST,
+            visibility: VisibilityPost.PUBLIC,
             deletedAt: null,
         },
         select: {
@@ -233,7 +234,6 @@ async function seedPosts() {
             createdAt: true,
         },
         orderBy: { createdAt: "desc" },
-        take: 200,
     });
 
     console.log(`   → ${posts.length} posts, bắt đầu sync...`);

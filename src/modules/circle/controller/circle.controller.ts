@@ -22,6 +22,7 @@ import {
   CircleStatsQueryDto,
   CprBodyDto,
   ExpLogQueryDto,
+  ManageMembersQueryDto,
   OffsetLimitQueryDto,
   SacrificeBodyDto,
 } from "../dto/runtime.dto";
@@ -396,7 +397,7 @@ class CircleController {
   }
 
   async getManageMembers(
-    req: Request<CirclePublicIdParamsDto, {}, {}, OffsetLimitQueryDto>,
+    req: Request<CirclePublicIdParamsDto, {}, {}, ManageMembersQueryDto>,
     res: Response,
   ) {
     const userId = req.user?.sub;
@@ -409,6 +410,7 @@ class CircleController {
     const data = await circleService.getManageMembers(publicId, userId, {
       page: currentPage,
       limit: perPage,
+      type: req.query_parsed.type,
     });
 
     return res.success(200, "Circle members retrieved successfully", data.rows, {

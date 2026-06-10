@@ -48,6 +48,7 @@ export const redisKey = {
       `${POST_PREFIX}${publicId}${POST_LIKE_COUNT_SUFFIX}`,
 
     replyCount: (publicId: string) => `${POST_PREFIX}${publicId}:replyCount`,
+    similars: (publicId: string) => `${POST_PREFIX}${publicId}:similars`,
     listVersion: () => POST_LIST_CACHE_VERSION_KEY,
     list: (
       version: number,

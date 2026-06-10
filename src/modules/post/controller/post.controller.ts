@@ -5,7 +5,10 @@ import { getPagination } from "@/shared/pagination/cursor-pagination";
 import { Request, Response } from "express";
 import { CreatePostDto, UpdatePostDto } from "../dto/post.dto";
 import type { LikeDto } from "../dto/request/like.request";
-import type { ReportDto } from "../dto/request/post.request";
+import type {
+  ReportDto,
+  SimilarPostsDto,
+} from "../dto/request/post.request";
 import {
   CursorPaginationQueryDto,
   NewsFeedQueryDto,
@@ -215,6 +218,18 @@ class PostController {
     }
 
     return res.success(200, POST_MESSAGE.RETRIEVED, post);
+  }
+
+  async getSimilarPosts(
+    req: Request<PublicIdParamsDto, {}, SimilarPostsDto>,
+    res: Response,
+  ) {
+    const posts = await postService.getSimilarPosts(
+      req.params.publicId,
+      req.body,
+    );
+
+    return res.success(200, POST_MESSAGE.RETRIEVED, posts);
   }
 
   async getJudgeStatus(req: Request<PostIdParamsDto>, res: Response) {

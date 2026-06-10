@@ -23,6 +23,7 @@ import {
     createCircleReplyRuntimeSchema,
     cursorLimitQuerySchema,
     expLogQuerySchema,
+    manageMembersQuerySchema,
     offsetLimitQuerySchema,
     sacrificeBodySchema,
 } from './dto/runtime.dto';
@@ -71,7 +72,7 @@ circleRouter.get(
 circleRouter.get(
     '/:publicId/manage/members',
     validate(circlePublicIdParamsSchema, 'params'),
-    validate(offsetLimitQuerySchema, 'query'),
+    validate(manageMembersQuerySchema, 'query'),
     circleController.getManageMembers,
 );
 circleRouter.post(

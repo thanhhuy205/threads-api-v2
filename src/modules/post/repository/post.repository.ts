@@ -379,6 +379,27 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
     });
   }
 
+  async findByIds(ids: number[]) {
+    if (!ids.length) {
+      return [];
+    }
+
+    return prisma.post.findMany({
+      where: {
+        id: { in: ids },
+        isDeleted: false,
+        isHidden: false,
+      },
+      select: {
+        id: true,
+        publicId: true,
+        content: true,
+        userSnapshot: true,
+        createdAt: true,
+      },
+    });
+  }
+
   async findOriginReferenceByPublicId(publicId: string) {
     return prisma.post.findFirst({
       where: { publicId, isDeleted: false },

@@ -23,6 +23,13 @@ export const publicIdParamsSchema = z.object({
 
 export type PublicIdParamsDto = z.infer<typeof publicIdParamsSchema>;
 
+export const similarPostsSchema = z.object({
+    content: z.string().trim().min(1, 'Content is required'),
+    topic: z.array(z.string().trim().min(1, 'Topic must not be empty')),
+});
+
+export type SimilarPostsDto = z.infer<typeof similarPostsSchema>;
+
 export const postIdParamsSchema = z.object({
     postId: z.coerce.number().int('Post id must be an integer').positive('Post id must be a positive number'),
 });

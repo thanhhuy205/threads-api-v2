@@ -63,6 +63,7 @@ type ReportSubmissionResult = {
 
 class PostService {
   private readonly postListCacheTtlSeconds = 60;
+  private readonly similarPostsCacheTtlSeconds = 300;
   private readonly circlePostTypes = new Set<PostType>([
     PostType.CIRCLE,
     PostType.CIRCLE_REPLY,
@@ -851,6 +852,74 @@ class PostService {
       ...post,
     };
   }
+
+  async getSimilarPosts(
+    publicId: string,
+    payload: { content: string; topic: string[] },
+  ) {
+    const cacheKey = redisKey.post.similars(publicId);
+    const cached = await redisService.get(cacheKey);
+
+    if (cached) {
+      try {
+        const posts = JSON.parse(cached);
+        if (Array.isArray(posts)) {
+          return posts.map((post) => ({
+            userSnapshot: post.userSnapshot,
+            content: post.content,
+            publicId: post.publicId,
+            createdAt: post.createdAt,
+          }));
+        }
+      } catch {
+        // Ignore malformed cache and generate a fresh result.
+      }
+    }
+
+    const currentPost = await postRepository.findByPublicId(publicId);
+    if (!currentPost) {
+      throw new NotFoundException("Post not found");
+    }
+
+    const embedding = await mixedBreadService.generateEmbedding(
+      payload.content,
+      payload.topic,
+    );
+    const matches = await pineconeService.querySimilarPosts(embedding, 6);
+    const similarIds = matches
+      .map((match) => Number(match.postId))
+      .filter(
+        (postId, index, ids) =>
+          Number.isInteger(postId) &&
+          postId > 0 &&
+          postId !== currentPost.id &&
+          ids.indexOf(postId) === index,
+      )
+      .slice(0, 5);
+
+    const posts = await postRepository.findByIds(similarIds);
+    const postById = new Map(posts.map((post) => [post.id, post]));
+    const result = similarIds.flatMap((id) => {
+      const post = postById.get(id);
+      return post
+        ? [
+          {
+            userSnapshot: post.userSnapshot,
+            content: post.content,
+            publicId: post.publicId,
+            createdAt: post.createdAt,
+          },
+        ]
+        : [];
+    });
+
+    await redisService.set(cacheKey, JSON.stringify(result), {
+      EX: this.similarPostsCacheTtlSeconds,
+    });
+
+    return result;
+  }
+
   async hide(publicId: string, userId: string): Promise<void> {
     const post = await postRepository.findByPublicId(publicId);
     if (!post) {

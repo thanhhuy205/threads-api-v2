@@ -7,6 +7,7 @@ import { SendInvitationEmailAdminInterface } from "@/modules/circle/interfaces/s
 import { SendInvitationInput } from "@/modules/circle/interfaces/send-invitation.interface";
 import { CIRCLE_ROLE_PERMISSIONS, CirclePermission } from "@/modules/circle/permission/circle-permission";
 import { checkCirclePermission } from "@/modules/circle/policy/check-circle-permission";
+import { getCircleHpTag } from "@/modules/circle/policy/check-circle-hp";
 import { CIRCLE_LEVEL_CONFIG, toCircleLevel } from "@/modules/circle/policy/check-level-up";
 import { emailProducer } from "@/modules/job/email/producer/email.producer";
 import { notificationService } from "@/modules/notification-group/service/notification.service";
@@ -143,6 +144,8 @@ class CircleService {
         ? {
           current: energyRecord.current,
           level: energyRecord.level,
+          max: energyRecord.max,
+          hpTag: getCircleHpTag(energyRecord.current, energyRecord.max),
         }
         : null,
     };
@@ -862,6 +865,7 @@ class CircleService {
     query: {
       page: number;
       limit: number;
+      type: "manage" | "default";
     },
   ) {
     const circle = await this.assertCanManageCircle(
@@ -870,12 +874,13 @@ class CircleService {
       CirclePermission.KICK_MEMBER,
     );
     const [members, total] = await Promise.all([
-      circleMemberService.findManagersByCircleIdPaginated({
+      circleMemberService.findMembersByCircleIdPaginated({
         circleId: circle.id,
         page: query.page,
         limit: query.limit,
+        type: query.type,
       }),
-      circleMemberService.countManagersByCircleId(circle.id),
+      circleMemberService.countMembersByCircleId(circle.id, query.type),
     ]);
 
     const rows = members.map((member) => ({
@@ -1179,6 +1184,7 @@ class CircleService {
       peak: energyRecord.peak,
       exp: energyRecord.exp,
       level: energyRecord.level,
+      hpTag: getCircleHpTag(energyRecord.current, energyRecord.max),
       createdAt: energyRecord.createdAt,
     };
 
