@@ -12,7 +12,7 @@ export type UploadMediaItemDataDto = {
 };
 
 export type UploadMediaDataDto = {
-    media: UploadMediaItemDataDto[];
+    medias: UploadMediaItemDataDto[];
 };
 
 export type UploadMediaResponseDto = BaseResponse<UploadMediaDataDto>;

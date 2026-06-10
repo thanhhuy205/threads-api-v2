@@ -138,7 +138,7 @@ class SearchService {
     const docs = await this.searchIndex<UserSearchDoc>({
       q,
       type: "user",
-      fields: ["username^3", "name^2", "bio"],
+      fields: ["username^3"],
       sortField: "username.keyword",
       after,
       take,

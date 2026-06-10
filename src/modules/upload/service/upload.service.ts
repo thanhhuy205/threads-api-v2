@@ -56,7 +56,7 @@ class UploadService {
         const medias = await postMediaRepository.createMedia(uploadResults);
 
         return {
-            media: medias,
+            medias,
         };
     }
 

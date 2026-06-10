@@ -335,6 +335,8 @@ class CircleService {
       circlePublicId: publicId,
       userId,
       content: body.content,
+      circleName: circle.name,
+      circleDescription: circle.description,
       // topics: post, // You can add topic extraction logic here if needed
     });
 
@@ -466,6 +468,8 @@ class CircleService {
       circlePublicId: publicId,
       userId,
       content: body.content,
+      circleName: circle.name,
+      circleDescription: circle.description,
     });
 
     return {

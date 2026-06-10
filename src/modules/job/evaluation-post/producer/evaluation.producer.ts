@@ -6,6 +6,8 @@ interface EvaluationPostPayload {
     circlePublicId: string;
     userId: string;
     content: string;
+    circleName: string;
+    circleDescription: string;
 }
 
 interface EvaluationReportPayload {

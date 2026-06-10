@@ -14,9 +14,6 @@ class UploadController {
         const result = await uploadService.uploadMedia(files);
         return res.success(201, UPLOAD_MESSAGE.UPLOAD_MEDIA_SUCCESS, result);
     }
-    async getUploadVideosUrl(req: Request, res: Response) {
-        const result = await uploadService.getUploadVideosUrl();
-        return res.success(201, UPLOAD_MESSAGE.UPLOAD_MEDIA_SUCCESS, result);
-    }
+
 }
 export const uploadController = new UploadController();
