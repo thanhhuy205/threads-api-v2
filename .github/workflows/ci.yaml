@@ -69,6 +69,8 @@ jobs:
           envs: AWS_ACCOUNT_ID,AWS_REGION,REPOSITORY
           script: |
             set -e
+            cd threads-api
+
             REGISTRY_URL="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
 
             aws ecr get-login-password --region $AWS_REGION \
@@ -78,7 +80,6 @@ jobs:
             docker container prune -f
             docker system prune -f
             docker compose -f docker-compose.yml up -d --remove-orphans
-            docker exec threads-api npx prisma migrate deploy
             docker system df
         env:
           AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
