@@ -61,7 +61,7 @@ jobs:
       - name: Write SSH key
         run: |
           printf '%s\n' "${{ secrets.EC2_SSH_KEY }}" > aws.pem
-          chmod 400 aws.pem
+          chmod 644 aws.pem
       - name: Deploy to EC2 via SSH
         uses: appleboy/ssh-action@v1.0.1
         with:
