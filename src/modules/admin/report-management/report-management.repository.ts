@@ -1,7 +1,6 @@
 import prisma from "@/config/prisma";
 import { buildPagination } from "@/shared/pagination/pagination";
-import type { Prisma, ReportStatus } from "@prisma/client";
-import { ReportTargetType } from "@prisma/client";
+import { Prisma, ReportStatus, ReportTargetType } from "@prisma/client";
 
 const adminReportSelect = {
   id: true,
@@ -19,6 +18,8 @@ const adminReportSelect = {
       email: true,
     },
   },
+  adminNote: true,
+  assistantNote: true,
 } satisfies Prisma.ReportSelect;
 
 const adminReportTargetPostSelect = {
@@ -78,6 +79,8 @@ class ReportManagementRepository {
             email: true,
           },
         },
+        adminNote: true,
+        assistantNote: true,
         targetType: true,
       }
     });
@@ -121,7 +124,15 @@ class ReportManagementRepository {
       skip: offset,
       take: currentLimit,
       orderBy: [{ createdAt: "desc" }],
-      select: adminReportSelect,
+      select: {
+        ...adminReportSelect,
+        ...(
+          status === ReportStatus.RESOLVED ? {
+            adminNote: true,
+            status: true,
+          } : {}
+        )
+      },
     });
   }
 
