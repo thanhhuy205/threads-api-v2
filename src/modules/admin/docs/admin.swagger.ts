@@ -120,7 +120,16 @@ export const adminSwaggerSchemas = {
     AdminModerateReportRequest: {
         type: 'object',
         properties: {
-            action: { type: 'string', enum: ['approve', 'hide_post', 'delete_post'], example: 'hide_post' },
+            action: {
+                type: 'string',
+                enum: ['approve', 'hide_post', 'delete_post', 'mark_disinformation'],
+                example: 'hide_post',
+            },
+            adminNote: {
+                type: 'string',
+                maxLength: 1000,
+                example: 'Post violates the community guidelines.',
+            },
         },
         required: ['action'],
     },
@@ -128,9 +137,49 @@ export const adminSwaggerSchemas = {
         type: 'object',
         properties: {
             success: { type: 'boolean', example: true },
-            message: { type: 'string', example: 'Admin report moderation route ready' },
-            data: { type: 'object' },
+            message: { type: 'string', example: 'Report moderated successfully' },
+            data: {
+                type: 'object',
+                properties: {
+                    report: {
+                        type: 'object',
+                        properties: {
+                            id: { type: 'string', example: 'report_123' },
+                            targetId: { type: 'string', example: 'post_123' },
+                            targetType: {
+                                type: 'string',
+                                enum: ['POST', 'USER', 'CIRCLE'],
+                                example: 'POST',
+                            },
+                            status: {
+                                type: 'string',
+                                enum: ['PENDING', 'RESOLVED', 'DISMISSED'],
+                                example: 'RESOLVED',
+                            },
+                            adminNote: {
+                                type: ['string', 'null'],
+                                example: 'Post violates the community guidelines.',
+                            },
+                        },
+                        required: ['id', 'targetId', 'targetType', 'status', 'adminNote'],
+                    },
+                    moderation: {
+                        type: 'object',
+                        properties: {
+                            action: {
+                                type: 'string',
+                                enum: ['approve', 'hide_post', 'delete_post', 'mark_disinformation'],
+                                example: 'hide_post',
+                            },
+                            adminId: { type: ['string', 'null'], example: 'admin_123' },
+                        },
+                        required: ['action', 'adminId'],
+                    },
+                },
+                required: ['report', 'moderation'],
+            },
         },
+        required: ['success', 'message', 'data'],
     },
     AdminReportTargetPost: {
         type: 'object',

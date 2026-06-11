@@ -11,9 +11,8 @@ export interface ModerateReportInput {
 
   /**
    * Requested action from the external DTO.
-   * Service logic will decide how to apply this later.
    */
-  action?: ReportModerationAction;
+  action: ReportModerationAction;
 
   /**
    * Admin user id from req.user.sub.

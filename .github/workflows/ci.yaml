@@ -53,31 +53,34 @@ jobs:
 
   deploy:
     needs: build
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     environment: production
     if: github.ref == 'refs/heads/production'
 
     steps:
-      - name: Login ECR inside EC2
-        env:
-          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-        run: |
-          REGISTRY_URL="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
-          aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $REGISTRY_URL
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v1.0.1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.PORT }}
+          # chuyển env từ apple boy đem theo vào ec2
+          envs: AWS_ACCOUNT_ID,AWS_REGION,REPOSITORY
+          script: |
+            set -e
+            REGISTRY_URL="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
 
-      - name: Pull image
+            aws ecr get-login-password --region $AWS_REGION \
+              | docker login --username AWS --password-stdin $REGISTRY_URL
+
+            docker pull $REGISTRY_URL/$REPOSITORY:production
+            docker container prune -f
+            docker system prune -f
+            docker compose -f docker-compose.yml up -d --remove-orphans
+            docker exec threads-api npx prisma migrate deploy
+            docker system df
         env:
           AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
           AWS_REGION: ${{ secrets.AWS_REGION }}
           REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
-        run: |
-          REGISTRY_URL="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
-          docker pull $REGISTRY_URL/$REPOSITORY:production
-
-          docker container prune -f
-          docker system prune -f
-          docker compose -f docker-compose.yml up -d --remove-orphans
-          docker exec threads-api npx prisma migrate deploy 
-          docker exec threads-nginx nginx -s reload
-          docker system df

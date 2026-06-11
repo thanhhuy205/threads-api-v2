@@ -935,6 +935,25 @@ class PostService {
     await this.bumpPostListCacheVersion();
   }
 
+  async actionAdmin(publicId: string, action: {
+    isHidden?: boolean;
+    isDeleted?: boolean;
+    isDisinformation?: boolean;
+  }): Promise<void> {
+    const post = await postRepository.findByPublicId(publicId);
+    if (!post) {
+      throw new Error("Post not found");
+    }
+    if (post.visibility === VisibilityPost.CIRCLE) {
+      throw new Error("Circle posts cannot be hidden");
+    }
+
+    await postRepository.updateStatusByPublicId(publicId, {
+      ...action
+    });
+    await this.bumpPostListCacheVersion();
+  }
+
   async save(publicId: string, userId: string): Promise<void> {
     // stub: no-op
     return;

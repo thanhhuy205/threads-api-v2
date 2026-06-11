@@ -8,6 +8,7 @@ import { disableDailyQuestParamsSchema } from "./daily-quest/dto/request/disable
 import { trendingHashtagQuerySchema } from "./hashtag-trending/dto/request/trending-hashtag.query.dto";
 import { hashtagTrendingController } from "./hashtag-trending/hashtag-trending.controller";
 import { listReportsQuerySchema } from "./report-management/dto/request/list-reports.query.dto";
+import { moderateReportRequestSchema } from "./report-management/dto/request/moderate-report.request.dto";
 import { reportManagementController } from "./report-management/report-management.controller";
 import { adminStatsQuerySchema } from "./statistics/dto/request/admin-stats.query.dto";
 import { statisticsController } from "./statistics/statistics.controller";
@@ -58,6 +59,7 @@ adminRouter.get(
 adminRouter.patch(
   "/reports/:reportId",
   checkRole(UserRoleType.ADMIN),
+  validate(moderateReportRequestSchema),
   reportManagementController.moderateReport,
 );
 

@@ -2,13 +2,13 @@ import { z } from "zod";
 
 /**
  * Actions that an external admin request may ask for.
- * The repository does not decide these actions; service logic will interpret
- * them later and call DB methods in the right order.
+ * The service maps each action to the report and target updates.
  */
 export const reportModerationActions = [
   "approve",
   "hide_post",
   "delete_post",
+  "mark_disinformation",
 ] as const;
 
 /**
@@ -17,19 +17,18 @@ export const reportModerationActions = [
 export const moderateReportRequestSchema = z.object({
   /**
    * Requested moderation action from the admin UI/API client.
-   * Optional for now because this endpoint is still a frame.
    */
-  action: z.enum(reportModerationActions).optional(),
+  action: z.enum(reportModerationActions),
 
   /**
    * Human note from admin explaining the decision.
-   * Stored later in reports.admin_note when service logic is finalized.
+   * Stored in reports.admin_note.
    */
   adminNote: z.string().max(1000).optional(),
 });
 
 /**
- * Union type: "approve" | "hide_post" | "delete_post".
+ * Union type for every supported report moderation action.
  */
 export type ReportModerationAction = (typeof reportModerationActions)[number];
 

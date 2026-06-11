@@ -90,6 +90,13 @@ class ReportManagementRepository {
     return prisma.report.update({
       where: { id: reportId },
       data,
+      select: {
+        id: true,
+        targetId: true,
+        targetType: true,
+        status: true,
+        adminNote: true,
+      },
     });
   }
 

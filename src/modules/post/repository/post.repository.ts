@@ -488,6 +488,39 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
     };
   }
 
+
+  async updateStatusByPublicId(
+    publicId: string,
+    status: { isDeleted?: boolean; isHidden?: boolean; isDisinformation?: boolean },
+  ): Promise<PostRecord> {
+    const post = await prisma.post.update({
+      where: { publicId },
+      data: {
+        isDeleted: status.isDeleted,
+        isHidden: status.isHidden,
+        isDisinformation: status.isDisinformation,
+      },
+      select: {
+        publicId: true,
+        content: true,
+        userId: true,
+        visibility: true,
+        isDisinformation: true,
+        createdAt: true,
+      },
+    });
+
+    return {
+      publicId: post.publicId,
+      content: post.content,
+      userId: post.userId,
+      visibility: post.visibility,
+      isDisinformation: post.isDisinformation,
+      createdAt: post.createdAt.toISOString(),
+    };
+  }
+
+
   async softDeleteByPublicId(publicId: string): Promise<void> {
     await prisma.post.update({
       where: { publicId },

@@ -1,5 +1,8 @@
+import { NotFoundException } from "@/errors/error";
+import { postService } from "@/modules/post/service/post.service";
 import { buildPaginationResponse } from "@/shared/pagination/pagination";
-import { ReportTargetType } from "@prisma/client";
+import { ReportStatus, ReportTargetType } from "@prisma/client";
+import type { ModerateReportDataDto } from "./dto/response/moderate-report.response.dto";
 import type { ListReportsInput } from "./interfaces/list-reports.input";
 import type { ModerateReportInput } from "./interfaces/moderate-report.input";
 import {
@@ -46,14 +49,55 @@ class ReportManagementService {
   }
 
 
-  async moderateReport(input: ModerateReportInput) {
+  async moderateReport(
+    input: ModerateReportInput,
+  ): Promise<ModerateReportDataDto> {
     const report = await reportManagementRepository.findById(input.reportId);
 
+    if (!report) {
+      throw new NotFoundException("Report not found");
+    }
+
+    let status: ReportStatus;
+
+    switch (input.action) {
+      case "approve":
+        status = ReportStatus.DISMISSED;
+        break;
+      case "hide_post":
+        status = ReportStatus.RESOLVED;
+        await postService.actionAdmin(report.targetId, {
+          isHidden: true,
+        });
+        break;
+      case "delete_post":
+        status = ReportStatus.RESOLVED;
+        await postService.actionAdmin(report.targetId, {
+          isDeleted: true,
+        });
+        break;
+      case "mark_disinformation":
+        status = ReportStatus.RESOLVED;
+        await postService.actionAdmin(report.targetId, {
+          isDisinformation: true,
+        });
+        break;
+    }
+
+    const updatedReport = await reportManagementRepository.updateById(
+      input.reportId,
+      {
+        status,
+        adminNote: input.adminNote,
+      },
+    );
+
     return {
-      ...input,
-      report,
-      nextStep:
-        "TODO: code moderation orchestration here, then call repository DB methods and add any follow-up jobs at the end of the flow.",
+      report: updatedReport,
+      moderation: {
+        action: input.action,
+        adminId: input.adminId ?? null,
+      },
     };
   }
 

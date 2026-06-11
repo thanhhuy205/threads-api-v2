@@ -38,12 +38,12 @@ class ReportManagementController {
   ) => {
     const result = await reportManagementService.moderateReport({
       reportId: req.params.reportId,
-      action: req.body?.action,
-      adminNote: req.body?.adminNote,
+      action: req.body.action,
+      adminNote: req.body.adminNote,
       adminId: req.user?.sub,
     });
 
-    return res.success(200, "Admin report moderation route ready", result);
+    return res.success(200, "Report moderated successfully", result);
   };
 }
 

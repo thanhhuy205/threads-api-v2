@@ -16,13 +16,15 @@ class StatisticsService {
   }
 
   private resolvePeriod(query: AdminStatsQueryDto) {
-    const now = new Date();
+    const now = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000); // Default to last 7 days
     const startAt = query.startDate && query.endDate
       ? this.parseDate(query.startDate)
       : new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+
     const endAt = query.startDate && query.endDate
       ? this.parseDate(query.endDate)
-      : new Date(startAt);
+      : new Date();
 
     endAt.setDate(endAt.getDate() + 1);
 
