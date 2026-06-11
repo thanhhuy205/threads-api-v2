@@ -64,7 +64,7 @@ jobs:
           debug: true
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
-          password: ${{ secrets.EC2_PASSWORD}}
+          key: ${{ secrets.EC2_SSH_KEY }}
           port: ${{ secrets.PORT }}
           # chuyển env từ apple boy đem theo vào ec2
           envs: AWS_ACCOUNT_ID,AWS_REGION,REPOSITORY
