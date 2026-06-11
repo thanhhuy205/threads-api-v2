@@ -26,6 +26,7 @@ class ReportManagementService {
         page: input.page,
         limit: input.limit,
         targetType,
+        status: input.status,
       }),
       reportManagementRepository.countReports({ targetType }),
     ]);

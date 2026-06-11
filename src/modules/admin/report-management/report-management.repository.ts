@@ -1,6 +1,6 @@
 import prisma from "@/config/prisma";
 import { buildPagination } from "@/shared/pagination/pagination";
-import type { Prisma } from "@prisma/client";
+import type { Prisma, ReportStatus } from "@prisma/client";
 import { ReportTargetType } from "@prisma/client";
 
 const adminReportSelect = {
@@ -104,16 +104,19 @@ class ReportManagementRepository {
     page,
     limit,
     targetType,
+    status,
   }: {
     page: number;
     limit: number;
     targetType: ReportTargetType;
+    status?: ReportStatus;
   }): Promise<AdminReportRow[]> {
     const { offset, currentLimit } = buildPagination({ page, limit });
 
     return prisma.report.findMany({
       where: {
         targetType,
+        status,
       },
       skip: offset,
       take: currentLimit,

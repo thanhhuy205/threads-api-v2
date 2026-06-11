@@ -15,6 +15,7 @@ class ReportManagementController {
       page: currentPage,
       limit: perPage,
       type: query?.type,
+      status: query?.status,
     });
 
     return res.success(200, "Reports retrieved successfully", result.rows, {
