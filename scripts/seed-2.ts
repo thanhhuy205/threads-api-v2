@@ -451,7 +451,7 @@ async function seedNewUsers(): Promise<{ id: string; username: string; name: str
         where: { email: { in: userList.map(u => u.email) } },
         select: { id: true, username: true, name: true, avatar: true, bio: true },
     });
-    return users;
+    return users as any;
 }
 
 // ─── PART B: Seed 100 reported posts ─────────────────────────────────────────
@@ -785,7 +785,7 @@ async function main(): Promise<void> {
     await seedTopics();
 
     // B. 100 reported posts
-    await seedReportedPosts(allUsers);
+    await seedReportedPosts(allUsers as any);
 
     // C. Follows
     await seedFollows(allUsers);

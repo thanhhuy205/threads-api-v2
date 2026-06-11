@@ -18,6 +18,12 @@
       "@config/*": ["src/config/*"]
     }
   },
-  "include": ["src/**/*.ts", "workers/**/*.ts", "prisma/**/*.ts"],
+  "include": [
+    "src/**/*.ts",
+    "workers/**/*.ts",
+    "prisma/**/*.ts",
+    "scripts/**/*.ts",
+    "template/*.ejs"
+  ],
   "exclude": ["node_modules", "dist"]
 }

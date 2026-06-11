@@ -80,7 +80,10 @@ jobs:
             docker pull $REGISTRY_URL/$REPOSITORY:production
             docker container prune -f
             docker system prune -f
+
             docker compose -f docker-compose.yml up -d --remove-orphans
+
+            docker exec -it threads-nginx nginx -s reload
             docker system df
         env:
           AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
