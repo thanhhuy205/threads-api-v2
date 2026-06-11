@@ -58,12 +58,17 @@ jobs:
     if: github.ref == 'refs/heads/production'
 
     steps:
+      - name: Write SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/aws.pem
+          chmod 400  ~/.ssh/aws.pem
       - name: Deploy to EC2 via SSH
         uses: appleboy/ssh-action@v1.0.1
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
+          key_path: "~/.ssh/aws.pem"
           port: ${{ secrets.PORT }}
           # chuyển env từ apple boy đem theo vào ec2
           envs: AWS_ACCOUNT_ID,AWS_REGION,REPOSITORY
