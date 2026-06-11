@@ -14,7 +14,18 @@ import { responseHandler } from './middlewares/response-handler';
 const app = express();
 
 app.disable('x-powered-by');
-app.use(helmet());
+app.use(
+    helmet({
+        contentSecurityPolicy: {
+            directives: {
+                connectSrc: [
+                    "'self'",
+                    'https://threads.huydarealest.com',
+                ],
+            },
+        },
+    }),
+);
 app.use(cors({ origin: corsOrigin }));
 app.use(compression());
 app.set('trust proxy', 1)
