@@ -83,6 +83,10 @@ export const swaggerDocument = {
 
     servers: [
         {
+            url: 'https://threads.huydarealest.com/api/v1',
+            description: 'Production server',
+        },
+        {
             url: 'http://localhost:3302/api/v1',
             description: 'Local server',
         },
