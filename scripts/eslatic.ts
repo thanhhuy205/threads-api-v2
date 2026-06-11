@@ -23,7 +23,10 @@ const INDEX = "search"; // 1 index, phân biệt bằng field type
 // ─── Tạo index ────────────────────────────────────────────────────────────────
 async function createIndex() {
     console.log("\n🗂️  Kiểm tra index...");
-    await elasticSearchClient.indices.delete({ index: "search" });
+    await elasticSearchClient.indices.delete({
+        index: INDEX,
+        ignore_unavailable: true,
+    });
     const { body: exists } = await elasticSearchClient.indices.exists({ index: INDEX });
     if (exists) {
         console.log(`   ⏭️  Index "${INDEX}" đã tồn tại`);
@@ -322,7 +325,11 @@ async function verify() {
     });
 
     const icons: Record<string, string> = { user: "👤", post: "📝", topic: "🏷️" };
-    const buckets = body.aggregations.by_type.buckets as { key: string; doc_count: number }[];
+    const aggregation = body.aggregations?.by_type as
+        | { buckets?: Array<{ key: string; doc_count: number }> }
+        | undefined;
+    const buckets = aggregation?.buckets ?? [];
+
     buckets.forEach(b => {
         console.log(`   ${icons[b.key] ?? "•"} ${b.key}: ${b.doc_count} documents`);
     });
