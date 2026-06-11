@@ -67,7 +67,7 @@ jobs:
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
-          key_path: /github/workspace/aws.pem
+          key: ${{ secrets.EC2_SSH_KEY }}
           port: ${{ secrets.PORT }}
           # chuyển env từ apple boy đem theo vào ec2
           envs: AWS_ACCOUNT_ID,AWS_REGION,REPOSITORY
