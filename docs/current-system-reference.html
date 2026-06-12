@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>System reference hiện tại - Threads API v2</title>
+  <style>
+    :root{--ivory:#faf9f5;--paper:#fff;--slate:#141413;--clay:#d97757;--olive:#788c5d;--rust:#b04a3f;--g100:#f0eee6;--g300:#d1cfc5;--g500:#87867f;--g700:#3d3d3a;--serif:ui-serif,Georgia,"Times New Roman",serif;--sans:system-ui,-apple-system,"Segoe UI",sans-serif;--mono:ui-monospace,Menlo,Consolas,monospace}
+    *{box-sizing:border-box}body{margin:0;background:var(--ivory);color:var(--g700);font:15px/1.65 var(--sans)}.page{max-width:1080px;margin:auto;padding:48px 24px 100px}.crumb{font:12px var(--mono);color:var(--g500);margin-bottom:22px}.crumb a{color:var(--clay)}h1,h2{font-family:var(--serif);font-weight:500;color:var(--slate)}h1{font-size:40px;line-height:1.1;margin:0 0 16px}h2{font-size:25px;margin:48px 0 10px}.lead{max-width:800px;font-size:16px}.note{border:1.5px solid var(--olive);background:rgba(120,140,93,.07);border-radius:12px;padding:15px 18px;margin:24px 0}.warn{border-color:var(--clay);background:rgba(217,119,87,.07)}table{width:100%;border-collapse:separate;border-spacing:0;background:var(--paper);border:1.5px solid var(--g300);border-radius:12px;overflow:hidden;margin:16px 0;font-size:13.5px}th{background:var(--g100);color:var(--g500);font:600 10px var(--mono);text-transform:uppercase;letter-spacing:.06em;text-align:left;padding:11px 14px;border-bottom:1px solid var(--g300)}td{padding:11px 14px;border-bottom:1px solid var(--g100);vertical-align:top}tr:last-child td{border-bottom:0}code{font:12px var(--mono);background:var(--g100);padding:2px 5px;border-radius:4px;color:var(--slate)}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:28px 0}.stat{background:var(--paper);border:1.5px solid var(--g300);border-radius:12px;padding:18px}.stat strong{display:block;font:500 35px/1 var(--serif);color:var(--slate);margin-bottom:8px}.stat span{font:10px var(--mono);text-transform:uppercase;color:var(--g500)}ul{padding-left:20px}.flow{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:20px 0}.flow div{position:relative;background:var(--paper);border:1.5px solid var(--g300);border-radius:10px;padding:15px 12px;text-align:center;font:12px var(--mono)}.flow div:not(:last-child)::after{content:"→";position:absolute;right:-11px;color:var(--clay);z-index:2}@media(max-width:760px){.stats{grid-template-columns:repeat(2,1fr)}.flow{grid-template-columns:1fr}.flow div:not(:last-child)::after{content:"↓";right:auto;left:50%;bottom:-17px}table{display:block;overflow:auto}}
+  </style>
+</head>
+<body>
+<main class="page">
+  <div class="crumb"><a href="index.html">docs</a> / current-system-reference</div>
+  <h1>System reference hiện tại</h1>
+  <p class="lead">Trang này là bản đồ ngắn gọn của code đang chạy tại ngày 12/06/2026. Khi tài liệu lịch sử mâu thuẫn với trang này, hãy kiểm tra route, DTO và service trong source; source code là nguồn sự thật cuối cùng.</p>
+  <div class="stats"><div class="stat"><strong>126</strong><span>route declarations</span></div><div class="stat"><strong>41</strong><span>Prisma models</span></div><div class="stat"><strong>10</strong><span>workers</span></div><div class="stat"><strong>12</strong><span>queue names</span></div></div>
+
+  <h2>Request lifecycle</h2>
+  <div class="flow"><div>Express middleware</div><div>Global rate limit</div><div>Module router</div><div>Controller + service</div><div>Response/error envelope</div></div>
+  <table><thead><tr><th>Giai đoạn</th><th>Code</th><th>Hành vi</th></tr></thead><tbody>
+    <tr><td>App middleware</td><td><code>src/app.ts</code></td><td>Helmet, CORS, compression, Morgan, JSON/urlencoded parser, logger và response helper.</td></tr>
+    <tr><td>Mux exception</td><td><code>/api/v1/webhooks/mux</code></td><td>Raw JSON body được mount trước <code>express.json()</code> để verify chữ ký.</td></tr>
+    <tr><td>API boundary</td><td><code>app.use('/api/v1', apiLimiter, router)</code></td><td>Mọi route bên dưới đều đi qua global limiter.</td></tr>
+    <tr><td>Authorization</td><td><code>src/middlewares/auth.ts</code></td><td>Verify Bearer JWT, Redis blacklist, user tồn tại và trạng thái không bị BANNED.</td></tr>
+    <tr><td>Validation</td><td><code>src/middlewares/validate.ts</code></td><td>Zod parse body/params/query; query đã parse nằm ở <code>req.query_parsed</code>.</td></tr>
+    <tr><td>Success envelope</td><td><code>res.success / res.paginate</code></td><td><code>{ success: true, message?, data?, pagination? }</code>.</td></tr>
+    <tr><td>Error envelope</td><td><code>errorHandler</code></td><td><code>{ success: false, message?, errors?, errorCode? }</code>; map Prisma P2002/P2025/P2003.</td></tr>
+  </tbody></table>
+
+  <h2>HTTP module map</h2>
+  <table><thead><tr><th>Prefix</th><th>Module</th><th>Auth boundary</th><th>Ghi chú</th></tr></thead><tbody>
+    <tr><td><code>/docs</code></td><td>Swagger UI</td><td>Public</td><td>OpenAPI document được ghép từ module swagger files.</td></tr>
+    <tr><td><code>/admin</code></td><td>Admin</td><td>Login public; phần còn lại JWT + ADMIN role</td><td>User moderation, report, stats, hashtag và daily quest.</td></tr>
+    <tr><td><code>/auth</code></td><td>Auth</td><td>Mixed</td><td>Profile, me, logout và resend verify cần JWT.</td></tr>
+    <tr><td><code>/posts</code></td><td>Post</td><td>Public reads trước <code>router.use(authorization)</code></td><td>Write/interactions protected; <code>judge-status</code> hiện trả placeholder.</td></tr>
+    <tr><td><code>/circle</code></td><td>Circle</td><td>Toàn bộ protected</td><td>Circle domain lớn nhất, gồm management và gamification.</td></tr>
+    <tr><td><code>/circle-ai</code></td><td>Circle AI</td><td>Protected</td><td>Generate markdown response cho circle workflow.</td></tr>
+    <tr><td><code>/users</code></td><td>Public user</td><td>Profile/mention public; karma/badge protected</td><td>Public profile route phải nằm trước auth boundary.</td></tr>
+    <tr><td><code>/user</code></td><td>Follow</td><td>Reads public, writes protected</td><td>Follow toggle và legacy friend-request route.</td></tr>
+    <tr><td><code>/me</code></td><td>Current user</td><td>Toàn bộ protected</td><td>Follower và friend-request lifecycle.</td></tr>
+    <tr><td><code>/message-groups</code></td><td>Chat</td><td>Mỗi route protected</td><td>Persistence + Pusher + message notification worker.</td></tr>
+    <tr><td><code>/notification</code></td><td>Notification</td><td>Toàn bộ protected</td><td>Grouped notification và unread counters.</td></tr>
+    <tr><td><code>/search</code></td><td>Search</td><td>Toàn bộ protected</td><td>Search index tên <code>search</code>, hydrate record từ Prisma.</td></tr>
+    <tr><td><code>/upload</code></td><td>Upload</td><td>Media protected; avatar hiện public</td><td>Avatar thiếu authorization là hành vi code hiện tại, cần cân nhắc security.</td></tr>
+    <tr><td><code>/webhooks</code></td><td>Webhooks</td><td>Provider verification</td><td>Mux signature và Leonardo callback key.</td></tr>
+    <tr><td><code>/ai</code></td><td>AI</td><td>Toàn bộ protected</td><td>HTTP route tạo image; scoring/report chạy nội bộ qua worker.</td></tr>
+    <tr><td><code>/topic</code>, <code>/quests</code>, <code>/museum</code>, <code>/pusher</code>, <code>/health</code></td><td>Supporting HTTP modules</td><td>Tùy module</td><td>Xem API page tương ứng.</td></tr>
+  </tbody></table>
+
+  <h2>Module hỗ trợ không mount route riêng</h2>
+  <table><thead><tr><th>Module</th><th>Trách nhiệm</th><th>Được dùng bởi</th></tr></thead><tbody>
+    <tr><td>access-control</td><td>Role, permission, user-role và middleware kiểm tra quyền.</td><td>Auth, admin, circle.</td></tr>
+    <tr><td>anti-spam</td><td>Lưu/đọc giới hạn hành vi user theo ngày.</td><td>Post/circle policy.</td></tr>
+    <tr><td>jwt</td><td>Sign/verify access-refresh token pair.</td><td>Auth middleware và auth service.</td></tr>
+    <tr><td>limit-action</td><td>Khóa hành động AI khi user vượt quota.</td><td>AI service.</td></tr>
+    <tr><td>mixed-bread + pinecone</td><td>Embedding và vector similarity.</td><td>Post semantic search/index worker.</td></tr>
+    <tr><td>report</td><td>Tạo report và enqueue AI evaluation.</td><td>Post + admin.</td></tr>
+    <tr><td>user-action-log</td><td>Audit hành động, quest progress và AI quota.</td><td>Post, circle, quest, AI.</td></tr>
+    <tr><td>user-restriction</td><td>Restriction theo user/type/expiry.</td><td>Circle và moderation policies.</td></tr>
+    <tr><td>job</td><td>Producer cho email, index, vector, like, notification, evaluation, HP và ban.</td><td>Nhiều domain service.</td></tr>
+  </tbody></table>
+
+  <h2>Queue và worker</h2>
+  <table><thead><tr><th>Queue</th><th>Worker hiện có</th><th>Mục đích</th></tr></thead><tbody>
+    <tr><td><code>email_queue</code></td><td>email.worker</td><td>Verify, forgot-password và invitation email.</td></tr>
+    <tr><td><code>bloom_queue</code></td><td>bloom.worker</td><td>Redis Bloom username/email.</td></tr>
+    <tr><td><code>elastic_queue</code></td><td>elastic.worker</td><td>Index post/user vào OpenSearch-compatible client.</td></tr>
+    <tr><td><code>pinecone_queue</code></td><td>pine.worker</td><td>Mixedbread embedding và Pinecone upsert.</td></tr>
+    <tr><td><code>like_queue</code> + <code>likes_events</code></td><td>like.worker</td><td>Đồng bộ like state và phát notification count.</td></tr>
+    <tr><td><code>notification</code></td><td>notification.worker</td><td>Flush grouped reply/mention/like notification.</td></tr>
+    <tr><td><code>message_queue</code></td><td>message.worker</td><td>Flush realtime chat notification.</td></tr>
+    <tr><td><code>evaluation_queue</code></td><td>evaluate.worker</td><td>AI score circle post và evaluate report.</td></tr>
+    <tr><td><code>delta_hp_queue</code></td><td>delta-hp.worker</td><td>Điều chỉnh circle HP theo repeat job.</td></tr>
+    <tr><td><code>auto_remove_ban_queue</code></td><td>auto-remove-ban.worker</td><td>Tự gỡ user ban hết hạn.</td></tr>
+    <tr><td><code>friend_request_queue</code></td><td>Không có worker riêng</td><td>Được producer khai báo; cần xác nhận consumer trước khi phụ thuộc.</td></tr>
+  </tbody></table>
+
+  <h2>Công nghệ thực tế</h2>
+  <table><thead><tr><th>Nhóm</th><th>Stack hiện tại</th></tr></thead><tbody>
+    <tr><td>Runtime/API</td><td>Node.js, TypeScript 5.8, Express 5.1, Zod 3.25.</td></tr>
+    <tr><td>Database</td><td>Prisma 7.8, <code>@prisma/adapter-mariadb</code>, MySQL/MariaDB.</td></tr>
+    <tr><td>Async/cache</td><td>Redis 5 client, ioredis, Redis Bloom, BullMQ 5.76.</td></tr>
+    <tr><td>Search/vector</td><td><code>@opensearch-project/opensearch</code>, Mixedbread AI, Pinecone.</td></tr>
+    <tr><td>AI</td><td>OpenRouter SDK/provider, Groq, Google GenAI dependency, Leonardo provider.</td></tr>
+    <tr><td>Media/realtime</td><td>Cloudflare R2 qua AWS S3 SDK, Sharp, Mux, Pusher.</td></tr>
+    <tr><td>Operations</td><td>Docker multi-stage, Nginx, API + worker container.</td></tr>
+  </tbody></table>
+
+  <div class="note warn"><strong>Các điểm chưa hoàn thiện cần ghi rõ khi tích hợp:</strong> <code>AuthService.updateProfile()</code> hiện trả cờ giả lập; <code>validateResetPasswordToken()</code> luôn trả valid; <code>PostService.getJudgeStatus()</code> trả pending placeholder; avatar upload chưa có authorization; Swagger vẫn có tag Internal dù router không mount internal module.</div>
+</main>
+</body>
+</html>

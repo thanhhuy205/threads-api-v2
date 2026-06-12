@@ -52,9 +52,9 @@
     <div class="breadcrumb"><a href="../index.html">docs</a> / api / internal</div>
     <div class="eyebrow">Internal · API Reference</div>
     <h1>API — Internal</h1>
-    <p class="lead">Tài liệu các endpoint của module <code>internal</code>. Mỗi endpoint có request format, response format, lỗi có thể xảy ra và ví dụ thực tế.</p>
+    <p class="lead">Tài liệu lưu trữ. <code>/api/v1/internal</code> không được mount trong router hiện tại và không phải endpoint có thể gọi ở snapshot 12/06/2026.</p>
   </header>
-  <main><h2>Tóm tắt endpoint</h2><table><thead><tr><th>Method</th><th>Path</th><th>Mô tả</th><th>Auth</th><th>Rate limit</th></tr></thead><tbody><tr><td><span class="tag clay">POST</span></td><td><code>/api/v1/internal/judge-complete</code></td><td>Nhận body judge complete.</td><td>Bearer</td><td>Global apiLimiter; một số flow có Redis/domain limit riêng.</td></tr></tbody></table>
+  <main><div class="callout-error"><strong>Endpoint đã loại khỏi runtime:</strong> không có route, controller, service hoặc repository <code>internal</code> trong source hiện tại. Không dùng request mẫu bên dưới để tích hợp.</div><h2>Tóm tắt endpoint lịch sử</h2><table><thead><tr><th>Method</th><th>Path</th><th>Trạng thái</th><th>Thay thế hiện tại</th></tr></thead><tbody><tr><td><span class="tag clay">POST</span></td><td><code>/api/v1/internal/judge-complete</code></td><td>Không được mount</td><td>Evaluation BullMQ worker; judge-status phía post vẫn là placeholder.</td></tr></tbody></table>
         <h2>POST /api/v1/internal/judge-complete</h2><span class="tag clay">POST</span> <span class="tag olive">Auth required</span> <span class="tag ">apiLimiter</span>
         <p>Endpoint này dùng để nhận body judge complete. Gọi endpoint này khi client cần thao tác đúng phạm vi module <code>internal</code>.</p>
         <h3>Request</h3><table><thead><tr><th>Header</th><th>Giá trị</th><th>Bắt buộc</th><th>Mô tả</th></tr></thead><tbody><tr><td>Authorization</td><td>Bearer accessToken</td><td>Có</td><td>JWT access token nếu route protected</td></tr><tr><td>x-refresh-token</td><td>raw refresh token</td><td>Không</td><td>Refresh token header theo middleware</td></tr></tbody></table>

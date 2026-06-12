@@ -1,82 +1,358 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Threads API v2 · docs</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Tài liệu kiến trúc, module, API và luồng nghiệp vụ của Threads API v2.">
+  <title>Threads API v2 - Documentation Hub</title>
   <style>
-    :root { --ivory: #FAF9F5; --slate: #141413; --clay: #D97757; --oat: #E3DACC; --olive: #788C5D; --rust: #B04A3F; --gray-150: #F0EEE6; --gray-300: #D1CFC5; --gray-500: #87867F; --gray-700: #3D3D3A; --serif: ui-serif, Georgia, 'Times New Roman', serif; --sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; --mono: ui-monospace, 'SF Mono', Menlo, Monaco, monospace; --radius: 12px; --border: 1.5px solid var(--gray-300); }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: var(--ivory); color: var(--gray-700); font-family: var(--sans); font-size: 15px; line-height: 1.65; padding: 48px 24px 96px; -webkit-font-smoothing: antialiased; }
-    .page { max-width: 1080px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 40px; }
-    .page.single { max-width: 860px; display: block; }
-    @media (max-width: 960px) { .page { grid-template-columns: 1fr; } aside { position: static; } .stat-grid { grid-template-columns: repeat(2,1fr); } }
-    header { grid-column: 1 / -1; margin-bottom: 8px; } aside { position: sticky; top: 24px; align-self: start; }
-    .eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gray-500); margin-bottom: 10px; }
-    h1 { font-family: var(--serif); font-weight: 500; font-size: 32px; line-height: 1.25; color: var(--slate); margin-bottom: 16px; }
-    h2 { font-family: var(--serif); font-weight: 500; font-size: 22px; color: var(--slate); margin: 40px 0 6px; }
-    h3 { font-family: var(--sans); font-weight: 600; font-size: 13px; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.06em; margin: 22px 0 10px; }
-    h4 { font-size: 13px; color: var(--slate); margin: 18px 0 8px; } p { margin-bottom: 12px; } ul { margin: 10px 0 14px 20px; }
-    .lead { max-width: 760px; font-size: 15.5px; color: var(--gray-700); line-height: 1.7; }
-    code { font-family: var(--mono); font-size: 13px; background: var(--gray-150); padding: 1px 5px; border-radius: 3px; }
-    .panel { border: var(--border); border-radius: var(--radius); background: #fff; padding: 18px 20px; margin-bottom: 20px; }
-    .panel h3 { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--gray-500); margin: 0 0 12px; }
-    table { width: 100%; border-collapse: separate; border-spacing: 0; background: #fff; border: var(--border); border-radius: var(--radius); overflow: hidden; margin: 16px 0; font-size: 14px; }
-    thead th { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--gray-500); background: var(--gray-150); padding: 10px 16px; text-align: left; border-bottom: 1px solid var(--gray-300); }
-    tbody td { padding: 12px 16px; border-bottom: 1px solid var(--gray-150); vertical-align: top; } tbody tr:last-child td { border-bottom: none; } tbody tr:hover { background: var(--ivory); }
-    .step { display: grid; grid-template-columns: 44px 1fr; gap: 18px; padding: 20px 0; border-bottom: 1.5px solid var(--gray-150); }
-    .badge { width: 34px; height: 34px; border-radius: 50%; background: var(--oat); border: 1.5px solid var(--gray-300); display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-weight: 600; color: var(--slate); font-size: 14px; }
-    .step.hot .badge { background: rgba(217,119,87,0.14); border-color: var(--clay); color: var(--clay); } .step.warn .badge { background: rgba(176,74,63,0.10); border-color: var(--rust); color: var(--rust); } .step.ok .badge { background: rgba(120,140,93,0.12); border-color: var(--olive); color: var(--olive); }
-    .step-loc { font-family: var(--mono); font-size: 13px; color: var(--slate); margin-bottom: 6px; }
-    details.snippet { margin-top: 8px; } details.snippet summary { list-style: none; cursor: pointer; font-size: 12.5px; color: var(--gray-500); font-family: var(--mono); display: inline-flex; gap: 6px; padding: 4px 0; } details.snippet summary::-webkit-details-marker { display: none; } details.snippet summary::before { content: "▸"; font-size: 10px; } details.snippet[open] summary::before { transform: rotate(90deg); }
-    pre.code { background: var(--slate); color: #E8E6DC; font-family: var(--mono); font-size: 12.5px; line-height: 1.7; border-radius: 8px; padding: 14px 16px; overflow-x: auto; margin-top: 10px; white-space: pre; }
-    pre.code .dim { color: var(--gray-500); } pre.code .kw { color: #C9B98A; } pre.code .str { color: #A8BC8C; } pre.code .num { color: #9AAFC5; }
-    .callout-warn { border: 1.5px solid var(--clay); border-radius: var(--radius); background: rgba(217,119,87,0.06); padding: 18px 20px; margin: 20px 0; } .callout-warn h3 { font-size: 11px; font-weight: 700; color: var(--clay); margin: 0 0 10px; }
-    .callout-warn ul { list-style: none; padding: 0; margin: 0; } .callout-warn li { position: relative; padding-left: 16px; font-size: 13px; margin-bottom: 8px; } .callout-warn li::before { content: ""; position: absolute; left: 0; top: 7px; width: 5px; height: 5px; background: var(--clay); border-radius: 2px; }
-    .callout-note { border: 1.5px solid var(--olive); border-radius: var(--radius); background: rgba(120,140,93,0.07); padding: 14px 18px; margin: 16px 0; font-size: 13.5px; }
-    .callout-error { border: 1.5px solid var(--rust); border-radius: var(--radius); background: rgba(176,74,63,0.07); padding: 14px 18px; margin: 16px 0; font-size: 13.5px; }
-    .diagram-panel { border: var(--border); border-radius: var(--radius); background: #fff; padding: 24px; overflow-x: auto; margin: 16px 0; } .diagram-caption { font-size: 12.5px; color: var(--gray-500); margin-top: 12px; font-style: italic; }
-    .flow { display: block; width: 100%; height: auto; min-width: 560px; } .flow text { font-family: var(--mono); font-size: 12px; fill: var(--slate); } .flow .sub, .flow .lbl { font-size: 10px; fill: var(--gray-500); }
-    .flow .box { fill: #fff; stroke: var(--gray-300); stroke-width: 1.5; } .flow .box.hot { fill: rgba(217,119,87,0.10); stroke: var(--clay); } .flow .box.ok { fill: rgba(120,140,93,0.12); stroke: var(--olive); } .flow .box.bad { fill: rgba(176,74,63,0.10); stroke: var(--rust); } .flow .box.gray { fill: var(--gray-150); stroke: var(--gray-300); }
-    .flow .arrow { stroke: var(--gray-500); stroke-width: 1.5; fill: none; } .flow .arrow.yes { stroke: var(--olive); } .flow .arrow.no { stroke: var(--rust); stroke-dasharray: 5 4; } .flow .arrow.hot { stroke: var(--clay); stroke-width: 2; }
-    .tag { display: inline-block; font-family: var(--mono); font-size: 11px; background: var(--gray-150); color: var(--gray-700); border: 1px solid var(--gray-300); border-radius: 4px; padding: 2px 8px; margin: 2px; } .tag.clay { background: rgba(217,119,87,0.12); border-color: var(--clay); color: var(--clay); } .tag.olive { background: rgba(120,140,93,0.12); border-color: var(--olive); color: var(--olive); } .tag.rust { background: rgba(176,74,63,0.10); border-color: var(--rust); color: var(--rust); }
-    .breadcrumb { font-family: var(--mono); font-size: 12px; color: var(--gray-500); margin-bottom: 20px; } .breadcrumb a { color: var(--clay); text-decoration: none; } .breadcrumb a:hover { text-decoration: underline; }
-    .key-files { list-style: none; padding: 0; margin: 0; } .key-files li { margin-bottom: 14px; } .key-files .path { font-family: var(--mono); font-size: 12px; color: var(--slate); display: block; margin-bottom: 3px; word-break: break-all; } .key-files .desc { font-size: 12.5px; color: var(--gray-500); line-height: 1.5; }
-    .stat-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin: 26px 0 8px; } .stat-card { background: #fff; border: var(--border); border-radius: var(--radius); padding: 20px 22px; } .stat-card.warn { border-left: 4px solid var(--clay); padding-left: 19px; } .stat-num { font-family: var(--serif); font-size: 40px; font-weight: 500; line-height: 1; color: var(--slate); margin-bottom: 8px; } .stat-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--gray-500); }
-    footer { max-width: 1080px; margin: 64px auto 0; padding-top: 20px; border-top: 1px solid var(--gray-300); font-family: var(--mono); font-size: 12px; color: var(--gray-500); }
-    </style>
+    :root {
+      --ivory:#faf9f5; --paper:#fff; --slate:#141413; --clay:#d97757;
+      --oat:#e3dacc; --olive:#788c5d; --rust:#b04a3f;
+      --g100:#f0eee6; --g200:#e6e3da; --g300:#d1cfc5;
+      --g500:#87867f; --g700:#3d3d3a;
+      --serif:ui-serif,Georgia,"Times New Roman",serif;
+      --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      --mono:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+    }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body {
+      margin:0; background:var(--ivory); color:var(--slate);
+      font-family:var(--sans); line-height:1.55; -webkit-font-smoothing:antialiased;
+    }
+    a { color:inherit; }
+    .wrap { max-width:1180px; margin:0 auto; padding:0 30px 120px; }
+    .masthead {
+      padding:72px 0 50px; border-bottom:1.5px solid var(--g300);
+      display:grid; grid-template-columns:minmax(0,1fr) 390px; gap:52px; align-items:end;
+    }
+    .eyebrow {
+      display:flex; align-items:center; gap:11px; margin-bottom:18px;
+      color:var(--g500); font:12px var(--mono); letter-spacing:.11em; text-transform:uppercase;
+    }
+    .eyebrow::before { content:""; width:25px; height:2px; background:var(--clay); }
+    h1 {
+      margin:0; max-width:16ch; font:500 clamp(42px,6vw,68px)/1.04 var(--serif);
+      letter-spacing:-.025em;
+    }
+    h1 em { color:var(--clay); font-weight:500; }
+    .intro { max-width:700px; margin:22px 0 0; color:var(--g700); font-size:16px; }
+    .snapshot {
+      background:var(--paper); border:1.5px solid var(--slate); border-radius:16px;
+      padding:18px; box-shadow:0 14px 34px rgba(20,20,19,.09);
+      transform:rotate(1deg);
+    }
+    .snapshot-head {
+      display:flex; justify-content:space-between; margin-bottom:15px;
+      font:10px var(--mono); letter-spacing:.08em; text-transform:uppercase; color:var(--g500);
+    }
+    .snapshot-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+    .metric { min-height:92px; padding:14px; border-radius:10px; background:var(--g100); }
+    .metric.accent { background:rgba(217,119,87,.12); }
+    .metric strong { display:block; font:500 34px/1 var(--serif); margin-bottom:9px; }
+    .metric span { color:var(--g500); font:10px var(--mono); text-transform:uppercase; }
+    .toolbar {
+      position:sticky; top:0; z-index:10; display:flex; gap:12px; align-items:center;
+      margin:0 -12px; padding:16px 12px; background:rgba(250,249,245,.94);
+      backdrop-filter:blur(12px); border-bottom:1px solid var(--g200);
+    }
+    .search {
+      flex:1; min-width:180px; border:1.5px solid var(--g300); border-radius:999px;
+      padding:10px 16px; background:var(--paper); color:var(--slate); font:14px var(--sans);
+    }
+    .search:focus { outline:none; border-color:var(--clay); box-shadow:0 0 0 3px rgba(217,119,87,.12); }
+    .filters { display:flex; gap:7px; flex-wrap:wrap; }
+    .filter {
+      border:1.5px solid var(--g300); border-radius:999px; background:var(--paper);
+      padding:8px 12px; cursor:pointer; color:var(--g700); font:11px var(--mono);
+    }
+    .filter.active { border-color:var(--slate); background:var(--slate); color:var(--paper); }
+    section { margin-top:70px; scroll-margin-top:90px; }
+    .sec-head { display:flex; gap:15px; align-items:baseline; margin-bottom:8px; }
+    .sec-head .idx { width:34px; color:var(--clay); font:600 12px var(--mono); }
+    .sec-head h2 { margin:0; font:500 29px var(--serif); letter-spacing:-.012em; }
+    .sec-head .count {
+      border-radius:999px; background:var(--g100); padding:3px 9px;
+      color:var(--g500); font:10px var(--mono);
+    }
+    .sec-intro { max-width:760px; margin:0 0 24px 49px; color:var(--g700); font-size:14px; }
+    .grid {
+      display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+      gap:18px; margin-left:49px;
+    }
+    .card {
+      display:flex; flex-direction:column; min-height:188px; padding:20px;
+      background:var(--paper); border:1.5px solid var(--g300); border-radius:14px;
+      text-decoration:none; transition:transform .15s,box-shadow .15s,border-color .15s;
+    }
+    .card:hover { transform:translateY(-3px); border-color:var(--slate); box-shadow:0 11px 28px rgba(20,20,19,.09); }
+    .card-top { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; }
+    .kind { color:var(--g500); font:10px var(--mono); letter-spacing:.08em; text-transform:uppercase; }
+    .status { border-radius:999px; padding:3px 8px; font:9px var(--mono); text-transform:uppercase; }
+    .status.live { color:#476035; background:rgba(120,140,93,.15); }
+    .status.partial { color:#8b442d; background:rgba(217,119,87,.14); }
+    .status.reference { color:var(--g700); background:var(--g100); }
+    .card h3 { margin:0 0 8px; font:600 17px var(--sans); letter-spacing:-.01em; }
+    .card p { margin:0; color:var(--g700); font-size:13px; }
+    .card-foot {
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      margin-top:auto; padding-top:20px; color:var(--g500); font:10px var(--mono);
+    }
+    .arrow { color:var(--clay); font-size:17px; }
+    .wide {
+      display:grid; grid-template-columns:1.25fr .75fr; gap:24px; margin-left:49px;
+      border:1.5px solid var(--g300); border-radius:16px; background:var(--paper); padding:26px;
+    }
+    .wide h3 { margin:0 0 10px; font:500 23px var(--serif); }
+    .wide p { margin:0 0 16px; color:var(--g700); font-size:14px; }
+    .stack { display:flex; flex-wrap:wrap; gap:7px; }
+    .tag { padding:5px 8px; border:1px solid var(--g300); border-radius:6px; background:var(--g100); font:10px var(--mono); }
+    .flow-list { margin:0; padding:0; list-style:none; counter-reset:flow; }
+    .flow-list li { position:relative; padding:0 0 15px 34px; color:var(--g700); font-size:13px; }
+    .flow-list li::before {
+      counter-increment:flow; content:counter(flow); position:absolute; left:0; top:0;
+      width:22px; height:22px; display:grid; place-items:center; border-radius:50%;
+      background:var(--oat); color:var(--slate); font:10px var(--mono);
+    }
+    .flow-list li:not(:last-child)::after { content:""; position:absolute; left:10px; top:23px; width:1px; height:14px; background:var(--g300); }
+    .no-results { display:none; margin:40px 0 0 49px; color:var(--g500); font:13px var(--mono); }
+    footer { margin-top:80px; padding-top:20px; border-top:1.5px solid var(--g300); color:var(--g500); font:11px var(--mono); }
+    @media(max-width:900px) {
+      .masthead { grid-template-columns:1fr; }
+      .snapshot { max-width:520px; transform:none; }
+      .toolbar { align-items:flex-start; flex-direction:column; }
+      .search { width:100%; }
+      .wide { grid-template-columns:1fr; }
+    }
+    @media(max-width:650px) {
+      .wrap { padding:0 18px 80px; }
+      .masthead { padding-top:46px; }
+      .sec-intro,.grid,.wide,.no-results { margin-left:0; }
+      .grid { grid-template-columns:1fr; }
+      .filters { flex-wrap:nowrap; width:100%; overflow:auto; padding-bottom:3px; }
+    }
+  </style>
 </head>
 <body>
-<div class="page single">
-  <header>
-    <div class="breadcrumb">docs / index</div>
-    <div class="eyebrow">Docs · Project Overview</div>
-    <h1>Threads API v2</h1>
-    <p class="lead">Trang này là cửa vào của toàn bộ tài liệu. Nếu bạn không biết code, hãy bắt đầu ở đây để hiểu ứng dụng làm gì, dữ liệu đi qua đâu, module nào quan trọng và nên đọc gì tiếp theo.</p>
+<div class="wrap">
+  <header class="masthead">
+    <div>
+      <div class="eyebrow">Code-aligned documentation</div>
+      <h1>Threads API v2, từ <em>request</em> đến worker.</h1>
+      <p class="intro">
+        Cửa vào cho kiến trúc, module, API và luồng nghiệp vụ. Nội dung được đối chiếu với
+        router, DTO, service, Prisma schema, Redis/BullMQ worker và provider đang có trong source.
+      </p>
+    </div>
+    <div class="snapshot" aria-label="Project snapshot">
+      <div class="snapshot-head"><span>Snapshot</span><span>2026-06-12</span></div>
+      <div class="snapshot-grid">
+        <div class="metric accent"><strong>126</strong><span>HTTP route declarations</span></div>
+        <div class="metric"><strong>41</strong><span>Prisma models</span></div>
+        <div class="metric"><strong>10</strong><span>Worker implementations</span></div>
+        <div class="metric"><strong>12</strong><span>Queue names</span></div>
+      </div>
+    </div>
   </header>
-  <main><div class="stat-grid"><div class="stat-card"><div class="stat-num">18</div><div class="stat-label">modules</div></div><div class="stat-card"><div class="stat-num">99</div><div class="stat-label">endpoints documented</div></div><div class="stat-card"><div class="stat-num">38</div><div class="stat-label">Prisma models</div></div><div class="stat-card warn"><div class="stat-num">10</div><div class="stat-label">worker queues</div></div></div>
-    <h2>Dự án này làm gì?</h2><p>Threads API v2 là backend cho một mạng xã hội kiểu Threads: người dùng đăng ký, đăng nhập, đăng bài, reply, quote, follow, gửi friend request, chat realtime và nhận notification.</p><p>Điểm riêng của hệ thống là <code>circle</code>: một cộng đồng nhỏ có thành viên, quyền quản trị, bài viết riêng và cơ chế HP/EXP. Khi thành viên đăng bài trong circle, hệ thống lưu bài và worker chấm chất lượng bằng AI.</p><p>Những tác vụ nặng như gửi email, index search, tạo embedding, sync like và gom notification được đưa ra worker để request chính trả nhanh hơn.</p>
-    <h2>Tech Stack</h2><table><thead><tr><th>Thành phần</th><th>Công nghệ</th><th>Phiên bản</th><th>Vai trò trong hệ thống</th></tr></thead><tbody><tr><td>Backend</td><td>Node.js + TypeScript + Express</td><td>Node 20, Express 5.1.0</td><td>HTTP API under /api/v1</td></tr><tr><td>Database</td><td>MySQL/MariaDB + Prisma</td><td>Prisma 7.0.0</td><td>Lưu user, post, circle, notification, quest, report</td></tr><tr><td>Queue/cache</td><td>Redis + BullMQ</td><td>BullMQ 5.76.4</td><td>Queue transport, cache, Bloom filter, debounce, blacklist</td></tr><tr><td>Search</td><td>Elasticsearch + Pinecone</td><td>Elastic 7 client, Pinecone 7</td><td>Full-text search và semantic vector search</td></tr><tr><td>AI</td><td>OpenRouter + Mixedbread</td><td>Theo package.json</td><td>Chấm post/report và tạo embedding</td></tr><tr><td>Storage/video</td><td>Cloudflare R2 + Mux</td><td>AWS S3 SDK, Mux 14</td><td>Upload ảnh và direct video upload</td></tr><tr><td>Realtime/email</td><td>Pusher + Nodemailer</td><td>Pusher 5, Nodemailer 8</td><td>Push realtime và email async</td></tr><tr><td>Infra</td><td>Docker, Nginx, GitHub Actions</td><td>Node alpine, nginx alpine</td><td>Build/deploy container và reverse proxy</td></tr></tbody></table>
-    <h2>Sơ đồ tổng thể hệ thống</h2><p>Request đi từ client vào Express API. API đọc/ghi MySQL qua Prisma, dùng Redis cho cache/queue, và đẩy tác vụ nặng sang worker. Worker mới gọi AI, search, email, storage hoặc realtime provider.</p><div class="diagram-panel"><svg class="flow" viewBox="0 0 980 420" role="img"><defs>
-      <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#87867F"/></marker>
-      <marker id="arr-olive" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#788C5D"/></marker>
-      <marker id="arr-rust" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#B04A3F"/></marker>
-    </defs><rect class="box " x="40" y="50" width="140" height="54" rx="8"/><text x="110.0" y="72" text-anchor="middle">Client</text><text class="sub" x="110.0" y="88" text-anchor="middle">Web/mobile</text><rect class="box hot" x="250" y="50" width="150" height="54" rx="8"/><text x="325.0" y="72" text-anchor="middle">Express API</text><text class="sub" x="325.0" y="88" text-anchor="middle">/api/v1</text><rect class="box " x="500" y="30" width="150" height="54" rx="8"/><text x="575.0" y="52" text-anchor="middle">MySQL</text><text class="sub" x="575.0" y="68" text-anchor="middle">Prisma</text><rect class="box " x="500" y="120" width="150" height="54" rx="8"/><text x="575.0" y="142" text-anchor="middle">Redis</text><text class="sub" x="575.0" y="158" text-anchor="middle">Cache/Queue</text><rect class="box " x="740" y="30" width="170" height="54" rx="8"/><text x="825.0" y="52" text-anchor="middle">External APIs</text><text class="sub" x="825.0" y="68" text-anchor="middle">R2 Mux AI</text><rect class="box ok" x="250" y="220" width="150" height="54" rx="8"/><text x="325.0" y="242" text-anchor="middle">BullMQ Workers</text><text class="sub" x="325.0" y="258" text-anchor="middle">workers/*.ts</text><rect class="box " x="500" y="240" width="150" height="54" rx="8"/><text x="575.0" y="262" text-anchor="middle">Search Stores</text><text class="sub" x="575.0" y="278" text-anchor="middle">Elastic/Pinecone</text><line class="arrow hot" x1="180" y1="77" x2="250" y2="77" marker-end="url(#arr)"/><text class="lbl" x="215.0" y="71.0" text-anchor="middle">HTTP</text><line class="arrow" x1="400" y1="77" x2="500" y2="57" marker-end="url(#arr)"/><text class="lbl" x="450.0" y="61.0" text-anchor="middle">Prisma</text><line class="arrow" x1="400" y1="95" x2="500" y2="145" marker-end="url(#arr)"/><text class="lbl" x="450.0" y="114.0" text-anchor="middle">Redis</text><line class="arrow" x1="650" y1="57" x2="740" y2="57" marker-end="url(#arr)"/><text class="lbl" x="695.0" y="51.0" text-anchor="middle">SDK</text><line class="arrow yes" x1="325" y1="104" x2="325" y2="220" marker-end="url(#arr-olive)"/><text class="lbl" x="325.0" y="156.0" text-anchor="middle">enqueue</text><line class="arrow" x1="400" y1="247" x2="500" y2="267" marker-end="url(#arr)"/><text class="lbl" x="450.0" y="251.0" text-anchor="middle">index</text></svg><div class="diagram-caption">Màu cam là API server, màu xanh là worker xử lý phần nặng sau response.</div></div>
-    <h2>Danh sách Module</h2><table><thead><tr><th>Module</th><th>Mô tả ngắn</th><th>File chính</th><th>Xem tài liệu</th></tr></thead><tbody><tr><td><a href="modules/circle/overview.html">circle</a></td><td>Module này cho phép người dùng tạo cộng đồng nhỏ gọi là circle, mời thành viên, xử lý yêu cầu tham gia, đăng bài trong nhóm và dùng cơ chế HP/EXP để phản ánh chất lượng đóng góp.</td><td>src/modules/circle/circle.routes.ts</td><td><a href="modules/circle/overview.html">overview</a> · <a href="api/circle.html">api</a></td></tr><tr><td><a href="modules/post/overview.html">post</a></td><td>Module này xử lý vòng đời bài viết: tạo post, reply, quote, repost, like, hide, report, update, delete, feed và semantic search.</td><td>src/modules/post/post.routes.ts</td><td><a href="modules/post/overview.html">overview</a> · <a href="api/post.html">api</a></td></tr><tr><td><a href="modules/auth/overview.html">auth</a></td><td>Module này cho phép user đăng ký, đăng nhập, làm mới token, logout, xác thực email và reset password.</td><td>src/modules/auth/auth.routes.ts</td><td><a href="modules/auth/overview.html">overview</a> · <a href="api/auth.html">api</a></td></tr><tr><td><a href="modules/jobs/overview.html">jobs</a></td><td>Module jobs gom toàn bộ pipeline bất đồng bộ: email, Bloom filter, vector search, full-text search, like sync, notification debounce, AI evaluation, giảm HP circle và tự gỡ ban.</td><td>workers/index.ts</td><td><a href="modules/jobs/overview.html">overview</a></td></tr><tr><td><a href="modules/notification-group/overview.html">notification-group</a></td><td>Module này gom các sự kiện reply, mention và message thành notification dễ đọc thay vì bắn từng event rời rạc.</td><td>src/modules/notification-group/notification.route.ts</td><td><a href="modules/notification-group/overview.html">overview</a> · <a href="api/notification-group.html">api</a></td></tr><tr><td><a href="modules/message-group/overview.html">message-group</a></td><td>Module này tạo phòng chat private hoặc crowd, gửi message, đọc message, đánh dấu đã đọc và gửi realtime event qua Pusher.</td><td>src/modules/message-group/routes/message-group.routes.ts</td><td><a href="modules/message-group/overview.html">overview</a> · <a href="api/message-group.html">api</a></td></tr><tr><td><a href="modules/admin/overview.html">admin</a></td><td>Module này dành cho admin: đăng nhập, xem user, ban user, duyệt report, xem hashtag/stats và quản lý daily quest.</td><td>src/modules/admin/admin-auth.routes.ts</td><td><a href="modules/admin/overview.html">overview</a> · <a href="api/admin.html">api</a></td></tr><tr><td><a href="modules/user/overview.html">user</a></td><td>Module này đọc profile công khai, follow/unfollow, gửi/accept/cancel friend request, lấy follower/following, karma và badge.</td><td>src/modules/user/user.routes.ts</td><td><a href="modules/user/overview.html">overview</a> · <a href="api/user.html">api</a></td></tr><tr><td><a href="modules/quest/overview.html">quest</a></td><td>Module này giao tối đa 3 daily quests mỗi chu kỳ ngày UTC+7, tính progress từ UserActionLog, và cho claim karma khi hoàn thành.</td><td>src/modules/quest/quest.routes.ts</td><td><a href="modules/quest/overview.html">overview</a> · <a href="api/quest.html">api</a></td></tr><tr><td><a href="modules/search/overview.html">search</a></td><td>Module này tìm post, username và topic trong index Elasticsearch search, sau đó hydrate record thật từ MySQL/Prisma.</td><td>src/modules/search/search.routes.ts</td><td><a href="modules/search/overview.html">overview</a> · <a href="api/search.html">api</a></td></tr><tr><td><a href="modules/upload/overview.html">upload</a></td><td>Module này nhận file ảnh avatar/media, resize bằng middleware rồi upload lên Cloudflare R2; video dùng Mux direct upload URL.</td><td>src/modules/upload/upload.routes.ts</td><td><a href="modules/upload/overview.html">overview</a> · <a href="api/upload.html">api</a></td></tr><tr><td><a href="modules/webhooks/overview.html">webhooks</a></td><td>Module này nhận webhook từ Mux, verify chữ ký HMAC SHA-256 bằng raw body, rồi cập nhật trạng thái media.</td><td>src/modules/webhooks/router.ts</td><td><a href="modules/webhooks/overview.html">overview</a> · <a href="api/webhooks.html">api</a></td></tr><tr><td><a href="modules/ai/overview.html">ai</a></td><td>Module này có API AI assistance và service nội bộ để chấm điểm post circle, đánh giá report bằng OpenRouter JSON schema.</td><td>src/modules/ai/ai.routes.ts</td><td><a href="modules/ai/overview.html">overview</a> · <a href="api/ai.html">api</a></td></tr><tr><td><a href="modules/topic/overview.html">topic</a></td><td>Module này tạo topic và tìm topic theo query để gắn vào post hoặc search.</td><td>src/modules/topic/topic.route.ts</td><td><a href="modules/topic/overview.html">overview</a> · <a href="api/topic.html">api</a></td></tr><tr><td><a href="modules/pusher/overview.html">pusher</a></td><td>Module này ký authorization cho private/presence channel Pusher sau khi user đã qua JWT middleware.</td><td>src/modules/pusher/routes/pusher.routes.ts</td><td><a href="modules/pusher/overview.html">overview</a> · <a href="api/pusher.html">api</a></td></tr><tr><td><a href="modules/museum/overview.html">museum</a></td><td>Module này trả danh sách và chi tiết museum/archive cho user đã đăng nhập.</td><td>src/modules/museum/museum.routes.ts</td><td><a href="modules/museum/overview.html">overview</a> · <a href="api/museum.html">api</a></td></tr><tr><td><a href="modules/internal/overview.html">internal</a></td><td>Module này chứa endpoint nội bộ judge-complete, hiện vẫn đi qua JWT authorization như route user-facing.</td><td>src/modules/internal/internal.routes.ts</td><td><a href="modules/internal/overview.html">overview</a> · <a href="api/internal.html">api</a></td></tr><tr><td><a href="modules/health/overview.html">health</a></td><td>Module này trả health check đơn giản để biết API process còn chạy.</td><td>src/modules/health/health.routes.ts</td><td><a href="modules/health/overview.html">overview</a> · <a href="api/health.html">api</a></td></tr></tbody></table>
-    <h2>Luồng chính của hệ thống</h2><div class="step "><div class="badge">1</div><div class="step-body"><p>User đăng ký hoặc login để nhận access token và refresh token.</p></div></div><div class="step "><div class="badge">2</div><div class="step-body"><p>User tạo post hoặc circle post; server validate payload rồi ghi DB.</p></div></div><div class="step hot"><div class="badge">3</div><div class="step-body"><p>Side effects như email, Bloom, Elastic, Pinecone, like sync, notification được worker xử lý.</p></div></div><div class="step "><div class="badge">4</div><div class="step-body"><p>Client đọc feed/search/notification/chat qua API và realtime Pusher.</p></div></div>
-    <h2>Glossary nhanh</h2><table><thead><tr><th>Thuật ngữ</th><th>Ý nghĩa trong dự án này</th></tr></thead><tbody><tr><td>API</td><td>Cổng giao tiếp giữa frontend và backend. Frontend gọi URL, backend trả JSON.</td></tr><tr><td>JWT</td><td>Token ký số để server biết request đến từ user nào.</td></tr><tr><td>Refresh token</td><td>Token dài hạn hơn access token, dùng để xin token pair mới.</td></tr><tr><td>Middleware</td><td>Lớp đứng trước controller để kiểm tra token, rate limit, parse body hoặc validate.</td></tr><tr><td>Prisma</td><td>ORM giúp TypeScript gọi database bằng API thay vì viết SQL trực tiếp.</td></tr><tr><td>Redis</td><td>Kho dữ liệu nhanh dùng cho cache, queue, blacklist, Bloom filter và debounce.</td></tr><tr><td>BullMQ</td><td>Thư viện queue chạy job nền trên Redis.</td></tr><tr><td>Worker</td><td>Process riêng lấy job từ queue để xử lý tác vụ chậm.</td></tr><tr><td>Bloom filter</td><td>Cấu trúc dữ liệu kiểm tra nhanh có thể tồn tại.</td></tr><tr><td>Pinecone</td><td>Vector database để tìm bài gần nghĩa.</td></tr><tr><td>Elasticsearch</td><td>Search engine cho text search.</td></tr><tr><td>Pusher</td><td>Realtime service gửi event về client.</td></tr><tr><td>Cloudflare R2</td><td>Object storage S3-compatible để lưu ảnh.</td></tr><tr><td>Mux</td><td>Video service tạo direct upload và gửi webhook status.</td></tr><tr><td>Circle</td><td>Cộng đồng nhỏ có member, role, HP/EXP và bài viết riêng.</td></tr></tbody></table>
-    </main>
-  
+
+  <div class="toolbar">
+    <input id="search" class="search" type="search" placeholder="Tìm module, API, flow hoặc công nghệ..." aria-label="Tìm tài liệu">
+    <div class="filters" aria-label="Lọc tài liệu">
+      <button class="filter active" data-filter="all">Tất cả</button>
+      <button class="filter" data-filter="architecture">Kiến trúc</button>
+      <button class="filter" data-filter="module">Module</button>
+      <button class="filter" data-filter="api">API</button>
+      <button class="filter" data-filter="flow">Flow</button>
+    </div>
+  </div>
+
+  <main>
+    <section id="start">
+      <div class="sec-head"><span class="idx">00</span><h2>Bắt đầu từ đây</h2><span class="count">5 tài liệu</span></div>
+      <p class="sec-intro">Đọc theo thứ tự này nếu cần nắm hệ thống trước khi đi vào một endpoint cụ thể.</p>
+      <div class="grid">
+        <a class="card searchable" data-type="architecture" href="architecture/overview.html">
+          <div class="card-top"><span class="kind">Architecture</span><span class="status live">Current</span></div>
+          <h3>Kiến trúc tổng thể</h3>
+          <p>Express modular monolith, middleware stack, Prisma, Redis, worker và external provider.</p>
+          <div class="card-foot"><span>src/app.ts · src/routes/index.ts</span><span class="arrow">→</span></div>
+        </a>
+        <a class="card searchable" data-type="architecture" href="current-system-reference.html">
+          <div class="card-top"><span class="kind">Source of truth</span><span class="status live">New</span></div>
+          <h3>System reference hiện tại</h3>
+          <p>Route prefix, module công khai/nội bộ, queue, provider, response envelope và các stub đã biết.</p>
+          <div class="card-foot"><span>Code snapshot 2026-06-12</span><span class="arrow">→</span></div>
+        </a>
+        <a class="card searchable" data-type="architecture" href="database-design.html">
+          <div class="card-top"><span class="kind">Data</span><span class="status live">41 models</span></div>
+          <h3>Database design</h3>
+          <p>User, post, social graph, circle, quest, message, report, notification và restriction.</p>
+          <div class="card-foot"><span>prisma/schema.prisma</span><span class="arrow">→</span></div>
+        </a>
+        <a class="card searchable" data-type="architecture" href="architecture/background-jobs.html">
+          <div class="card-top"><span class="kind">Async</span><span class="status live">10 workers</span></div>
+          <h3>Background jobs</h3>
+          <p>Producer, Redis queue, repeat job, debounce notification, AI evaluation và search indexing.</p>
+          <div class="card-foot"><span>workers/ · queues/</span><span class="arrow">→</span></div>
+        </a>
+        <a class="card searchable" data-type="module" href="modules/supporting-modules.html">
+          <div class="card-top"><span class="kind">Internal modules</span><span class="status live">Code map</span></div>
+          <h3>Supporting modules</h3>
+          <p>Access control, JWT, anti-spam, restriction, action log, report, search/vector adapters và job producers.</p>
+          <div class="card-foot"><span>Không mount route riêng</span><span class="arrow">→</span></div>
+        </a>
+      </div>
+    </section>
+
+    <section id="architecture">
+      <div class="sec-head"><span class="idx">01</span><h2>Kiến trúc và vận hành</h2><span class="count">6 tài liệu</span></div>
+      <p class="sec-intro">Các tài liệu mô tả boundary hệ thống và những dependency cần có khi chạy local hoặc production.</p>
+      <div class="grid">
+        <a class="card searchable" data-type="architecture" href="architecture/auth-flow.html">
+          <div class="card-top"><span class="kind">Security</span><span class="status live">JWT + Redis</span></div>
+          <h3>Auth flow</h3><p>Access token, refresh token hash, blacklist, user status và role.</p>
+          <div class="card-foot"><span>auth · jwt · access-control</span><span class="arrow">→</span></div>
+        </a>
+        <a class="card searchable" data-type="architecture" href="architecture/data-model.html">
+          <div class="card-top"><span class="kind">Data</span><span class="status live">Prisma 7.8</span></div>
+          <h3>Data model</h3><p>Quan hệ chính và ownership giữa các domain trong MySQL.</p>
+          <div class="card-foot"><span>Prisma + MariaDB adapter</span><span class="arrow">→</span></div>
+        </a>
+        <a class="card searchable" data-type="architecture" href="architecture/deployment.html">
+          <div class="card-top"><span class="kind">Operations</span><span class="status live">Docker</span></div>
+          <h3>Deployment</h3><p>API container, worker container, Redis, Nginx và provider compose.</p>
+          <div class="card-foot"><span>Dockerfile · compose</span><span class="arrow">→</span></div>
+        </a>
+        <a class="card searchable" data-type="architecture" href="13-route-flowchart.html">
+          <div class="card-top"><span class="kind">Request lifecycle</span><span class="status reference">Diagram</span></div>
+          <h3>Route flowchart</h3><p>Request đi qua rate limit, auth, validation, controller và error handler.</p>
+          <div class="card-foot"><span>Express pipeline</span><span class="arrow">→</span></div>
+        </a>
+        <a class="card searchable" data-type="architecture" href="glossary.html">
+          <div class="card-top"><span class="kind">Reference</span><span class="status reference">Glossary</span></div>
+          <h3>Thuật ngữ dự án</h3><p>Circle HP/EXP, CPR, notification grouping, queue và pagination.</p>
+          <div class="card-foot"><span>Business + technical terms</span><span class="arrow">→</span></div>
+        </a>
+        <a class="card searchable" data-type="architecture" href="16-implementation-plan.html">
+          <div class="card-top"><span class="kind">Planning</span><span class="status reference">Historical</span></div>
+          <h3>Implementation plan</h3><p>Kế hoạch triển khai cũ để tham khảo; code hiện tại vẫn là nguồn sự thật.</p>
+          <div class="card-foot"><span>Plan archive</span><span class="arrow">→</span></div>
+        </a>
+      </div>
+    </section>
+
+    <section id="modules">
+      <div class="sec-head"><span class="idx">02</span><h2>Domain modules</h2><span class="count">17 bộ docs</span></div>
+      <p class="sec-intro">Mỗi module có overview, business logic, activity/sequence diagram và API reference tương ứng khi có HTTP route.</p>
+      <div class="grid">
+        <a class="card searchable" data-type="module" href="modules/auth/overview.html"><div class="card-top"><span class="kind">Identity</span><span class="status live">13 routes</span></div><h3>Auth</h3><p>Register, login, token rotation, logout, verify email và reset password.</p><div class="card-foot"><span>/auth</span><span class="arrow">→</span></div></a>
+        <a class="card searchable" data-type="module" href="modules/user/overview.html"><div class="card-top"><span class="kind">Social graph</span><span class="status live">14 routes</span></div><h3>User</h3><p>Profile, follow, friend request, follower lists, karma và badge.</p><div class="card-foot"><span>/users · /user · /me</span><span class="arrow">→</span></div></a>
+        <a class="card searchable" data-type="module" href="modules/post/overview.html"><div class="card-top"><span class="kind">Content</span><span class="status live">22 routes</span></div><h3>Post</h3><p>Post, reply, quote, repost, feed, like, save, hide, report và semantic similarity.</p><div class="card-foot"><span>/posts</span><span class="arrow">→</span></div></a>
+        <a class="card searchable" data-type="module" href="modules/circle/overview.html"><div class="card-top"><span class="kind">Community</span><span class="status live">36 routes</span></div><h3>Circle + Circle AI</h3><p>Membership, invitation, moderation, HP/EXP, CPR, karma sacrifice và circle post.</p><div class="card-foot"><span>/circle · /circle-ai</span><span class="arrow">→</span></div></a>
+        <a class="card searchable" data-type="module" href="modules/admin/overview.html"><div class="card-top"><span class="kind">Back office</span><span class="status live">14 routes</span></div><h3>Admin</h3><p>Role-guarded user moderation, reports, statistics, trending hashtag và daily quest.</p><div class="card-foot"><span>/admin</span><span class="arrow">→</span></div></a>
+        <a class="card searchable" data-type="module" href="modules/message-group/overview.html"><div class="card-top"><span class="kind">Realtime</span><span class="status live">6 routes</span></div><h3>Message Group</h3><p>Private/crowd groups, messages, status, members và Pusher event.</p><div class="card-foot"><span>/message-groups</span><span class="arrow">→</span></div></a>
+        <a class="card searchable" data-type="module" href="modules/notification-group/overview.html"><div class="card-top"><span class="kind">Realtime</span><span class="status live">5 routes</span></div><h3>Notification</h3><p>Grouped reply/mention/like, unread state, message và friend-request counters.</p><div class="card-foot"><span>/notification</span><span class="arrow">→</span></div></a>
+        <a class="card searchable" data-type="module" href="modules/search/overview.html"><div class="card-top"><span class="kind">Discovery</span><span class="status live">3 routes</span></div><h3>Search</h3><p>OpenSearch-compatible full-text index cho post, username và topic.</p><div class="card-foot"><span>/search</span><span class="arrow">→</span></div></a>
+        <a class="card searchable" data-type="module" href="modules/upload/overview.html"><div class="card-top"><span class="kind">Media</span><span class="status live">2 routes</span></div><h3>Upload</h3><p>Sharp + memory upload, Cloudflare R2 và media record.</p><div class="card-foot"><span>/upload</span><span class="arrow">→</span></div></a>
+        <a class="card searchable" data-type="module" href="modules/webhooks/overview.html"><div class="card-top"><span class="kind">Integration</span><span class="status live">Webhook</span></div><h3>Webhooks</h3><p>Mux raw-body signature và Leonardo image callback.</p><div class="card-foot"><span>/webhooks</span><span class="arrow">→</span></div></a>
+        <a class="card searchable" data-type="module" href="modules/ai/overview.html"><div class="card-top"><span class="kind">AI</span><span class="status partial">Mixed providers</span></div><h3>AI</h3><p>Groq markdown, Leonardo generation và OpenRouter scoring/evaluation.</p><div class="card-foot"><span>/ai + internal services</span><span class="arrow">→</span></div></a>
+        <a class="card searchable" data-type="module" href="modules/quest/overview.html"><div class="card-top"><span class="kind">Gamification</span><span class="status live">2 routes</span></div><h3>Quest</h3><p>Daily quest assignment, action-log progress và karma claim.</p><div class="card-foot"><span>/quests</span><span class="arrow">→</span></div></a>
+        <a class="card searchable" data-type="module" href="modules/topic/overview.html"><div class="card-top"><span class="kind">Taxonomy</span><span class="status live">2 active routes</span></div><h3>Topic</h3><p>Create và search topic; một route list cũ đang comment trong code.</p><div class="card-foot"><span>/topic</span><span class="arrow">→</span></div></a>
+        <a class="card searchable" data-type="module" href="modules/pusher/overview.html"><div class="card-top"><span class="kind">Realtime</span><span class="status live">1 route</span></div><h3>Pusher</h3><p>Authorize private/presence channel bằng JWT identity.</p><div class="card-foot"><span>/pusher</span><span class="arrow">→</span></div></a>
+        <a class="card searchable" data-type="module" href="modules/museum/overview.html"><div class="card-top"><span class="kind">Archive</span><span class="status live">2 routes</span></div><h3>Museum</h3><p>Danh sách và chi tiết archive cho user đã xác thực.</p><div class="card-foot"><span>/museum</span><span class="arrow">→</span></div></a>
+        <a class="card searchable" data-type="module" href="modules/health/overview.html"><div class="card-top"><span class="kind">Operations</span><span class="status live">1 route</span></div><h3>Health</h3><p>Liveness endpoint cho API process.</p><div class="card-foot"><span>/health</span><span class="arrow">→</span></div></a>
+        <a class="card searchable" data-type="module" href="modules/jobs/overview.html"><div class="card-top"><span class="kind">Async</span><span class="status live">10 workers</span></div><h3>Jobs</h3><p>Email, Bloom, search, vector, like, notification, evaluation, HP và ban cleanup.</p><div class="card-foot"><span>workers/ · producers/</span><span class="arrow">→</span></div></a>
+      </div>
+    </section>
+
+    <section id="api">
+      <div class="sec-head"><span class="idx">03</span><h2>API reference</h2><span class="count">Swagger + HTML</span></div>
+      <p class="sec-intro">Swagger tại <code>/api/v1/docs</code> là reference có thể gọi thử; các trang HTML bổ sung bối cảnh nghiệp vụ và side effect.</p>
+      <div class="wide searchable" data-type="api">
+        <div>
+          <h3>HTTP groups đang được mount</h3>
+          <p>Base path <code>/api/v1</code>. Mọi group đi qua global rate limiter; auth tùy vị trí middleware trong route file.</p>
+          <div class="stack">
+            <a class="tag" href="api/current-routes.html">current route catalog</a>
+            <a class="tag" href="api/auth.html">auth</a><a class="tag" href="api/user.html">user</a>
+            <a class="tag" href="api/post.html">post</a><a class="tag" href="api/circle.html">circle</a>
+            <a class="tag" href="api/admin.html">admin</a><a class="tag" href="api/message-group.html">message</a>
+            <a class="tag" href="api/notification-group.html">notification</a><a class="tag" href="api/search.html">search</a>
+            <a class="tag" href="api/upload.html">upload</a><a class="tag" href="api/webhooks.html">webhooks</a>
+            <a class="tag" href="api/ai.html">ai</a><a class="tag" href="api/quest.html">quest</a>
+            <a class="tag" href="api/topic.html">topic</a><a class="tag" href="api/pusher.html">pusher</a>
+            <a class="tag" href="api/museum.html">museum</a><a class="tag" href="api/health.html">health</a>
+          </div>
+        </div>
+        <ol class="flow-list">
+          <li>Client gọi <code>/api/v1/*</code>.</li>
+          <li>Helmet, CORS, compression, body parser, logger và response helper chạy.</li>
+          <li>Global rate limiter chạy trước module router.</li>
+          <li>Route-specific auth và Zod validation chạy theo khai báo.</li>
+          <li>Controller trả envelope <code>success/data/pagination</code>.</li>
+        </ol>
+      </div>
+    </section>
+
+    <section id="flows">
+      <div class="sec-head"><span class="idx">04</span><h2>Feature flows</h2><span class="count">Luồng end-to-end</span></div>
+      <p class="sec-intro">Các trang này cắt ngang nhiều module, phù hợp khi cần hiểu một hành vi người dùng từ API tới DB, queue và realtime.</p>
+      <div class="grid">
+        <a class="card searchable" data-type="flow" href="01-dang-bai.html"><div class="card-top"><span class="kind">Content flow</span><span class="status live">Post</span></div><h3>Đăng bài</h3><p>Validate, transaction, topic/mention, search index, vector index và notification.</p><div class="card-foot"><span>POST /posts</span><span class="arrow">→</span></div></a>
+        <a class="card searchable" data-type="flow" href="02-sua-xoa-bai.html"><div class="card-top"><span class="kind">Lifecycle</span><span class="status live">Post</span></div><h3>Sửa và xóa bài</h3><p>Ownership, update constraints, soft delete và cache/index consistency.</p><div class="card-foot"><span>PATCH · DELETE</span><span class="arrow">→</span></div></a>
+        <a class="card searchable" data-type="flow" href="03-like-comment-share.html"><div class="card-top"><span class="kind">Interaction</span><span class="status live">Redis + worker</span></div><h3>Like, reply, quote, repost</h3><p>Interaction state, async like sync và grouped notification.</p><div class="card-foot"><span>Post interactions</span><span class="arrow">→</span></div></a>
+        <a class="card searchable" data-type="flow" href="06-follow-friend-request.html"><div class="card-top"><span class="kind">Social</span><span class="status live">User</span></div><h3>Follow và friend request</h3><p>Public follow, request lifecycle và notification count.</p><div class="card-foot"><span>User graph</span><span class="arrow">→</span></div></a>
+        <a class="card searchable" data-type="flow" href="07-newsfeed.html"><div class="card-top"><span class="kind">Read model</span><span class="status live">Feed</span></div><h3>News feed</h3><p>Visibility, hidden/deleted state, cursor pagination và hydration.</p><div class="card-foot"><span>GET /posts/news-feed</span><span class="arrow">→</span></div></a>
+        <a class="card searchable" data-type="flow" href="08-chat-realtime.html"><div class="card-top"><span class="kind">Realtime</span><span class="status live">Pusher</span></div><h3>Chat realtime</h3><p>Message persistence, membership, event push và unread grouping.</p><div class="card-foot"><span>Message Group</span><span class="arrow">→</span></div></a>
+        <a class="card searchable" data-type="flow" href="09-notification-realtime.html"><div class="card-top"><span class="kind">Realtime</span><span class="status live">Debounce</span></div><h3>Notification grouping</h3><p>Redis hash/set/zset, 3-5 giây debounce, DB group và Pusher.</p><div class="card-foot"><span>Notification worker</span><span class="arrow">→</span></div></a>
+        <a class="card searchable" data-type="flow" href="mux-webhook-flow.html"><div class="card-top"><span class="kind">Webhook</span><span class="status live">Mux</span></div><h3>Mux webhook</h3><p>Raw body, signature verification và PostMedia status transition.</p><div class="card-foot"><span>/webhooks/mux</span><span class="arrow">→</span></div></a>
+        <a class="card searchable" data-type="flow" href="14-circle.html"><div class="card-top"><span class="kind">Community</span><span class="status live">Circle</span></div><h3>Circle lifecycle</h3><p>Invite/join, role permission, post scoring, HP/EXP, CPR và karma.</p><div class="card-foot"><span>Circle domain</span><span class="arrow">→</span></div></a>
+      </div>
+    </section>
+
+    <p id="no-results" class="no-results">Không tìm thấy tài liệu phù hợp.</p>
+  </main>
+
+  <footer>
+    Threads API v2 docs · source snapshot 2026-06-12 · Express 5.1 · TypeScript 5.8 · Prisma 7.8
+  </footer>
 </div>
-<footer>Cập nhật lần cuối: 2026-05-28 · Module: project · <a href="index.html">← Về trang chủ</a></footer>
 <script>
-  var snippets = document.querySelectorAll('details.snippet');
-  snippets.forEach(function(d) {
-    d.addEventListener('toggle', function() {
-      if (!d.open) return;
-      snippets.forEach(function(o) { if (o !== d) o.open = false; });
+  (function () {
+    var query = "";
+    var filter = "all";
+    var cards = Array.prototype.slice.call(document.querySelectorAll(".searchable"));
+    var input = document.getElementById("search");
+    var buttons = Array.prototype.slice.call(document.querySelectorAll(".filter"));
+    var empty = document.getElementById("no-results");
+
+    function apply() {
+      var visible = 0;
+      cards.forEach(function (card) {
+        var matchesText = !query || card.textContent.toLowerCase().indexOf(query) !== -1;
+        var matchesType = filter === "all" || card.getAttribute("data-type") === filter;
+        var show = matchesText && matchesType;
+        card.style.display = show ? "" : "none";
+        if (show) visible += 1;
+      });
+      empty.style.display = visible ? "none" : "block";
+    }
+
+    input.addEventListener("input", function () {
+      query = input.value.trim().toLowerCase();
+      apply();
     });
-  });
+
+    buttons.forEach(function (button) {
+      button.addEventListener("click", function () {
+        buttons.forEach(function (item) { item.classList.remove("active"); });
+        button.classList.add("active");
+        filter = button.getAttribute("data-filter");
+        apply();
+      });
+    });
+  }());
 </script>
 </body>
 </html>
