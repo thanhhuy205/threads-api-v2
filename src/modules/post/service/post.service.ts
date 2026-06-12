@@ -299,6 +299,8 @@ class PostService {
       PostMapper.toFeedResponse(post, userId ?? undefined),
     );
 
+    console.log(data);
+
     const paginationResult = buildCursorPagination({
       rows,
       take: currentLimit,
@@ -401,17 +403,17 @@ class PostService {
         this.paginatePosts({
           after,
           take,
+          userId,
           where: buildUserPostsWhere({
             after,
             userId,
             postType: PostType.POST,
           }),
-          userId,
         }),
     });
   }
 
-  async getPostsByUser({ after, take, userId }: GetPostWithUser) {
+  async getPostsByUser({ after, take, userId, myUserId }: GetPostWithUser) {
     return this.getCachedPostList({
       scope: "post-user",
       after,
@@ -421,6 +423,7 @@ class PostService {
         this.paginatePosts({
           after,
           take,
+          userId: myUserId,
           where: buildUserPostsWhere({
             after,
             userId,
@@ -430,7 +433,7 @@ class PostService {
     });
   }
 
-  async getRepliesByUser({ after, take, userId }: GetPostWithUser) {
+  async getRepliesByUser({ after, take, userId, myUserId }: GetPostWithUser) {
     return this.getCachedPostList({
       scope: "reply-user",
       after,
@@ -440,6 +443,7 @@ class PostService {
         this.paginatePosts({
           after,
           take,
+          userId: myUserId,
           where: buildUserPostsWhere({
             after,
             userId,
@@ -485,7 +489,7 @@ class PostService {
     });
   }
 
-  async getQuote({ after, take, userId }: GetPostWithUser) {
+  async getQuote({ after, take, userId, myUserId }: GetPostWithUser) {
     return this.getCachedPostList({
       scope: "quote-user",
       after,
@@ -495,6 +499,7 @@ class PostService {
         this.paginatePosts({
           after,
           take,
+          userId: myUserId,
           where: buildQuoteWhere({
             after,
             userId,

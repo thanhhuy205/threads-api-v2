@@ -12,6 +12,7 @@ import { CIRCLE_LEVEL_CONFIG, toCircleLevel } from "@/modules/circle/policy/chec
 import { emailProducer } from "@/modules/job/email/producer/email.producer";
 import { notificationService } from "@/modules/notification-group/service/notification.service";
 import { postService } from "@/modules/post/service/post.service";
+import { pusherService } from "@/modules/pusher/service/pusher.service";
 import { userActionLogService } from "@/modules/user-action-log/service/user-action-log.service";
 import { userRestrictionService } from "@/modules/user-restriction/service/user-restriction.service";
 import { userService } from "@/modules/user/service/user.service";
@@ -1555,11 +1556,32 @@ class CircleService {
     }
 
 
-    await circleJoinRequestService.create({
-      circleId: circle.id,
-      userId,
-      reason: "User requested to join the circle",
+    await transactionService.doInTransaction(async (tx) => {
+      await circleJoinRequestService.create({
+        circleId: circle.id,
+        userId,
+        reason: "User requested to join the circle",
+      }, tx);
+      await notificationService.create({
+        recipientId: circle.createdBy.createById,
+        actorId: userId,
+        type: NotificationType.JOIN_REQUEST,
+        targetType: "CIRCLE_JOIN_REQUEST",
+        targetId: circle.publicId,
+        count: 0,
+      }, tx);
     });
+
+
+    await pusherService.trigger(
+      `private-user-${circle.createdBy.createById}`,
+      "new-join-request",
+      {
+        circlePublicId: circle.publicId,
+        circleName: circle.name,
+        requesterId: userId,
+      },
+    );
 
     return { isCancelled: false };
   }

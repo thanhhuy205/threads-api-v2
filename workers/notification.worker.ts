@@ -5,6 +5,7 @@ import type {
   PendingCommentNotificationRedisMeta,
 } from "@/modules/notification-group/interface/notification.types";
 import { notificationRepository } from "@/modules/notification-group/repository/notification.repository";
+import { pusherChannel } from "@/modules/pusher/channel/pusher-channel";
 import { pusher } from "@/providers/pusher.provider";
 import { redisService } from "@/providers/redis.provider";
 import { NotificationType } from "@prisma/client";
@@ -190,7 +191,7 @@ class NotificationWorker {
 
   async sendPushNotification(recipientId: string, payload: PushNotificationPayload) {
     console.log(`Sending push notification to user ${recipientId}: ${JSON.stringify(payload)}`);
-    await pusher.trigger(`private-user-notification-${recipientId}`, "new-notifications", {
+    await pusher.trigger(pusherChannel.privateNotification(recipientId), "new-notifications", {
       recipientId,
       payload,
     });

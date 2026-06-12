@@ -244,18 +244,24 @@ class NotificationService {
     };
 
     baseLogger.info(`Enqueuing like count update notification for recipient ${recipientId} for post ${postPublicId} with like count ${likeCount}`);
+    const actorNotIncludeOwner = actorIds.filter((id) => id !== recipientId);
+    if (actorNotIncludeOwner.length === 0) {
+      baseLogger.info(`No actors to notify for like count update on post ${postPublicId} for recipient ${recipientId}, skipping notification`);
+      return;
+    }
     await Promise.all([
       notificationRepository.create({
         recipientId,
         type: NotificationType.LIKE,
         targetType: "POST",
         targetId: postPublicId,
-        actorIds: itemLike.map((item) => item.userId),
+        actorIds: actorNotIncludeOwner.length > 0 ? actorNotIncludeOwner : [recipientId],
         count: likeCount,
-        lastActorId: itemLike?.[0]?.userId,
+        lastActorId: actorNotIncludeOwner?.[0],
         lastEventAt: new Date(),
       }),
-      pusherService.trigger(`private-user-notification-${recipientId}`, 'like-count-update', notificationData)]);
+      ...(actorNotIncludeOwner.length > 0 ? [pusherService.trigger(`private-user-notification-${recipientId}`, "like-count-update", notificationData)] : []),
+    ]);
   }
 }
 export const notificationService = new NotificationService();

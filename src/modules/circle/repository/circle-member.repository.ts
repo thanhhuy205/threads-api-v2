@@ -191,6 +191,19 @@ class CircleMemberRepository implements ICursorPagination<Prisma.CircleMemberWhe
             },
         });
     }
-}
 
+    findMembersByCircleIdAndRole(circleId: number, role: RoleMembership) {
+        return prisma.circleMember.findMany({
+            where: {
+                circleId,
+                role,
+            },
+            select: {
+                userId: true,
+                role: true,
+            },
+        });
+    }
+
+}
 export const circleMemberRepository = new CircleMemberRepository();

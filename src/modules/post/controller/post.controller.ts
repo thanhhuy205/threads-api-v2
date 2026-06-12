@@ -75,10 +75,12 @@ class PostController {
       return res.error(404, "User not found");
     }
 
+    const myUserId = await jwtService.requestAuthToken(req);
     const { posts, pagination } = await postService.getPostsByUser({
       after: after ?? undefined,
       take,
       userId: user.id,
+      myUserId: myUserId ?? undefined,
     });
 
     return res.paginate({ rows: posts, pagination });
@@ -129,10 +131,12 @@ class PostController {
       return res.error(404, "User not found");
     }
 
+    const myUserId = await jwtService.requestAuthToken(req);
     const { posts, pagination } = await postService.getRepliesByUser({
       after: after ?? undefined,
       take,
       userId: user.id,
+      myUserId: myUserId ?? undefined,
     });
 
     return res.paginate({ rows: posts, pagination });
@@ -169,10 +173,12 @@ class PostController {
       return res.error(404, "User not found");
     }
 
+    const myUserId = await jwtService.requestAuthToken(req);
     const { posts, pagination } = await postService.getQuote({
       after: after ?? undefined,
       take,
       userId: user.id,
+      myUserId: myUserId ?? undefined,
     });
 
     return res.paginate({ rows: posts, pagination });

@@ -49,6 +49,7 @@ class AuthRepository {
         email: payload.email.trim(),
         username: payload.username.trim(),
         password: payload.password,
+        avatar: "https://threads.file.huydarealest.com/thread-store/medias/fall_back/fall_back.jpg",
       },
       select: authSessionUserSelect,
     });

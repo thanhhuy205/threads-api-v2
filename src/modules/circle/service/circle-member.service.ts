@@ -87,6 +87,9 @@ class CircleMemberService {
       tx as Prisma.TransactionClient,
     );
   }
-}
 
+  findMembersByCircleIdAndRole(circleId: number, role: RoleMembership) {
+    return circleMemberRepository.findMembersByCircleIdAndRole(circleId, role);
+  }
+}
 export const circleMemberService = new CircleMemberService();

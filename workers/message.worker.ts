@@ -1,3 +1,4 @@
+import { pusherChannel } from "@/modules/pusher/channel/pusher-channel";
 import { pusherService } from "@/modules/pusher/service/pusher.service";
 import { redisService } from "@/providers/redis.provider";
 import { NOTIFICATION_JOB_KEY, NOTIFICATION_JOB_NAME, QUEUE_NAME } from "../src/constants/queue";
@@ -93,8 +94,8 @@ class MessageWorker {
         const { recipientId, content, avatar, name, groupPublicId } = payload;
         const message = this.buildMessageNotificationPayload(payload);
         console.log(message);
-        console.log(`private-notification-message-${recipientId}`)
-        await pusherService.trigger(`private-notification-message-${recipientId}`, "message-notification:new", {
+        console.log(pusherChannel.privateNotification(recipientId))
+        await pusherService.trigger(pusherChannel.privateNotification(recipientId), "message-notification:new", {
             groupPublicId,
             name,
             avatar: avatar ?? "",

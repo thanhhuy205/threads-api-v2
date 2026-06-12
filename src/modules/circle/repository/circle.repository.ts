@@ -158,6 +158,14 @@ class CircleRepository implements ICursorPagination<
             circleMembers: true,
           },
         },
+        createdBy: {
+          select: {
+            createById: true,
+            name: true,
+            username: true,
+            avatar: true,
+          },
+        },
         circleEnergies: {
           orderBy: {
             createdAt: "desc",
