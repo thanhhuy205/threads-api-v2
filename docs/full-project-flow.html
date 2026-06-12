@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Bản đồ đầy đủ route, module, worker và luồng nghiệp vụ của Threads API v2.">
+  <title>Full Project Flow Map - Threads API v2</title>
+  <style>
+    :root{--ivory:#faf9f5;--paper:#fff;--slate:#141413;--clay:#d97757;--oat:#e3dacc;--olive:#788c5d;--rust:#b04a3f;--g100:#f0eee6;--g200:#e6e3da;--g300:#d1cfc5;--g500:#87867f;--g700:#3d3d3a;--serif:ui-serif,Georgia,"Times New Roman",serif;--sans:system-ui,-apple-system,"Segoe UI",sans-serif;--mono:ui-monospace,Menlo,Consolas,monospace}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--ivory);color:var(--slate);font:14px/1.55 var(--sans)}a{color:inherit}.wrap{max-width:1160px;margin:auto;padding:52px 28px 110px}.crumb{color:var(--g500);font:11px var(--mono)}.crumb a{color:var(--clay)}header{display:grid;grid-template-columns:1.2fr .8fr;gap:42px;align-items:end;padding:48px 0 45px;border-bottom:1.5px solid var(--g300)}.eyebrow{display:flex;align-items:center;gap:10px;margin-bottom:16px;color:var(--g500);font:11px var(--mono);letter-spacing:.1em;text-transform:uppercase}.eyebrow:before{content:"";width:24px;height:2px;background:var(--clay)}h1{max-width:13ch;margin:0;font:500 clamp(42px,6vw,65px)/1.02 var(--serif);letter-spacing:-.025em}h1 em{color:var(--clay);font-style:italic}.lead{max-width:720px;margin:20px 0 0;color:var(--g700);font-size:16px}.snapshot{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:16px;border:1.5px solid var(--slate);border-radius:14px;background:var(--paper);box-shadow:0 12px 30px rgba(20,20,19,.08);transform:rotate(1deg)}.metric{min-height:88px;padding:13px;border-radius:9px;background:var(--g100)}.metric.hot{background:rgba(217,119,87,.14)}.metric b{display:block;font:500 31px/1 var(--serif)}.metric span{display:block;margin-top:8px;color:var(--g500);font:9px/1.35 var(--mono);text-transform:uppercase}.toc{display:flex;flex-wrap:wrap;gap:7px;padding:23px 0 0}.toc a{border:1.5px solid var(--g300);border-radius:999px;padding:6px 11px;background:var(--paper);color:var(--g700);font-size:12px;text-decoration:none}.toc a:hover{border-color:var(--slate)}section{margin-top:68px;scroll-margin-top:22px}.sec-head{display:flex;align-items:baseline;gap:14px;margin-bottom:9px}.idx{width:33px;color:var(--clay);font:600 12px var(--mono)}h2{margin:0;font:500 28px var(--serif)}.count{border-radius:999px;padding:2px 8px;background:var(--g100);color:var(--g500);font:10px var(--mono)}.intro{max-width:760px;margin:0 0 22px 47px;color:var(--g700)}.pipeline{display:grid;grid-template-columns:repeat(6,1fr);margin-left:47px;overflow:hidden;border:1.5px solid var(--slate);border-radius:12px;background:var(--slate);color:#fff}.pipe{position:relative;min-height:94px;padding:15px 12px;border-right:1px solid rgba(255,255,255,.12)}.pipe:last-child{border:0}.pipe:not(:last-child):after{content:"›";position:absolute;right:-6px;top:32px;color:var(--clay);font:22px var(--mono)}.pipe b{display:block;margin-bottom:6px;font-size:12px}.pipe span{color:#c4c2bb;font:9px/1.4 var(--mono)}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-left:47px}.flow{display:flex;flex-direction:column;min-height:235px;border:1.5px solid var(--g300);border-radius:13px;background:var(--paper);overflow:hidden}.flow-head{display:flex;justify-content:space-between;gap:10px;padding:13px 16px;background:var(--g100);border-bottom:1px solid var(--g200)}.flow-head b{font:500 17px var(--serif)}.status{height:max-content;border-radius:999px;padding:3px 7px;font:8px var(--mono);text-transform:uppercase}.current{background:rgba(120,140,93,.16);color:#476035}.mixed{background:rgba(217,119,87,.15);color:#8b442d}.flow ol{margin:0;padding:16px 18px 14px 37px;color:var(--g700);font-size:12px}.flow li{padding:0 0 7px 3px}.links{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto;padding:0 16px 16px}.links a{border:1px solid var(--g300);border-radius:6px;padding:4px 7px;background:var(--g100);color:var(--g700);font:9px var(--mono);text-decoration:none}.links a:hover{border-color:var(--clay);color:var(--clay)}table{width:calc(100% - 47px);margin-left:47px;border-collapse:separate;border-spacing:0;overflow:hidden;border:1.5px solid var(--g300);border-radius:12px;background:var(--paper)}th{padding:9px 11px;border-bottom:1px solid var(--g300);background:var(--g100);color:var(--g500);font:600 9px var(--mono);text-align:left;text-transform:uppercase}td{padding:9px 11px;border-bottom:1px solid var(--g100);vertical-align:top;font-size:12px}tr:last-child td{border:0}code{color:var(--slate);font:11px var(--mono)}.route-groups{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-left:47px}.group{display:flex;justify-content:space-between;gap:10px;border:1px solid var(--g300);border-radius:9px;padding:10px 11px;background:var(--paper);text-decoration:none}.group:hover{border-color:var(--slate)}.group code{font-size:10px}.group span{color:var(--clay);font:10px var(--mono)}.callout{margin-left:47px;padding:17px 19px;border-left:4px solid var(--clay);border-radius:0 10px 10px 0;background:rgba(217,119,87,.1);color:var(--g700)}.callout b{color:var(--slate)}.callout ul{margin:8px 0 0;padding-left:18px}.callout li{margin:5px 0}footer{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-top:80px;padding-top:25px;border-top:1.5px solid var(--g300);color:var(--g500);font-size:12px}footer a{color:var(--clay)}@media(max-width:850px){header{grid-template-columns:1fr}.snapshot{max-width:460px;transform:none}.pipeline{grid-template-columns:repeat(3,1fr)}.pipe:nth-child(3){border-right:0}.route-groups{grid-template-columns:repeat(2,1fr)}}@media(max-width:620px){.wrap{padding:35px 17px 70px}header{padding-top:38px}.intro,.grid,.pipeline,table,.route-groups,.callout{margin-left:0}.pipeline{grid-template-columns:1fr}.pipe{min-height:auto;border-right:0;border-bottom:1px solid rgba(255,255,255,.12)}.route-groups{grid-template-columns:1fr}table{display:block;width:100%;overflow:auto;white-space:nowrap}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="crumb"><a href="index.html">docs</a> / full-project-flow</div>
+  <header>
+    <div>
+      <div class="eyebrow">Source snapshot · 2026-06-12</div>
+      <h1>Full project <em>flow map.</em></h1>
+      <p class="lead">Bản đồ từ HTTP entrypoint tới domain service, database, Redis queue, worker và external provider. Route comment hoặc module không được mount không được tính là API hiện hành.</p>
+      <nav class="toc"><a href="#request">Request path</a><a href="#routes">126 routes</a><a href="#business">Business flows</a><a href="#async">Queues &amp; workers</a><a href="#gaps">Known gaps</a></nav>
+    </div>
+    <div class="snapshot">
+      <div class="metric hot"><b>126</b><span>route declarations</span></div>
+      <div class="metric"><b>19</b><span>mounted route groups</span></div>
+      <div class="metric"><b>12</b><span>queue names</span></div>
+      <div class="metric"><b>10</b><span>worker implementations</span></div>
+    </div>
+  </header>
+
+  <main>
+    <section id="request">
+      <div class="sec-head"><span class="idx">01</span><h2>Request lifecycle chung</h2><span class="count">sync path</span></div>
+      <p class="intro">Mọi endpoint hiện hành nằm dưới <code>/api/v1</code>. Mux là ngoại lệ về body parser vì cần raw body để xác minh chữ ký.</p>
+      <div class="pipeline">
+        <div class="pipe"><b>Client</b><span>HTTP · Bearer token · body/query/params</span></div>
+        <div class="pipe"><b>App middleware</b><span>Helmet · CORS · compression · logger</span></div>
+        <div class="pipe"><b>Global router</b><span>/api/v1 · rate limiter · mounted group</span></div>
+        <div class="pipe"><b>Route middleware</b><span>authorization · role · Zod validate</span></div>
+        <div class="pipe"><b>Domain</b><span>controller · service · repository</span></div>
+        <div class="pipe"><b>Result</b><span>Prisma/Redis/job/provider · response envelope</span></div>
+      </div>
+    </section>
+
+    <section id="routes">
+      <div class="sec-head"><span class="idx">02</span><h2>Route coverage</h2><span class="count">126 / 126</span></div>
+      <p class="intro">Các nhóm dưới đây được mount thật trong <code>src/routes/index.ts</code>. Catalog chi tiết chứa method, path, auth, handler và source file cho từng endpoint.</p>
+      <div class="route-groups">
+        <a class="group" href="api/admin.html"><code>/admin</code><span>14</span></a>
+        <a class="group" href="api/ai.html"><code>/ai</code><span>1</span></a>
+        <a class="group" href="api/auth.html"><code>/auth</code><span>13</span></a>
+        <a class="group" href="api/circle.html"><code>/circle</code><span>35</span></a>
+        <a class="group" href="api/circle.html"><code>/circle-ai</code><span>1</span></a>
+        <a class="group" href="api/health.html"><code>/health</code><span>1</span></a>
+        <a class="group" href="api/user.html"><code>/me</code><span>6</span></a>
+        <a class="group" href="api/message-group.html"><code>/message-groups</code><span>6</span></a>
+        <a class="group" href="api/museum.html"><code>/museum</code><span>2</span></a>
+        <a class="group" href="api/notification-group.html"><code>/notification</code><span>5</span></a>
+        <a class="group" href="api/post.html"><code>/posts</code><span>22</span></a>
+        <a class="group" href="api/pusher.html"><code>/pusher</code><span>1</span></a>
+        <a class="group" href="api/quest.html"><code>/quests</code><span>2</span></a>
+        <a class="group" href="api/search.html"><code>/search</code><span>3</span></a>
+        <a class="group" href="api/topic.html"><code>/topic</code><span>2</span></a>
+        <a class="group" href="api/upload.html"><code>/upload</code><span>2</span></a>
+        <a class="group" href="api/user.html"><code>/user</code><span>4</span></a>
+        <a class="group" href="api/user.html"><code>/users</code><span>4</span></a>
+        <a class="group" href="api/webhooks.html"><code>/webhooks</code><span>2</span></a>
+      </div>
+      <div class="callout" style="margin-top:16px"><b>Source of truth:</b> <a href="api/current-routes.html">mở catalog 126 route</a>. Chạy <code>npm run docs:routes</code> để sinh lại catalog từ TypeScript AST.</div>
+    </section>
+
+    <section id="business">
+      <div class="sec-head"><span class="idx">03</span><h2>Luồng nghiệp vụ end-to-end</h2><span class="count">15 flow families</span></div>
+      <p class="intro">Mỗi thẻ gom các endpoint cùng một hành vi và chỉ ra phần xử lý sau HTTP response khi có queue hoặc realtime side effect.</p>
+      <div class="grid">
+        <article class="flow"><div class="flow-head"><b>Identity &amp; session</b><span class="status current">current</span></div><ol><li>Register/login và kiểm tra username/email.</li><li>Hash password/refresh token, phát JWT pair.</li><li>Verify/forgot password enqueue email worker.</li><li>Logout blacklist access token trong Redis.</li></ol><div class="links"><a href="auth-flow.html">full flow</a><a href="api/auth.html">13 routes</a></div></article>
+        <article class="flow"><div class="flow-head"><b>Profile &amp; social graph</b><span class="status current">current</span></div><ol><li>Đọc profile/mention, karma và badge.</li><li>Follow/unfollow, followers/following.</li><li>Gửi, hủy, chấp nhận friend request.</li><li>Cập nhật counter/notification liên quan.</li></ol><div class="links"><a href="06-follow-friend-request.html">full flow</a><a href="api/user.html">14 routes</a></div></article>
+        <article class="flow"><div class="flow-head"><b>Create post</b><span class="status current">current</span></div><ol><li>Zod validate content/topic/media.</li><li>Service tạo post và relation trong transaction.</li><li>Enqueue OpenSearch/Pinecone indexing.</li><li>Ghi action log và notification khi cần.</li></ol><div class="links"><a href="01-dang-bai.html">full flow</a><a href="api/post.html">post API</a></div></article>
+        <article class="flow"><div class="flow-head"><b>Post interaction</b><span class="status current">current</span></div><ol><li>Reply/quote/repost kiểm tra visibility và policy.</li><li>Like state cập nhật atomic trong Redis.</li><li>Like worker sync event về DB.</li><li>Reply/mention/like tạo grouped notification.</li></ol><div class="links"><a href="03-like-comment-share.html">interaction</a><a href="17-pr-likejob-sync-fix.html">like incident</a></div></article>
+        <article class="flow"><div class="flow-head"><b>Post lifecycle &amp; moderation</b><span class="status current">current</span></div><ol><li>Edit/delete yêu cầu ownership.</li><li>Delete là soft delete và bump cache version.</li><li>Save/hide lưu state theo user.</li><li>Report đi qua evaluation/admin moderation.</li></ol><div class="links"><a href="post-visibility-edit-delete.html">visibility</a><a href="04-luu-bai.html">save</a><a href="05-an-bai-bao-cao.html">hide/report</a></div></article>
+        <article class="flow"><div class="flow-head"><b>Feed &amp; content reads</b><span class="status current">current</span></div><ol><li>News feed và profile post dùng cursor pagination.</li><li>Lọc hidden/deleted và visibility.</li><li>Hydrate author, media, topic và interaction state.</li><li>Cache key/version được bump sau mutation.</li></ol><div class="links"><a href="07-newsfeed.html">newsfeed</a><a href="modules/post/overview.html">post module</a></div></article>
+        <article class="flow"><div class="flow-head"><b>Search &amp; discovery</b><span class="status current">current</span></div><ol><li>OpenSearch phục vụ post/user/topic full-text.</li><li>Post creation enqueue elastic indexing.</li><li>Mixedbread sinh embedding.</li><li>Pinecone trả semantic similar posts.</li></ol><div class="links"><a href="10-search.html">search flow</a><a href="api/search.html">3 routes</a></div></article>
+        <article class="flow"><div class="flow-head"><b>Circle membership</b><span class="status current">current</span></div><ol><li>Create/list/detail circle và membership.</li><li>Invitation/join request có response lifecycle.</li><li>Owner/admin quản lý role, kick và ban.</li><li>Circle post/reply áp dụng permission riêng.</li></ol><div class="links"><a href="14-circle.html">circle flow</a><a href="api/circle.html">36 routes</a></div></article>
+        <article class="flow"><div class="flow-head"><b>Circle HP, EXP &amp; CPR</b><span class="status current">current</span></div><ol><li>Evaluation worker chấm chất lượng circle post.</li><li>Ghi quality log, EXP log và energy delta.</li><li>Level-up dựa trên rule hiện hành.</li><li>CPR/sacrifice dùng karma và restriction policy.</li></ol><div class="links"><a href="modules/circle/business-logic.html">business logic</a><a href="liquidation-stakes-flow.html">extended flow</a></div></article>
+        <article class="flow"><div class="flow-head"><b>Chat &amp; realtime</b><span class="status current">current</span></div><ol><li>Create group, member và message.</li><li>Persist message trước khi trigger Pusher.</li><li>Client authorize private/presence channel.</li><li>Message worker gom unread notification mỗi 3 giây.</li></ol><div class="links"><a href="22-chat-pusher-mechanism.html">Pusher flow</a><a href="08-chat-realtime.html">chat flow</a></div></article>
+        <article class="flow"><div class="flow-head"><b>Grouped notifications</b><span class="status current">current</span></div><ol><li>Event ghi hash/set/zset tạm trong Redis.</li><li>Repeat job quét item đến hạn mỗi 5 giây.</li><li>Worker tạo NotificationGroup trong DB.</li><li>Pusher phát event và API trả unread counters.</li></ol><div class="links"><a href="09-notification-realtime.html">realtime</a><a href="18-notification-grouping-plan.html">bug analysis</a></div></article>
+        <article class="flow"><div class="flow-head"><b>Media &amp; webhooks</b><span class="status current">current</span></div><ol><li>Multer nhận avatar hoặc tối đa 5 media.</li><li>Sharp resize trước khi upload R2.</li><li>Mux webhook dùng raw body + signature.</li><li>Leonardo callback cập nhật preview image.</li></ol><div class="links"><a href="mux-webhook-flow.html">Mux flow</a><a href="api/upload.html">upload API</a><a href="api/webhooks.html">webhooks</a></div></article>
+        <article class="flow"><div class="flow-head"><b>Daily quest &amp; action log</b><span class="status current">current</span></div><ol><li>Admin định nghĩa quest và action.</li><li>User action service ghi event có target/metadata.</li><li>Quest service tính progress theo ngày.</li><li>Claim kiểm tra completion rồi cộng karma.</li></ol><div class="links"><a href="23-daily-quest-actions-user-action-log.html">quest flow</a><a href="api/quest.html">2 routes</a></div></article>
+        <article class="flow"><div class="flow-head"><b>Admin &amp; moderation</b><span class="status current">current</span></div><ol><li>Admin login riêng, route còn lại cần bearer + role.</li><li>List/ban/unban user, auto-remove timed ban.</li><li>Review report và chạy evaluation report.</li><li>Stats, trending hashtag và daily quest CMS.</li></ol><div class="links"><a href="11-admin-cms.html">admin flow</a><a href="19-admin-status-report.html">status</a><a href="api/admin.html">14 routes</a></div></article>
+        <article class="flow"><div class="flow-head"><b>AI generation &amp; evaluation</b><span class="status mixed">multi-provider</span></div><ol><li>AI endpoint tạo image/caption theo service hiện hành.</li><li>Circle AI sinh markdown response.</li><li>Evaluation worker gọi AI scoring.</li><li>Embedding dùng Mixedbread, vector lưu Pinecone.</li></ol><div class="links"><a href="12-ai-integration.html">AI flow</a><a href="api/ai.html">AI API</a><a href="modules/ai/overview.html">module</a></div></article>
+      </div>
+    </section>
+
+    <section id="async">
+      <div class="sec-head"><span class="idx">04</span><h2>Queue và worker coverage</h2><span class="count">12 names · 10 workers</span></div>
+      <p class="intro">Không phải mọi tên queue đều có worker riêng: <code>likes_events</code> là Redis list do like worker drain; friend-request scheduling hiện dùng message queue.</p>
+      <table>
+        <thead><tr><th>Queue / structure</th><th>Consumer</th><th>Mục đích</th></tr></thead>
+        <tbody>
+          <tr><td><code>email_queue</code></td><td>email worker</td><td>Verify email, forgot password, invitation email.</td></tr>
+          <tr><td><code>bloom_queue</code></td><td>bloom worker</td><td>Cập nhật Redis Bloom cho username/email.</td></tr>
+          <tr><td><code>elastic_queue</code></td><td>elastic worker</td><td>Index post và user vào OpenSearch.</td></tr>
+          <tr><td><code>pinecone_queue</code></td><td>pine worker</td><td>Sinh embedding và upsert Pinecone.</td></tr>
+          <tr><td><code>like_queue</code> + <code>likes_events</code></td><td>like worker</td><td>Drain event Redis, sync DB và phát like notification.</td></tr>
+          <tr><td><code>notification</code></td><td>notification worker</td><td>Batch reply/mention notification mỗi 5 giây.</td></tr>
+          <tr><td><code>message_queue</code></td><td>message worker</td><td>Batch chat notification mỗi 3 giây.</td></tr>
+          <tr><td><code>evaluation_queue</code></td><td>evaluate worker</td><td>Chấm post/report, cập nhật quality, HP/EXP và moderation.</td></tr>
+          <tr><td><code>delta_hp_queue</code></td><td>delta HP worker</td><td>Tăng/giảm circle energy theo job.</td></tr>
+          <tr><td><code>auto_remove_ban_queue</code></td><td>auto-remove-ban worker</td><td>Dọn timed ban đã hết hạn.</td></tr>
+          <tr><td><code>friend_request_queue</code></td><td>không có worker riêng</td><td>Constant/queue được tạo, nhưng scheduler hiện add friend request job vào message queue.</td></tr>
+        </tbody>
+      </table>
+      <div class="links" style="margin:15px 0 0 47px;padding:0"><a href="job-worker-flow.html">worker operations map</a><a href="architecture/background-jobs.html">background jobs</a><a href="modules/jobs/overview.html">jobs module</a></div>
+    </section>
+
+    <section id="gaps">
+      <div class="sec-head"><span class="idx">05</span><h2>Known gaps và tài liệu tham khảo</h2><span class="count">không tính vào route coverage</span></div>
+      <div class="callout">
+        <b>Các điểm cần phân biệt với API hiện hành:</b>
+        <ul>
+          <li><code>GET /topic</code> đang hoạt động cho search; route list topic cũ trong code đã comment nên không được tính thêm.</li>
+          <li>Docs dưới <code>modules/internal</code> và <code>api/internal.html</code> mô tả endpoint internal cũ, nhưng router internal không được mount trong <code>src/routes/index.ts</code>.</li>
+          <li><code>friend_request_queue</code> có trong constants/producer nhưng không có worker riêng; <code>initFriendRequest()</code> hiện thao tác trên message queue.</li>
+          <li>Các trang Liquidation Stakes, Emotional Butterfly Effect và Bonus Features là thiết kế/kế hoạch mở rộng, không đồng nghĩa đã có route production.</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <footer><span>Threads API v2 · full project flow map</span><span><a href="index.html">Docs hub</a> · <a href="api/current-routes.html">126-route catalog</a></span></footer>
+</div>
+</body>
+</html>

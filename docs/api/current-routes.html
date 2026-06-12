@@ -230,13 +230,6 @@
     <td><code>createCircle</code></td>
     <td><code>src/modules/circle/circle.routes.ts</code></td>
   </tr>
-  <tr data-group="/circle-ai" data-search="post /circle-ai/generate-response generatemdcontent src/modules/circle/circle-ai.routes.ts">
-    <td><span class="method post">POST</span></td>
-    <td><code>/circle-ai/generate-response</code></td>
-    <td>Bearer</td>
-    <td><code>generateMdContent</code></td>
-    <td><code>src/modules/circle/circle-ai.routes.ts</code></td>
-  </tr>
   <tr data-group="/circle" data-search="get /circle/:publicid getcircledetail src/modules/circle/circle.routes.ts">
     <td><span class="method get">GET</span></td>
     <td><code>/circle/:publicId</code></td>
@@ -468,6 +461,13 @@
     <td><code>sendInvitation</code></td>
     <td><code>src/modules/circle/circle.routes.ts</code></td>
   </tr>
+  <tr data-group="/circle-ai" data-search="post /circle-ai/generate-response generatemdcontent src/modules/circle/circle-ai.routes.ts">
+    <td><span class="method post">POST</span></td>
+    <td><code>/circle-ai/generate-response</code></td>
+    <td>Bearer</td>
+    <td><code>generateMdContent</code></td>
+    <td><code>src/modules/circle/circle-ai.routes.ts</code></td>
+  </tr>
   <tr data-group="/health" data-search="get /health gethealth src/modules/health/health.routes.ts">
     <td><span class="method get">GET</span></td>
     <td><code>/health</code></td>
@@ -622,13 +622,6 @@
     <td><code>getJudgeStatus</code></td>
     <td><code>src/modules/post/post.routes.ts</code></td>
   </tr>
-  <tr data-group="/posts" data-search="delete /posts/:publicid deletepost src/modules/post/post.routes.ts">
-    <td><span class="method delete">DELETE</span></td>
-    <td><code>/posts/:publicId</code></td>
-    <td>Bearer</td>
-    <td><code>deletePost</code></td>
-    <td><code>src/modules/post/post.routes.ts</code></td>
-  </tr>
   <tr data-group="/posts" data-search="get /posts/:publicid getpost src/modules/post/post.routes.ts">
     <td><span class="method get">GET</span></td>
     <td><code>/posts/:publicId</code></td>
@@ -641,6 +634,13 @@
     <td><code>/posts/:publicId</code></td>
     <td>Bearer</td>
     <td><code>updatePost</code></td>
+    <td><code>src/modules/post/post.routes.ts</code></td>
+  </tr>
+  <tr data-group="/posts" data-search="delete /posts/:publicid deletepost src/modules/post/post.routes.ts">
+    <td><span class="method delete">DELETE</span></td>
+    <td><code>/posts/:publicId</code></td>
+    <td>Bearer</td>
+    <td><code>deletePost</code></td>
     <td><code>src/modules/post/post.routes.ts</code></td>
   </tr>
   <tr data-group="/posts" data-search="post /posts/:publicid/hide hidepost src/modules/post/post.routes.ts">
@@ -901,11 +901,18 @@
     <td>Public</td>
     <td><code>muxWebhook</code></td>
     <td><code>src/modules/webhooks/router.ts</code></td>
-  </tr></tbody></table>
-  <p id="empty" class="empty">Không có route phù hợp.</p>
+  </tr>
+  </tbody></table>
+  <p id="empty" class="empty">Không tìm thấy route phù hợp.</p>
 </main>
 <script>
-  (function(){var q="",g="all",rows=[].slice.call(document.querySelectorAll("tbody tr")),input=document.getElementById("search"),empty=document.getElementById("empty"),buttons=[].slice.call(document.querySelectorAll(".filter"));function apply(){var n=0;rows.forEach(function(row){var show=(!q||row.dataset.search.indexOf(q)!==-1)&&(g==="all"||row.dataset.group===g);row.style.display=show?"":"none";if(show)n++});empty.style.display=n?"none":"block"}input.addEventListener("input",function(){q=input.value.trim().toLowerCase();apply()});buttons.forEach(function(button){button.addEventListener("click",function(){buttons.forEach(function(item){item.classList.remove("active")});button.classList.add("active");g=button.dataset.group;apply()})})}());
+  (function(){
+    var group="all",query="",rows=[].slice.call(document.querySelectorAll("tbody tr"));
+    var empty=document.getElementById("empty"),input=document.getElementById("search");
+    function apply(){var count=0;rows.forEach(function(row){var show=(group==="all"||row.dataset.group===group)&&(!query||row.dataset.search.indexOf(query)!==-1);row.style.display=show?"":"none";if(show)count+=1});empty.style.display=count?"none":"block"}
+    input.addEventListener("input",function(){query=input.value.trim().toLowerCase();apply()});
+    [].slice.call(document.querySelectorAll(".filter")).forEach(function(button){button.addEventListener("click",function(){document.querySelector(".filter.active").classList.remove("active");button.classList.add("active");group=button.dataset.group;apply()})});
+  }());
 </script>
 </body>
 </html>
