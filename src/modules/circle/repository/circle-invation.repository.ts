@@ -141,7 +141,7 @@ class CircleInvitationRepository implements ICursorPagination<
   async rejectInvitation(
     circleId: number,
     userId: string,
-    tx: Prisma.TransactionClient,
+    tx: Prisma.TransactionClient = prisma,
   ) {
     return tx.circleInvitation.update({
       where: {
@@ -160,7 +160,7 @@ class CircleInvitationRepository implements ICursorPagination<
   async acceptInvitation(
     circleId: number,
     userId: string,
-    tx: Prisma.TransactionClient,
+    tx: Prisma.TransactionClient = prisma,
   ) {
     return tx.circleInvitation.update({
       where: {

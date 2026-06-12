@@ -1885,5 +1885,74 @@ class CircleService {
       // userQuantity: quantity,
     }
   }
+
+  async respondJoinRequestInvitation(
+    {
+      publicId,
+      userId,
+      isAccept,
+    }: { publicId: string; userId: string; isAccept: boolean },
+  ) {
+    const circle = await circleRepository.findByPublicId(publicId);
+    if (!circle) {
+      throw new NotFoundException(`Circle ${publicId} not found`);
+    }
+
+    const member = await circleMemberService.findRoleByCircleId(circle.id, userId);
+    if (member) {
+      throw new BadRequestException(`User ${userId} is already a member of circle ${publicId}`);
+    }
+
+
+    const invitation = await circleInvitationService.findPendingInvitationByCircleIdAndUserId(
+      circle.id,
+      userId,
+    );
+
+
+    if (!invitation) {
+      throw new NotFoundException(
+        `No pending invitation found for user ${userId} in circle ${publicId}`,
+      );
+    }
+
+    if (isAccept) {
+      await transactionService.doInTransaction(async (tx) => {
+        await circleInvitationService.acceptInvitation(
+          circle.id,
+          userId,
+          tx,
+        );
+        await circleMemberService.create(
+          {
+            circleId: circle.id,
+            userId,
+          },
+          tx,
+        );
+        await userActionLogService.logInviteAccepted({
+          userId,
+          targetId: publicId,
+          metadata: {
+            circleId: circle.id,
+            source: "INVITATION",
+          },
+          tx,
+        });
+      });
+    } else {
+      await circleInvitationService.rejectInvitation(
+        circle.id,
+        userId,
+      );
+    }
+    await this.bumpCircleListCacheVersion();
+
+    return {
+      circlePublicId: publicId,
+      userId,
+      isAccepted: isAccept,
+    }
+  }
 }
 export const circleService = new CircleService();

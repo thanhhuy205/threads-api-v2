@@ -7,6 +7,7 @@ import {
 import {
   ResendInvitationDto,
   RespondJoinRequestDto,
+  RespondJoinRequestInvitationDto,
   ResponseInvitationDto,
 } from "@/modules/circle/dto/response-invitation.dto";
 import type { SendInvitationDto } from "@/modules/circle/dto/send-invitation.dto";
@@ -609,6 +610,29 @@ class CircleController {
     const result = await circleService.respondJoinRequest({
       publicId,
       adminId,
+      userId,
+      isAccept,
+    });
+    return res.success(
+      200,
+      `Join request ${isAccept ? 'accept' : 'reject'} for user ${userId} to join circle ${publicId}`,
+      result
+    );
+  }
+
+
+  async respondJoinRequestInvitation(
+    req: Request<CirclePublicIdParamsDto, {}, RespondJoinRequestInvitationDto>,
+    res: Response,
+  ) {
+    const userId = req.user?.sub;
+    if (!userId) {
+      return res.error(401, "Unauthorized");
+    }
+    const { publicId } = req.params;
+    const { isAccept } = req.body;
+    const result = await circleService.respondJoinRequestInvitation({
+      publicId,
       userId,
       isAccept,
     });

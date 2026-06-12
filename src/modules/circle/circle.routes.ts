@@ -3,6 +3,7 @@ import { validate } from '@/middlewares/validate';
 import { sendInvitationManageSchema } from '@/modules/circle/dto/admin-circle.dto';
 import {
     resendInvitationSchema,
+    respondJoinRequestInvitationSchema,
     respondJoinRequestSchema,
     responseInvitationSchema,
 } from '@/modules/circle/dto/response-invitation.dto';
@@ -146,6 +147,16 @@ circleRouter.post(
     validate(circlePublicIdParamsSchema, 'params'),
     circleController.sendJoinRequest,
 );
+
+circleRouter.post(
+    '/:publicId/join-request/respond-invitation',
+    validate(circlePublicIdParamsSchema, 'params'),
+    validate(respondJoinRequestInvitationSchema),
+    circleController.respondJoinRequestInvitation,
+);
+
+
+
 circleRouter.post(
     '/:publicId/posts/:postPublicId/reply',
     validate(circleReplyParamsSchema, 'params'),
