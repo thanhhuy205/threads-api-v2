@@ -1,18 +1,17 @@
 import { baseLogger } from "@/middlewares/logger";
 import { notificationService } from "@/modules/notification-group/service/notification.service";
+import { likeEventService } from "@/modules/post/service/like-event.service";
 import { LIKE_JOB_NAME, QUEUE_NAME } from "../src/constants/queue";
 import { redisKey } from "../src/constants/resolve-key/redis-key";
-import { likeRepository } from '../src/modules/post/repository/like.repository';
-import { postRepository } from '../src/modules/post/repository/post.repository';
 import { createWorker } from "../src/providers/bullmq.provider";
 import { redisService } from "../src/providers/redis.provider";
 
-type LikeResult = {
-  postPublicId: string,
-  createdAt: Date,
-  userId: string,
-}
-
+type LikeEvent = {
+  postPublicId: string;
+  createdAt: string;
+  userId: string;
+  isLiked: boolean;
+};
 
 class LikeWorker {
   private readonly syncLockKey = redisKey.job.likeSyncInitLock();
@@ -27,130 +26,111 @@ class LikeWorker {
     }
   });
 
-
   async initSyncJob() {
     const lockToken = `${process.pid}:${Date.now()}:${Math.random().toString(36).slice(2)}`;
     const isLocked = await this.acquireSyncLock(lockToken);
-    baseLogger.info(`Attempting to acquire lock for like sync job with token ${lockToken}: ${isLocked ? 'acquired' : 'not acquired'}`);
+
     if (!isLocked) {
       return;
     }
-    baseLogger.info(`Starting like sync job...`);
 
     try {
-      await Promise.all([
-        this.processAddLike(),
-        this.processRemoveLike(),
-      ]);
+      await this.processLikeEvents();
     } finally {
       await this.releaseSyncLock(lockToken);
     }
   }
 
-  async processAddLike() {
-    const results = await this.rPopCustomBatch(QUEUE_NAME.POST_LIKE_EVENT_QUEUE, 500);
-    if (results.length === 0) return;
-    baseLogger.info(`Processing add like jobs...`);
-    const grouped = this.groupByPostPublicId(results);
+  private async processLikeEvents() {
+    const events = await this.rPopCustomBatch(
+      QUEUE_NAME.POST_LIKE_EVENT_QUEUE,
+      500,
+    );
 
-    baseLogger.info(`Group item ${JSON.stringify(results)} ${results.length} like jobs into ${grouped.size} groups by postPublicId`);
-    baseLogger.info(`Grouped like jobs: ${JSON.stringify(Array.from(grouped.entries()))}`);
+    for (const [index, event] of events.entries()) {
+      let result;
 
-    for (const [postPublicId, items] of grouped.entries()) {
-      const uniqueItems = Array.from(
-        new Map(items.map((item) => [item.userId, item])).values(),
-      );
+      try {
+        result = await likeEventService.applyEvent({
+          userId: event.userId,
+          postId: event.postPublicId,
+          isLiked: event.isLiked,
+        });
+      } catch (error) {
+        baseLogger.error({
+          error,
+          event,
+        }, "Failed to process like event");
 
-      const post = await postRepository.findByPublicId(postPublicId);
+        await this.restoreEvents(events.slice(index));
+        return;
+      }
 
-      if (!post) {
-        baseLogger.warn({ postPublicId }, "Post not found when processing like events");
+      if (!result.changed || !event.isLiked) {
         continue;
       }
 
-      const insertedActors: typeof uniqueItems = [];
-
-      for (const item of uniqueItems) {
-        try {
-          await likeRepository.create({
-            userId: item.userId,
-            postId: post.publicId,
-            isLike: true,
-          });
-
-          insertedActors.push(item);
-        } catch (error) {
-          baseLogger.warn({
-            postPublicId,
-            userId: item.userId,
-          }, "Like already exists or failed, skip increment");
-        }
+      try {
+        await notificationService.sendLikeCountUpdateNotification(
+          event.postPublicId,
+          result.ownerId,
+          result.likesCount,
+          [{
+            postPublicId: event.postPublicId,
+            createdAt: new Date(event.createdAt),
+            userId: event.userId,
+          }],
+        );
+      } catch (error) {
+        baseLogger.error({
+          error,
+          event,
+        }, "Failed to send like notification");
       }
+    }
+  }
 
-      const insertedCount = insertedActors.length;
-
-      if (insertedCount === 0) {
-        continue;
-      }
-
-      const updatedPost = await postRepository.incrementLikedCount(
-        postPublicId,
-        insertedCount,
-      );
-
-      baseLogger.info({
-        postPublicId,
-        ownerId: updatedPost.ownerId,
-        insertedCount,
-      }, "Incremented liked count");
-
-      await notificationService.sendLikeCountUpdateNotification(
-        postPublicId,
-        updatedPost.ownerId,
-        insertedCount,
-        insertedActors,
-      );
+  private async rPopCustomBatch(
+    key: string,
+    count: number,
+  ): Promise<LikeEvent[]> {
+    const elements = await redisService.rPopCount(key, count);
+    if (!elements) {
+      return [];
     }
 
-  }
-
-  async processRemoveLike() {
-    const results = await this.rPopCustomBatch(QUEUE_NAME.POST_UNLIKE_EVENT_QUEUE, 500);
-    console.log("🚀 ~ file: like.worker.ts:122 ~ LikeWorker ~ processRemoveLike ~ results:", results)
-    if (results.length === 0) return;
-    // gom nhóm theo postPublicId để giảm số lần gọi postRepository.decrementLikedCount
-    const grouped = this.groupByPostPublicId(results);
-    baseLogger.info(`Grouped remove like jobs: ${JSON.stringify(Array.from(grouped.entries()))}`);
-
-    await Promise.all([
-      likeRepository.updateMany(results.map((item) => ({
-        userId: item.userId as string,
-        postId: item.postPublicId as string,
-      }))),
-      // vì mỗi item trong results là một like bị xóa, nên số lần giảm liked count sẽ bằng số item trong nhóm
-      // grouped.entries() trả về [postPublicId, items], trong đó items là mảng các like bị xóa của post đó
-      ...Array.from(grouped.entries()).map(([postPublicId, items]) =>
-        postRepository.decrementLikedCount(postPublicId, items.length)
-      ),
-    ]);
-  }
-
-
-
-  private async rPopCustomBatch(key: string, count: number): Promise<LikeResult[]> {
-    const elements = await redisService.rPopCount(key, count);
-    if (!elements) throw new Error(`Failed to RPop batch from ${key}`);
-
-    baseLogger.info(`RPop batch from ${key}, got ${JSON.stringify(elements)} items`);
     return elements
-      .map((item) => this.safeParseLikeItem(item))
-      .filter((item): item is LikeResult => item !== null);
+      .map((item) => this.safeParseLikeEvent(item))
+      .filter((item): item is LikeEvent => item !== null);
   }
 
+  private async restoreEvents(events: LikeEvent[]): Promise<void> {
+    if (events.length === 0) {
+      return;
+    }
 
-  private safeParseLikeItem(item: string): LikeResult | null {
+    await redisService.rPush(
+      QUEUE_NAME.POST_LIKE_EVENT_QUEUE,
+      events
+        .slice()
+        .reverse()
+        .map((event) => JSON.stringify(event)),
+    );
+  }
+
+  private safeParseLikeEvent(item: string): LikeEvent | null {
     try {
-      return JSON.parse(item) as LikeResult;
+      const event = JSON.parse(item) as Partial<LikeEvent>;
+      if (
+        typeof event.postPublicId !== "string"
+        || typeof event.createdAt !== "string"
+        || typeof event.userId !== "string"
+        || typeof event.isLiked !== "boolean"
+      ) {
+        return null;
+      }
+
+      return event as LikeEvent;
     } catch {
       return null;
     }
@@ -171,19 +151,6 @@ class LikeWorker {
       await redisService.del(this.syncLockKey);
     }
   }
-
-  private groupByPostPublicId(items: LikeResult[]): Map<string, LikeResult[]> {
-    return items.reduce((acc, item) => {
-      const bucket = acc.get(item.postPublicId);
-      if (bucket) {
-        bucket.push(item);
-      } else {
-        acc.set(item.postPublicId, [item]);
-      }
-      return acc;
-    }, new Map<string, LikeResult[]>());
-  }
-
 }
 
 export const likeWorker = new LikeWorker();

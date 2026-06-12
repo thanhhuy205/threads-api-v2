@@ -988,58 +988,54 @@ class PostService {
     baseLogger.info(`User ${userId} is ${isLiked ? "liking" : "unliking"} post ${publicId}`);
     baseLogger.info(`Like key: ${likeKey}, Count key: ${countKey}`);
 
-    if (isLiked) {
-      const added = await redisService.sAdd(likeKey, userId);
-      baseLogger.info(`Added ${added}`);
-      baseLogger.info(`Added like for post ${publicId} by user ${userId}`);
+    const event = JSON.stringify({
+      postPublicId: publicId,
+      createdAt: new Date().toISOString(),
+      userId,
+      isLiked,
+    });
+    const changed = await redisService.eval(
+      `
+        local changed
+        if ARGV[2] == "1" then
+          changed = redis.call("SADD", KEYS[1], ARGV[1])
+          if changed == 1 then
+            redis.call("INCR", KEYS[2])
+          end
+        else
+          changed = redis.call("SREM", KEYS[1], ARGV[1])
+          if changed == 1 then
+            redis.call("DECR", KEYS[2])
+          end
+        end
 
-      if (added === 1) {
-        baseLogger.info(`Incrementing like count for post ${publicId}`);
+        if changed == 1 then
+          redis.call("LPUSH", KEYS[3], ARGV[3])
+        end
 
-        await redisService.incr(countKey);
+        return changed
+      `,
+      {
+        keys: [likeKey, countKey, QUEUE_NAME.POST_LIKE_EVENT_QUEUE],
+        arguments: [userId, isLiked ? "1" : "0", event],
+      },
+    );
 
-        await redisService.lPush(
-          QUEUE_NAME.POST_LIKE_EVENT_QUEUE,
-          JSON.stringify({
-            postPublicId: publicId,
-            createdAt: new Date().toISOString(),
-            userId,
-          }),
-        );
+    baseLogger.info({
+      changed,
+      isLiked,
+      postPublicId: publicId,
+      userId,
+    }, "Updated like state and enqueued event");
 
-        await userActionLogService.logLikeCreated({
-          userId,
-          targetId: publicId,
-          metadata: {
-            postPublicId: publicId,
-          },
-        });
-
-
-      }
-    } else {
-
-      const removed = await redisService.sRem(likeKey, userId);
-      baseLogger.info(`Removed like for post ${publicId} by user ${userId}`);
-      baseLogger.info({
-        removed,
-        likeKey,
+    if (changed === 1 && isLiked) {
+      await userActionLogService.logLikeCreated({
         userId,
-      }, "SREM result");
-      if (removed === 1) {
-        await redisService.decr(countKey);
-
-        baseLogger.info(`Decrementing like count for post ${publicId}`);
-        await redisService.lPush(
-          QUEUE_NAME.POST_UNLIKE_EVENT_QUEUE,
-          JSON.stringify({
-            postPublicId: publicId,
-            createdAt: new Date().toISOString(),
-            userId,
-          }),
-        );
-
-      }
+        targetId: publicId,
+        metadata: {
+          postPublicId: publicId,
+        },
+      });
     }
     const likeCount = await redisService.sCard(likeKey);
     const post = await postRepository.findByPublicId(publicId);

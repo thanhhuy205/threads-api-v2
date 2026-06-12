@@ -572,6 +572,38 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
 
   }
 
+  async applyLikeCountDelta(
+    publicId: string,
+    delta: number,
+    tx: Prisma.TransactionClient,
+  ): Promise<void> {
+    await tx.$executeRaw`
+      UPDATE posts
+      SET likes_count = GREATEST(likes_count + ${delta}, 0)
+      WHERE public_id = ${publicId}
+    `;
+  }
+
+  async findLikeCountSnapshot(
+    publicId: string,
+    tx: Prisma.TransactionClient,
+  ): Promise<{ likesCount: number; ownerId: string }> {
+    const post = await tx.post.findUniqueOrThrow({
+      where: {
+        publicId,
+      },
+      select: {
+        likesCount: true,
+        userId: true,
+      },
+    });
+
+    return {
+      likesCount: post.likesCount,
+      ownerId: post.userId,
+    };
+  }
+
   async updateIsDisinformation(publicId: string, isDisinformation: boolean): Promise<void> {
     await prisma.post.update({
       where: { publicId },
