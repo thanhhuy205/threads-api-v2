@@ -1563,7 +1563,7 @@ class CircleService {
         reason: "User requested to join the circle",
       }, tx);
       await notificationService.create({
-        recipientId: circle.createdBy.createById,
+        recipientId: circle.createdBy.id,
         actorId: userId,
         type: NotificationType.JOIN_REQUEST,
         targetType: "CIRCLE_JOIN_REQUEST",
@@ -1574,7 +1574,7 @@ class CircleService {
 
 
     await pusherService.trigger(
-      `private-user-${circle.createdBy.createById}`,
+      `private-user-${circle.createdBy.id}`,
       "new-join-request",
       {
         circlePublicId: circle.publicId,

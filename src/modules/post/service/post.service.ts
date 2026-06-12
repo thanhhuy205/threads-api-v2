@@ -1046,6 +1046,8 @@ class PostService {
     if (!post) {
       throw new NotFoundException("Post not found");
     }
+
+    await this.bumpPostListCacheVersion();
     return likeCount + (post.likesCount ?? 0);
   }
 
