@@ -203,6 +203,19 @@ class NotificationRepository
             skipDuplicates: true,
         });
     }
+
+
+    markGroupAsRead(userId: string) {
+        return prisma.notificationGroup.updateMany({
+            where: {
+                recipientId: userId,
+                isRead: false,
+            },
+            data: {
+                isRead: true,
+            },
+        });
+    }
 }
 
 export const notificationRepository = new NotificationRepository();

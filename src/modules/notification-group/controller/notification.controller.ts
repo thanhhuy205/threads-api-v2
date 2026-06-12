@@ -63,6 +63,15 @@ class NotificationController {
       friendRequestCount,
     });
   }
+
+  async markAsRead(req: Request, res: Response) {
+    const userId = req.user?.sub;
+    if (!userId) {
+      throw new UnauthorizedException();
+    }
+
+    await notificationService.markGroupAsRead(userId);
+  }
 }
 
 export const notificationController = new NotificationController();

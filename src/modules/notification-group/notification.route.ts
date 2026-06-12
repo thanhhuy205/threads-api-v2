@@ -10,6 +10,11 @@ notificationRouter.get(
     "/unread",
     notificationController.getUnreadStatus,
 );
+
+notificationRouter.post(
+    "/read",
+    notificationController.markAsRead,
+);
 notificationRouter.get(
     "/message",
     notificationController.getUnreadMessageGroups,

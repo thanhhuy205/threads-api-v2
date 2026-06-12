@@ -263,5 +263,9 @@ class NotificationService {
       ...(actorNotIncludeOwner.length > 0 ? [pusherService.trigger(`private-user-notification-${recipientId}`, "like-count-update", notificationData)] : []),
     ]);
   }
+
+  async markGroupAsRead(userId: string) {
+    await notificationRepository.markGroupAsRead(userId);
+  }
 }
 export const notificationService = new NotificationService();
