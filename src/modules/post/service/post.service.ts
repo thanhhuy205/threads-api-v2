@@ -1185,6 +1185,10 @@ class PostService {
       evaluationQueued: true,
     };
   }
+
+  async findById(id: number): Promise<{publicId : string} | null> {
+    return postRepository.findById(id);
+  }
 }
 
 export const postService = new PostService();

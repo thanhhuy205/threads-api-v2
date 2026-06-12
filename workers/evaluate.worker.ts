@@ -13,6 +13,7 @@ import { circlePostQualityLogService } from "@/modules/circle/service/circle-pos
 import { mixedBreadService } from "@/modules/mixed-bread/service/mixed-bread.service";
 import { pineconeService } from "@/modules/pinecone/service/pinecone.service";
 import { postRepository } from "@/modules/post/repository/post.repository";
+import { postService } from "@/modules/post/service/post.service";
 import { pusherChannel } from "@/modules/pusher/channel/pusher-channel";
 import { pusherService } from "@/modules/pusher/service/pusher.service";
 import { reportRepository } from "@/modules/report/repository/report.repository";
@@ -49,7 +50,7 @@ const processEvaluationPost = async (job: EvaluationPostJob) => {
         if (!member) {
             throw new Error(`User ${job.userId} is not a member of circle ${job.circlePublicId}`);
         }
-
+        console.log(job);
         const embedding = await mixedBreadService.generateEmbedding(job.content, [circle.name]);
         // khác nhóm nhưng đang giống nội dung với nhau
         // cùng nhóm và cùng user nhưng đang giống nội dung với nhau
@@ -137,19 +138,28 @@ const processEvaluationPost = async (job: EvaluationPostJob) => {
                 embedding, // You can choose to generate an embedding for the post content if needed
             }),
         ]);
-
-        await circleEnergyService.addExpAndHp(circle.id, formatResult.expDelta, formatResult.hpDelta);
+        const post = await postService.findById(job.postId);
+        if (post) {
+            await redisService.incr(redisKey.post.listVersion());
+        }
+        await Promise.all([
+            circleEnergyService.addExpAndHp(circle.id, formatResult.expDelta, formatResult.hpDelta),
+            ...(post ? [pusherService.trigger(pusherChannel.privateNotification(member.userId), 'circle-valuate', {
+                circlePublicId: circle.publicId,
+                postPublicId: post.publicId,
+                expDelta: formatResult.expDelta,
+                hpDelta: formatResult.hpDelta,
+                reason: formatResult.reason,
+                confidence: formatResult.confidence,
+                label: qualityLabel,
+            })] : []),
+        ]);
         return {
             processed: true,
             postId: job.postId,
             result: formatResult
         };
     } catch (error) {
-        console.error(
-            `[EVALUATE] Error processing post ${job.postId}:`,
-            error,
-        );
-        throw error;
     }
 };
 
