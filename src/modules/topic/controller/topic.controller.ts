@@ -1,19 +1,12 @@
-import { getPagination } from "@/shared/pagination/cursor-pagination";
 import { Request, Response } from "express";
 import type { CreateTopicDto, SearchTopicQueryDto } from "../dto/request/topic.request";
 import { topicService } from "../service/topic.service";
 
 class TopicController {
   async getByName(req: Request<{}, {}, {}, SearchTopicQueryDto>, res: Response) {
-    const { after, take } = getPagination(req);
     const { q } = req.query;
-    const { rows, pagination } = await topicService.searchByName({
-      q,
-      take,
-      after: after ?? undefined,
-    });
-
-    return res.paginate({ rows, pagination });
+    const result = await topicService.searchByName(q);
+    return res.success(200, "Topics retrieved successfully", result);
   }
 
   async create(req: Request<{}, {}, CreateTopicDto>, res: Response) {

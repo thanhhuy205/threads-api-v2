@@ -76,6 +76,15 @@ class TopicRepository implements ICursorPagination<{ q: string }, TopicRecord> {
       count: topic.count,
     };
   }
+  searchTopic({ q }: { q: string; }): Promise<TopicRecord[]> {
+    return prisma.$queryRaw<TopicRecord[]>`
+      SELECT name, count
+      FROM topics
+      WHERE MATCH(name) AGAINST (${q} IN BOOLEAN MODE)
+      ORDER BY count DESC, MATCH(name) AGAINST (${q} IN BOOLEAN MODE)  DESC
+      LIMIT 20
+    `;
+  }
 }
 
 export const topicRepository = new TopicRepository();

@@ -2,6 +2,18 @@ import { AUTH_MESSAGE, COMMON_MESSAGE } from "@/constants/message";
 
 const bearerAuthSecurity = [{ bearerAuth: [] }];
 
+const searchQueryParameter = {
+  name: "q",
+  in: "query",
+  required: true,
+  description: "Search text.",
+  schema: {
+    type: "string",
+    minLength: 1,
+    example: "threads",
+  },
+};
+
 export const searchSwaggerSchemas = {
   SearchUsernameItem: {
     type: "object",
@@ -55,9 +67,102 @@ export const searchSwaggerSchemas = {
     },
     required: ["success", "message", "data"],
   },
+  SearchTopicResponse: {
+    type: "object",
+    properties: {
+      success: {
+        type: "boolean",
+        example: true,
+      },
+      message: {
+        type: "string",
+        example: "Topics retrieved successfully",
+      },
+      data: {
+        type: "array",
+        maxItems: 20,
+        items: {
+          $ref: "#/components/schemas/TopicItem",
+        },
+      },
+    },
+    required: ["success", "message", "data"],
+  },
 };
 
 export const searchSwaggerPaths = {
+  "/search/posts": {
+    get: {
+      tags: ["Search"],
+      summary: "Search posts",
+      description:
+        "Searches visible posts by content using MySQL full-text search.",
+      security: bearerAuthSecurity,
+      parameters: [
+        {
+          ...searchQueryParameter,
+          description: "Post content search text.",
+          schema: {
+            ...searchQueryParameter.schema,
+            example: "prisma",
+          },
+        },
+        {
+          name: "after",
+          in: "query",
+          required: false,
+          description: "Cursor returned by the previous response.",
+          schema: {
+            type: "string",
+            minLength: 1,
+            example: "post_abc123xyz789",
+          },
+        },
+        {
+          name: "take",
+          in: "query",
+          required: false,
+          description: "Maximum number of posts to return.",
+          schema: {
+            type: "integer",
+            minimum: 1,
+            maximum: 100,
+            default: 20,
+            example: 20,
+          },
+        },
+        {
+          name: "serp_type",
+          in: "query",
+          required: false,
+          description: "Search result mode.",
+          schema: {
+            type: "string",
+            enum: ["default"],
+            default: "default",
+          },
+        },
+      ],
+      responses: {
+        200: {
+          description: "Posts retrieved successfully",
+          content: {
+            "application/json": {
+              schema: {
+                $ref: "#/components/schemas/PaginatedPostResponse",
+              },
+            },
+          },
+        },
+        400: {
+          description: COMMON_MESSAGE.VALIDATION_FAILED,
+        },
+        401: {
+          description: AUTH_MESSAGE.TOKEN_INVALID,
+        },
+      },
+    },
+  },
   "/search/username": {
     get: {
       tags: ["Search"],
@@ -85,6 +190,43 @@ export const searchSwaggerPaths = {
             "application/json": {
               schema: {
                 $ref: "#/components/schemas/SearchUsernameResponse",
+              },
+            },
+          },
+        },
+        400: {
+          description: COMMON_MESSAGE.VALIDATION_FAILED,
+        },
+        401: {
+          description: AUTH_MESSAGE.TOKEN_INVALID,
+        },
+      },
+    },
+  },
+  "/search/topic": {
+    get: {
+      tags: ["Search"],
+      summary: "Search topics",
+      description:
+        "Returns up to 20 topics matched by MySQL n-gram full-text search.",
+      security: bearerAuthSecurity,
+      parameters: [
+        {
+          ...searchQueryParameter,
+          description: "Topic name search text.",
+          schema: {
+            ...searchQueryParameter.schema,
+            example: "nestjs",
+          },
+        },
+      ],
+      responses: {
+        200: {
+          description: "Topics retrieved successfully",
+          content: {
+            "application/json": {
+              schema: {
+                $ref: "#/components/schemas/SearchTopicResponse",
               },
             },
           },

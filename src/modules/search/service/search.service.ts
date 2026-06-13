@@ -1,9 +1,7 @@
-import prisma from "@/config/prisma";
-import { postFeedSelect } from "@/modules/post/selector/post.selector";
+import { postService } from "@/modules/post/service/post.service";
 import { topicService } from "@/modules/topic/service/topic.service";
 import { elasticSearchClient } from "@/providers/elastic-search.provider";
 import { buildCursorPagination } from "@/shared/pagination/cursor-pagination";
-import { userService } from '../../user/service/user.service';
 
 type SerpType = "default";
 
@@ -12,6 +10,7 @@ type SearchPostInput = {
   after?: string;
   take: number;
   serpType?: SerpType;
+  userId?: string;
 };
 
 type SearchUserInput = {
@@ -91,51 +90,75 @@ class SearchService {
     return keys.map((key) => map.get(key)).filter((item): item is T => Boolean(item));
   }
 
-  async searchPost({ q, after, take, serpType = "default" }: SearchPostInput) {
+  // async searchPost({ q, after, take, serpType = "default" }: SearchPostInput) {
+  //   if (serpType !== "default") {
+  //     serpType = "default";
+  //   }
+
+  //   const docs = await this.searchIndex<PostSearchDoc>({
+  //     q,
+  //     type: "post",
+  //     fields: ["content^3", "authorUsername^2"],
+  //     sortField: "publicId",
+  //     after,
+  //     take,
+  //   });
+
+  //   const publicIds = docs
+  //     .map((item) => item.publicId?.trim())
+  //     .filter((item): item is string => Boolean(item));
+
+  //   if (!publicIds.length) {
+  //     return buildCursorPagination({
+  //       rows: [],
+  //       take,
+  //       getAfter: (item) => ""
+  //     });
+  //   }
+
+  //   const posts = await prisma.post.findMany({
+  //     where: {
+  //       publicId: {
+  //         in: publicIds,
+  //       },
+  //       isDeleted: false,
+  //     },
+  //     select: postFeedSelect,
+  //   });
+
+  //   const rows = this.reorderByKeys(posts, publicIds, (item) => item?.publicId);
+
+  //   return buildCursorPagination({
+  //     rows,
+  //     take,
+  //     getAfter: (item) => item?.publicId,
+  //   });
+  // }
+
+  async searchPost({
+    q,
+    after,
+    take,
+    serpType = "default",
+    userId,
+  }: SearchPostInput) {
     if (serpType !== "default") {
       serpType = "default";
     }
 
-    const docs = await this.searchIndex<PostSearchDoc>({
-      q,
-      type: "post",
-      fields: ["content^3", "authorUsername^2"],
-      sortField: "publicId",
+    const posts = await postService.searchByContent({
+      query: q,
       after,
       take,
+      userId,
     });
-
-    const publicIds = docs
-      .map((item) => item.publicId?.trim())
-      .filter((item): item is string => Boolean(item));
-
-    if (!publicIds.length) {
-      return buildCursorPagination({
-        rows: [],
-        take,
-        getAfter: (item) => ""
-      });
-    }
-
-    const posts = await prisma.post.findMany({
-      where: {
-        publicId: {
-          in: publicIds,
-        },
-        isDeleted: false,
-      },
-      select: postFeedSelect,
-    });
-
-    const rows = this.reorderByKeys(posts, publicIds, (item) => item?.publicId);
 
     return buildCursorPagination({
-      rows,
+      rows: posts,
       take,
       getAfter: (item) => item?.publicId,
     });
   }
-
   private async searchUsernameIndex({
     q,
     take,
@@ -333,30 +356,8 @@ class SearchService {
   //     getAfter: (item) => item.username,
   //   });
   // }
-  async searchTopic({ q, after, take }: SearchTopicInput) {
-    const docs = await this.searchTopicIndex({ q, after, take });
-
-    const topicNames = docs
-      .map((item) => item.source.topicName?.trim())
-      .filter((item): item is string => Boolean(item));
-
-    if (!topicNames.length) {
-      return buildCursorPagination({
-        rows: [],
-        take,
-        getAfter: (item) => "",
-      });
-    }
-
-    const topics = await topicService.listNames(topicNames);
-
-    const rows = this.reorderByKeys(topics, topicNames, (item) => item.name);
-
-    return buildCursorPagination({
-      rows,
-      take,
-      getAfter: (item) => item.name,
-    });
+  async searchTopic({ q }: { q: string }) {
+    return topicService.searchByName(q);
   }
 }
 

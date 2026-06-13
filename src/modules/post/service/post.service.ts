@@ -1186,8 +1186,49 @@ class PostService {
     };
   }
 
-  async findById(id: number): Promise<{publicId : string} | null> {
+  async findById(id: number): Promise<{ publicId: string } | null> {
     return postRepository.findById(id);
+  }
+  async searchByContent({
+    query,
+    after,
+    take,
+    userId,
+  }: {
+    query: string;
+    after?: string;
+    take: number;
+    userId?: string;
+  }) {
+    const posts = await postRepository.searchByContent({
+      q: query,
+      after,
+      take,
+      userId,
+    });
+
+    const authorIds = [...new Set(posts.map((post) => post.userId))];
+    const following = await followerService.getUserFollowingPostByAuth(
+      userId ?? "",
+      authorIds,
+    );
+    const followers = await followerService.getUserFollowersByAuth(
+      userId ?? "",
+      authorIds,
+    );
+    const followingSet = new Set(following.map((row) => row.followingId));
+    const followerSet = new Set(followers.map((row) => row.userId));
+
+    return posts.map((post) =>
+      PostMapper.toFeedResponse(
+        {
+          ...post,
+          isFollowingAuthor: followingSet.has(post.userId),
+          isFollowedByAuthor: followerSet.has(post.userId),
+        },
+        userId,
+      ),
+    );
   }
 }
 

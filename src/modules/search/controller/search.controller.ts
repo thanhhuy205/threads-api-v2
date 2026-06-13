@@ -15,6 +15,7 @@ class SearchController {
       after,
       take,
       serpType: serp_type,
+      userId: req.user?.sub,
     });
     return res.paginate({
       rows,
@@ -33,12 +34,9 @@ class SearchController {
   }
 
   async searchTopic(req: Request<{}, {}, {}, {}>, res: Response) {
-    const { q, after, take } = req.query_parsed as SearchTopicQueryDto;
-    const { rows, pagination } = await searchService.searchTopic({ q, after, take });
-    return res.paginate({
-      rows,
-      pagination,
-    });
+    const { q } = req.query_parsed as SearchTopicQueryDto;
+    const result = await searchService.searchTopic({ q });
+    return res.success(200, "Topics retrieved successfully", result);
   }
 }
 export const searchController = new SearchController();

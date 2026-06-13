@@ -18,7 +18,9 @@ export const searchPostsQuerySchema = baseSearchQuerySchema.extend({
 export const searchUsernameQuerySchema = z.object({
   q: z.string().trim().min(1, "Query is required"),
 });
-export const searchTopicQuerySchema = baseSearchQuerySchema;
+export const searchTopicQuerySchema = z.object({
+  q: z.string().trim().min(1, "Query is required"),
+});
 
 export type SearchPostsQueryDto = z.infer<typeof searchPostsQuerySchema>;
 export type SearchUsernameQueryDto = z.infer<typeof searchUsernameQuerySchema>;

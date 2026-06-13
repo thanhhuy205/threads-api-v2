@@ -575,8 +575,97 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
       SET likes_count = GREATEST(likes_count - ${count}, 0)
       WHERE public_id = ${publicId}
     `
+  }
 
 
+  async searchByContent({
+    q,
+    after,
+    take = 20,
+    userId,
+  }: {
+    q: string;
+    after?: string;
+    take?: number;
+    userId?: string;
+  }) {
+    const cursor = after ?? null;
+    const matches = await prisma.$queryRaw<{ publicId: string }[]>`
+      SELECT p.public_id AS publicId
+      FROM posts p
+      LEFT JOIN posts cursor_post ON cursor_post.public_id = ${cursor}
+      WHERE MATCH(p.content) AGAINST (${q} IN BOOLEAN MODE)
+        AND p.type = ${PostType.POST}
+        AND p.is_deleted = false
+        AND p.is_hidden = false
+        AND p.visibility = ${VisibilityPost.PUBLIC}
+        AND (
+          ${cursor} IS NULL
+          OR p.created_at < cursor_post.created_at
+          OR (p.created_at = cursor_post.created_at AND p.id < cursor_post.id)
+        )
+      ORDER BY p.created_at DESC, p.id DESC
+      LIMIT ${take + 1}
+    `;
+
+    const publicIds = matches.map((post) => post.publicId);
+    if (!publicIds.length) {
+      return [];
+    }
+
+    const posts = await prisma.post.findMany({
+      where: {
+        publicId: {
+          in: publicIds,
+        },
+        type: PostType.POST,
+        isDeleted: false,
+        isHidden: false,
+        visibility: VisibilityPost.PUBLIC,
+      },
+      select: {
+        ...postFeedSelect,
+        _count: {
+          select: {
+            children: true,
+            derivatives: true,
+          },
+        },
+        ...(userId
+          ? {
+            likes: {
+              where: {
+                userId,
+                isLike: true,
+              },
+              select: {
+                userId: true,
+              },
+              take: 1,
+            },
+            derivatives: {
+              where: {
+                isQuote: true,
+                userId,
+              },
+              select: {
+                publicId: true,
+                userId: true,
+              },
+              take: 1,
+            },
+          }
+          : {}),
+      },
+    });
+
+    const postsByPublicId = new Map(
+      posts.map((post) => [post.publicId, post]),
+    );
+
+    return publicIds
+      .map((publicId) => postsByPublicId.get(publicId))
+      .filter((post): post is NonNullable<typeof post> => Boolean(post));
   }
 
   async applyLikeCountDelta(
