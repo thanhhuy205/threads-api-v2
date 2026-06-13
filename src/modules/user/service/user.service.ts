@@ -1,22 +1,9 @@
-import { baseLogger } from "@/middlewares/logger";
-import { searchService } from "@/modules/search/service/search.service";
 import { userRepository } from "@/modules/user/repository/user.repository";
-import {
-  type PaginationResponse
-} from "@/shared/pagination/cursor-pagination";
 import { Prisma } from "@prisma/client";
 import { mapUserProfileForFE } from "../mapper/user.mapper";
-import type { UserUsernameItem } from "../repository/user.repository";
 
 type GetNetworkUsernamesInput = {
   query: string;
-  after?: string;
-  take: number;
-};
-
-type GetNetworkUsernamesResult = {
-  rows: UserUsernameItem[];
-  pagination: PaginationResponse<string | number | null>;
 };
 
 class UserService {
@@ -103,19 +90,16 @@ class UserService {
     return userRepository.findByUsernames(normalizedUsernames);
   }
 
-  async getNetworkUsernames({
-    query,
-    after,
-    take,
-  }: GetNetworkUsernamesInput): Promise<GetNetworkUsernamesResult> {
-    baseLogger.info(`Getting network usernames for with query "${query}", after "${after}", take ${take}`
-    );
-    const result = await searchService.searchUsername({ q: query, after, take });
-    return result;
+  async searchUsername({ query }: GetNetworkUsernamesInput) {
+    return userRepository.searchUsername(query);
   }
 
   async findUserByEmail(email: string) {
     return userRepository.findByEmail(email);
+  }
+
+  async searchUsernameOneQuery({ query }: { query: string }) {
+    return userRepository.searchUsernameOneQuery(query);
   }
 }
 

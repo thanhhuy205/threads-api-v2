@@ -1,5 +1,5 @@
 import prisma from "@/config/prisma";
-import { FriendRequestStatus, type Prisma } from "@prisma/client";
+import { FriendRequestStatus, Prisma } from "@prisma/client";
 
 const userProfileSelect = {
   id: true,
@@ -48,6 +48,9 @@ export type UserBasicIdentity = Prisma.UserGetPayload<{
 export type UserUsernameItem = {
   username: string;
   id: string;
+  avatar: string | null;
+  name: string | null;
+  verifiedAt: Date | null;
 };
 
 class UserRepository {
@@ -124,6 +127,8 @@ class UserRepository {
         avatar: true,
         id: true,
         username: true,
+        name: true,
+        verifiedAt: true,
       },
     });
   }
@@ -253,6 +258,38 @@ class UserRepository {
     });
   }
 
+  async searchUsernameOneQuery(query: string) {
+    return prisma.user.findMany({
+      where: {
+        username: {
+          startsWith: query,
+        },
+      },
+      orderBy: {
+        username: "asc",
+      },
+      take: 40,
+      select: {
+        id: true,
+        username: true,
+        name: true,
+        verifiedAt: true,
+      },
+    });
+  }
+
+  async searchUsername(query: string) {
+    const rows = await prisma.$queryRaw<UserUsernameItem[]>`
+      SELECT username, id, avatar, name, verified_at as verifiedAt
+      FROM users
+      WHERE MATCH(username , name) AGAINST (${query} IN BOOLEAN MODE)
+        AND deleted_at IS NULL
+      ORDER BY MATCH(username, name) AGAINST (${query} IN BOOLEAN MODE) DESC, username ASC
+      LIMIT 40
+    `;
+
+    return rows;
+  }
   async findByEmail(email: string) {
     return prisma.user.findUnique({
       where: {

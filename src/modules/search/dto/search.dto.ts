@@ -15,7 +15,9 @@ export const searchPostsQuerySchema = baseSearchQuerySchema.extend({
   serp_type: z.enum(["default"]).default("default"),
 });
 
-export const searchUsernameQuerySchema = baseSearchQuerySchema;
+export const searchUsernameQuerySchema = z.object({
+  q: z.string().trim().min(1, "Query is required"),
+});
 export const searchTopicQuerySchema = baseSearchQuerySchema;
 
 export type SearchPostsQueryDto = z.infer<typeof searchPostsQuerySchema>;

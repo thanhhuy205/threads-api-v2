@@ -334,9 +334,13 @@ model User {
   webHookPreviewImages WebHookPreviewImage[]
   limitActionAIs       LimitActionAI[]
 
+  @@index([email], map: "idx_users_email")
+  @@index([name], map: "idx_users_name")
+  @@index([username], map: "idx_users_username")
   @@index([deletedAt], map: "idx_users_deleted_at")
   @@index([bannedUntil], map: "idx_users_banned_until")
   @@index([status, bannedUntil], map: "idx_users_status_banned_until")
+  @@fulltext([username, name], map: "idx_users_username_name_fulltext")
   @@map("users")
 }
 
@@ -494,6 +498,7 @@ model Post {
   @@index([originPostId])
   @@index([rootPostId])
   @@index([createdAt])
+  @@fulltext([content], map: "idx_posts_content_fulltext")
   @@map("posts")
 }
 
@@ -594,7 +599,9 @@ model Topic {
   topicsPosts        TopicsPost[] @relation("TopicPublic")
   privateTopicsPosts TopicsPost[] @relation("TopicPrivate")
 
+  @@index([name], map: "idx_topics_name")
   @@index([count], map: "idx_topics_count")
+  @@fulltext([name], map: "idx_topics_name_fulltext")
   @@map("topics")
 }
 

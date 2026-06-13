@@ -4,6 +4,7 @@ import type {
   SearchUsernameQueryDto,
 } from "@/modules/search/dto/search.dto";
 import { searchService } from "@/modules/search/service/search.service";
+import { userService } from "@/modules/user/service/user.service";
 import type { Request, Response } from "express";
 
 class SearchController {
@@ -22,12 +23,13 @@ class SearchController {
   }
 
   async searchUsername(req: Request<{}, {}, {}, {}>, res: Response) {
-    const { q, after, take } = req.query_parsed as SearchUsernameQueryDto;
-    const { rows, pagination } = await searchService.searchUsername({ q, after, take });
-    return res.paginate({
-      rows,
-      pagination,
-    });
+    const { q } = req.query_parsed as SearchUsernameQueryDto;
+    if (q.length === 1) {
+      const result = await userService.searchUsernameOneQuery({ query: q });
+      return res.success(200, "Usernames retrieved successfully", result);
+    }
+    const result = await userService.searchUsername({ query: q });
+    return res.success(200, "Usernames retrieved successfully", result);
   }
 
   async searchTopic(req: Request<{}, {}, {}, {}>, res: Response) {

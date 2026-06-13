@@ -299,31 +299,40 @@ class SearchService {
       }));
   }
 
-  async searchUsername({ q, after, take }: SearchUserInput) {
-    const docs = await this.searchUsernameIndex({ q, after, take });
+  // async searchUsername({ q, after, take }: SearchUserInput) {
+  //   const docs = await this.searchUsernameIndex({ q, after, take });
 
-    const usernames = docs
-      .map((item) => item.source.username?.trim())
-      .filter((item): item is string => Boolean(item));
+  //   const usernames = docs
+  //     .map((item) => item.source.username?.trim())
+  //     .filter((item): item is string => Boolean(item));
 
-    if (!usernames.length) {
-      return buildCursorPagination({
-        rows: [],
-        take,
-        getAfter: (item) => "",
-      });
-    }
+  //   if (!usernames.length) {
+  //     return buildCursorPagination({
+  //       rows: [],
+  //       take,
+  //       getAfter: (item) => "",
+  //     });
+  //   }
 
-    const users = await userService.findUsersByUsernames(usernames);
-    const rows = this.reorderByKeys(users, usernames, (item) => item.username);
+  //   const users = await userService.findUsersByUsernames(usernames);
+  //   const rows = this.reorderByKeys(users, usernames, (item) => item.username);
 
-    return buildCursorPagination({
-      rows,
-      take,
-      getAfter: (item) => item.username,
-    });
-  }
+  //   return buildCursorPagination({
+  //     rows,
+  //     take,
+  //     getAfter: (item) => item.username,
+  //   });
+  // }
 
+  // async searchUsername({ q, after, take }: SearchUserInput) {
+  //   const result = await userService.searchUsername(q, after, take);
+
+  //   return buildCursorPagination({
+  //     rows: result.rows,
+  //     take,
+  //     getAfter: (item) => item.username,
+  //   });
+  // }
   async searchTopic({ q, after, take }: SearchTopicInput) {
     const docs = await this.searchTopicIndex({ q, after, take });
 

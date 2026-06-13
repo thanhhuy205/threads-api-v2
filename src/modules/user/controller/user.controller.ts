@@ -179,18 +179,17 @@ class UserController {
     req: Request<{}, {}, {}, UserNameMentionQueryDto>,
     res: Response,
   ) {
-    const { after, take } = getPagination(req);
-
-    const query = req.query_parsed.q?.trim() || undefined;
-    baseLogger.info(`Received request to get usernames with query "${query}", after "${after}", take ${take}`);
-
-    const { rows, pagination } = await userService.getNetworkUsernames({
+    const query = req.query_parsed.q.trim();
+    baseLogger.info(`Received request to get usernames with query "${query}"`);
+    if (query.length === 1) {
+      const result = await userService.searchUsernameOneQuery({ query });
+      return res.success(200, "Usernames retrieved successfully", result);
+    }
+    const result = await userService.searchUsername({
       query,
-      after: after ?? undefined,
-      take,
     });
 
-    return res.paginate({ rows, pagination });
+    return res.success(200, "Usernames retrieved successfully", result);
   }
 
   async getMyKarma(req: Request, res: Response) {
