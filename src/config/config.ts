@@ -1,6 +1,5 @@
 import { cloudflareConfig } from '@/config/cloudflare';
 import { databaseConfig } from '@/config/database';
-import { elasticSearchConfig } from '@/config/elasticsearch';
 import { groQConfig } from '@/config/groq';
 import { jwtConfig } from '@/config/jwt';
 import { leonardoConfig } from '@/config/leonardo';
@@ -36,7 +35,6 @@ const envSchema = z.object({
     ...muxConfig.shape,
     ...openRouterConfig.shape,
     ...leonardoConfig.shape,
-    ...elasticSearchConfig.shape,
     ...notionConfig.shape,
     ...groQConfig.shape,
 });

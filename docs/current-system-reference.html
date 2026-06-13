@@ -65,7 +65,7 @@
   <table><thead><tr><th>Queue</th><th>Worker hiện có</th><th>Mục đích</th></tr></thead><tbody>
     <tr><td><code>email_queue</code></td><td>email.worker</td><td>Verify, forgot-password và invitation email.</td></tr>
     <tr><td><code>bloom_queue</code></td><td>bloom.worker</td><td>Redis Bloom username/email.</td></tr>
-    <tr><td><code>elastic_queue</code></td><td>elastic.worker</td><td>Index post/user vào OpenSearch-compatible client.</td></tr>
+
     <tr><td><code>pinecone_queue</code></td><td>pine.worker</td><td>Mixedbread embedding và Pinecone upsert.</td></tr>
     <tr><td><code>like_queue</code> + <code>likes_events</code></td><td>like.worker</td><td>Đồng bộ like state và phát notification count.</td></tr>
     <tr><td><code>notification</code></td><td>notification.worker</td><td>Flush grouped reply/mention/like notification.</td></tr>
@@ -81,7 +81,7 @@
     <tr><td>Runtime/API</td><td>Node.js, TypeScript 5.8, Express 5.1, Zod 3.25.</td></tr>
     <tr><td>Database</td><td>Prisma 7.8, <code>@prisma/adapter-mariadb</code>, MySQL/MariaDB.</td></tr>
     <tr><td>Async/cache</td><td>Redis 5 client, ioredis, Redis Bloom, BullMQ 5.76.</td></tr>
-    <tr><td>Search/vector</td><td><code>@opensearch-project/opensearch</code>, Mixedbread AI, Pinecone.</td></tr>
+    <tr><td>Search/vector</td><td>Prisma, Mixedbread AI, Pinecone.</td></tr>
     <tr><td>AI</td><td>OpenRouter SDK/provider, Groq, Google GenAI dependency, Leonardo provider.</td></tr>
     <tr><td>Media/realtime</td><td>Cloudflare R2 qua AWS S3 SDK, Sharp, Mux, Pusher.</td></tr>
     <tr><td>Operations</td><td>Docker multi-stage, Nginx, API + worker container.</td></tr>

@@ -1,6 +1,5 @@
 export const QUEUE_NAME = {
   PINECONE_QUEUE: "pinecone_queue",
-  ELASTIC_QUEUE: "elastic_queue",
   EMAIL_QUEUE: "email_queue",
   BLOOM_QUEUE: "bloom_queue",
   LIKE_QUEUE: "like_queue",
@@ -16,7 +15,6 @@ export const QUEUE_NAME = {
 
 export const WORKER_NAME = {
   PINECONE_WORKER: "pinecone_worker",
-  ELASTIC_WORKER: "elastic_worker",
   EMAIL_WORKER: "email_verification_worker",
   BLOOM_WORKER: "bloom_worker",
   LIKE_WORKER: "like_worker",
@@ -31,10 +29,6 @@ export const PINECONE_JOB_NAME = {
   POST_EMBEDDING: "post_embedding",
 };
 
-export const ELASTIC_JOB_NAME = {
-  ADD_POST: "add_post",
-  ADD_USER: "add_user",
-};
 export const EMAIL_JOB_NAME = {
   SEND_VERIFICATION_EMAIL: "send_verification_email",
   SEND_FORGOT_PASSWORD_EMAIL: "send_forgot_password_email",

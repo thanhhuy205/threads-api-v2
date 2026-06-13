@@ -417,7 +417,7 @@
           <div class="card-foot"><span>prisma/schema.prisma</span><span class="arrow">→</span></div>
         </a>
         <a class="card searchable" data-type="architecture" href="architecture/background-jobs.html">
-          <div class="card-top"><span class="kind">Async</span><span class="status live">10 workers</span></div>
+          <div class="card-top"><span class="kind">Async</span><span class="status live">9 workers</span></div>
           <h3>Background jobs</h3>
           <p>Producer, Redis queue, repeat job, debounce notification, AI evaluation và search indexing.</p>
           <div class="card-foot"><span>workers/ · queues/</span><span class="arrow">→</span></div>
@@ -425,7 +425,7 @@
         <a class="card searchable" data-type="module" href="modules/supporting-modules.html">
           <div class="card-top"><span class="kind">Internal modules</span><span class="status live">Code map</span></div>
           <h3>Supporting modules</h3>
-          <p>Access control, JWT, anti-spam, restriction, action log, report, search/vector adapters và job producers.</p>
+          <p>Access control, JWT, anti-spam, restriction, action log, report, database search và vector services và job producers.</p>
           <div class="card-foot"><span>Không mount route riêng</span><span class="arrow">→</span></div>
         </a>
       </div>
@@ -458,9 +458,9 @@
         </article>
         <article class="tech-card searchable" data-type="tech" data-index="04">
           <span class="tech-label">Search &amp; vector</span>
-          <h3>OpenSearch + Pinecone + Mixedbread</h3>
+          <h3>Prisma + Pinecone + Mixedbread</h3>
           <p>Full-text search cho post/user/topic và semantic search bằng embedding lưu trong vector database.</p>
-          <div class="pills"><span class="pill">OpenSearch 3.6</span><span class="pill">Pinecone 7.2</span><span class="pill">Mixedbread AI</span></div>
+          <div class="pills"><span class="pill">Prisma 7.8</span><span class="pill">Pinecone 7.2</span><span class="pill">Mixedbread AI</span></div>
         </article>
         <article class="tech-card searchable" data-type="tech" data-index="05">
           <span class="tech-label">AI providers</span>
@@ -550,7 +550,7 @@
         <a class="card searchable" data-type="module" href="modules/admin/overview.html"><div class="card-top"><span class="kind">Back office</span><span class="status live">14 routes</span></div><h3>Admin</h3><p>Role-guarded user moderation, reports, statistics, trending hashtag và daily quest.</p><div class="card-foot"><span>/admin</span><span class="arrow">→</span></div></a>
         <a class="card searchable" data-type="module" href="modules/message-group/overview.html"><div class="card-top"><span class="kind">Realtime</span><span class="status live">6 routes</span></div><h3>Message Group</h3><p>Private/crowd groups, messages, status, members và Pusher event.</p><div class="card-foot"><span>/message-groups</span><span class="arrow">→</span></div></a>
         <a class="card searchable" data-type="module" href="modules/notification-group/overview.html"><div class="card-top"><span class="kind">Realtime</span><span class="status live">5 routes</span></div><h3>Notification</h3><p>Grouped reply/mention/like, unread state, message và friend-request counters.</p><div class="card-foot"><span>/notification</span><span class="arrow">→</span></div></a>
-        <a class="card searchable" data-type="module" href="modules/search/overview.html"><div class="card-top"><span class="kind">Discovery</span><span class="status live">3 routes</span></div><h3>Search</h3><p>OpenSearch-compatible full-text index cho post, username và topic.</p><div class="card-foot"><span>/search</span><span class="arrow">→</span></div></a>
+        <a class="card searchable" data-type="module" href="modules/search/overview.html"><div class="card-top"><span class="kind">Discovery</span><span class="status live">3 routes</span></div><h3>Search</h3><p>Database-backed search cho post, username và topic.</p><div class="card-foot"><span>/search</span><span class="arrow">→</span></div></a>
         <a class="card searchable" data-type="module" href="modules/upload/overview.html"><div class="card-top"><span class="kind">Media</span><span class="status live">2 routes</span></div><h3>Upload</h3><p>Sharp + memory upload, Cloudflare R2 và media record.</p><div class="card-foot"><span>/upload</span><span class="arrow">→</span></div></a>
         <a class="card searchable" data-type="module" href="modules/webhooks/overview.html"><div class="card-top"><span class="kind">Integration</span><span class="status live">Webhook</span></div><h3>Webhooks</h3><p>Mux raw-body signature và Leonardo image callback.</p><div class="card-foot"><span>/webhooks</span><span class="arrow">→</span></div></a>
         <a class="card searchable" data-type="module" href="modules/ai/overview.html"><div class="card-top"><span class="kind">AI</span><span class="status partial">Mixed providers</span></div><h3>AI</h3><p>Groq markdown, Leonardo generation và OpenRouter scoring/evaluation.</p><div class="card-foot"><span>/ai + internal services</span><span class="arrow">→</span></div></a>
@@ -559,7 +559,7 @@
         <a class="card searchable" data-type="module" href="modules/pusher/overview.html"><div class="card-top"><span class="kind">Realtime</span><span class="status live">1 route</span></div><h3>Pusher</h3><p>Authorize private/presence channel bằng JWT identity.</p><div class="card-foot"><span>/pusher</span><span class="arrow">→</span></div></a>
         <a class="card searchable" data-type="module" href="modules/museum/overview.html"><div class="card-top"><span class="kind">Archive</span><span class="status live">2 routes</span></div><h3>Museum</h3><p>Danh sách và chi tiết archive cho user đã xác thực.</p><div class="card-foot"><span>/museum</span><span class="arrow">→</span></div></a>
         <a class="card searchable" data-type="module" href="modules/health/overview.html"><div class="card-top"><span class="kind">Operations</span><span class="status live">1 route</span></div><h3>Health</h3><p>Liveness endpoint cho API process.</p><div class="card-foot"><span>/health</span><span class="arrow">→</span></div></a>
-        <a class="card searchable" data-type="module" href="modules/jobs/overview.html"><div class="card-top"><span class="kind">Async</span><span class="status live">10 workers</span></div><h3>Jobs</h3><p>Email, Bloom, search, vector, like, notification, evaluation, HP và ban cleanup.</p><div class="card-foot"><span>workers/ · producers/</span><span class="arrow">→</span></div></a>
+        <a class="card searchable" data-type="module" href="modules/jobs/overview.html"><div class="card-top"><span class="kind">Async</span><span class="status live">9 workers</span></div><h3>Jobs</h3><p>Email, Bloom, vector, like, notification, evaluation, HP và ban cleanup.</p><div class="card-foot"><span>workers/ · producers/</span><span class="arrow">→</span></div></a>
       </div>
     </section>
 
@@ -608,10 +608,10 @@
         <a class="card searchable" data-type="flow" href="04-luu-bai.html"><div class="card-top"><span class="kind">Bookmark</span><span class="status live">Post</span></div><h3>Lưu bài</h3><p>Authorization, toggle save state, repository write và response cho client.</p><div class="card-foot"><span>POST /posts/:id/save</span><span class="arrow">→</span></div></a>
         <a class="card searchable" data-type="flow" href="05-an-bai-bao-cao.html"><div class="card-top"><span class="kind">Moderation</span><span class="status live">Post + report</span></div><h3>Ẩn bài và báo cáo</h3><p>Per-user hide state, report persistence, AI evaluation và admin review.</p><div class="card-foot"><span>hide · report · evaluation</span><span class="arrow">→</span></div></a>
         <a class="card searchable" data-type="flow" href="post-visibility-edit-delete.html"><div class="card-top"><span class="kind">Visibility</span><span class="status live">Current</span></div><h3>Visibility, edit và soft delete</h3><p>Ownership, audience filtering, mutation constraints và cache version invalidation.</p><div class="card-foot"><span>Post lifecycle deep dive</span><span class="arrow">→</span></div></a>
-        <a class="card searchable" data-type="flow" href="10-search.html"><div class="card-top"><span class="kind">Discovery</span><span class="status live">Search</span></div><h3>Search end-to-end</h3><p>OpenSearch full-text, Mixedbread embedding, Pinecone semantic query và hydration.</p><div class="card-foot"><span>/search · /posts/search</span><span class="arrow">→</span></div></a>
+        <a class="card searchable" data-type="flow" href="10-search.html"><div class="card-top"><span class="kind">Discovery</span><span class="status live">Search</span></div><h3>Search end-to-end</h3><p>Prisma text search, Mixedbread embedding và Pinecone semantic query.</p><div class="card-foot"><span>/search · /posts/search</span><span class="arrow">→</span></div></a>
         <a class="card searchable" data-type="flow" href="11-admin-cms.html"><div class="card-top"><span class="kind">Back office</span><span class="status live">14 routes</span></div><h3>Admin và CMS</h3><p>User moderation, reports, statistics, trending hashtag và daily quest management.</p><div class="card-foot"><span>/admin</span><span class="arrow">→</span></div></a>
         <a class="card searchable" data-type="flow" href="12-ai-integration.html"><div class="card-top"><span class="kind">AI pipeline</span><span class="status partial">Multi-provider</span></div><h3>AI integration</h3><p>Generation, scoring, evaluation, embedding và provider boundary trong hệ thống.</p><div class="card-foot"><span>AI · evaluation · vector</span><span class="arrow">→</span></div></a>
-        <a class="card searchable" data-type="flow" href="job-worker-flow.html"><div class="card-top"><span class="kind">Async operations</span><span class="status live">10 workers</span></div><h3>Job và worker operations</h3><p>12 queue name, repeat jobs, producers, consumers, retry và external side effects.</p><div class="card-foot"><span>queues/ · workers/</span><span class="arrow">→</span></div></a>
+        <a class="card searchable" data-type="flow" href="job-worker-flow.html"><div class="card-top"><span class="kind">Async operations</span><span class="status live">9 workers</span></div><h3>Job và worker operations</h3><p>11 queue name, repeat jobs, producers, consumers, retry và external side effects.</p><div class="card-foot"><span>queues/ · workers/</span><span class="arrow">→</span></div></a>
         <a class="card searchable" data-type="flow" href="22-chat-pusher-mechanism.html"><div class="card-top"><span class="kind">Realtime deep dive</span><span class="status live">Pusher</span></div><h3>Cơ chế Pusher cho chat</h3><p>Channel naming, authorization, event payload, persistence và notification worker.</p><div class="card-foot"><span>Pusher mechanism</span><span class="arrow">→</span></div></a>
         <a class="card searchable" data-type="flow" href="23-daily-quest-actions-user-action-log.html"><div class="card-top"><span class="kind">Gamification</span><span class="status live">Quest</span></div><h3>Daily quest và action log</h3><p>Action taxonomy, progress aggregation, claim rule, karma reward và admin setup.</p><div class="card-foot"><span>/quests · /admin/daily-quests</span><span class="arrow">→</span></div></a>
         <a class="card searchable" data-type="flow" href="17-pr-likejob-sync-fix.html"><div class="card-top"><span class="kind">Incident analysis</span><span class="status reference">Like sync</span></div><h3>LikeJob sync debug trail</h3><p>Redis event list, lock/dedupe, DB sync, failure recovery và notification side effect.</p><div class="card-foot"><span>like worker incident</span><span class="arrow">→</span></div></a>

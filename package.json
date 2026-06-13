@@ -22,7 +22,6 @@
         "start:prod": "node dist/src/server.js",
         "start:worker": "node dist/workers/index.js",
         "all:workers:queues": "npm run worker && npm run queue",
-        "elastic:seed": "tsx scripts",
         "docs:routes": "node scripts/generate-docs-routes.mjs"
     },
     "prisma": {
@@ -37,7 +36,6 @@
         "@notionhq/client": "^5.22.0",
         "@openrouter/ai-sdk-provider": "^2.9.0",
         "@openrouter/sdk": "^0.12.35",
-        "@opensearch-project/opensearch": "^3.6.0",
         "@pinecone-database/pinecone": "^7.2.0",
         "@prisma/adapter-mariadb": "7.8.0",
         "@prisma/client": "7.8.0",

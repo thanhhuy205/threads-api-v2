@@ -76,7 +76,7 @@
   <span class="str">"success"</span>: false,
   <span class="str">"message"</span>: <span class="str">"Validation failed"</span>
 }</pre></div>
-        <h3>Ghi chú</h3><ul><li>Endpoint đi qua global <code>apiLimiter</code>.</li><li>Idempotency không được đảm bảo trừ khi service có upsert/unique constraint riêng.</li><li>Index tên cố định là search.</li></ul>
+        <h3>Ghi chú</h3><ul><li>Endpoint đi qua global <code>apiLimiter</code>.</li><li>Idempotency không được đảm bảo trừ khi service có upsert/unique constraint riêng.</li><li>Search đọc trực tiếp từ MySQL/Prisma.</li></ul>
         
         <h2>GET /api/v1/search/username</h2><span class="tag clay">GET</span> <span class="tag olive">Auth required</span> <span class="tag ">apiLimiter</span>
         <p>Endpoint này dùng để search users. Gọi endpoint này khi client cần thao tác đúng phạm vi module <code>search</code>.</p>
@@ -99,7 +99,7 @@
   <span class="str">"success"</span>: false,
   <span class="str">"message"</span>: <span class="str">"Validation failed"</span>
 }</pre></div>
-        <h3>Ghi chú</h3><ul><li>Endpoint đi qua global <code>apiLimiter</code>.</li><li>Idempotency không được đảm bảo trừ khi service có upsert/unique constraint riêng.</li><li>Index tên cố định là search.</li></ul>
+        <h3>Ghi chú</h3><ul><li>Endpoint đi qua global <code>apiLimiter</code>.</li><li>Idempotency không được đảm bảo trừ khi service có upsert/unique constraint riêng.</li><li>Search đọc trực tiếp từ MySQL/Prisma.</li></ul>
         
         <h2>GET /api/v1/search/topic</h2><span class="tag clay">GET</span> <span class="tag olive">Auth required</span> <span class="tag ">apiLimiter</span>
         <p>Endpoint này dùng để search topics. Gọi endpoint này khi client cần thao tác đúng phạm vi module <code>search</code>.</p>
@@ -122,7 +122,7 @@
   <span class="str">"success"</span>: false,
   <span class="str">"message"</span>: <span class="str">"Validation failed"</span>
 }</pre></div>
-        <h3>Ghi chú</h3><ul><li>Endpoint đi qua global <code>apiLimiter</code>.</li><li>Idempotency không được đảm bảo trừ khi service có upsert/unique constraint riêng.</li><li>Index tên cố định là search.</li></ul>
+        <h3>Ghi chú</h3><ul><li>Endpoint đi qua global <code>apiLimiter</code>.</li><li>Idempotency không được đảm bảo trừ khi service có upsert/unique constraint riêng.</li><li>Search đọc trực tiếp từ MySQL/Prisma.</li></ul>
         </main>
   
 </div>

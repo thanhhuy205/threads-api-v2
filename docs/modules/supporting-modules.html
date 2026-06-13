@@ -38,7 +38,7 @@
   <table><thead><tr><th>Module/provider</th><th>Vai trò</th><th>Luồng</th></tr></thead><tbody>
     <tr><td>mixed-bread</td><td>Sinh embedding.</td><td>Post content/query → vector.</td></tr>
     <tr><td>pinecone</td><td>Lưu/query vector post.</td><td><code>pinecone_queue</code> và post similar/search flow.</td></tr>
-    <tr><td>OpenSearch client</td><td>Full-text index chung tên <code>search</code>.</td><td>Elastic producer/worker → search module hydrate Prisma.</td></tr>
+    <tr><td>MySQL/Prisma</td><td>Lưu dữ liệu nguồn cho text search.</td><td>Search module gọi repository trực tiếp.</td></tr>
     <tr><td>OpenRouter</td><td>Structured JSON scoring/evaluation.</td><td>Evaluation worker cho circle post và report.</td></tr>
     <tr><td>Groq</td><td>Định dạng markdown caption.</td><td>Circle AI/AI service.</td></tr>
     <tr><td>Leonardo</td><td>Image generation job và webhook callback.</td><td><code>/ai/generate-image</code> → preview record → webhook.</td></tr>
@@ -48,7 +48,7 @@
   <table><thead><tr><th>Producer</th><th>Queue</th><th>Được gọi khi</th></tr></thead><tbody>
     <tr><td>emailProducer</td><td>email_queue</td><td>Verify email, forgot password, circle invitation.</td></tr>
     <tr><td>bloomProducer</td><td>bloom_queue</td><td>Register user.</td></tr>
-    <tr><td>elasticProducer</td><td>elastic_queue</td><td>Register user và index post.</td></tr>
+
     <tr><td>pineProducer</td><td>pinecone_queue</td><td>Post cần semantic embedding.</td></tr>
     <tr><td>likeProducer</td><td>like_queue</td><td>Server bootstrap và like sync.</td></tr>
     <tr><td>notificationProducer</td><td>notification/message/friend-request queues</td><td>Repeat flush notification; friend-request chưa có worker riêng.</td></tr>
