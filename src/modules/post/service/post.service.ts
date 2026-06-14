@@ -60,6 +60,11 @@ type ReportSubmissionResult = {
   evaluationQueued: boolean;
 };
 
+type CreatePostMeta = {
+  topic?: string;
+  mentionIds: string[];
+};
+
 class PostService {
   private readonly postListCacheTtlSeconds = 60;
   private readonly similarPostsCacheTtlSeconds = 300;
@@ -135,7 +140,7 @@ class PostService {
 
   private async createInTransaction(
     createFn: (tx: Prisma.TransactionClient) => Promise<PostRecord>,
-    meta?: { topic?: string; mentionIds: string[] },
+    meta?: CreatePostMeta,
   ): Promise<PostRecord> {
     return transactionService.doInTransaction(async (tx) => {
       const post = await createFn(tx);
@@ -229,7 +234,7 @@ class PostService {
   private async attachPostMeta(
     tx: Prisma.TransactionClient,
     postId: number,
-    payload?: { topic?: string; mentionIds: string[] },
+    payload?: CreatePostMeta,
   ): Promise<void> {
     if (!payload) return;
     if (payload.mentionIds.length) {
@@ -252,6 +257,7 @@ class PostService {
         tx,
       );
     }
+
   }
 
   private async paginatePosts({

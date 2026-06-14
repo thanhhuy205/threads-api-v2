@@ -24,7 +24,6 @@ class MessageWorker {
             now
         );
 
-        console.log("Due items:", dueItems);
         if (!dueItems.length) return;
         const notificationMessage: {
             avatar: string,
@@ -47,8 +46,6 @@ class MessageWorker {
             console.log(notificationData);
 
             notificationMessage.push({ ...notificationData } as any);
-
-
 
             await redisService
                 .multi()

@@ -31,7 +31,8 @@ export type PostRecord = {
   createdAt: string;
 };
 
-type RepositoryCreatePostPayload = CreatePostPayload & {
+type RepositoryCreatePostPayload = Omit<CreatePostPayload, "isSurvey"> & {
+  isSurvey?: boolean;
   type?: PostType;
 };
 
@@ -148,6 +149,31 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
     return contentJson as Prisma.InputJsonValue;
   }
 
+  private createPoll(polls?: string[]) {
+    const options = polls
+      ?.map((poll) => poll.trim())
+      .filter((poll) => poll.length > 0);
+
+    if (!options?.length) {
+      return undefined;
+    }
+
+    return {
+      create: {
+        expiresAt: this.getPollExpiresAt(),
+        pollOptions: {
+          create: options.map((optionText) => ({
+            optionText,
+          })),
+        },
+      },
+    };
+  }
+
+  private getPollExpiresAt() {
+    return new Date(Date.now() + 24 * 60 * 60 * 1000);
+  }
+
   private baseData(
     payload: RepositoryCreatePostPayload,
     userSnapshot: UserSnapshot,
@@ -159,6 +185,8 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
       replyPermission: payload.replyPermission ?? ReplyPermission.EVERYONE,
       visibility: payload.visibility ?? VisibilityPost.PUBLIC,
       userSnapshot,
+      isSurvey: Boolean(payload.isSurvey || payload.polls?.length),
+      polls: this.createPoll(payload.polls),
       media: this.connectMedia(payload.media),
     };
   }

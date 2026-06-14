@@ -132,6 +132,8 @@ enum RequestStatus {
 enum PostMediaType {
   IMAGE
   VIDEO
+  HLS
+  VOICE
   GIF
   OTHER
 }
@@ -306,8 +308,6 @@ model User {
   followers            Follow[]              @relation("FollowFollowing")
   circles              Circle[]              @relation("CircleCreated")
   circleMembers        CircleMember[]
-  antiSpams            AntiSpam[]
-  emailLogs            EmailLog[]
   notifications        NotificationGroup[]
   circleInvitations    CircleInvitation[]    @relation("CircleInvitationUser")
   circleInvited        CircleInvitation[]    @relation("CircleInvitationInviter")
@@ -464,6 +464,7 @@ model Post {
   isQuote  Boolean @default(false) @map("is_quote")
   isPinned Boolean @default(false) @map("is_pinned")
   isGhost  Boolean @default(false) @map("is_ghost")
+  isSurvey Boolean @default(false) @map("is_survey")
 
   isDeleted Boolean   @default(false) @map("is_deleted")
   deletedAt DateTime? @map("deleted_at")
@@ -492,6 +493,7 @@ model Post {
   circlePostQualityLogs   CirclePostQualityLog[]
   circleExpLogs           CircleExpLog[]
   originPostNotifications NotificationGroup[]    @relation("NotificationOriginPost")
+  polls                   Poll[]
 
   @@index([userId, createdAt])
   @@index([parentId])
@@ -500,6 +502,32 @@ model Post {
   @@index([createdAt])
   @@fulltext([content], map: "idx_posts_content_fulltext")
   @@map("posts")
+}
+
+model Poll {
+  id        Int      @id @default(autoincrement())
+  postId    Int      @map("post_id")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  post        Post         @relation(fields: [postId], references: [id])
+  pollOptions PollOption[]
+
+  @@index([postId], map: "idx_polls_post_id")
+  @@map("polls")
+}
+
+model PollOption {
+  id         Int      @id @default(autoincrement())
+  pollId     Int      @map("poll_id")
+  optionText String   @map("option_text") @db.VarChar(255)
+  votesCount Int      @default(0) @map("votes_count")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  poll Poll @relation(fields: [pollId], references: [id])
+
+  @@index([pollId], map: "idx_poll_options_poll_id")
+  @@map("poll_options")
 }
 
 model PostMedia {
@@ -649,23 +677,6 @@ model RefreshToken {
   @@map("refresh_tokens")
 }
 
-model EmailLog {
-  id        Int      @id @default(autoincrement())
-  userId    String   @map("user_id")
-  email     String   @db.VarChar(255)
-  type      String   @db.VarChar(50)
-  status    String   @db.VarChar(50)
-  error     String?  @db.VarChar(255)
-  createdAt DateTime @default(now()) @map("created_at")
-
-  user User @relation(fields: [userId], references: [id])
-
-  @@index([userId], map: "idx_email_logs_user_id")
-  @@index([type], map: "idx_email_logs_type")
-  @@index([status], map: "idx_email_logs_status")
-  @@map("email_logs")
-}
-
 model Circle {
   id          Int        @id @default(autoincrement())
   publicId    String     @unique @default(cuid()) @db.VarChar(255)
@@ -684,7 +695,6 @@ model Circle {
   circleEnergies        CircleEnergy[]
   circlePostQualityLogs CirclePostQualityLog[]
   circleSoulStone       CircleSoulStone?
-  cprSessions           CprSession[]
   circleExpLogs         CircleExpLog[]
   heroBadges            HeroBadge[]
   circleJoinRequests    CircleJoinRequest[]
@@ -931,24 +941,6 @@ model UserRestriction {
   @@map("user_restrictions")
 }
 
-// Hồi sức cho nhóm only admin 
-model CprSession {
-  id              String   @id @default(cuid())
-  circleId        String
-  activatedBy     String
-  expiresAt       DateTime
-  resolved        Boolean  @default(false)
-  targetComments  Int      @default(10) @map("target_comments")
-  currentComments Int      @default(0) @map("current_comments")
-  postId          Int?     @map("post_id") // bài CPR cụ thể
-  success         Boolean?
-  createdAt       DateTime @default(now())
-
-  circle Circle @relation(fields: [circleId], references: [publicId])
-
-  @@map("cpr_sessions")
-}
-
 model CircleSoulStone {
   id         String   @id @default(cuid())
   circleId   String   @unique
@@ -1001,19 +993,6 @@ model CircleJoinRequest {
   user   User   @relation(fields: [userId], references: [id])
 
   @@map("circle_join_requests")
-}
-
-model AntiSpam {
-  id     Int        @id @default(autoincrement())
-  userId String     @map("user_id")
-  action ActionType @map("action")
-  reason String?    @db.VarChar(255)
-
-  user      User     @relation(fields: [userId], references: [id])
-  createdAt DateTime @default(now()) @map("created_at")
-
-  @@index([userId], map: "idx_anti_spam_user_id")
-  @@map("anti_spam")
 }
 
 model WebHookPreviewImage {

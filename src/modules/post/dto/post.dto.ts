@@ -6,6 +6,12 @@ const mentionSchema = z.object({
   username: z.string().trim().min(1, "Mention username is required"),
 });
 
+const pollOptionSchema = z
+  .string()
+  .trim()
+  .min(1, "Poll option text is required")
+  .max(255, "Poll option text must be at most 255 characters");
+
 const replyPermissionSchema = z.preprocess(
   (value) => (typeof value === "string" ? value.trim().toUpperCase() : value),
   z.nativeEnum(ReplyPermission, {
@@ -45,22 +51,49 @@ const createPostSchema = z.object({
       }),
     )
     .optional(),
+  isSurvey: z.boolean().default(false),
+  polls: z.array(pollOptionSchema).max(4, "Polls must be at most 4 options").optional(),
   replyPermission: replyPermissionSchema.default(ReplyPermission.EVERYONE),
   visibility: visibilityPostSchema.default(VisibilityPost.PUBLIC),
 }).superRefine((payload, ctx) => {
-  if (!payload.mentions?.length) {
-    return;
+  if (payload.mentions?.length) {
+    const mentionIds = payload.mentions.map((mention) => mention.userId);
+    const uniqueIds = new Set(mentionIds);
+
+    if (uniqueIds.size !== mentionIds.length) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Mentions must not contain duplicate users",
+        path: ["mentions"],
+      });
+    }
   }
 
-  const mentionIds = payload.mentions.map((mention) => mention.userId);
-  const uniqueIds = new Set(mentionIds);
-
-  if (uniqueIds.size !== mentionIds.length) {
+  if (payload.isSurvey && payload.polls && payload.polls?.length < 2) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      message: "Mentions must not contain duplicate users",
-      path: ["mentions"],
+      message: "Polls must contain at least 2 options when isSurvey is true",
     });
+  }
+
+  if (payload.isSurvey && !payload.polls?.length) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Polls are required when isSurvey is true",
+      path: ["polls"],
+    });
+  }
+
+  if (payload.isSurvey && payload.polls && payload.polls.length >= 2) {
+    const hasEmpty = payload.polls.some(item => item.trim() === "");
+
+    if (hasEmpty) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Polls are required when isSurvey is true",
+        path: ["polls"],
+      });
+    }
   }
 });
 
@@ -80,3 +113,4 @@ const updatePostSchema = z.object({
 export type UpdatePostDto = z.infer<typeof updatePostSchema>;
 
 export { createPostSchema, updatePostSchema };
+

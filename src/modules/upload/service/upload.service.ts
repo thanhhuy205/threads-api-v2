@@ -83,7 +83,7 @@ class UploadService {
 
         return {
             key: folder,
-            url: `https://${configService.R2_ENDPOINT}/${configService.R2_BUCKET_NAME}/hls/${folder}`,
+            url: `${configService.R2_ENDPOINT}/${configService.R2_BUCKET_NAME}/hls/${folder}/index.m3u8`,
             type: "VIDEO" as const,
             status: PostMediaStatus.UPLOADING,
             width: file.width ?? null,

@@ -15,8 +15,28 @@ export const postFeedSelect = Prisma.validator<Prisma.PostSelect>()({
   likesCount: true,
   viewsCount: true,
   isGhost: true,
+  isSurvey: true,
   isDisinformation: true,
   createdAt: true,
+  polls: {
+    select: {
+      id: true,
+      expiresAt: true,
+      pollOptions: {
+        select: {
+          id: true,
+          optionText: true,
+          votesCount: true,
+        },
+        orderBy: {
+          id: "asc",
+        },
+      },
+    },
+    orderBy: {
+      id: "asc",
+    },
+  },
   media: {
     select: {
       id: true,

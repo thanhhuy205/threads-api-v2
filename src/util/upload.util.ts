@@ -1,5 +1,5 @@
 import { putObject } from "@/providers/cloudflare.provider";
-import { readdir, readFile } from "fs/promises";
+import { readdir, readFile, rm } from "fs/promises";
 export const generateKeyImage = (
     folder: string,
     fileName: string
@@ -27,5 +27,7 @@ export const uploadDirToR2 = async (localDir: string, r2Dir: string) => {
                 : 'video/MP2T',
         });
     }
+
+    await rm(localDir, { recursive: true, force: true });
 
 }
