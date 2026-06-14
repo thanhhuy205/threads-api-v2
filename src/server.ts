@@ -73,8 +73,6 @@ const bootstrap = async () => {
         console.error('Failed to initialize delta hp repeat job:', error);
     }
 
-
-
     process.on('SIGINT', () => {
         shutdown('SIGINT');
     });

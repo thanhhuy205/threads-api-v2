@@ -47,10 +47,28 @@ export const uploadSwaggerSchemas = {
             },
             url: {
                 type: 'string',
-                example: 'https://cdn.example.com/bucket/post-media/2026/05/uuid.webm',
+                example: 'https://cdn.example.com/bucket/hls/video-id/index.m3u8',
+            },
+            type: {
+                type: 'string',
+                enum: ['IMAGE', 'VIDEO'],
+                example: 'VIDEO',
+            },
+            status: {
+                type: 'string',
+                enum: ['UPLOADING', 'UPLOADED', 'FAILED', 'DELETED'],
+                example: 'UPLOADING',
+            },
+            width: {
+                type: ['integer', 'null'],
+                example: null,
+            },
+            height: {
+                type: ['integer', 'null'],
+                example: null,
             },
         },
-        required: ['id', 'key', 'url'],
+        required: ['id', 'key', 'url', 'type', 'status', 'width', 'height'],
     },
     UploadMediaData: {
         type: 'object',
@@ -110,10 +128,12 @@ const multipartMediaRequestBody = {
                 properties: {
                     medias: {
                         type: 'array',
+                        description: 'One to five image or video files, maximum 20 MB per file',
                         items: {
                             type: 'string',
                             format: 'binary',
                         },
+                        minItems: 1,
                         maxItems: 5,
                     },
                 },
@@ -168,6 +188,9 @@ export const uploadSwaggerPaths = {
                 },
                 401: {
                     description: AUTH_MESSAGE.TOKEN_INVALID,
+                },
+                413: {
+                    description: 'A media file exceeds the 20 MB upload limit',
                 },
             },
         },

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mux Webhook Flow · Tài liệu nghiệp vụ</title>
+    <title>HLS Webhook Flow · Tài liệu nghiệp vụ</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -84,7 +84,7 @@
             Business Document
           </p>
           <h1 class="mt-1 font-serif text-2xl leading-tight text-slatex">
-            Mux Webhook Flow
+            HLS Webhook Flow
           </h1>
           <p class="mt-2 text-sm leading-6 text-g700">
             Tài liệu nghiệp vụ định hướng phối hợp Product, FE, BE, QA, Ops.
@@ -161,22 +161,22 @@
           <p
             class="mb-3 flex items-center gap-2 font-mono text-xs uppercase tracking-[0.12em] text-g500">
             <span class="inline-block h-px w-6 bg-clay"></span>
-            Mux Video Pipeline
+            HLS Video Pipeline
           </p>
           <h2
             class="max-w-4xl font-serif text-4xl font-medium leading-tight text-slatex lg:text-5xl">
-            Flow webhook Mux theo góc nhìn nghiệp vụ
+            Flow webhook HLS theo góc nhìn nghiệp vụ
           </h2>
           <p class="mt-5 max-w-3xl text-[15.5px] leading-7 text-g700">
             Tài liệu này tập trung vào quyết định vận hành và phối hợp liên
             nhóm. Không thay thế Swagger, không lặp lại schema endpoint. Mục
-            tiêu là giúp mọi bên thống nhất cách hệ thống phản ứng khi Mux gửi
+            tiêu là giúp mọi bên thống nhất cách hệ thống phản ứng khi HLS gửi
             sự kiện liên quan đến trạng thái video.
           </p>
           <div class="mt-5 flex flex-wrap gap-2">
             <span
               class="rounded-full border border-g300 bg-paper px-3 py-1 text-xs font-semibold text-g700"
-              >Route: /api/v1/webhooks/mux</span
+              >Route: /api/v1/webhooks/hls</span
             >
             <span
               class="rounded-full border border-oat bg-[#F7F1E9] px-3 py-1 text-xs font-semibold text-clayDark"
@@ -207,7 +207,7 @@
               class="rounded-xl border border-g300 bg-paper p-4 shadow-paper/40">
               <h4 class="text-sm font-semibold">Tác nhân chính</h4>
               <p class="mt-1 text-sm leading-6 text-g700">
-                Mux, Backend API, bảng
+                HLS, Backend API, bảng
                 <code class="rounded bg-g100 px-1 py-0.5 font-mono text-xs"
                   >post_media</code
                 >, và ứng dụng client.
@@ -240,7 +240,7 @@
           <ol class="space-y-3">
             <li
               class="rounded-xl border border-g300 bg-paper p-4 text-sm leading-6 text-g700">
-              <span class="font-semibold text-slatex">1.</span> Mux gửi webhook
+              <span class="font-semibold text-slatex">1.</span> HLS gửi webhook
               đến endpoint của backend.
             </li>
             <li
@@ -263,7 +263,7 @@
             </li>
             <li
               class="rounded-xl border border-g300 bg-paper p-4 text-sm leading-6 text-g700">
-              <span class="font-semibold text-slatex">5.</span> API ACK cho Mux,
+              <span class="font-semibold text-slatex">5.</span> API ACK cho HLS,
               client đọc trạng thái mới để hiển thị đúng UX.
             </li>
           </ol>
@@ -281,21 +281,21 @@
           </div>
           <p class="max-w-3xl text-sm leading-6 text-g700">
             Ở <code class="rounded bg-g100 px-1 py-0.5 font-mono text-xs">src/app.ts</code> có đoạn:
-            <code class="rounded bg-g100 px-1 py-0.5 font-mono text-xs">app.use('/api/v1/webhooks/mux', express.raw({ type: 'application/json' }))</code>.
-            Mục đích là giữ nguyên <strong>bytes gốc</strong> của payload webhook Mux để verify chữ ký.
+            <code class="rounded bg-g100 px-1 py-0.5 font-mono text-xs">app.use('/api/v1/webhooks/hls', express.raw({ type: 'application/json' }))</code>.
+            Mục đích là giữ nguyên <strong>bytes gốc</strong> của payload webhook HLS để verify chữ ký.
           </p>
 
           <div class="mt-4 grid gap-4 md:grid-cols-2">
             <article class="rounded-xl border border-g300 bg-paper p-4">
-              <h4 class="text-sm font-semibold">Mux ký payload theo raw body</h4>
+              <h4 class="text-sm font-semibold">HLS ký payload theo raw body</h4>
               <p class="mt-2 text-sm leading-6 text-g700">
-                Signature của Mux theo kiểu:
+                Signature của HLS theo kiểu:
                 <code class="rounded bg-g100 px-1 py-0.5 font-mono text-xs">HMAC_SHA256(secret, `${timestamp}.${rawBody}`)</code>.
-                Tức là hash được tạo trên đúng chuỗi JSON gốc Mux gửi.
+                Tức là hash được tạo trên đúng chuỗi JSON gốc HLS gửi.
               </p>
               <p class="mt-2 text-sm leading-6 text-g700">
                 Header thường có dạng:
-                <code class="rounded bg-g100 px-1 py-0.5 font-mono text-xs">mux-signature: t=1710000000,v1=abcdef...</code>
+                <code class="rounded bg-g100 px-1 py-0.5 font-mono text-xs">x-webhook-signature: t=1710000000,v1=abcdef...</code>
                 với <code class="rounded bg-g100 px-1 py-0.5 font-mono text-xs">t</code> là timestamp,
                 <code class="rounded bg-g100 px-1 py-0.5 font-mono text-xs">v1</code> là HMAC hash.
               </p>
@@ -328,7 +328,7 @@
                   <td class="px-3 py-2">Nhận body</td>
                   <td class="px-3 py-2">Body thành object JS</td>
                   <td class="px-3 py-2">Body giữ dạng Buffer bytes gốc</td>
-                  <td class="px-3 py-2">Raw bytes mới khớp cách Mux ký</td>
+                  <td class="px-3 py-2">Raw bytes mới khớp cách HLS ký</td>
                 </tr>
                 <tr>
                   <td class="px-3 py-2">Dữ liệu đem hash</td>
@@ -347,7 +347,7 @@
           </div>
 
           <div class="mt-4 rounded-xl border border-[#E7C9BE] bg-[#FFF6F2] p-4 text-sm leading-6 text-[#8F4A36]">
-            Hình dung đơn giản: Mux ký trên “file gốc”. Nếu server mở file rồi lưu lại mới đi verify, bytes đã khác nên chữ ký sẽ không còn khớp.
+            Hình dung đơn giản: HLS ký trên “file gốc”. Nếu server mở file rồi lưu lại mới đi verify, bytes đã khác nên chữ ký sẽ không còn khớp.
           </div>
         </section>
 
@@ -518,7 +518,7 @@
                   <td class="px-3 py-2">Nhiều event không hỗ trợ</td>
                   <td class="px-3 py-2">Tỉ lệ event bỏ qua cao bất thường</td>
                   <td class="px-3 py-2">
-                    Rà soát cấu hình webhook Mux và cập nhật whitelist nếu cần.
+                    Rà soát cấu hình webhook HLS và cập nhật whitelist nếu cần.
                   </td>
                 </tr>
               </tbody>
@@ -564,7 +564,7 @@
 
         <p
           class="mt-8 border-t border-g300 pt-4 font-mono text-[11px] uppercase tracking-[0.1em] text-g500">
-          Last reviewed: 2026-05-10 · Mux webhook business alignment
+          Last reviewed: 2026-05-10 · HLS webhook business alignment
         </p>
       </main>
     </div>

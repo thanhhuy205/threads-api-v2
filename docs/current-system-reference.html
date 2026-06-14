@@ -20,7 +20,7 @@
   <div class="flow"><div>Express middleware</div><div>Global rate limit</div><div>Module router</div><div>Controller + service</div><div>Response/error envelope</div></div>
   <table><thead><tr><th>Giai đoạn</th><th>Code</th><th>Hành vi</th></tr></thead><tbody>
     <tr><td>App middleware</td><td><code>src/app.ts</code></td><td>Helmet, CORS, compression, Morgan, JSON/urlencoded parser, logger và response helper.</td></tr>
-    <tr><td>Mux exception</td><td><code>/api/v1/webhooks/mux</code></td><td>Raw JSON body được mount trước <code>express.json()</code> để verify chữ ký.</td></tr>
+    <tr><td>HLS exception</td><td><code>/api/v1/webhooks/hls</code></td><td>Raw JSON body được mount trước <code>express.json()</code> để verify chữ ký.</td></tr>
     <tr><td>API boundary</td><td><code>app.use('/api/v1', apiLimiter, router)</code></td><td>Mọi route bên dưới đều đi qua global limiter.</td></tr>
     <tr><td>Authorization</td><td><code>src/middlewares/auth.ts</code></td><td>Verify Bearer JWT, Redis blacklist, user tồn tại và trạng thái không bị BANNED.</td></tr>
     <tr><td>Validation</td><td><code>src/middlewares/validate.ts</code></td><td>Zod parse body/params/query; query đã parse nằm ở <code>req.query_parsed</code>.</td></tr>
@@ -43,7 +43,7 @@
     <tr><td><code>/notification</code></td><td>Notification</td><td>Toàn bộ protected</td><td>Grouped notification và unread counters.</td></tr>
     <tr><td><code>/search</code></td><td>Search</td><td>Toàn bộ protected</td><td>Search index tên <code>search</code>, hydrate record từ Prisma.</td></tr>
     <tr><td><code>/upload</code></td><td>Upload</td><td>Media protected; avatar hiện public</td><td>Avatar thiếu authorization là hành vi code hiện tại, cần cân nhắc security.</td></tr>
-    <tr><td><code>/webhooks</code></td><td>Webhooks</td><td>Provider verification</td><td>Mux signature và Leonardo callback key.</td></tr>
+    <tr><td><code>/webhooks</code></td><td>Webhooks</td><td>Provider verification</td><td>HLS signature và Leonardo callback key.</td></tr>
     <tr><td><code>/ai</code></td><td>AI</td><td>Toàn bộ protected</td><td>HTTP route tạo image; scoring/report chạy nội bộ qua worker.</td></tr>
     <tr><td><code>/topic</code>, <code>/quests</code>, <code>/museum</code>, <code>/pusher</code>, <code>/health</code></td><td>Supporting HTTP modules</td><td>Tùy module</td><td>Xem API page tương ứng.</td></tr>
   </tbody></table>
@@ -83,7 +83,7 @@
     <tr><td>Async/cache</td><td>Redis 5 client, ioredis, Redis Bloom, BullMQ 5.76.</td></tr>
     <tr><td>Search/vector</td><td>Prisma, Mixedbread AI, Pinecone.</td></tr>
     <tr><td>AI</td><td>OpenRouter SDK/provider, Groq, Google GenAI dependency, Leonardo provider.</td></tr>
-    <tr><td>Media/realtime</td><td>Cloudflare R2 qua AWS S3 SDK, Sharp, Mux, Pusher.</td></tr>
+    <tr><td>Media/realtime</td><td>Cloudflare R2 qua AWS S3 SDK, Sharp, HLS, Pusher.</td></tr>
     <tr><td>Operations</td><td>Docker multi-stage, Nginx, API + worker container.</td></tr>
   </tbody></table>
 

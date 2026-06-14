@@ -31,13 +31,6 @@ app.use(compression());
 app.set('trust proxy', 1)
 app.use(morgan(configService.NODE_ENV === 'development' ? 'dev' : 'combined'));
 
-// app.use(capture);
-// Mux sends webhooks with 'application/json' content type
-app.use(
-    '/api/v1/webhooks/mux',
-    express.raw({ type: 'application/json' }),
-);
-
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(logger);

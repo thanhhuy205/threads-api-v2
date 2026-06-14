@@ -1,48 +1,40 @@
 export const webhooksSwaggerSchemas = {
-    MuxWebhookPlaybackId: {
+    HlsWebhookData: {
         type: 'object',
         properties: {
-            id: { type: 'string', example: 'playback-123' },
-            policy: { type: 'string', example: 'public' },
-        },
-    },
-    MuxWebhookObject: {
-        type: 'object',
-        properties: {
-            type: { type: 'string', example: 'asset' },
-            id: { type: 'string', example: 'asset-123' },
-        },
-    },
-    MuxWebhookData: {
-        type: 'object',
-        properties: {
-            status: { type: 'string', example: 'ready' },
-            playback_ids: {
-                type: 'array',
-                items: { $ref: '#/components/schemas/MuxWebhookPlaybackId' },
+            status: {
+                type: 'string',
+                enum: ['ready', 'errored', 'deleted'],
+                example: 'ready',
             },
-            duration: { type: 'number', example: 120.4 },
-            id: { type: 'string', example: 'asset-123' },
-            upload_id: { type: 'string', example: 'upload-123' },
+            url: {
+                type: 'string',
+                format: 'uri',
+                example: 'https://cdn.example.com/bucket/hls/video-id/index.m3u8',
+            },
+            key: { type: 'string', example: 'video-id.mp4' },
         },
+        required: ['status', 'url', 'key'],
     },
-    MuxWebhookRequest: {
+    HlsWebhookRequest: {
         type: 'object',
         properties: {
-            type: { type: 'string', example: 'video.asset.ready' },
-            created_at: { type: 'string', example: '2026-05-21T00:00:00Z' },
-            object: { $ref: '#/components/schemas/MuxWebhookObject' },
-            data: { $ref: '#/components/schemas/MuxWebhookData' },
-            accessor_source: { type: ['string', 'null'], example: null },
-            request_id: { type: 'string', example: 'req_123' },
+            title: { type: 'string', example: 'video-id' },
+            outputCloudDir: { type: 'string', example: 'hls/video-id' },
+            type: {
+                type: 'string',
+                enum: ['video.asset.ready', 'video.asset.errored', 'video.asset.deleted'],
+                example: 'video.asset.ready',
+            },
+            data: { $ref: '#/components/schemas/HlsWebhookData' },
         },
-        required: ['type', 'created_at', 'object', 'data', 'request_id'],
+        required: ['title', 'outputCloudDir', 'type', 'data'],
     },
-    MuxWebhookResponse: {
+    HlsWebhookResponse: {
         type: 'object',
         properties: {
             success: { type: 'boolean', example: true },
-            message: { type: 'string', example: 'Mux webhook received' },
+            message: { type: 'string', example: 'Webhook received' },
             data: {
                 type: 'object',
                 properties: {
@@ -82,27 +74,41 @@ export const webhooksSwaggerSchemas = {
 };
 
 export const webhooksSwaggerPaths = {
-    '/webhooks/mux': {
+    '/webhooks/hls': {
         post: {
             tags: ['Webhooks'],
-            summary: 'Receive Mux webhook events',
+            summary: 'Receive local HLS processing events',
             security: [],
+            parameters: [
+                {
+                    in: 'header',
+                    name: 'x-webhook-signature',
+                    required: true,
+                    schema: { type: 'string' },
+                },
+            ],
             requestBody: {
                 required: true,
                 content: {
                     'application/json': {
-                        schema: { $ref: '#/components/schemas/MuxWebhookRequest' },
+                        schema: { $ref: '#/components/schemas/HlsWebhookRequest' },
                     },
                 },
             },
             responses: {
                 200: {
-                    description: 'Mux webhook received',
+                    description: 'HLS webhook received',
                     content: {
                         'application/json': {
-                            schema: { $ref: '#/components/schemas/MuxWebhookResponse' },
+                            schema: { $ref: '#/components/schemas/HlsWebhookResponse' },
                         },
                     },
+                },
+                400: {
+                    description: 'Missing webhook signature',
+                },
+                401: {
+                    description: 'Invalid webhook signature',
                 },
             },
         },

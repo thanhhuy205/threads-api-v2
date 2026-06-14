@@ -11,10 +11,10 @@ export const defaultJobOptions: JobsOptions = {
     removeOnFail: false,
 };
 
-export const createQueue = (name: string): Queue => {
+export const createQueue = (name: string, options?: JobsOptions): Queue => {
     return new Queue(name, {
         connection: redisWorker,
-        defaultJobOptions,
+        defaultJobOptions: options ? options : defaultJobOptions,
     });
 };
 

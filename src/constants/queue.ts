@@ -10,6 +10,8 @@ export const QUEUE_NAME = {
   DELTA_HP_QUEUE: "delta_hp_queue",
   MESSAGE_QUEUE: "message_queue",
   FRIEND_REQUEST_QUEUE: "friend_request_queue",
+  HLS_QUEUE: "hls_queue",
+  VIDEO_QUEUE: "video_queue",
 };
 
 
@@ -23,6 +25,7 @@ export const WORKER_NAME = {
   EVALUATE_WORKER: "evaluate_worker",
   DELTA_HP_WORKER: "delta_hp_worker",
   MESSAGE_WORKER: "message_worker",
+  VIDEO_WORKER: "video_worker",
 };
 
 export const PINECONE_JOB_NAME = {
@@ -73,4 +76,8 @@ export const BLOOM_KEY = {
 export const EVALUATION_JOB_NAME = {
   EVALUATION_POST: "evaluation-post",
   EVALUATION_REPORT: "evaluation-report",
+};
+
+export const HLS_JOB_NAME = {
+  HLS_JOB_GENERATE_HLS: "hls_job_generate_hls",
 };

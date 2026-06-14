@@ -2,15 +2,26 @@ import { baseLogger } from '@/middlewares/logger';
 import { webhookPreviewImageRepository } from '@/modules/ai/repository/webhook-preview-image.repository';
 import { pusherService } from '@/modules/pusher/service/pusher.service';
 import { postMediaRepository } from '@/modules/upload/repository/post-media.repository';
-import type { MuxWebhooksResponseDto } from '@/modules/webhooks/dto/response/mux.webhooks';
+import type { HlsWebhookRequestDto } from '@/modules/webhooks/dto/request/hls-webhook.request.dto';
+import type { HlsWebhookResponseDataDto } from '@/modules/webhooks/dto/response/hls-webhook.response.dto';
 import type { LeonardoWebhookPayload } from '@/providers/leonardo.types';
-import { Prisma } from '@prisma/client';
+import { PostMediaStatus, Prisma } from '@prisma/client';
 
 class WebhooksService {
-  async muxWebhooks(body: MuxWebhooksResponseDto) {
-    if (body.type === 'video.asset.ready') {
-      await postMediaRepository.updateMediaStatusByMuxWebhook(body);
-    }
+  async hookHls(body: HlsWebhookRequestDto): Promise<HlsWebhookResponseDataDto> {
+    const { key, status, url } = body.data;
+    const mediaStatus = {
+      ready: PostMediaStatus.UPLOADED,
+      errored: PostMediaStatus.FAILED,
+      deleted: PostMediaStatus.DELETED,
+    }[status];
+
+    await postMediaRepository.updateMediaStatus({
+      key,
+      status: mediaStatus,
+      url: status === 'ready' ? url : undefined,
+    });
+    baseLogger.info(`Updated media status to ${mediaStatus} for key: ${key}`);
 
     return {
       received: true,

@@ -54,13 +54,13 @@
     <h1>API — Webhooks</h1>
     <p class="lead">Tài liệu các endpoint của module <code>webhooks</code>. Mỗi endpoint có request format, response format, lỗi có thể xảy ra và ví dụ thực tế.</p>
   </header>
-  <main><h2>Tóm tắt endpoint</h2><table><thead><tr><th>Method</th><th>Path</th><th>Mô tả</th><th>Auth</th><th>Rate limit</th></tr></thead><tbody><tr><td><span class="tag clay">POST</span></td><td><code>/api/v1/webhooks/mux</code></td><td>Nhận Mux webhook, verify signature.</td><td>Mux signature</td><td>Global apiLimiter; một số flow có Redis/domain limit riêng.</td></tr></tbody></table>
-        <h2>POST /api/v1/webhooks/mux</h2><span class="tag clay">POST</span> <span class="tag ">Auth varies</span> <span class="tag ">apiLimiter</span>
-        <p>Endpoint này dùng để nhận Mux webhook, verify signature. Gọi endpoint này khi client cần thao tác đúng phạm vi module <code>webhooks</code>.</p>
+  <main><h2>Tóm tắt endpoint</h2><table><thead><tr><th>Method</th><th>Path</th><th>Mô tả</th><th>Auth</th><th>Rate limit</th></tr></thead><tbody><tr><td><span class="tag clay">POST</span></td><td><code>/api/v1/webhooks/hls</code></td><td>Nhận HLS webhook, verify signature.</td><td>HLS signature</td><td>Global apiLimiter; một số flow có Redis/domain limit riêng.</td></tr></tbody></table>
+        <h2>POST /api/v1/webhooks/hls</h2><span class="tag clay">POST</span> <span class="tag ">Auth varies</span> <span class="tag ">apiLimiter</span>
+        <p>Endpoint này dùng để nhận HLS webhook, verify signature. Gọi endpoint này khi client cần thao tác đúng phạm vi module <code>webhooks</code>.</p>
         <h3>Request</h3><table><thead><tr><th>Header</th><th>Giá trị</th><th>Bắt buộc</th><th>Mô tả</th></tr></thead><tbody><tr><td>Authorization</td><td>Bearer accessToken</td><td>Không/Tùy route</td><td>JWT access token nếu route protected</td></tr><tr><td>x-refresh-token</td><td>raw refresh token</td><td>Không</td><td>Refresh token header theo middleware</td></tr></tbody></table>
         <table><thead><tr><th>Parameter</th><th>Kiểu</th><th>Mô tả</th><th>Ví dụ</th></tr></thead><tbody><tr><td>path params</td><td>string</td><td>Các phần :publicId, :username, :code nếu path có</td><td>cm123</td></tr><tr><td>query params</td><td>string/number</td><td>take, after, page, limit hoặc module-specific query</td><td>take=20</td></tr></tbody></table>
         <table><thead><tr><th>Field</th><th>Kiểu</th><th>Bắt buộc</th><th>Validation</th><th>Mô tả</th><th>Ví dụ giá trị</th></tr></thead><tbody><tr><td>body</td><td>object</td><td>Tùy endpoint</td><td>Theo DTO Zod nếu route có validate()</td><td>Payload nghiệp vụ của endpoint</td><td>{&quot;content&quot;:&quot;Hello&quot;}</td></tr></tbody></table>
-        <div class="callout-note">Ví dụ request<pre class="code">curl -X POST http://localhost:3302/api/v1/webhooks/mux \
+        <div class="callout-note">Ví dụ request<pre class="code">curl -X POST http://localhost:3302/api/v1/webhooks/hls \
   -H <span class="str">"Authorization: Bearer ACCESS_TOKEN"</span> \
   -H <span class="str">"Content-Type: application/json"</span></pre></div>
         <h3>Response</h3><h4>200/201 — Thành công</h4><table><thead><tr><th>Field</th><th>Kiểu</th><th>Luôn có?</th><th>Mô tả</th></tr></thead><tbody><tr><td>success</td><td>boolean</td><td>Có</td><td>true khi request thành công</td></tr><tr><td>message</td><td>string</td><td>Không</td><td>Một số controller truyền message</td></tr><tr><td>data</td><td>object/array</td><td>Tùy endpoint</td><td>Dữ liệu trả về từ service</td></tr><tr><td>pagination</td><td>object</td><td>Với list</td><td>Cursor/offset pagination</td></tr></tbody></table>
@@ -68,7 +68,7 @@
   <span class="str">"success"</span>: true,
   <span class="str">"data"</span>: {
     <span class="str">"module"</span>: <span class="str">"webhooks</span>",
-    <span class="str">"endpoint"</span>: <span class="str">"/api/v1/webhooks/mux"</span>
+    <span class="str">"endpoint"</span>: <span class="str">"/api/v1/webhooks/hls"</span>
   }
 }</pre>
         <h4>Lỗi có thể xảy ra</h4><table><thead><tr><th>HTTP Status</th><th>Error Code</th><th>Khi nào xảy ra</th><th>Cách xử lý ở client</th></tr></thead><tbody><tr><td>401</td><td>UNAUTHORIZED</td><td>Unauthorized</td><td>Login lại hoặc refresh token.</td></tr><tr><td>400</td><td>VALIDATION_FAILED</td><td>Validation failed</td><td>Client sửa field sai.</td></tr><tr><td>404</td><td>NOT_FOUND</td><td>Resource not found</td><td>Refresh dữ liệu.</td></tr><tr><td>403</td><td>FORBIDDEN</td><td>Forbidden</td><td>Ẩn action trong UI.</td></tr><tr><td>500</td><td>INTERNAL_SERVER_ERROR</td><td>External dependency fail</td><td>On-call kiểm tra provider/log.</td></tr></tbody></table>
@@ -76,7 +76,7 @@
   <span class="str">"success"</span>: false,
   <span class="str">"message"</span>: <span class="str">"Validation failed"</span>
 }</pre></div>
-        <h3>Ghi chú</h3><ul><li>Endpoint đi qua global <code>apiLimiter</code>.</li><li>Idempotency không được đảm bảo trừ khi service có upsert/unique constraint riêng.</li><li>Thiếu mux-signature trả JSON thủ công.</li></ul>
+        <h3>Ghi chú</h3><ul><li>Endpoint đi qua global <code>apiLimiter</code>.</li><li>Idempotency không được đảm bảo trừ khi service có upsert/unique constraint riêng.</li><li>Thiếu x-webhook-signature trả JSON thủ công.</li></ul>
         </main>
   
 </div>

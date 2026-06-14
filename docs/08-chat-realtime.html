@@ -275,7 +275,7 @@ body > .page{display:none}
       <tr><td>Realtime</td><td>Pusher (Soketi self-hosted)</td><td>Đã setup. Private channels cho auth. Client events cho typing. Presence cho online status.</td></tr>
       <tr><td>Database</td><td>MySQL (Prisma)</td><td>Bảng Message + MessageGroup. Index on <code>(conversationId, createdAt)</code> cho query nhanh.</td></tr>
       <tr><td>Caching</td><td>Redis</td><td>Cache danh sách conversation, unread count. Invalidate khi có message mới.</td></tr>
-      <tr><td>File upload</td><td>Mux / S3 / Upload module</td><td>Reuse upload infrastructure sẵn có. Message chỉ lưu URL reference.</td></tr>
+      <tr><td>File upload</td><td>HLS / S3 / Upload module</td><td>Reuse upload infrastructure sẵn có. Message chỉ lưu URL reference.</td></tr>
     </tbody>
   </table>
 </section>

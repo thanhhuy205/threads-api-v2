@@ -30,9 +30,9 @@
     "dependencies": {
         "@aws-sdk/client-s3": "^3.1041.0",
         "@aws-sdk/lib-storage": "^3.1041.0",
+        "@aws-sdk/s3-request-presigner": "^3.1068.0",
         "@google/genai": "^2.7.0",
         "@mixedbread-ai/sdk": "^2.2.11",
-        "@mux/mux-node": "^14.0.1",
         "@notionhq/client": "^5.22.0",
         "@openrouter/ai-sdk-provider": "^2.9.0",
         "@openrouter/sdk": "^0.12.35",

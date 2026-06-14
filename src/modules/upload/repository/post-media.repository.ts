@@ -1,6 +1,4 @@
 import prisma from '@/config/prisma';
-import { baseLogger } from '@/middlewares/logger';
-import type { MuxWebhooksResponseDto } from '@/modules/webhooks/dto/response/mux.webhooks';
 import { PostMediaStatus, PostMediaType } from '@prisma/client';
 
 export type PostMediaItemData = {
@@ -49,40 +47,19 @@ class PostMediaRepository {
         }));
     }
 
-    async updateMediaStatusByMuxWebhook(body: MuxWebhooksResponseDto) {
-        baseLogger.info(`Updating media status for Mux webhook: ${JSON.stringify(body)}`);
-        const uploadId = body.data.upload_id;
+    async updateMediaStatus(body: {
+        status: PostMediaStatus;
+        key: string;
+        url?: string;
+    }) {
 
-        if (!uploadId) {
-            baseLogger.warn(`Skipping Mux webhook because upload_id is missing: ${JSON.stringify(body)}`);
-            return null;
-        }
-
-        const playbackId = body.data.playback_ids?.[0]?.id;
-        const hlsUrl = playbackId ? `https://stream.mux.com/${playbackId}.m3u8` : '';
-        return prisma.postMedia.upsert({
+        return prisma.postMedia.updateMany({
             where: {
-                key: uploadId,
+                key: body.key,
             },
-            update: {
-                url: hlsUrl,
-                type: PostMediaType.VIDEO,
-                status:
-                    body.data.status === 'ready'
-                        ? PostMediaStatus.UPLOADED
-                        : PostMediaStatus.UPLOADING,
-            },
-
-            create: {
-                key: uploadId,
-                url: hlsUrl,
-                type: PostMediaType.VIDEO,
-                status:
-                    body.data.status === 'ready'
-                        ? PostMediaStatus.UPLOADED
-                        : PostMediaStatus.UPLOADING,
-                width: null,
-                height: null,
+            data: {
+                status: body.status,
+                ...(body.url ? { url: body.url } : {}),
             },
         })
     }

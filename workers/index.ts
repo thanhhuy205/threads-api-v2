@@ -10,8 +10,8 @@ export { bloomWorker } from './bloom.worker';
 export { deltaWorker } from './delta-hp.worker';
 export { emailWorker } from './email.worker';
 export { evaluateWorker } from './evaluate.worker';
+export { hlsWorker } from './hls.worker';
 export { likeWorker } from './like.worker';
 export { messageWorker } from './message.worker';
 export { notificationWorker } from './notification.worker';
 export { pineWorker } from './pine.worker';
-

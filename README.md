@@ -24,7 +24,7 @@ Ngoài Swagger API, repo có thêm docs nghiệp vụ để đọc nhanh theo ng
 - [Docs Hub (Online)](https://thanhhuy205.github.io/threads-api-v2/)
 - [Docs Hub (Local)](docs/index.html)
 - [Sơ đồ hạ tầng](infrastructure/infa.png)
-- [Mux Webhook Flow](docs/mux-webhook-flow.html)
+- HLS video processing runs locally with FFmpeg, BullMQ, and Cloudflare R2.
 
 Gợi ý: mở link online hoặc file `docs/index.html` trước, sau đó đi vào từng tài liệu con.
 

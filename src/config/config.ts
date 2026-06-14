@@ -1,10 +1,10 @@
 import { cloudflareConfig } from '@/config/cloudflare';
 import { databaseConfig } from '@/config/database';
 import { groQConfig } from '@/config/groq';
+import { hookSecretKeyConfig } from '@/config/hook-secret.config';
 import { jwtConfig } from '@/config/jwt';
 import { leonardoConfig } from '@/config/leonardo';
 import { mixedbreadAIConfig } from '@/config/mixedbread-ai';
-import { muxConfig } from '@/config/mux';
 import { nodemailerConfig } from '@/config/nodemailer';
 import { notionConfig } from '@/config/notion';
 import { openRouterConfig } from '@/config/openrouter';
@@ -32,11 +32,11 @@ const envSchema = z.object({
     ...nodemailerConfig.shape,
     ...cloudflareConfig.shape,
     ...pusherConfig.shape,
-    ...muxConfig.shape,
     ...openRouterConfig.shape,
     ...leonardoConfig.shape,
     ...notionConfig.shape,
     ...groQConfig.shape,
+    ...hookSecretKeyConfig.shape,
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
