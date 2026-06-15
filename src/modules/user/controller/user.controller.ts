@@ -211,6 +211,20 @@ class UserController {
     const badges = await userService.getMyBadges(userId);
     return res.success(200, "User badges retrieved successfully", badges);
   }
+
+  async getMyStatusProfile(req: Request, res: Response) {
+    const userId = req.user?.sub;
+    if (!userId) {
+      return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
+    }
+
+    const statusProfile = await userService.getMyStatusProfile(userId);
+    if (!statusProfile) {
+      return res.error(404, USER_MESSAGE.USER_NOT_FOUND);
+    }
+
+    return res.success(200, "User status profile retrieved successfully", statusProfile);
+  }
 }
 
 export const userController = new UserController();

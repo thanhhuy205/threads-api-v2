@@ -282,6 +282,30 @@ export const userSwaggerSchemas = {
         },
         required: ['success', 'message', 'data'],
     },
+    UserStatusProfileData: {
+        type: 'object',
+        properties: {
+            isSuccessFollow: { type: 'boolean', example: true },
+            isSuccessBio: { type: 'boolean', example: true },
+            isSuccessPost: { type: 'boolean', example: true },
+            isSuccessAvatar: { type: 'boolean', example: true },
+        },
+        required: [
+            'isSuccessFollow',
+            'isSuccessBio',
+            'isSuccessPost',
+            'isSuccessAvatar',
+        ],
+    },
+    UserStatusProfileSuccessResponse: {
+        type: 'object',
+        properties: {
+            success: { type: 'boolean', example: true },
+            message: { type: 'string', example: 'User status profile retrieved successfully' },
+            data: { $ref: '#/components/schemas/UserStatusProfileData' },
+        },
+        required: ['success', 'message', 'data'],
+    },
 
 };
 
@@ -621,6 +645,29 @@ export const userSwaggerPaths = {
                 },
                 401: {
                     description: AUTH_MESSAGE.TOKEN_INVALID,
+                },
+            },
+        },
+    },
+    '/users/me/status-profile': {
+        get: {
+            tags: ['User'],
+            summary: 'Get current user profile completion status',
+            security: bearerAuthSecurity,
+            responses: {
+                200: {
+                    description: 'User status profile retrieved successfully',
+                    content: {
+                        'application/json': {
+                            schema: { $ref: '#/components/schemas/UserStatusProfileSuccessResponse' },
+                        },
+                    },
+                },
+                401: {
+                    description: AUTH_MESSAGE.TOKEN_INVALID,
+                },
+                404: {
+                    description: USER_MESSAGE.USER_NOT_FOUND,
                 },
             },
         },

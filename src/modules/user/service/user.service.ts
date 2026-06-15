@@ -1,6 +1,8 @@
+import { postRepository } from "@/modules/post/repository/post.repository";
 import { userRepository } from "@/modules/user/repository/user.repository";
 import { Prisma } from "@prisma/client";
 import { mapUserProfileForFE } from "../mapper/user.mapper";
+import { followRepository } from "../repository/follow.repository";
 
 type GetNetworkUsernamesInput = {
   query: string;
@@ -40,6 +42,25 @@ class UserService {
           createdAt: new Date().toISOString(),
         },
       ],
+    };
+  }
+
+  async getMyStatusProfile(userId: string) {
+    const [user, followingCount, postCount] = await Promise.all([
+      userRepository.findStatusProfileById(userId),
+      followRepository.countActiveFollowing(userId),
+      postRepository.count({ where: { userId } }),
+    ]);
+
+    if (!user) {
+      return null;
+    }
+
+    return {
+      isSuccessFollow: followingCount >= 10,
+      isSuccessBio: user.bio !== null,
+      isSuccessPost: postCount >= 1,
+      isSuccessAvatar: user.avatar !== null && user.avatar !== "",
     };
   }
 

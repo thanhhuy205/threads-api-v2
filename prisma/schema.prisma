@@ -333,6 +333,7 @@ model User {
   userActionLogs       UserActionLog[]
   webHookPreviewImages WebHookPreviewImage[]
   limitActionAIs       LimitActionAI[]
+  votes                Vote[]
 
   @@index([email], map: "idx_users_email")
   @@index([name], map: "idx_users_name")
@@ -524,10 +525,26 @@ model PollOption {
   votesCount Int      @default(0) @map("votes_count")
   createdAt  DateTime @default(now()) @map("created_at")
 
-  poll Poll @relation(fields: [pollId], references: [id])
+  poll  Poll   @relation(fields: [pollId], references: [id])
+  votes Vote[]
 
   @@index([pollId], map: "idx_poll_options_poll_id")
   @@map("poll_options")
+}
+
+model Vote {
+  id           Int      @id @default(autoincrement())
+  userId       String   @map("user_id")
+  pollOptionId Int      @map("poll_option_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user       User       @relation(fields: [userId], references: [id])
+  pollOption PollOption @relation(fields: [pollOptionId], references: [id])
+
+  @@unique([userId, pollOptionId], map: "uq_votes_user_poll_option")
+  @@index([userId], map: "idx_votes_user_id")
+  @@index([pollOptionId], map: "idx_votes_poll_option_id")
+  @@map("votes")
 }
 
 model PostMedia {
