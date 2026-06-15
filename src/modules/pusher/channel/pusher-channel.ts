@@ -1,10 +1,9 @@
 import { NotificationType } from "@prisma/client";
 
-const PRIVATE_CHAT_PREFIX = "private-chat-";
+const PRIVATE_CHAT_PREFIX = "private-chat-room-";
 const PRIVATE_USER_PREFIX = "private-user-";
 
 const privateChat = (publicId: string) => `${PRIVATE_CHAT_PREFIX}${publicId}`;
-
 const privateUser = (userId: string) => `${PRIVATE_USER_PREFIX}${userId}`;
 
 const user = () => "user";
@@ -25,12 +24,12 @@ const extractPrivateChatPublicId = (channelName: string) => {
 };
 
 
-
 const privateNotification = (userId: string) => `private-user-notification-${userId}`;
 const privateNotificationMessage = (userId: string) => `private-notification-message-${userId}`;
 const privateReport = (userId: string) => `private-report-${userId}`;
 const privateGeneratedImage = (userId: string) => `private-generated-image-${userId}`;
-const privateConversation = (conversation: string) => `private-chat-room-${conversation}`;
+const privateConversation = (conversation: string) => `${PRIVATE_CHAT_PREFIX}${conversation}`;
+
 export const pusherChannel = {
   privateChat,
   privateUser,
