@@ -26,6 +26,39 @@ class PollOptionsRepository {
       },
     });
   }
+
+  findByIdAndPollId(
+    id: number,
+    pollId: number,
+    tx: Prisma.TransactionClient = prisma,
+  ) {
+    return tx.pollOption.findFirst({
+      where: {
+        id,
+        pollId,
+      },
+    });
+  }
+
+  incrementVotesCount(
+    id: number,
+    pollId: number,
+    tx: Prisma.TransactionClient = prisma,
+  ) {
+    return tx.pollOption.update({
+      where: {
+        id_pollId: {
+          id,
+          pollId,
+        },
+      },
+      data: {
+        votesCount: {
+          increment: 1,
+        },
+      },
+    });
+  }
 }
 
 export const pollOptionsRepository = new PollOptionsRepository();

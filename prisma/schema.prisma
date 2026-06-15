@@ -513,6 +513,7 @@ model Poll {
 
   post        Post         @relation(fields: [postId], references: [id])
   pollOptions PollOption[]
+  votes       Vote[]
 
   @@index([postId], map: "idx_polls_post_id")
   @@map("polls")
@@ -528,6 +529,7 @@ model PollOption {
   poll  Poll   @relation(fields: [pollId], references: [id])
   votes Vote[]
 
+  @@unique([id, pollId], map: "uq_poll_options_id_poll_id") // đảm bảo mỗi option chỉ thuộc về một poll duy nhất
   @@index([pollId], map: "idx_poll_options_poll_id")
   @@map("poll_options")
 }
@@ -535,13 +537,16 @@ model PollOption {
 model Vote {
   id           Int      @id @default(autoincrement())
   userId       String   @map("user_id")
+  pollId       Int      @map("poll_id")
   pollOptionId Int      @map("poll_option_id")
   createdAt    DateTime @default(now()) @map("created_at")
 
   user       User       @relation(fields: [userId], references: [id])
   pollOption PollOption @relation(fields: [pollOptionId], references: [id])
+  poll       Poll       @relation(fields: [pollId], references: [id])
 
   @@unique([userId, pollOptionId], map: "uq_votes_user_poll_option")
+  @@unique([userId, pollId], map: "uq_votes_user_poll") // đảm bảo mỗi người dùng chỉ được vote một lần cho mỗi poll
   @@index([userId], map: "idx_votes_user_id")
   @@index([pollOptionId], map: "idx_votes_poll_option_id")
   @@map("votes")

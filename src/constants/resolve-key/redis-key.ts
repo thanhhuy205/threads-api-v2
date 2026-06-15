@@ -83,5 +83,9 @@ export const redisKey = {
     list: (version: number, after: string, take: number, userId: string) =>
       `circle:list:v${version}:after:${after}:take:${take}:user:${userId}`,
   },
+  poll: {
+    voteLock: (userId: string, pollOptionId: number) =>
+      `poll_lock:${userId}:${pollOptionId}`,
+  },
 
 } as const;
