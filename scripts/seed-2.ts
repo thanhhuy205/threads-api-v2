@@ -403,8 +403,6 @@ const QUEST_DEFINITIONS: QuestDef[] = [
 
 // ─── PART A: Seed 50 new users ────────────────────────────────────────────────
 async function seedNewUsers(): Promise<{ id: string; username: string; name: string; avatar: string | null; bio: string | null }[]> {
-    console.log("\n👤 ===== PART A: SEED 50 NEW USERS (from Excel avatars) =====\n");
-
     const hashedPassword = await bcrypt.hash("12345678", 10);
     const existing = await prisma.user.findMany({ select: { username: true, email: true } });
     const usedUsernames = new Set(existing.map(u => u.username));
@@ -445,8 +443,6 @@ async function seedNewUsers(): Promise<{ id: string; username: string; name: str
     }
 
     await prisma.user.createMany({ data: userList, skipDuplicates: true });
-    console.log(`   ✅ 50 new users created`);
-
     const users = await prisma.user.findMany({
         where: { email: { in: userList.map(u => u.email) } },
         select: { id: true, username: true, name: true, avatar: true, bio: true },
@@ -456,8 +452,6 @@ async function seedNewUsers(): Promise<{ id: string; username: string; name: str
 
 // ─── PART B: Seed 100 reported posts ─────────────────────────────────────────
 async function seedReportedPosts(allUsers: { id: string; username: string; name: string; avatar: string | null; bio: string | null }[]): Promise<void> {
-    console.log("\n🚨 ===== PART B: SEED 100 REPORTED POSTS =====\n");
-
     // Need topics first
     const topicIds = await getOrCreateTopics();
 
@@ -564,14 +558,10 @@ async function seedReportedPosts(allUsers: { id: string; username: string; name:
 
         created++;
         if (created % 10 === 0) process.stdout.write(`\r   → ${created}/100 reported posts`);
-    }
-    console.log(`\n   ✅ ${created} reported posts created with reports + quality logs + topics + mentions`);
-}
+    }}
 
 // ─── PART C: Seed follows (mỗi user follow ít nhất 5 người) ──────────────────
 async function seedFollows(allUsers: { id: string }[]): Promise<void> {
-    console.log("\n👥 ===== PART C: SEED FOLLOWS =====\n");
-
     const existingFollows = await prisma.follow.findMany({
         select: { userId: true, followingId: true },
     });
@@ -602,11 +592,7 @@ async function seedFollows(allUsers: { id: string }[]): Promise<void> {
     for (let i = 0; i < batchData.length; i += 500) {
         await prisma.follow.createMany({ data: batchData.slice(i, i + 500), skipDuplicates: true });
         process.stdout.write(`\r   → ${Math.min(i + 500, batchData.length)}/${batchData.length} follows`);
-    }
-
-    // Update follower/following counts
-    console.log("\n   🔄 Updating follow counts...");
-    for (const user of allUsers) {
+    }    for (const user of allUsers) {
         const [followerCount, followingCount] = await Promise.all([
             prisma.follow.count({ where: { followingId: user.id, status: FollowStatus.ACCEPTED } }),
             prisma.follow.count({ where: { userId: user.id, status: FollowStatus.ACCEPTED } }),
@@ -615,14 +601,10 @@ async function seedFollows(allUsers: { id: string }[]): Promise<void> {
             where: { id: user.id },
             data: { followersCount: followerCount, followingCount },
         });
-    }
-    console.log(`   ✅ ${total} follow relationships created`);
-}
+    }}
 
 // ─── PART D: Seed friend requests (mỗi user ít nhất 2 bạn) ───────────────────
 async function seedFriends(allUsers: { id: string }[]): Promise<void> {
-    console.log("\n🤝 ===== PART D: SEED FRIEND REQUESTS =====\n");
-
     const existing = await prisma.friendRequest.findMany({
         select: { senderId: true, receiverId: true },
     });
@@ -677,9 +659,7 @@ async function seedFriends(allUsers: { id: string }[]): Promise<void> {
     for (let i = 0; i < batchData.length; i += 500) {
         await prisma.friendRequest.createMany({ data: batchData.slice(i, i + 500), skipDuplicates: true });
         process.stdout.write(`\r   → ${Math.min(i + 500, batchData.length)}/${batchData.length} friend requests`);
-    }
-    console.log(`\n   ✅ ${batchData.length} friend requests (ACCEPTED + PENDING)`);
-}
+    }}
 
 // ─── PART E: Seed topics + attach to existing posts ──────────────────────────
 async function getOrCreateTopics(): Promise<number[]> {
@@ -697,11 +677,7 @@ async function getOrCreateTopics(): Promise<number[]> {
 }
 
 async function seedTopics(): Promise<void> {
-    console.log("\n🏷️  ===== PART E: SEED TOPICS + ATTACH TO EXISTING POSTS =====\n");
-
     const topicIds = await getOrCreateTopics();
-    console.log(`   ✅ ${topicIds.length} topics upserted (count > 50)`);
-
     // Attach topics to existing posts that don't have one yet
     const postsWithoutTopic = await prisma.post.findMany({
         where: {
@@ -720,36 +696,26 @@ async function seedTopics(): Promise<void> {
             data: { postId: post.id, topicId, isPublic: true },
         }).catch(() => { });
         attached++;
-    }
-    console.log(`   ✅ Topics attached to ${attached} existing posts`);
-}
+    }}
 
 // ─── PART F: Seed Daily Quests (admin only) ───────────────────────────────────
 async function seedDailyQuests(): Promise<void> {
-    console.log("\n📋 ===== PART F: SEED DAILY QUESTS =====\n");
-
     // Find admin user
     const adminRole = await prisma.role.findUnique({ where: { name: "ADMIN" }, select: { id: true } });
-    if (!adminRole) {
-        console.log("   ⚠️  Admin role not found — run seedSpecialAccounts first");
-        return;
+    if (!adminRole) {        return;
     }
     const adminUserRole = await prisma.userRole.findFirst({
         where: { roleId: adminRole.id },
         select: { userId: true },
     });
-    if (!adminUserRole) {
-        console.log("   ⚠️  No admin user found — run seedSpecialAccounts first");
-        return;
+    if (!adminUserRole) {        return;
     }
     const adminId = adminUserRole.userId;
 
     let created = 0;
     for (const def of QUEST_DEFINITIONS) {
         const existing = await prisma.dailyQuest.findFirst({ where: { action: def.action, description: def.description } });
-        if (existing) {
-            console.log(`   ⚠️  Quest "${def.description.slice(0, 40)}..." already exists — skipping`);
-            continue;
+        if (existing) {            continue;
         }
         await prisma.dailyQuest.create({
             data: {
@@ -761,16 +727,10 @@ async function seedDailyQuests(): Promise<void> {
                 createById: adminId,
             },
         });
-        created++;
-        console.log(`   ✅ [${def.action.padEnd(30)}] karma:${def.karmaReward} req:${def.requirement} — ${def.description.slice(0, 50)}`);
-    }
-    console.log(`\n   ✅ ${created} daily quests created`);
-}
+        created++;    }}
 
 // ─── MAIN ─────────────────────────────────────────────────────────────────────
 async function main(): Promise<void> {
-    console.log("🌱 ===== SEED SUPPLEMENT: USERS + REPORTED POSTS + FOLLOWS + FRIENDS + TOPICS + QUESTS =====\n");
-
     // A. Seed 50 new users with Excel avatars
     const newUsers = await seedNewUsers();
 
@@ -779,8 +739,6 @@ async function main(): Promise<void> {
         where: { deletedAt: null, status: UserStatus.ACTIVE },
         select: { id: true, username: true, name: true, avatar: true, bio: true },
     });
-    console.log(`\n   📋 Total active users: ${allUsers.length}`);
-
     // E. Topics (needed by B)
     await seedTopics();
 
@@ -809,19 +767,7 @@ async function main(): Promise<void> {
         prisma.friendRequest.count({ where: { status: FriendRequestStatus.ACCEPTED } }),
         prisma.topic.count(),
         prisma.dailyQuest.count({ where: { isActive: true } }),
-    ]);
-
-    console.log(`
-🎉 ===== SUPPLEMENT SEED COMPLETE =====
-   👤 Total users        : ${totalUsers}
-   📝 Total posts        : ${totalPosts}
-   🚨 Total reports      : ${totalReports}
-   👥 Follow relations   : ${totalFollows}
-   🤝 Accepted friends   : ${totalFriends}
-   🏷️  Topics             : ${totalTopics}
-   📋 Active quests      : ${totalQuests}
-========================================`);
-}
+    ]);}
 
 main()
     .catch((e) => { console.error("❌ Supplement seed failed:", e); process.exit(1); })

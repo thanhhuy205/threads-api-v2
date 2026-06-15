@@ -12,11 +12,6 @@ export const redisWorker = {
     maxRetriesPerRequest: null,
 };
 
-
-redisClient.on('error', (err) => console.log('Redis error:', err));
-redisClient.on('connect', () => console.log('Redis connecting...'));
-redisClient.on('ready', () => console.log('Redis ready'));
-
 export const redisService = redisClient;
 
 

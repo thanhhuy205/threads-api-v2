@@ -49,9 +49,7 @@ const processEvaluationPost = async (job: EvaluationPostJob) => {
         const member = await circleMemberRepository.findRoleByCircleId(circle.id, job.userId);
         if (!member) {
             throw new Error(`User ${job.userId} is not a member of circle ${job.circlePublicId}`);
-        }
-        console.log(job);
-        const embedding = await mixedBreadService.generateEmbedding(job.content, [circle.name]);
+        }        const embedding = await mixedBreadService.generateEmbedding(job.content, [circle.name]);
         // khác nhóm nhưng đang giống nội dung với nhau
         // cùng nhóm và cùng user nhưng đang giống nội dung với nhau
         // cùng nhóm nhưng khác user đang giống nội dung với nhau
@@ -90,9 +88,7 @@ const processEvaluationPost = async (job: EvaluationPostJob) => {
         const matches = sameCircle.matches ?? [];
         const bestMatch = matches[0];
 
-        if (bestMatch && bestMatch.score && bestMatch.score > 0.9) {
-            console.log(`Post ${job.postId} is very similar to a previous post with id ${bestMatch.id} and score ${bestMatch.score}`);
-            return {
+        if (bestMatch && bestMatch.score && bestMatch.score > 0.9) {            return {
                 processed: false,
                 postId: job.postId,
             };

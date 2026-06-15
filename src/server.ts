@@ -15,14 +15,9 @@ const bootstrap = async () => {
         process.exit(1);
     }
 
-    const server = app.listen(configService.PORT, () => {
-        console.log(`Server is running on http://localhost:${configService.PORT}`);
-        console.log(`Swagger docs available at http://localhost:${configService.PORT}/api/v1/docs`);
-    });
+    const server = app.listen(configService.PORT, () => {  });
 
     const shutdown = (signal: string) => {
-        console.log(`Received ${signal}. Closing server...`);
-
         server.close((error) => {
             if (error) {
                 process.exit(1);
@@ -38,37 +33,27 @@ const bootstrap = async () => {
     };
 
     try {
-        await likeProducer.initSyncJob();
-        console.log('Initialized like sync repeat job');
-    } catch (error) {
+        await likeProducer.initSyncJob();    } catch (error) {
         console.error('Failed to initialize like sync repeat job:', error);
     }
 
     try {
-        await autoRemoveBanProducer.initAutoRemoveBanJob();
-        console.log('Initialized auto-remove-ban repeat job');
-    } catch (error) {
+        await autoRemoveBanProducer.initAutoRemoveBanJob();    } catch (error) {
         console.error('Failed to initialize auto-remove-ban repeat job:', error);
     }
 
     try {
-        await notificationProducer.initSyncNotificationBatchJob();
-        console.log('Initialized notification batch repeat job');
-    } catch (error) {
+        await notificationProducer.initSyncNotificationBatchJob();    } catch (error) {
         console.error('Failed to initialize notification batch repeat job:', error);
     }
 
     try {
-        await notificationProducer.initMessageNotificationJob();
-        console.log('Initialized message notification repeat job');
-    } catch (error) {
+        await notificationProducer.initMessageNotificationJob();    } catch (error) {
         console.error('Failed to initialize message notification repeat job:', error);
     }
 
     try {
-        await deltaProducer.initSyncBatchJob();
-        console.log('Initialized delta hp repeat job');
-    }
+        await deltaProducer.initSyncBatchJob();    }
     catch (error) {
         console.error('Failed to initialize delta hp repeat job:', error);
     }

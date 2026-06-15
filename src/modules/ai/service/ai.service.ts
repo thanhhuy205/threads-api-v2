@@ -44,7 +44,6 @@ class AiService {
         { role: "user", content: `Đây là nội dung cần đánh bóng ${content}` },
       ]
     })
-    console.log(response)
     const markdown = response.choices[0].message.content;
 
     if (!markdown) {

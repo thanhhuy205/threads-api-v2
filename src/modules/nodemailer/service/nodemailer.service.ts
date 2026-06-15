@@ -12,9 +12,7 @@ class NodemailerService {
                 subject,
                 html,
                 ...options,
-            });
-            console.log('Email sent: %s', info.messageId);
-        } catch (error) {
+            });        } catch (error) {
             console.error('Error sending email:', error);
             throw error;
         }

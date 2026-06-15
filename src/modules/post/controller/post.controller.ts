@@ -59,8 +59,6 @@ class PostController {
       take,
       userId,
     });
-    console.log("posts", posts);
-
     return res.paginate({ rows: posts, pagination });
   }
 

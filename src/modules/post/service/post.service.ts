@@ -303,9 +303,6 @@ class PostService {
     const rows = data.map((post) =>
       PostMapper.toFeedResponse(post, userId ?? undefined),
     );
-
-    console.log(data);
-
     const paginationResult = buildCursorPagination({
       rows,
       take: currentLimit,

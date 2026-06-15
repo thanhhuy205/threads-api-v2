@@ -24,9 +24,7 @@ class PineWorker {
             content: data.content,
             topics: data.topic,
             embedding,
-        });
-        console.log(`Processed embedding for postId: ${data.postId}`);
-    }
+        });    }
 }
 
 export const pineWorker = new PineWorker();

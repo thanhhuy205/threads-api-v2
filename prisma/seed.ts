@@ -886,8 +886,6 @@ interface SeedUser {
 // Flow: upsert Role → tạo User → tạo UserRole
 
 async function seedSpecialAccounts(): Promise<void> {
-    console.log("\n🔐 ===== PART 0: SEED SPECIAL ACCOUNTS =====\n");
-
     const hashedPassword = await bcrypt.hash("12345678", 10);
 
     // 1. Upsert các Role cần thiết vào bảng roles
@@ -901,9 +899,7 @@ async function seedSpecialAccounts(): Promise<void> {
             create: { name: roleName },
             select: { id: true, name: true },
         });
-        roleMap[role.name] = role.id;
-        console.log(`   📋 Role "${roleName}" ready (id: ${role.id})`);
-    }
+        roleMap[role.name] = role.id;    }
 
     // 2. Danh sách tài khoản đặc biệt cần tạo
     const specials: {
@@ -960,18 +956,9 @@ async function seedSpecialAccounts(): Promise<void> {
         if (!existingUserRole) {
             await prisma.userRole.create({
                 data: { userId: user.id, roleId },
-            });
-            console.log(`   ✅ Created ${s.roleName}: ${s.email} (userId: ${user.id})`);
-        } else {
-            console.log(`   ⚠️  ${s.roleName} already has role assigned (${s.email}) — skipping`);
-        }
-    }
-
-    console.log(`\n   ✅ Special accounts ready\n`);
-}
+            });        } else {        }
+    }}
 async function seedUsers(): Promise<SeedUser[]> {
-    console.log("\n👤 ===== PART 1: SEED 200 USERS =====\n");
-
     const hashedPassword = await bcrypt.hash("12345678", 10);
     const usedUsernames = new Set<string>();
     const usedEmails = new Set<string>();
@@ -1020,23 +1007,16 @@ async function seedUsers(): Promise<SeedUser[]> {
 
 
     await prisma.user.createMany({ data: userList, skipDuplicates: true });
-    console.log(`✅ ${userList.length} users created`);
-
     const users = await prisma.user.findMany({
         where: { deletedAt: null, status: UserStatus.ACTIVE },
         select: { id: true, username: true, name: true, avatar: true, bio: true },
         orderBy: { createdAt: "desc" },
         take: 200,
-    });
-
-    console.log(`📋 Loaded ${users.length} users`);
-    return users as SeedUser[];
+    });    return users as SeedUser[];
 }
 
 // ─── Seed Posts ───────────────────────────────────────────────────────────────
 async function seedPosts(users: SeedUser[]): Promise<void> {
-    console.log(`\n📝 ===== PART 2: SEED 300 POSTS =====`);
-
     let postCount = 0;
     let imgIdx = 0;
     const TARGET = 300;
@@ -1102,15 +1082,10 @@ async function seedPosts(users: SeedUser[]): Promise<void> {
             postCount++;
         }
         process.stdout.write(`\r   → ${postCount}/${TARGET} posts`);
-    }
-
-    console.log(`\n   ✅ ${postCount} posts with 2–5 images each (0 likes, 0 comments)`);
-}
+    }}
 
 // ─── Seed Circles ─────────────────────────────────────────────────────────────
 async function seedCircles(users: SeedUser[]): Promise<void> {
-    console.log(`\n⭕ ===== PART 3: SEED ${CIRCLES_DATA.length} CIRCLES =====`);
-
     const statusIcon = (s: HpState) => {
         switch (s) {
             case "healthy": return "💚";
@@ -1174,24 +1149,11 @@ async function seedCircles(users: SeedUser[]): Promise<void> {
         const totalMembers = memberCount + 1; // +1 owner
         const icon = def.statusPeak ? "🔥" : "  ";
         const vis = def.visibility === "PUBLIC" ? "🌐" : "🔒";
-        console.log(
-            `   ${String(i + 1).padStart(2)}. ${icon} ${vis} ${statusIcon(def.hpState)} [${def.hpState.toUpperCase().padEnd(7)}]` +
-            ` Lv.${def.level} ${cfg.name.padEnd(8)} HP ${String(currentHp).padStart(4)}/${cfg.maxHp} EXP ${String(exp).padStart(4)}` +
-            ` — ${totalMembers} members — ${def.name}`
-        );
     }
-
-    console.log(`\n   ✅ ${CIRCLES_DATA.length} circles seeded`);
-    console.log(`   💀 Dead  : ${CIRCLES_DATA.filter(c => c.hpState === "dead").length}`);
-    console.log(`   🟠 Dying : ${CIRCLES_DATA.filter(c => c.hpState === "dying").length}`);
-    console.log(`   🟡 Sick  : ${CIRCLES_DATA.filter(c => c.hpState === "sick").length}`);
-    console.log(`   💚 Healthy: ${CIRCLES_DATA.filter(c => c.hpState === "healthy").length}`);
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 async function main(): Promise<void> {
-    console.log("🌱 ===== SEED: USERS → POSTS → CIRCLES =====");
-    console.log("   Note: likes=0, comments=0, reposts=0 on all posts");
     await seedSpecialAccounts();
     const users = await seedUsers();
     if (users.length === 0) throw new Error("No users found after seed – aborting.");
@@ -1207,17 +1169,7 @@ async function main(): Promise<void> {
             prisma.postMedia.count(),
             prisma.circle.count(),
             prisma.circleMember.count(),
-        ]);
-
-    console.log(`
-🎉 ===== SEED COMPLETE =====
-   👤 Users (active)  : ${totalUsers}
-   📝 Posts           : ${totalPosts} (0 likes | 0 comments | 0 reposts)
-   🖼️  PostMedia       : ${totalMedia} (2–5 per post)
-   ⭕ Circles         : ${totalCircles} (≥70 required ✓)
-   👥 Circle Members  : ${totalMembers}
-==============================`);
-}
+        ]);}
 
 main()
     .catch((e) => { console.error("❌ Seed failed:", e); process.exit(1); })

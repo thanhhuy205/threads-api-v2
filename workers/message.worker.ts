@@ -42,9 +42,6 @@ class MessageWorker {
             baseLogger.info(`[REALTIME_CHAT_NOTIFICATION_QUEUE_ITEM] ${messageKey}`);
 
             const notificationData = await redisService.hGetAll(messageKey);
-
-            console.log(notificationData);
-
             notificationMessage.push({ ...notificationData } as any);
 
             await redisService
@@ -89,10 +86,7 @@ class MessageWorker {
         name: string
     }) {
         const { recipientId, content, avatar, name, groupPublicId } = payload;
-        const message = this.buildMessageNotificationPayload(payload);
-        console.log(message);
-        console.log(pusherChannel.privateNotification(recipientId))
-        await pusherService.trigger(pusherChannel.privateNotification(recipientId), "message-notification:new", {
+        const message = this.buildMessageNotificationPayload(payload);      await pusherService.trigger(pusherChannel.privateNotification(recipientId), "message-notification:new", {
             groupPublicId,
             name,
             avatar: avatar ?? "",

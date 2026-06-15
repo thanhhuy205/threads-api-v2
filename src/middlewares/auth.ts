@@ -50,9 +50,7 @@ export const authorization = async (
     req.accessToken = token;
     return next();
   } catch (error) {
-    if (process.env.NODE_ENV === "development") {
-      console.log(error);
-    }
+    if (process.env.NODE_ENV === "development") {    }
 
     if (
       error instanceof UnauthorizedException ||
