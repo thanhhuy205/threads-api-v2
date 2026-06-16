@@ -1,5 +1,4 @@
 import prisma from "@/config/prisma";
-import type { Prisma } from "@prisma/client";
 
 class UserRoleRepository {
   async findByUserId(userId: string) {

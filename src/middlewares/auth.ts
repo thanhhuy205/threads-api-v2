@@ -1,7 +1,6 @@
 import { AUTH_MESSAGE } from "@/constants/message";
 import { redisKey } from "@/constants/resolve-key/redis-key";
 import { ForbiddenException, UnauthorizedException } from "@/errors/error";
-import { userRoleService } from "@/modules/access-control/role/service/user-role.service";
 import { jwtService } from "@/modules/jwt/service/jwt.service";
 import { userRepository } from "@/modules/user/repository/user.repository";
 import { redisService } from "@/providers/redis.provider";
