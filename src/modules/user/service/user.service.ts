@@ -1,4 +1,4 @@
-import { postRepository } from "@/modules/post/repository/post.repository";
+import { postService } from "@/modules/post/service/post.service";
 import { userRepository } from "@/modules/user/repository/user.repository";
 import { Prisma } from "@prisma/client";
 import { mapUserProfileForFE } from "../mapper/user.mapper";
@@ -49,7 +49,7 @@ class UserService {
     const [user, followingCount, postCount] = await Promise.all([
       userRepository.findStatusProfileById(userId),
       followRepository.countActiveFollowing(userId),
-      postRepository.count({ where: { userId } }),
+      postService.count(userId)
     ]);
 
     if (!user) {
@@ -84,18 +84,26 @@ class UserService {
     }
 
     if (!userId) {
-      return mapUserProfileForFE(user);
+      const postCount = await postService.count(user.id);
+      return mapUserProfileForFE({
+        ...user,
+        postsCount: postCount,
+        postCount,
+      });
     }
 
-    const [requestUser, follower] = await Promise.all([
+    const [requestUser, follower, postCount] = await Promise.all([
       userRepository.findUserRequestFriend(userId, user.id),
       userRepository.findUserFollowing(userId, user.id),
+      postService.count(user.id),
     ]);
 
     return mapUserProfileForFE({
       ...user,
       ...requestUser,
       ...follower,
+      postsCount: postCount,
+      postCount,
     });
   }
 

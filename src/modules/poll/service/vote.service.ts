@@ -7,7 +7,7 @@ import { pollService } from "./poll.service";
 
 type CreateVotePayload = {
   pollId: number;
-  pollOptionsId: number;
+  pollOptionId: number;
   userId: string;
 };
 
@@ -15,7 +15,7 @@ class VoteService {
   private readonly voteLockTtlSeconds = 5;
 
   async createVote(payload: CreateVotePayload) {
-    const lockKey = redisKey.poll.voteLock(payload.userId, payload.pollOptionsId);
+    const lockKey = redisKey.poll.voteLock(payload.userId, payload.pollOptionId);
     const countVoteKey = redisKey.poll.countVote(payload.pollId);
     const locked = await redisService.set(lockKey, "1", {
       NX: true,
@@ -28,7 +28,7 @@ class VoteService {
 
     const result = await transactionService.doInTransaction(async (tx) => {
       await pollService.assertPollOptionBelongsToPoll(
-        payload.pollOptionsId,
+        payload.pollOptionId,
         payload.pollId,
         tx,
       );
@@ -37,24 +37,34 @@ class VoteService {
         {
           userId: payload.userId,
           pollId: payload.pollId,
-          pollOptionId: payload.pollOptionsId,
+          pollOptionId: payload.pollOptionId,
         },
         tx,
       );
 
       const result = await pollService.incrementPollOptionVotesCount(
-        payload.pollOptionsId,
+        payload.pollOptionId,
         payload.pollId,
         tx,
       );
 
       return result;
     });
-    await redisService.incr(countVoteKey);
+    let votesCount = 0;
+    const exists = await redisService.exists(countVoteKey);
+    if (!exists) {
+      const totalVotes = await pollService.getCountVoted(payload.pollId);
+      votesCount = totalVotes.count;
+      await redisService.set(countVoteKey, String(votesCount), {
+        EX: 24 * 60 * 60, // 24 hours
+      });
+    } else {
+      votesCount = await redisService.incr(countVoteKey);
+    }
     await redisService.del(lockKey);
 
     return {
-      totalVotes: result.votesCount,
+      totalVotes: votesCount,
       votedCount: result.votesCount,
       totalVotedCount: result.votesCount,
       isVoted: true,

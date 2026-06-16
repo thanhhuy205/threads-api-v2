@@ -16,6 +16,14 @@ class VoteRepository {
       data: payload,
     });
   }
+
+  countByPollId(pollId: number, tx: Prisma.TransactionClient = prisma) {
+    return tx.vote.count({
+      where: {
+        pollId,
+      },
+    });
+  }
 }
 
 export const voteRepository = new VoteRepository();

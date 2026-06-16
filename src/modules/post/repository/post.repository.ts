@@ -148,23 +148,6 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
                 userId: true,
               },
               take: 1,
-            },
-            polls: {
-              select: {
-                pollOptions: {
-                  select: {
-                    votes: {
-                      where: {
-                        userId: userId,
-                      },
-                      select: {
-                        pollOptionId: true,
-                      },
-                      take: 1,
-                    },
-                  },
-                },
-              },
             }
           }
           : {}),
@@ -176,6 +159,16 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
     return prisma.post.count({
       where: {
         AND: [{ isDeleted: false }, where],
+      },
+    });
+  }
+
+  countPostBydUserId(userId: string) {
+    return prisma.post.count({
+      where: {
+        isDeleted: false,
+        userId,
+        type: PostType.POST,
       },
     });
   }

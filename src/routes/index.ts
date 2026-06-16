@@ -40,7 +40,7 @@ router.use("/upload", uploadRouter);
 router.use("/posts", postRouter);
 router.use("/topic", topicRouter);
 router.use("/notification", notificationRouter);
-router.use("/poll", pollRouter);
+router.use("/polls", pollRouter);
 router.use("/webhooks", webhooksRouter);
 router.use("/search", searchRouter);
 router.use("/message-groups", messageGroupRouter);

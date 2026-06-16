@@ -19,7 +19,7 @@ class PollController {
 
     const result = await voteService.createVote({
       pollId: req.params.pollId,
-      pollOptionsId: req.body.pollOptionsId,
+      pollOptionId: req.body.pollOptionId,
       userId,
     });
 

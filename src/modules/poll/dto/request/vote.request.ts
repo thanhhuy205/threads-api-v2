@@ -5,7 +5,7 @@ export const voteParamsSchema = z.object({
 });
 
 export const createVoteSchema = z.object({
-  pollOptionsId: z.coerce.number().int().positive(),
+  pollOptionId: z.coerce.number().int().positive(),
 });
 
 export type VoteParamsDto = z.infer<typeof voteParamsSchema>;

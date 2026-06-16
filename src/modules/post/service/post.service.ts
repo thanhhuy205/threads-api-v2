@@ -821,6 +821,10 @@ class PostService {
     return results;
   }
 
+  async count(userId: string) {
+    return postRepository.countPostBydUserId(userId);
+  }
+
   async getById(publicId: string, userId?: string | null) {
     const post = await postRepository.findByPublicId(publicId, userId);
 

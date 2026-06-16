@@ -1,6 +1,7 @@
 import { BadRequestException, NotFoundException } from "@/errors/error";
 import type { Prisma } from "@prisma/client";
 import { pollRepository } from "../repository/poll.repository";
+import { voteRepository } from "../repository/vote.repository";
 import {
   pollOptionsService,
   type PollOptionInput,
@@ -67,6 +68,12 @@ class PollService {
     tx?: Prisma.TransactionClient,
   ) {
     return pollOptionsService.incrementVotesCount(pollOptionId, pollId, tx);
+  }
+
+  async getCountVoted(pollId: number, tx?: Prisma.TransactionClient) {
+    const count = await voteRepository.countByPollId(pollId, tx);
+
+    return { count };
   }
 
   private normalizeOptions(options: PollOptionInput[]) {
