@@ -44,6 +44,51 @@ type CreateRepostPayload = {
 };
 
 class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
+  private buildFeedSelect(userId?: string | null): Prisma.PostSelect {
+    const select: Prisma.PostSelect = {
+      ...postFeedSelect,
+      polls: {
+        select: {
+          id: true,
+          expiresAt: true,
+          _count: {
+            select: {
+              votes: true,
+            },
+          },
+          pollOptions: {
+            select: {
+              id: true,
+              optionText: true,
+              votesCount: true,
+              ...(userId
+                ? {
+                  votes: {
+                    where: {
+                      userId,
+                    },
+                    select: {
+                      pollOptionId: true,
+                    },
+                    take: 1,
+                  },
+                }
+                : {}),
+            },
+            orderBy: {
+              id: Prisma.SortOrder.asc,
+            },
+          },
+        },
+        orderBy: {
+          id: Prisma.SortOrder.asc,
+        },
+      },
+    };
+
+    return select;
+  }
+
   findAll({
     after,
     take,
@@ -74,7 +119,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
         }
         : undefined,
       select: {
-        ...postFeedSelect,
+        ...this.buildFeedSelect(userId),
         _count: {
           select: {
             children: true,
@@ -104,6 +149,23 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
               },
               take: 1,
             },
+            polls: {
+              select: {
+                pollOptions: {
+                  select: {
+                    votes: {
+                      where: {
+                        userId: userId,
+                      },
+                      select: {
+                        pollOptionId: true,
+                      },
+                      take: 1,
+                    },
+                  },
+                },
+              },
+            }
           }
           : {}),
       },
@@ -397,12 +459,12 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
       createdAt: post.createdAt.toISOString(),
     }));
   }
-  async findByPublicId(publicId: string) {
+  async findByPublicId(publicId: string, userId?: string | null) {
     return prisma.post.findFirst({
       where: { publicId, isDeleted: false },
       select: {
         id: true,
-        ...postFeedSelect,
+        ...this.buildFeedSelect(userId),
       },
     });
   }
@@ -652,7 +714,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
         visibility: VisibilityPost.PUBLIC,
       },
       select: {
-        ...postFeedSelect,
+        ...this.buildFeedSelect(userId),
         _count: {
           select: {
             children: true,

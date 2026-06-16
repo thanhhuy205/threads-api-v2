@@ -42,6 +42,9 @@ export type PostFeedResponse = Omit<
   }[];
   isDisinformation: boolean;
   isSurvey: boolean;
+  isVoted: boolean;
+  optionPollIds: number[];
+  totalVotedCount: number;
 };
 export type UserSnapshot = {
   id: string;
@@ -75,17 +78,49 @@ export class PostMapper {
       createdAt: post.createdAt.toISOString() ?? new Date().toISOString(),
     };
   }
-  static toFeedResponse(post: PostFeedItem, userId?: string): PostFeedResponse {
+  static toFeedResponse(post: any, userId?: string): PostFeedResponse {
     baseLogger.info(
       `Mapping post with id ${post.publicId} to feed response for user ${userId}. Post derivatives: ${JSON.stringify(post.derivatives)}, Likes: ${JSON.stringify(post.likes)}`,
     );
     const topics: string[] =
       post?.topicsPosts
-        ?.map((tp) => tp.topic?.name)
-        .filter((name): name is string => !!name) ?? [];
+        ?.map((tp: { topic?: { name?: string | null } | null }) => tp.topic?.name)
+        .filter((name: string | null | undefined): name is string => !!name) ?? [];
 
     const repliesCount = post._count?.children ?? 0;
     const repostsCountAndQuoteCount = post._count?.derivatives ?? 0;
+    const polls = ((post.polls ?? []) as any[]).map((poll) => {
+      const optionPollIds = poll.pollOptions.flatMap((option: any) =>
+        Array.isArray(option.votes)
+          ? option.votes.map((vote: { pollOptionId: number }) => vote.pollOptionId)
+          : [],
+      );
+      const totalVotedCount =
+        poll._count?.votes ??
+        poll.pollOptions.reduce(
+          (total: number, option: { votesCount: number }) =>
+            total + option.votesCount,
+          0,
+        );
+
+      return {
+        id: poll.id,
+        expiresAt: poll.expiresAt,
+        pollOptions: poll.pollOptions.map((option: any) => ({
+          id: option.id,
+          optionText: option.optionText,
+          votesCount: option.votesCount,
+        })),
+        isVoted: optionPollIds.length > 0,
+        optionPollIds,
+        totalVotedCount,
+      };
+    });
+    const optionPollIds = polls.flatMap((poll: { optionPollIds: number[] }) => poll.optionPollIds);
+    const totalVotedCount = polls.reduce(
+      (total: number, poll: { totalVotedCount: number }) => total + poll.totalVotedCount,
+      0,
+    );
 
     return {
       userId: post.userId,
@@ -105,12 +140,15 @@ export class PostMapper {
       isGhost: post.isGhost,
       isSurvey: post.isSurvey,
       isDisinformation: post.isDisinformation,
-      polls: post.polls,
+      polls,
+      isVoted: optionPollIds.length > 0,
+      optionPollIds,
+      totalVotedCount,
       origin: post.origin,
       viewsCount: post.viewsCount,
       parent: post.parent,
       media: post.media?.map(({ ...media }) => media) ?? [],
-      mentions: post.mentions.map(m => ({
+      mentions: post.mentions.map((m: { userId: string; user: { username: string } }) => ({
         userId: m.userId,
         username: m.user.username,
       })),

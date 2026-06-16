@@ -510,6 +510,7 @@ model Poll {
   postId    Int      @map("post_id")
   expiresAt DateTime @map("expires_at")
   createdAt DateTime @default(now()) @map("created_at")
+  voteCount Int      @default(0) @map("vote_count")
 
   post        Post         @relation(fields: [postId], references: [id])
   pollOptions PollOption[]

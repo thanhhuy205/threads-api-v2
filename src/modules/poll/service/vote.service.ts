@@ -16,6 +16,7 @@ class VoteService {
 
   async createVote(payload: CreateVotePayload) {
     const lockKey = redisKey.poll.voteLock(payload.userId, payload.pollOptionsId);
+    const countVoteKey = redisKey.poll.countVote(payload.pollId);
     const locked = await redisService.set(lockKey, "1", {
       NX: true,
       EX: this.voteLockTtlSeconds,
@@ -49,10 +50,13 @@ class VoteService {
 
       return result;
     });
+    await redisService.incr(countVoteKey);
+    await redisService.del(lockKey);
 
-    redisService.del(lockKey);
     return {
+      totalVotes: result.votesCount,
       votedCount: result.votesCount,
+      totalVotedCount: result.votesCount,
       isVoted: true,
     };
   }

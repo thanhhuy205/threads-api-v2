@@ -420,6 +420,7 @@ class PostService {
       scope: "post-user",
       after,
       take,
+      userId: myUserId,
       extra: userId,
       resolver: () =>
         this.paginatePosts({
@@ -440,6 +441,7 @@ class PostService {
       scope: "reply-user",
       after,
       take,
+      userId: myUserId,
       extra: userId,
       resolver: () =>
         this.paginatePosts({
@@ -455,16 +457,18 @@ class PostService {
     });
   }
 
-  async getReplies({ after, take, publicId }: GetPostWithPublicId) {
+  async getReplies({ after, take, publicId, userId }: GetPostWithPublicId) {
     return this.getCachedPostList({
       scope: "reply-post",
       after,
       take,
+      userId,
       extra: publicId,
       resolver: () =>
         this.paginatePosts({
           after,
           take,
+          userId,
           where: buildRepliesWhere({
             after,
             publicId,
@@ -496,6 +500,7 @@ class PostService {
       scope: "quote-user",
       after,
       take,
+      userId: myUserId,
       extra: userId,
       resolver: () =>
         this.paginatePosts({
@@ -816,15 +821,16 @@ class PostService {
     return results;
   }
 
-  async getById(publicId: string) {
-    const post = await postRepository.findByPublicId(publicId);
+  async getById(publicId: string, userId?: string | null) {
+    const post = await postRepository.findByPublicId(publicId, userId);
 
     if (!post) {
       return null;
     }
 
     return {
-      ...post,
+      id: post.id,
+      ...PostMapper.toFeedResponse(post, userId ?? undefined),
     };
   }
 
