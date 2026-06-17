@@ -293,10 +293,37 @@ class PostService {
       follower.map((row) => row.userId)
     );
 
+    // Poll
+    const mapPostIdToPollId = new Map<string, number>();
+    const voteCountMap = new Map<number, any>()
+    posts.forEach((post) => {
+      if (post.isSurvey && post.poll?.id) {
+        mapPostIdToPollId.set(post.publicId, post.poll.id);
+      }
+    });
+    console.log("mapPostIdToPollId", mapPostIdToPollId)
+
+    if (mapPostIdToPollId.size > 0) {
+      const pollIds = Array.from(mapPostIdToPollId.values())
+      const keys = pollIds.map(id => redisKey.poll.countVote(id))
+      const voteCountAll = await redisService.mGet(keys);
+      console.log(voteCountAll);
+      pollIds.forEach((pollId, index) => {
+        if (voteCountAll[index] !== null) {
+          voteCountMap.set(pollId, JSON.parse(voteCountAll[index]))
+        }
+      })
+    }
+
+    console.log(voteCountMap)
     const data = posts.map((post) => ({
       ...post,
       isFollowingAuthor: followingSet.has(post.userId),
       isFollowedByAuthor: followerSet.has(post.userId),
+      poll: post?.poll && mapPostIdToPollId.has(post.publicId) ? {
+        ...post.poll,
+        voteCount: voteCountMap.get(post?.poll.id) ?? post.poll?.voteCount ?? 0,
+      } : null
     }));
 
 

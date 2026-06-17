@@ -43,8 +43,18 @@ export type PostFeedResponse = Omit<
   isDisinformation: boolean;
   isSurvey: boolean;
   isVoted: boolean;
+  poll: {
+    id: number;
+    expiresAt: Date;
+    pollOptions: {
+      id: number;
+      option: string;
+      voteCount: number;
+    }[];
+    isExpired: boolean;
+    voteCount: number;
+  } | null;
   optionPollIds: number[];
-  totalVotedCount: number;
 };
 export type UserSnapshot = {
   id: string;
@@ -89,39 +99,8 @@ export class PostMapper {
 
     const repliesCount = post._count?.children ?? 0;
     const repostsCountAndQuoteCount = post._count?.derivatives ?? 0;
-    const polls = ((post.polls ?? []) as any[]).map((poll) => {
-      const optionPollIds = poll.pollOptions.flatMap((option: any) =>
-        Array.isArray(option.votes)
-          ? option.votes.map((vote: { pollOptionId: number }) => vote.pollOptionId)
-          : [],
-      );
-      const totalVotedCount =
-        poll._count?.votes ??
-        poll.pollOptions.reduce(
-          (total: number, option: { votesCount: number }) =>
-            total + option.votesCount,
-          0,
-        );
-
-      return {
-        id: poll.id,
-        expiresAt: poll.expiresAt,
-        pollOptions: poll.pollOptions.map((option: any) => ({
-          id: option.id,
-          optionText: option.optionText,
-          votesCount: option.votesCount,
-        })),
-        isVoted: optionPollIds.length > 0,
-        optionPollIds,
-        totalVotedCount,
-      };
-    });
-    const optionPollIds = polls.flatMap((poll: { optionPollIds: number[] }) => poll.optionPollIds);
-    const totalVotedCount = polls.reduce(
-      (total: number, poll: { totalVotedCount: number }) => total + poll.totalVotedCount,
-      0,
-    );
-
+    const poll = post.poll ?? null;
+    const isVoted = post.poll?.pollOptions.some(op => op.votes != null) ?? false;
     return {
       userId: post.userId,
       createdAt: post.createdAt,
@@ -140,10 +119,8 @@ export class PostMapper {
       isGhost: post.isGhost,
       isSurvey: post.isSurvey,
       isDisinformation: post.isDisinformation,
-      polls,
-      isVoted: optionPollIds.length > 0,
-      optionPollIds,
-      totalVotedCount,
+      poll: poll ?? null,
+      isVoted,
       origin: post.origin,
       viewsCount: post.viewsCount,
       parent: post.parent,

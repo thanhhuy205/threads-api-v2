@@ -47,15 +47,12 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
   private buildFeedSelect(userId?: string | null): Prisma.PostSelect {
     const select: Prisma.PostSelect = {
       ...postFeedSelect,
-      polls: {
+      poll: {
         select: {
           id: true,
           expiresAt: true,
-          _count: {
-            select: {
-              votes: true,
-            },
-          },
+          voteCount: true,
+          isExpired: true,
           pollOptions: {
             select: {
               id: true,
@@ -79,9 +76,6 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
               id: Prisma.SortOrder.asc,
             },
           },
-        },
-        orderBy: {
-          id: Prisma.SortOrder.asc,
         },
       },
     };
@@ -241,7 +235,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
       visibility: payload.visibility ?? VisibilityPost.PUBLIC,
       userSnapshot,
       isSurvey: Boolean(payload.isSurvey || payload.polls?.length),
-      polls: this.createPoll(payload.polls),
+      poll: this.createPoll(payload.polls),
       media: this.connectMedia(payload.media),
     };
   }

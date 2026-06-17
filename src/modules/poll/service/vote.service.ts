@@ -17,6 +17,7 @@ class VoteService {
   async createVote(payload: CreateVotePayload) {
     const lockKey = redisKey.poll.voteLock(payload.userId, payload.pollOptionId);
     const countVoteKey = redisKey.poll.countVote(payload.pollId);
+    await redisService.sAdd(redisKey.poll.dirtySurveys(), String(payload.pollId));
     const locked = await redisService.set(lockKey, "1", {
       NX: true,
       EX: this.voteLockTtlSeconds,
@@ -57,7 +58,7 @@ class VoteService {
       votesCount = totalVotes.count;
       await redisService.set(countVoteKey, String(votesCount), {
         EX: 24 * 60 * 60, // 24 hours
-        
+
       });
     } else {
       votesCount = await redisService.incr(countVoteKey);

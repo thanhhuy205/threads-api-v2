@@ -3,6 +3,7 @@ import { autoRemoveBanProducer } from '@/modules/job/auto-remove-ban/producer/au
 import { deltaProducer } from '@/modules/job/delta-hp-cron/producer/delta-producer';
 import { likeProducer } from '@/modules/job/like-job/producer/like.producer';
 import { notificationProducer } from '@/modules/job/notification-job/producer/notification.producer';
+import { surveySyncProducer } from '@/modules/job/survey-sync/producer/survey-sync.producer';
 import configService from './config/config';
 import prisma from './config/prisma';
 import { redisService } from './providers/redis.provider';
@@ -56,6 +57,11 @@ const bootstrap = async () => {
         await deltaProducer.initSyncBatchJob();    }
     catch (error) {
         console.error('Failed to initialize delta hp repeat job:', error);
+    }
+
+    try {
+        await surveySyncProducer.initSyncSurveyJob();    } catch (error) {
+        console.error('Failed to initialize survey sync repeat job:', error);
     }
 
     process.on('SIGINT', () => {

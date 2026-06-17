@@ -494,7 +494,7 @@ model Post {
   circlePostQualityLogs   CirclePostQualityLog[]
   circleExpLogs           CircleExpLog[]
   originPostNotifications NotificationGroup[]    @relation("NotificationOriginPost")
-  polls                   Poll[]
+  poll                    Poll?
 
   @@index([userId, createdAt])
   @@index([parentId])
@@ -508,14 +508,16 @@ model Post {
 model Poll {
   id        Int      @id @default(autoincrement())
   postId    Int      @map("post_id")
+  isExpired Boolean  @default(false) @map("is_expired")
   expiresAt DateTime @map("expires_at")
   createdAt DateTime @default(now()) @map("created_at")
   voteCount Int      @default(0) @map("vote_count")
 
-  post        Post         @relation(fields: [postId], references: [id])
+  post        Post         @relation(fields: [postId], references: [id], onDelete: Restrict)
   pollOptions PollOption[]
   votes       Vote[]
 
+  @@unique([postId], map: "uq_polls_post_id")
   @@index([postId], map: "idx_polls_post_id")
   @@map("polls")
 }

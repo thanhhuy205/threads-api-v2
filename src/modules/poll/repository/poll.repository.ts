@@ -6,6 +6,11 @@ export type CreatePollPayload = {
   expiresAt: Date;
 };
 
+export type PollVoteCountUpdate = {
+  pollId: number;
+  voteCount: number;
+};
+
 class PollRepository {
   create(
     payload: CreatePollPayload,
@@ -29,6 +34,30 @@ class PollRepository {
         },
       },
     });
+  }
+
+  bulkUpdateVoteCount(
+    updates: PollVoteCountUpdate[],
+    tx: Prisma.TransactionClient = prisma,
+  ) {
+    if (updates.length === 0) {
+      return Promise.resolve(0);
+    }
+
+    const ids = updates.map((update) => update.pollId);
+    const cases = Prisma.join(
+      updates.map(
+        (update) =>
+          Prisma.sql`WHEN ${update.pollId} THEN ${update.voteCount}`,
+      ),
+      " ",
+    );
+
+    return tx.$executeRaw`
+      UPDATE polls
+      SET vote_count = CASE id ${cases} END
+      WHERE id IN (${Prisma.join(ids)})
+    `;
   }
 }
 

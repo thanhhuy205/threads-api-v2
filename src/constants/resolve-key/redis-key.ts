@@ -87,6 +87,7 @@ export const redisKey = {
     voteLock: (userId: string, pollOptionId: number) =>
       `poll_lock:${userId}:${pollOptionId}`,
     countVote: (pollId: number) => `voted:poll:count:all:${pollId}`,
+    dirtySurveys: () => "dirty_surveys",
   },
 
 } as const;
