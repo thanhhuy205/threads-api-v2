@@ -281,6 +281,47 @@ export const postSwaggerSchemas = {
         },
         required: ['success', 'message', 'data'],
     },
+    SimilarPostsRequest: {
+        type: 'object',
+        properties: {
+            content: {
+                type: 'string',
+                minLength: 1,
+                example: 'A practical note about Prisma pagination',
+            },
+            topic: {
+                type: 'array',
+                items: { type: 'string', minLength: 1 },
+                example: ['prisma', 'backend'],
+            },
+        },
+        required: ['content', 'topic'],
+    },
+    SimilarPostItem: {
+        type: 'object',
+        properties: {
+            userSnapshot: {
+                type: 'object',
+                additionalProperties: true,
+            },
+            content: { type: 'string', example: 'Related post content' },
+            publicId: { type: 'string', example: 'post_related_123' },
+            createdAt: { type: 'string', format: 'date-time' },
+        },
+        required: ['userSnapshot', 'content', 'publicId', 'createdAt'],
+    },
+    SimilarPostsResponse: {
+        type: 'object',
+        properties: {
+            success: { type: 'boolean', example: true },
+            message: { type: 'string', example: POST_MESSAGE.RETRIEVED },
+            data: {
+                type: 'array',
+                items: { $ref: '#/components/schemas/SimilarPostItem' },
+            },
+        },
+        required: ['success', 'message', 'data'],
+    },
 };
 
 const cursorPaginationQueryParameters = [
@@ -414,7 +455,7 @@ export const postSwaggerPaths = {
         get: {
             tags: ['Post'],
             summary: 'Get news feed',
-            security: bearerAuthSecurity,
+            security: [],
             parameters: newsFeedQueryParameters,
             responses: {
                 200: {
@@ -426,9 +467,6 @@ export const postSwaggerPaths = {
                             },
                         },
                     },
-                },
-                401: {
-                    description: AUTH_MESSAGE.TOKEN_INVALID,
                 },
             },
         },
@@ -470,6 +508,41 @@ export const postSwaggerPaths = {
                 },
                 400: {
                     description: COMMON_MESSAGE.VALIDATION_FAILED,
+                },
+            },
+        },
+    },
+    '/posts/{publicId}/similar': {
+        post: {
+            tags: ['Post'],
+            summary: 'Get semantically similar posts',
+            parameters: [publicIdParameters[0]],
+            requestBody: {
+                required: true,
+                content: {
+                    'application/json': {
+                        schema: {
+                            $ref: '#/components/schemas/SimilarPostsRequest',
+                        },
+                    },
+                },
+            },
+            responses: {
+                200: {
+                    description: POST_MESSAGE.RETRIEVED,
+                    content: {
+                        'application/json': {
+                            schema: {
+                                $ref: '#/components/schemas/SimilarPostsResponse',
+                            },
+                        },
+                    },
+                },
+                400: {
+                    description: COMMON_MESSAGE.VALIDATION_FAILED,
+                },
+                404: {
+                    description: 'Post not found',
                 },
             },
         },
@@ -657,7 +730,7 @@ export const postSwaggerPaths = {
         get: {
             tags: ['Post'],
             summary: 'Get user posts',
-            security: bearerAuthSecurity,
+            security: [],
             parameters: usernameParameters,
             responses: {
                 200: {
@@ -670,9 +743,6 @@ export const postSwaggerPaths = {
                         },
                     },
                 },
-                401: {
-                    description: AUTH_MESSAGE.TOKEN_INVALID,
-                },
                 404: {
                     description: 'Post not found',
                 },
@@ -683,7 +753,7 @@ export const postSwaggerPaths = {
         get: {
             tags: ['Post'],
             summary: 'Get user replies',
-            security: bearerAuthSecurity,
+            security: [],
             parameters: usernameParameters,
             responses: {
                 200: {
@@ -696,9 +766,6 @@ export const postSwaggerPaths = {
                         },
                     },
                 },
-                401: {
-                    description: AUTH_MESSAGE.TOKEN_INVALID,
-                },
                 404: {
                     description: 'Post not found',
                 },
@@ -709,7 +776,7 @@ export const postSwaggerPaths = {
         get: {
             tags: ['Post'],
             summary: 'Get user quotes and reposts',
-            security: bearerAuthSecurity,
+            security: [],
             parameters: usernameParameters,
             responses: {
                 200: {
@@ -721,9 +788,6 @@ export const postSwaggerPaths = {
                             },
                         },
                     },
-                },
-                401: {
-                    description: AUTH_MESSAGE.TOKEN_INVALID,
                 },
             },
         },
@@ -845,19 +909,6 @@ export const postSwaggerPaths = {
             summary: 'Repost a post',
             security: bearerAuthSecurity,
             parameters: [publicIdParameters[0]],
-            requestBody: {
-                required: false,
-                content: {
-                    'application/json': {
-                        schema: {
-                            $ref: '#/components/schemas/CreatePostRequest',
-                        },
-                        example: {
-                            content: 'Optional caption for repost',
-                        },
-                    },
-                },
-            },
             responses: {
                 201: {
                     description: POST_MESSAGE.CREATED,
@@ -901,72 +952,6 @@ export const postSwaggerPaths = {
                         'application/json': {
                             schema: {
                                 $ref: '#/components/schemas/PostSuccessResponse',
-                            },
-                        },
-                    },
-                },
-                401: {
-                    description: AUTH_MESSAGE.TOKEN_INVALID,
-                },
-                404: {
-                    description: 'Post not found',
-                },
-            },
-        },
-    },
-    '/posts/{publicId}/save': {
-        post: {
-            tags: ['Post'],
-            summary: 'Save a post',
-            security: bearerAuthSecurity,
-            parameters: [publicIdParameters[0]],
-            responses: {
-                200: {
-                    description: POST_MESSAGE.RETRIEVED,
-                    content: {
-                        'application/json': {
-                            schema: {
-                                $ref: '#/components/schemas/PostActionFlagResponse',
-                            },
-                            example: {
-                                success: true,
-                                message: POST_MESSAGE.RETRIEVED,
-                                data: {
-                                    saved: true,
-                                },
-                            },
-                        },
-                    },
-                },
-                401: {
-                    description: AUTH_MESSAGE.TOKEN_INVALID,
-                },
-                404: {
-                    description: 'Post not found',
-                },
-            },
-        },
-    },
-    '/posts/{publicId}/hide': {
-        post: {
-            tags: ['Post'],
-            summary: 'Hide a post',
-            security: bearerAuthSecurity,
-            parameters: [publicIdParameters[0]],
-            responses: {
-                200: {
-                    description: POST_MESSAGE.RETRIEVED,
-                    content: {
-                        'application/json': {
-                            schema: {
-                                $ref: '#/components/schemas/PostActionFlagResponse',
-                            },
-                            example: {
-                                success: true,
-                                message: POST_MESSAGE.RETRIEVED,
-                                data: {
-                                    hidden: true,
-                                },
                             },
                         },
                     },

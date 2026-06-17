@@ -396,29 +396,6 @@ export const userSwaggerPaths = {
             },
         },
     },
-    '/me/usernames': {
-        get: {
-            tags: ['User'],
-            summary: 'Get usernames from following or accepted friends of current user',
-            security: bearerAuthSecurity,
-            parameters: followersPaginationQueryParameters,
-            responses: {
-                200: {
-                    description: 'Usernames retrieved',
-                    content: {
-                        'application/json': {
-                            schema: {
-                                $ref: '#/components/schemas/UserUsernamesPaginatedResponse',
-                            },
-                        },
-                    },
-                },
-                401: {
-                    description: AUTH_MESSAGE.TOKEN_INVALID,
-                },
-            },
-        },
-    },
     '/me/friend-requests/received': {
         get: {
             tags: ['User'],
@@ -484,6 +461,25 @@ export const userSwaggerPaths = {
             responses: {
                 200: {
                     description: USER_MESSAGE.FRIEND_REQUEST_PROCESSED,
+                },
+            },
+        },
+    },
+    '/me/{username}/friend-requests': {
+        post: {
+            tags: ['User'],
+            summary: 'Send friend request from current user',
+            security: bearerAuthSecurity,
+            parameters: usernamePathParameter,
+            responses: {
+                200: {
+                    description: USER_MESSAGE.FRIEND_REQUEST_SENT,
+                },
+                401: {
+                    description: AUTH_MESSAGE.TOKEN_INVALID,
+                },
+                404: {
+                    description: USER_MESSAGE.USER_NOT_FOUND,
                 },
             },
         },
@@ -567,7 +563,7 @@ export const userSwaggerPaths = {
         get: {
             tags: ['User'],
             summary: 'Search usernames for mentions',
-            security: bearerAuthSecurity,
+            security: [],
             parameters: userMentionQueryParameters,
             responses: {
                 200: {
@@ -579,9 +575,6 @@ export const userSwaggerPaths = {
                             },
                         },
                     },
-                },
-                401: {
-                    description: AUTH_MESSAGE.TOKEN_INVALID,
                 },
             },
         },
@@ -605,46 +598,6 @@ export const userSwaggerPaths = {
                 },
                 404: {
                     description: 'User not found',
-                },
-            },
-        },
-    },
-    '/users/me/karma': {
-        get: {
-            tags: ['User'],
-            summary: 'Get current user karma summary',
-            security: bearerAuthSecurity,
-            responses: {
-                200: {
-                    description: 'User karma retrieved successfully',
-                    content: {
-                        'application/json': {
-                            schema: { $ref: '#/components/schemas/UserKarmaSuccessResponse' },
-                        },
-                    },
-                },
-                401: {
-                    description: AUTH_MESSAGE.TOKEN_INVALID,
-                },
-            },
-        },
-    },
-    '/users/me/badges': {
-        get: {
-            tags: ['User'],
-            summary: 'Get current user badges',
-            security: bearerAuthSecurity,
-            responses: {
-                200: {
-                    description: 'User badges retrieved successfully',
-                    content: {
-                        'application/json': {
-                            schema: { $ref: '#/components/schemas/UserBadgesSuccessResponse' },
-                        },
-                    },
-                },
-                401: {
-                    description: AUTH_MESSAGE.TOKEN_INVALID,
                 },
             },
         },

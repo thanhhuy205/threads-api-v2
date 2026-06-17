@@ -54,7 +54,6 @@ export type PostFeedResponse = Omit<
     isExpired: boolean;
     voteCount: number;
   } | null;
-  optionPollIds: number[];
 };
 export type UserSnapshot = {
   id: string;
@@ -100,7 +99,13 @@ export class PostMapper {
     const repliesCount = post._count?.children ?? 0;
     const repostsCountAndQuoteCount = post._count?.derivatives ?? 0;
     const poll = post.poll ?? null;
-    const isVoted = post.poll?.pollOptions.some(op => op.votes != null) ?? false;
+    const isVoted = post.poll?.pollOptions.some((op: {
+      votes: [
+        {
+          pollOptionId: number
+        }
+      ]
+    }) => op.votes != null) ?? false;
     return {
       userId: post.userId,
       createdAt: post.createdAt,
