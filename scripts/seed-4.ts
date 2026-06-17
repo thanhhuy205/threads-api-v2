@@ -163,8 +163,6 @@ const CIRCLES_DATA: CircleDef[] = [
 
 // ─── Seed Circles ─────────────────────────────────────────────────────────────
 async function seedCircles(users: SeedUser[]): Promise<void> {
-    console.log(`\n⭕ ===== PART 3: SEED ${CIRCLES_DATA.length} CIRCLES =====`);
-
     const statusIcon = (s: HpState) => {
         switch (s) {
             case "healthy": return "💚";
@@ -228,18 +226,7 @@ async function seedCircles(users: SeedUser[]): Promise<void> {
         const totalMembers = memberCount + 1; // +1 owner
         const icon = def.statusPeak ? "🔥" : "  ";
         const vis = def.visibility === "PUBLIC" ? "🌐" : "🔒";
-        console.log(
-            `   ${String(i + 1).padStart(2)}. ${icon} ${vis} ${statusIcon(def.hpState)} [${def.hpState.toUpperCase().padEnd(7)}]` +
-            ` Lv.${def.level} ${cfg.name.padEnd(8)} HP ${String(currentHp).padStart(4)}/${cfg.maxHp} EXP ${String(exp).padStart(4)}` +
-            ` — ${totalMembers} members — ${def.name}`
-        );
     }
-
-    console.log(`\n   ✅ ${CIRCLES_DATA.length} circles seeded`);
-    console.log(`   💀 Dead  : ${CIRCLES_DATA.filter(c => c.hpState === "dead").length}`);
-    console.log(`   🟠 Dying : ${CIRCLES_DATA.filter(c => c.hpState === "dying").length}`);
-    console.log(`   🟡 Sick  : ${CIRCLES_DATA.filter(c => c.hpState === "sick").length}`);
-    console.log(`   💚 Healthy: ${CIRCLES_DATA.filter(c => c.hpState === "healthy").length}`);
 }
 
 // ─── Level-Up Ready Circles ───────────────────────────────────────────────────
@@ -317,11 +304,7 @@ const LEVELUP_CIRCLES: LevelUpCircleDef[] = [
     { name: "Cộng Đồng AI Engineer VN 🤖", description: "LLM, diffusion model, MLOps. Senior AI/ML engineers trao đổi thực chiến.", visibility: Visibility.PRIVATE, statusPeak: true, currentLevel: 4, hpState: "healthy" },
 ];
 
-async function seedCirclesLevelReady(users: SeedUser[]): Promise<void> {
-    console.log(`\n⬆️  ===== PART 4: SEED ${LEVELUP_CIRCLES.length} LEVEL-UP READY CIRCLES =====`);
-    console.log("   (EXP ĐÃ ĐẠT hoặc VƯỢT ngưỡng lên cấp — chỉ cần bấm Lên cấp)\n");
-
-    // Offset user index so we don't repeat owners from seedCircles
+async function seedCirclesLevelReady(users: SeedUser[]): Promise<void> {    // Offset user index so we don't repeat owners from seedCircles
     const USER_OFFSET = 84;
 
     for (const [i, def] of LEVELUP_CIRCLES.entries()) {
@@ -382,26 +365,11 @@ async function seedCirclesLevelReady(users: SeedUser[]): Promise<void> {
         const nextName = LEVEL_CONFIG[nextLevel]?.name ?? "MAX";
         const sp = def.statusPeak ? "🔥" : "  ";
         const vis = def.visibility === "PUBLIC" ? "🌐" : "🔒";
-        console.log(
-            `   ${String(i + 1).padStart(2)}. ${sp} ${vis} Lv.${def.currentLevel}→${nextLevel} ` +
-            `${cfg.name.padEnd(8)} → ${nextName.padEnd(8)} ` +
-            `EXP ${String(exp).padStart(4)} HP ${String(currentHp).padStart(4)}/${cfg.maxHp} ` +
-            `— ${memberCount + 1} members — ${def.name}`
-        );
     }
-
-    console.log(`\n   ✅ ${LEVELUP_CIRCLES.length} level-up ready circles seeded`);
-    console.log(`   Lv.1→2 : ${LEVELUP_CIRCLES.filter(c => c.currentLevel === 1).length} nhóm`);
-    console.log(`   Lv.2→3 : ${LEVELUP_CIRCLES.filter(c => c.currentLevel === 2).length} nhóm`);
-    console.log(`   Lv.3→4 : ${LEVELUP_CIRCLES.filter(c => c.currentLevel === 3).length} nhóm`);
-    console.log(`   Lv.4→5 : ${LEVELUP_CIRCLES.filter(c => c.currentLevel === 4).length} nhóm`);
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
-// ─── Main ─────────────────────────────────────────────────────────────────────
 async function main(): Promise<void> {
-    console.log("\n⭕ ===== SEED CIRCLES (users đã có sẵn) =====\n");
-
     // User đã có sẵn — chỉ findMany, không tạo mới
     const users = await prisma.user.findMany({
         where: { deletedAt: null, status: UserStatus.ACTIVE },
@@ -410,8 +378,6 @@ async function main(): Promise<void> {
     });
 
     if (users.length === 0) throw new Error("Không tìm thấy user nào — hãy seed users trước!");
-    console.log(`👤 Loaded ${users.length} users từ DB\n`);
-
     await seedCircles(users as SeedUser[]);
     await seedCirclesLevelReady(users as SeedUser[]);
 
@@ -419,17 +385,7 @@ async function main(): Promise<void> {
         prisma.circle.count(),
         prisma.circleMember.count(),
         prisma.circleEnergy.count(),
-    ]);
-
-    console.log(`
-🎉 ===== XONG =====
-   ⭕ Circles (total)   : ${totalCircles}
-      ├─ batch thường   : ${CIRCLES_DATA.length} (dead/dying/sick/healthy)
-      └─ level-up ready : ${LEVELUP_CIRCLES.length} (EXP ≥ ngưỡng lên cấp ✓)
-   ⚡ CircleEnergy      : ${totalEnergy}
-   👥 CircleMember      : ${totalMembers}
-==================`);
-}
+    ]);}
 
 main()
     .catch((e) => { console.error("❌ Seed thất bại:", e); process.exit(1); })

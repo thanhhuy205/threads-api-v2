@@ -59,8 +59,6 @@ class PostController {
       take,
       userId,
     });
-    console.log("posts", posts);
-
     return res.paginate({ rows: posts, pagination });
   }
 
@@ -91,10 +89,12 @@ class PostController {
     res: Response,
   ) {
     const { after, take } = getPagination(req);
+    const userId = await jwtService.requestAuthToken(req);
     const { posts, pagination } = await postService.getReplies({
       after: after ?? undefined,
       take,
       publicId: req.params.publicId,
+      userId,
     });
 
     return res.paginate({ rows: posts, pagination });
@@ -115,6 +115,7 @@ class PostController {
       after: after ?? undefined,
       take,
       userId,
+      myUserId: userId,
     });
 
     return res.paginate({ rows: posts, pagination });
@@ -157,6 +158,7 @@ class PostController {
       after: after ?? undefined,
       take,
       userId,
+      myUserId: userId,
     });
 
     return res.paginate({ rows: posts, pagination });
@@ -207,7 +209,8 @@ class PostController {
   }
 
   async getThread(req: Request<PublicIdParamsDto>, res: Response) {
-    const post = await postService.getById(req.params.publicId);
+    const userId = await jwtService.requestAuthToken(req);
+    const post = await postService.getById(req.params.publicId, userId);
 
     if (!post) {
       return res.error(404, "Post not found");
@@ -217,7 +220,8 @@ class PostController {
   }
 
   async getPost(req: Request<PublicIdParamsDto>, res: Response) {
-    const post = await postService.getById(req.params.publicId);
+    const userId = await jwtService.requestAuthToken(req);
+    const post = await postService.getById(req.params.publicId, userId);
 
     if (!post) {
       return res.error(404, "Post not found");

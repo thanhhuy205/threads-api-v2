@@ -185,13 +185,9 @@ class NotificationWorker {
         lastEventAt: new Date(),
         count: Number(item.meta.count ?? 0),
       })),
-    );
-    console.log(notificationSave)
-  }
+    );  }
 
-  async sendPushNotification(recipientId: string, payload: PushNotificationPayload) {
-    console.log(`Sending push notification to user ${recipientId}: ${JSON.stringify(payload)}`);
-    await pusher.trigger(pusherChannel.privateNotification(recipientId), "new-notifications", {
+  async sendPushNotification(recipientId: string, payload: PushNotificationPayload) {    await pusher.trigger(pusherChannel.privateNotification(recipientId), "new-notifications", {
       recipientId,
       payload,
     });

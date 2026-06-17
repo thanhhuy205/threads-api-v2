@@ -1,6 +1,8 @@
+import { postService } from "@/modules/post/service/post.service";
 import { userRepository } from "@/modules/user/repository/user.repository";
 import { Prisma } from "@prisma/client";
 import { mapUserProfileForFE } from "../mapper/user.mapper";
+import { followRepository } from "../repository/follow.repository";
 
 type GetNetworkUsernamesInput = {
   query: string;
@@ -43,6 +45,25 @@ class UserService {
     };
   }
 
+  async getMyStatusProfile(userId: string) {
+    const [user, followingCount, postCount] = await Promise.all([
+      userRepository.findStatusProfileById(userId),
+      followRepository.countActiveFollowing(userId),
+      postService.count(userId)
+    ]);
+
+    if (!user) {
+      return null;
+    }
+
+    return {
+      isSuccessFollow: followingCount >= 10,
+      isSuccessBio: user.bio !== null,
+      isSuccessPost: postCount >= 1,
+      isSuccessAvatar: user.avatar !== null && user.avatar !== "",
+    };
+  }
+
   async findByUserId(userId: string) {
     return userRepository.findById(userId);
   }
@@ -63,18 +84,26 @@ class UserService {
     }
 
     if (!userId) {
-      return mapUserProfileForFE(user);
+      const postCount = await postService.count(user.id);
+      return mapUserProfileForFE({
+        ...user,
+        postsCount: postCount,
+        postCount,
+      });
     }
 
-    const [requestUser, follower] = await Promise.all([
+    const [requestUser, follower, postCount] = await Promise.all([
       userRepository.findUserRequestFriend(userId, user.id),
       userRepository.findUserFollowing(userId, user.id),
+      postService.count(user.id),
     ]);
 
     return mapUserProfileForFE({
       ...user,
       ...requestUser,
       ...follower,
+      postsCount: postCount,
+      postCount,
     });
   }
 

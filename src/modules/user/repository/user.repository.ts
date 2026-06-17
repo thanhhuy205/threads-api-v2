@@ -39,11 +39,20 @@ const userBasicIdentitySelect = {
   username: true,
 } as const;
 
+const userStatusProfileSelect = {
+  id: true,
+  bio: true,
+  avatar: true,
+} as const;
+
 export type UserProfile = Prisma.UserGetPayload<{
   select: typeof userProfileSelect;
 }>;
 export type UserBasicIdentity = Prisma.UserGetPayload<{
   select: typeof userBasicIdentitySelect;
+}>;
+export type UserStatusProfile = Prisma.UserGetPayload<{
+  select: typeof userStatusProfileSelect;
 }>;
 export type UserUsernameItem = {
   username: string;
@@ -60,6 +69,15 @@ class UserRepository {
         id,
       },
       select: userProfileSelect,
+    });
+  }
+
+  async findStatusProfileById(id: string): Promise<UserStatusProfile | null> {
+    return prisma.user.findUnique({
+      where: {
+        id,
+      },
+      select: userStatusProfileSelect,
     });
   }
 

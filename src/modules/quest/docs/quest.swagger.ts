@@ -87,13 +87,13 @@ export const questSwaggerPaths = {
             },
         },
     },
-    '/quests/{questId}/claim': {
+    '/quests/{code}/claim': {
         post: {
             tags: ['Quest'],
             summary: 'Claim a quest reward',
             security: bearerAuthSecurity,
             parameters: [
-                { name: 'questId', in: 'path', required: true, schema: { type: 'integer', example: 1 } },
+                { name: 'code', in: 'path', required: true, schema: { type: 'string', example: 'DAILY_POST' } },
             ],
             responses: {
                 200: {

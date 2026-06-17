@@ -244,6 +244,15 @@ export const adminSwaggerSchemas = {
         },
         required: ['success', 'message', 'data', 'pagination'],
     },
+    AdminReportDetailResponse: {
+        type: 'object',
+        properties: {
+            success: { type: 'boolean', example: true },
+            message: { type: 'string', example: 'Report details retrieved successfully' },
+            data: { $ref: '#/components/schemas/AdminReportItem' },
+        },
+        required: ['success', 'message', 'data'],
+    },
     AdminTrendingHashtagsResponse: {
         type: 'object',
         properties: {
@@ -529,6 +538,23 @@ export const adminSwaggerPaths = {
         },
     },
     '/admin/reports/{reportId}': {
+        get: {
+            tags: ['Admin'],
+            summary: 'Get report details',
+            security: bearerAuthSecurity,
+            parameters: [
+                { name: 'reportId', in: 'path', required: true, schema: { type: 'string' } },
+            ],
+            responses: {
+                200: {
+                    description: 'Report details retrieved successfully',
+                    content: { 'application/json': { schema: { $ref: '#/components/schemas/AdminReportDetailResponse' } } },
+                },
+                401: { description: COMMON_MESSAGE.UNAUTHORIZED },
+                403: { description: COMMON_MESSAGE.FORBIDDEN },
+                404: { description: COMMON_MESSAGE.NOT_FOUND },
+            },
+        },
         patch: {
             tags: ['Admin'],
             summary: 'Moderate a report',

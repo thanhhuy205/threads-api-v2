@@ -652,48 +652,6 @@ export const authSwaggerPaths = {
             },
         },
     },
-    '/auth/profile': {
-        post: {
-            tags: ['Auth'],
-            summary: 'Update current user profile',
-            security: bearerAuthSecurity,
-            requestBody: {
-                required: true,
-                content: {
-                    'application/json': {
-                        schema: {
-                            $ref: '#/components/schemas/AuthUpdateProfileRequest',
-                        },
-                        example: {
-                            name: 'John Doe',
-                            bio: 'Building in public',
-                            location: 'Ho Chi Minh City',
-                            website: 'https://example.com',
-                            avatar: 'https://cdn.example.com/avatar.png',
-                        },
-                    },
-                },
-            },
-            responses: {
-                200: {
-                    description: AUTH_MESSAGE.UPDATE_USER_SUCCESS,
-                    content: {
-                        'application/json': {
-                            schema: {
-                                $ref: '#/components/schemas/AuthUpdateProfileSuccessResponse',
-                            },
-                        },
-                    },
-                },
-                400: {
-                    description: COMMON_MESSAGE.VALIDATION_FAILED,
-                },
-                401: {
-                    description: AUTH_MESSAGE.TOKEN_INVALID,
-                },
-            },
-        },
-    },
     '/auth/refresh-token': {
         post: {
             tags: ['Auth'],
@@ -906,39 +864,6 @@ export const authSwaggerPaths = {
                         'application/json': {
                             schema: {
                                 $ref: '#/components/schemas/AuthValidateUsernameSuccessResponse',
-                            },
-                        },
-                    },
-                },
-                400: {
-                    description: COMMON_MESSAGE.VALIDATION_FAILED,
-                },
-            },
-        },
-    },
-    '/auth/reset-password/validate': {
-        get: {
-            tags: ['Auth'],
-            summary: 'Validate reset password token',
-            parameters: [
-                {
-                    name: 'token',
-                    in: 'query',
-                    required: true,
-                    schema: {
-                        type: 'string',
-                        example: 'f8c7f1b8d2a44c7c9f3f2a1b0c9d8e7f',
-                    },
-                    description: 'Reset password token',
-                },
-            ],
-            responses: {
-                200: {
-                    description: AUTH_MESSAGE.VALIDATE_RESET_PASSWORD_TOKEN_SUCCESS,
-                    content: {
-                        'application/json': {
-                            schema: {
-                                $ref: '#/components/schemas/AuthValidateTokenSuccessResponse',
                             },
                         },
                     },

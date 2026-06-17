@@ -9,9 +9,7 @@ export const errorHandler = (error: unknown, _req: Request, res: Response, _next
         return res.error(error.statusCode, error.message, undefined, { errorCode: error.errorCode });
     }
 
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        console.log('Prisma known request error:', error.code, error.meta);
-        switch (error.code) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {        switch (error.code) {
             case 'P2002':
                 return res.error(409, COMMON_MESSAGE.RESOURCE_ALREADY_EXISTS, undefined, { field: error.meta?.target });
 

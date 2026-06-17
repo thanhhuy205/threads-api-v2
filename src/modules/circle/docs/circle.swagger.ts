@@ -434,6 +434,89 @@ export const circleSwaggerSchemas = {
         },
         required: ['success', 'message', 'data'],
     },
+    CircleGenericSuccessResponse: {
+        type: 'object',
+        properties: {
+            success: { type: 'boolean', example: true },
+            message: { type: 'string', example: 'Action completed successfully' },
+            data: {
+                type: 'object',
+                additionalProperties: true,
+                nullable: true,
+            },
+        },
+        required: ['success', 'message'],
+    },
+    CircleGenericOffsetListResponse: {
+        type: 'object',
+        properties: {
+            success: { type: 'boolean', example: true },
+            message: { type: 'string', example: 'Items retrieved successfully' },
+            data: {
+                type: 'array',
+                items: {
+                    type: 'object',
+                    additionalProperties: true,
+                },
+            },
+            pagination: { $ref: '#/components/schemas/OffsetPagination' },
+        },
+        required: ['success', 'message', 'data', 'pagination'],
+    },
+    CircleGenericCursorListResponse: {
+        type: 'object',
+        properties: {
+            success: { type: 'boolean', example: true },
+            data: {
+                type: 'array',
+                items: {
+                    type: 'object',
+                    additionalProperties: true,
+                },
+            },
+            pagination: { $ref: '#/components/schemas/CursorPagination' },
+        },
+        required: ['success', 'data', 'pagination'],
+    },
+    CircleBanMemberRequest: {
+        type: 'object',
+        properties: {
+            userId: { type: 'string', example: 'user_456' },
+            reason: { type: 'string', maxLength: 255, example: 'Spam in circle', nullable: true },
+            expiresAt: { type: 'string', format: 'date-time', example: '2026-07-01T00:00:00.000Z' },
+        },
+        required: ['userId'],
+    },
+    CircleKickMemberRequest: {
+        type: 'object',
+        properties: {
+            userId: { type: 'string', example: 'user_456' },
+        },
+        required: ['userId'],
+    },
+    SendInvitationManageRequest: {
+        type: 'object',
+        properties: {
+            username: { type: 'string', example: 'jane_doe' },
+            role: { type: 'string', enum: ['OWNER', 'ADMIN', 'MEMBER'], example: 'MEMBER' },
+            description: { type: 'string', maxLength: 255, example: 'Join our private circle' },
+        },
+        required: ['username', 'role'],
+    },
+    RespondJoinInvitationRequest: {
+        type: 'object',
+        properties: {
+            isAccept: { type: 'boolean', example: true },
+        },
+        required: ['isAccept'],
+    },
+    SacrificeKarmaRequest: {
+        type: 'object',
+        properties: {
+            karmaAmount: { type: 'integer', minimum: 1, example: 25 },
+        },
+        required: ['karmaAmount'],
+    },
     CircleAiMarkdownRequest: {
         type: 'object',
         properties: {
@@ -487,6 +570,7 @@ export const circleSwaggerPaths = {
         get: {
             tags: ['Circle'],
             summary: 'List circles',
+            security: bearerAuthSecurity,
             parameters: [
                 { name: 'after', in: 'query', schema: { type: 'string' } },
                 { name: 'take', in: 'query', schema: { type: 'number' } },
@@ -519,6 +603,7 @@ export const circleSwaggerPaths = {
         get: {
             tags: ['Circle'],
             summary: 'Get circle detail by publicId',
+            security: bearerAuthSecurity,
             parameters: [
                 { name: 'publicId', in: 'path', required: true, schema: { type: 'string' } },
             ],
@@ -618,6 +703,24 @@ export const circleSwaggerPaths = {
             },
         },
     },
+    '/circle/me-join': {
+        get: {
+            tags: ['Circle'],
+            summary: 'Get circles joined by current user',
+            security: bearerAuthSecurity,
+            parameters: [
+                { name: 'after', in: 'query', schema: { type: 'string', example: 'cuid_string_here' } },
+                { name: 'take', in: 'query', schema: { type: 'number', example: 10 } },
+            ],
+            responses: {
+                200: {
+                    description: 'Joined circles retrieved',
+                    content: { 'application/json': { schema: { $ref: '#/components/schemas/CircleListResponse' } } },
+                },
+                401: { description: COMMON_MESSAGE.UNAUTHORIZED },
+            },
+        },
+    },
     '/circle/response-invitation': {
         post: {
             tags: ['Circle'],
@@ -704,6 +807,115 @@ export const circleSwaggerPaths = {
             },
         },
     },
+    '/circle/{publicId}/manage/members/ban': {
+        post: {
+            tags: ['Circle'],
+            summary: 'Ban a circle member',
+            security: bearerAuthSecurity,
+            parameters: [
+                { name: 'publicId', in: 'path', required: true, schema: { type: 'string' }, description: 'Circle public ID' },
+            ],
+            requestBody: {
+                required: true,
+                content: { 'application/json': { schema: { $ref: '#/components/schemas/CircleBanMemberRequest' } } },
+            },
+            responses: {
+                200: {
+                    description: 'Circle member banned',
+                    content: { 'application/json': { schema: { $ref: '#/components/schemas/CircleGenericSuccessResponse' } } },
+                },
+                400: { description: COMMON_MESSAGE.BAD_REQUEST },
+                401: { description: COMMON_MESSAGE.UNAUTHORIZED },
+                403: { description: COMMON_MESSAGE.FORBIDDEN },
+                404: { description: COMMON_MESSAGE.NOT_FOUND },
+            },
+        },
+    },
+    '/circle/{publicId}/manage/members/kick': {
+        post: {
+            tags: ['Circle'],
+            summary: 'Kick a circle member',
+            security: bearerAuthSecurity,
+            parameters: [
+                { name: 'publicId', in: 'path', required: true, schema: { type: 'string' }, description: 'Circle public ID' },
+            ],
+            requestBody: {
+                required: true,
+                content: { 'application/json': { schema: { $ref: '#/components/schemas/CircleKickMemberRequest' } } },
+            },
+            responses: {
+                200: {
+                    description: 'Circle member kicked',
+                    content: { 'application/json': { schema: { $ref: '#/components/schemas/CircleGenericSuccessResponse' } } },
+                },
+                400: { description: COMMON_MESSAGE.BAD_REQUEST },
+                401: { description: COMMON_MESSAGE.UNAUTHORIZED },
+                403: { description: COMMON_MESSAGE.FORBIDDEN },
+                404: { description: COMMON_MESSAGE.NOT_FOUND },
+            },
+        },
+    },
+    '/circle/{publicId}/level-up': {
+        post: {
+            tags: ['Circle'],
+            summary: 'Level up a circle',
+            security: bearerAuthSecurity,
+            parameters: [
+                { name: 'publicId', in: 'path', required: true, schema: { type: 'string' }, description: 'Circle public ID' },
+            ],
+            responses: {
+                200: {
+                    description: 'Circle leveled up successfully',
+                    content: { 'application/json': { schema: { $ref: '#/components/schemas/CircleGenericSuccessResponse' } } },
+                },
+                401: { description: COMMON_MESSAGE.UNAUTHORIZED },
+                403: { description: COMMON_MESSAGE.FORBIDDEN },
+                404: { description: COMMON_MESSAGE.NOT_FOUND },
+            },
+        },
+    },
+    '/circle/{publicId}/manage/exp-log': {
+        get: {
+            tags: ['Circle'],
+            summary: 'Get circle EXP logs',
+            security: bearerAuthSecurity,
+            parameters: [
+                { name: 'publicId', in: 'path', required: true, schema: { type: 'string' }, description: 'Circle public ID' },
+                { name: 'page', in: 'query', schema: { type: 'integer', minimum: 1, example: 1 } },
+                { name: 'limit', in: 'query', schema: { type: 'integer', minimum: 1, maximum: 100, example: 10 } },
+            ],
+            responses: {
+                200: {
+                    description: 'Circle exp log retrieved',
+                    content: { 'application/json': { schema: { $ref: '#/components/schemas/CircleGenericOffsetListResponse' } } },
+                },
+                401: { description: COMMON_MESSAGE.UNAUTHORIZED },
+                403: { description: COMMON_MESSAGE.FORBIDDEN },
+                404: { description: COMMON_MESSAGE.NOT_FOUND },
+            },
+        },
+    },
+    '/circle/{publicId}/manage/post-quality-log': {
+        get: {
+            tags: ['Circle'],
+            summary: 'Get circle post quality logs',
+            security: bearerAuthSecurity,
+            parameters: [
+                { name: 'publicId', in: 'path', required: true, schema: { type: 'string' }, description: 'Circle public ID' },
+                { name: 'page', in: 'query', schema: { type: 'integer', minimum: 1, example: 1 } },
+                { name: 'limit', in: 'query', schema: { type: 'integer', minimum: 1, maximum: 100, example: 10 } },
+            ],
+            responses: {
+                200: {
+                    description: 'Circle post quality logs retrieved',
+                    content: { 'application/json': { schema: { $ref: '#/components/schemas/CircleGenericOffsetListResponse' } } },
+                },
+                401: { description: COMMON_MESSAGE.UNAUTHORIZED },
+                403: { description: COMMON_MESSAGE.FORBIDDEN },
+                404: { description: COMMON_MESSAGE.NOT_FOUND },
+            },
+        },
+    },
     '/circle/{publicId}/manage/invitations/stats': {
         get: {
             tags: ['Circle'],
@@ -720,6 +932,48 @@ export const circleSwaggerPaths = {
                 },
                 401: { description: COMMON_MESSAGE.UNAUTHORIZED },
                 403: { description: 'Requires ACCEPT_USE_JOIN permission' },
+                404: { description: COMMON_MESSAGE.NOT_FOUND },
+            },
+        },
+    },
+    '/circle/{publicId}/manage/invitations': {
+        get: {
+            tags: ['Circle'],
+            summary: 'List circle invitations for management',
+            security: bearerAuthSecurity,
+            parameters: [
+                { name: 'publicId', in: 'path', required: true, schema: { type: 'string' }, description: 'Circle public ID' },
+                { name: 'page', in: 'query', schema: { type: 'integer', minimum: 1, example: 1 } },
+                { name: 'limit', in: 'query', schema: { type: 'integer', minimum: 1, maximum: 100, example: 10 } },
+            ],
+            responses: {
+                200: {
+                    description: 'Circle invitations retrieved',
+                    content: { 'application/json': { schema: { $ref: '#/components/schemas/CircleGenericOffsetListResponse' } } },
+                },
+                401: { description: COMMON_MESSAGE.UNAUTHORIZED },
+                403: { description: COMMON_MESSAGE.FORBIDDEN },
+                404: { description: COMMON_MESSAGE.NOT_FOUND },
+            },
+        },
+    },
+    '/circle/{publicId}/manage/join-requests': {
+        get: {
+            tags: ['Circle'],
+            summary: 'List circle join requests for management',
+            security: bearerAuthSecurity,
+            parameters: [
+                { name: 'publicId', in: 'path', required: true, schema: { type: 'string' }, description: 'Circle public ID' },
+                { name: 'page', in: 'query', schema: { type: 'integer', minimum: 1, example: 1 } },
+                { name: 'limit', in: 'query', schema: { type: 'integer', minimum: 1, maximum: 100, example: 10 } },
+            ],
+            responses: {
+                200: {
+                    description: 'Circle join requests retrieved',
+                    content: { 'application/json': { schema: { $ref: '#/components/schemas/CircleGenericOffsetListResponse' } } },
+                },
+                401: { description: COMMON_MESSAGE.UNAUTHORIZED },
+                403: { description: COMMON_MESSAGE.FORBIDDEN },
                 404: { description: COMMON_MESSAGE.NOT_FOUND },
             },
         },
@@ -749,6 +1003,30 @@ export const circleSwaggerPaths = {
             },
         },
     },
+    '/circle/{publicId}/send-invitation/manage': {
+        post: {
+            tags: ['Circle'],
+            summary: 'Send a managed circle invitation',
+            security: bearerAuthSecurity,
+            parameters: [
+                { name: 'publicId', in: 'path', required: true, schema: { type: 'string' }, description: 'Circle public ID' },
+            ],
+            requestBody: {
+                required: true,
+                content: { 'application/json': { schema: { $ref: '#/components/schemas/SendInvitationManageRequest' } } },
+            },
+            responses: {
+                200: {
+                    description: 'Invitation sent',
+                    content: { 'application/json': { schema: { $ref: '#/components/schemas/CircleGenericSuccessResponse' } } },
+                },
+                400: { description: COMMON_MESSAGE.BAD_REQUEST },
+                401: { description: COMMON_MESSAGE.UNAUTHORIZED },
+                403: { description: COMMON_MESSAGE.FORBIDDEN },
+                404: { description: COMMON_MESSAGE.NOT_FOUND },
+            },
+        },
+    },
     '/circle/{publicId}/posts': {
         post: {
             tags: ['Circle'],
@@ -772,6 +1050,159 @@ export const circleSwaggerPaths = {
                 403: { description: 'User is restricted from posting' },
                 404: { description: 'Circle not found' },
                 429: { description: 'Rate limit exceeded: maximum 5 posts per hour' },
+            },
+        },
+        get: {
+            tags: ['Circle'],
+            summary: 'Get posts in a circle',
+            security: bearerAuthSecurity,
+            parameters: [
+                { name: 'publicId', in: 'path', required: true, schema: { type: 'string' }, description: 'Circle public ID' },
+                { name: 'after', in: 'query', schema: { type: 'string', example: 'post_public_id' } },
+                { name: 'take', in: 'query', schema: { type: 'integer', minimum: 1, maximum: 100, example: 10 } },
+                { name: 'sort', in: 'query', schema: { type: 'string', enum: ['latest', 'quality'] } },
+            ],
+            responses: {
+                200: {
+                    description: 'Circle posts retrieved',
+                    content: { 'application/json': { schema: { $ref: '#/components/schemas/CircleGenericCursorListResponse' } } },
+                },
+                401: { description: COMMON_MESSAGE.UNAUTHORIZED },
+                403: { description: COMMON_MESSAGE.FORBIDDEN },
+                404: { description: COMMON_MESSAGE.NOT_FOUND },
+            },
+        },
+    },
+    '/circle/{publicId}/join-request': {
+        post: {
+            tags: ['Circle'],
+            summary: 'Send or cancel a circle join request',
+            security: bearerAuthSecurity,
+            parameters: [
+                { name: 'publicId', in: 'path', required: true, schema: { type: 'string' }, description: 'Circle public ID' },
+            ],
+            responses: {
+                200: {
+                    description: 'Join request state changed',
+                    content: { 'application/json': { schema: { $ref: '#/components/schemas/CircleGenericSuccessResponse' } } },
+                },
+                401: { description: COMMON_MESSAGE.UNAUTHORIZED },
+                403: { description: COMMON_MESSAGE.FORBIDDEN },
+                404: { description: COMMON_MESSAGE.NOT_FOUND },
+            },
+        },
+    },
+    '/circle/{publicId}/join-request/respond-invitation': {
+        post: {
+            tags: ['Circle'],
+            summary: 'Accept or reject a join invitation request',
+            security: bearerAuthSecurity,
+            parameters: [
+                { name: 'publicId', in: 'path', required: true, schema: { type: 'string' }, description: 'Circle public ID' },
+            ],
+            requestBody: {
+                required: true,
+                content: { 'application/json': { schema: { $ref: '#/components/schemas/RespondJoinInvitationRequest' } } },
+            },
+            responses: {
+                200: {
+                    description: 'Join invitation response recorded',
+                    content: { 'application/json': { schema: { $ref: '#/components/schemas/CircleGenericSuccessResponse' } } },
+                },
+                400: { description: COMMON_MESSAGE.BAD_REQUEST },
+                401: { description: COMMON_MESSAGE.UNAUTHORIZED },
+                404: { description: COMMON_MESSAGE.NOT_FOUND },
+            },
+        },
+    },
+    '/circle/{publicId}/posts/{postPublicId}/reply': {
+        post: {
+            tags: ['Circle'],
+            summary: 'Reply to a circle post',
+            security: bearerAuthSecurity,
+            parameters: [
+                { name: 'publicId', in: 'path', required: true, schema: { type: 'string' }, description: 'Circle public ID' },
+                { name: 'postPublicId', in: 'path', required: true, schema: { type: 'string' }, description: 'Circle post public ID' },
+            ],
+            requestBody: {
+                required: true,
+                content: { 'application/json': { schema: { $ref: '#/components/schemas/CirclePostRequest' } } },
+            },
+            responses: {
+                202: {
+                    description: 'Reply accepted for judging',
+                    content: { 'application/json': { schema: { $ref: '#/components/schemas/CirclePostResponse' } } },
+                },
+                400: { description: COMMON_MESSAGE.BAD_REQUEST },
+                401: { description: COMMON_MESSAGE.UNAUTHORIZED },
+                403: { description: COMMON_MESSAGE.FORBIDDEN },
+                404: { description: COMMON_MESSAGE.NOT_FOUND },
+            },
+        },
+    },
+    '/circle/{publicId}/posts/{postPublicId}/replies': {
+        get: {
+            tags: ['Circle'],
+            summary: 'Get replies for a circle post',
+            security: bearerAuthSecurity,
+            parameters: [
+                { name: 'publicId', in: 'path', required: true, schema: { type: 'string' }, description: 'Circle public ID' },
+                { name: 'postPublicId', in: 'path', required: true, schema: { type: 'string' }, description: 'Circle post public ID' },
+                { name: 'after', in: 'query', schema: { type: 'string', example: 'post_public_id' } },
+                { name: 'take', in: 'query', schema: { type: 'integer', minimum: 1, maximum: 100, example: 10 } },
+            ],
+            responses: {
+                200: {
+                    description: 'Circle replies retrieved',
+                    content: { 'application/json': { schema: { $ref: '#/components/schemas/CircleGenericCursorListResponse' } } },
+                },
+                401: { description: COMMON_MESSAGE.UNAUTHORIZED },
+                403: { description: COMMON_MESSAGE.FORBIDDEN },
+                404: { description: COMMON_MESSAGE.NOT_FOUND },
+            },
+        },
+    },
+    '/circle/{publicId}/sacrifice': {
+        post: {
+            tags: ['Circle'],
+            summary: 'Sacrifice karma to restore circle HP',
+            security: bearerAuthSecurity,
+            parameters: [
+                { name: 'publicId', in: 'path', required: true, schema: { type: 'string' }, description: 'Circle public ID' },
+            ],
+            requestBody: {
+                required: true,
+                content: { 'application/json': { schema: { $ref: '#/components/schemas/SacrificeKarmaRequest' } } },
+            },
+            responses: {
+                200: {
+                    description: 'Karma sacrificed successfully',
+                    content: { 'application/json': { schema: { $ref: '#/components/schemas/CircleGenericSuccessResponse' } } },
+                },
+                400: { description: COMMON_MESSAGE.BAD_REQUEST },
+                401: { description: COMMON_MESSAGE.UNAUTHORIZED },
+                403: { description: COMMON_MESSAGE.FORBIDDEN },
+                404: { description: COMMON_MESSAGE.NOT_FOUND },
+            },
+        },
+    },
+    '/circle/{publicId}/stats': {
+        get: {
+            tags: ['Circle'],
+            summary: 'Get circle statistics',
+            security: bearerAuthSecurity,
+            parameters: [
+                { name: 'publicId', in: 'path', required: true, schema: { type: 'string' }, description: 'Circle public ID' },
+                { name: 'type', in: 'query', schema: { type: 'string', enum: ['7days', '30days', '90days'] } },
+            ],
+            responses: {
+                200: {
+                    description: 'Circle stats retrieved',
+                    content: { 'application/json': { schema: { $ref: '#/components/schemas/CircleGenericSuccessResponse' } } },
+                },
+                401: { description: COMMON_MESSAGE.UNAUTHORIZED },
+                403: { description: COMMON_MESSAGE.FORBIDDEN },
+                404: { description: COMMON_MESSAGE.NOT_FOUND },
             },
         },
     },

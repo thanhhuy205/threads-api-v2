@@ -333,6 +333,7 @@ model User {
   userActionLogs       UserActionLog[]
   webHookPreviewImages WebHookPreviewImage[]
   limitActionAIs       LimitActionAI[]
+  votes                Vote[]
 
   @@index([email], map: "idx_users_email")
   @@index([name], map: "idx_users_name")
@@ -493,7 +494,7 @@ model Post {
   circlePostQualityLogs   CirclePostQualityLog[]
   circleExpLogs           CircleExpLog[]
   originPostNotifications NotificationGroup[]    @relation("NotificationOriginPost")
-  polls                   Poll[]
+  poll                    Poll?
 
   @@index([userId, createdAt])
   @@index([parentId])
@@ -507,12 +508,16 @@ model Post {
 model Poll {
   id        Int      @id @default(autoincrement())
   postId    Int      @map("post_id")
+  isExpired Boolean  @default(false) @map("is_expired")
   expiresAt DateTime @map("expires_at")
   createdAt DateTime @default(now()) @map("created_at")
+  voteCount Int      @default(0) @map("vote_count")
 
-  post        Post         @relation(fields: [postId], references: [id])
+  post        Post         @relation(fields: [postId], references: [id], onDelete: Restrict)
   pollOptions PollOption[]
+  votes       Vote[]
 
+  @@unique([postId], map: "uq_polls_post_id")
   @@index([postId], map: "idx_polls_post_id")
   @@map("polls")
 }
@@ -524,10 +529,30 @@ model PollOption {
   votesCount Int      @default(0) @map("votes_count")
   createdAt  DateTime @default(now()) @map("created_at")
 
-  poll Poll @relation(fields: [pollId], references: [id])
+  poll  Poll   @relation(fields: [pollId], references: [id])
+  votes Vote[]
 
+  @@unique([id, pollId], map: "uq_poll_options_id_poll_id") // đảm bảo mỗi option chỉ thuộc về một poll duy nhất
   @@index([pollId], map: "idx_poll_options_poll_id")
   @@map("poll_options")
+}
+
+model Vote {
+  id           Int      @id @default(autoincrement())
+  userId       String   @map("user_id")
+  pollId       Int      @map("poll_id")
+  pollOptionId Int      @map("poll_option_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user       User       @relation(fields: [userId], references: [id])
+  pollOption PollOption @relation(fields: [pollOptionId], references: [id])
+  poll       Poll       @relation(fields: [pollId], references: [id])
+
+  @@unique([userId, pollOptionId], map: "uq_votes_user_poll_option")
+  @@unique([userId, pollId], map: "uq_votes_user_poll") // đảm bảo mỗi người dùng chỉ được vote một lần cho mỗi poll
+  @@index([userId], map: "idx_votes_user_id")
+  @@index([pollOptionId], map: "idx_votes_poll_option_id")
+  @@map("votes")
 }
 
 model PostMedia {

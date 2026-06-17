@@ -56,6 +56,10 @@ import {
     pusherSwaggerSchemas,
 } from '../modules/pusher/docs/pusher.swagger';
 import {
+    pollSwaggerPaths,
+    pollSwaggerSchemas,
+} from '../modules/poll/docs/poll.swagger';
+import {
     questSwaggerPaths,
     questSwaggerSchemas,
 } from '../modules/quest/docs/quest.swagger';
@@ -146,16 +150,16 @@ export const swaggerDocument = {
             description: 'Museum archive APIs',
         },
         {
-            name: 'Internal',
-            description: 'Internal processing APIs',
-        },
-        {
             name: 'Search',
             description: 'Search APIs',
         },
         {
             name: 'Pusher',
             description: 'Realtime authorization APIs',
+        },
+        {
+            name: 'Poll',
+            description: 'Poll voting APIs',
         },
         {
             name: 'Webhooks',
@@ -179,6 +183,7 @@ export const swaggerDocument = {
         ...museumSwaggerPaths,
         ...searchSwaggerPaths,
         ...pusherSwaggerPaths,
+        ...pollSwaggerPaths,
         ...webhooksSwaggerPaths,
     },
 
@@ -200,6 +205,7 @@ export const swaggerDocument = {
             ...museumSwaggerSchemas,
             ...searchSwaggerSchemas,
             ...pusherSwaggerSchemas,
+            ...pollSwaggerSchemas,
             ...webhooksSwaggerSchemas,
         },
 

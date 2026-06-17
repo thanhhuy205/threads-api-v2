@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Code Review — Threads API v2 (Cleanup + Security Audit)</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --border:#30363d; --text:#c9d1d9; --muted:#8b949e;
+    --add:#1f3d2b; --add-line:#2ea04326; --del:#3d1f23; --del-line:#f8514926;
+    --crit:#f85149; --warn:#d29922; --info:#58a6ff; --ok:#3fb950;
+    --mono:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;line-height:1.5}
+  header{padding:32px 40px 24px;border-bottom:1px solid var(--border);background:linear-gradient(180deg,#161b22,#0d1117)}
+  h1{margin:0 0 6px;font-size:22px}
+  .sub{color:var(--muted);font-size:14px}
+  .wrap{max-width:1080px;margin:0 auto;padding:28px 40px 80px}
+  h2{font-size:17px;margin:36px 0 14px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+  .legend{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}
+  .badge{font-size:11px;font-weight:700;letter-spacing:.4px;padding:2px 9px;border-radius:20px;text-transform:uppercase}
+  .b-crit{background:rgba(248,81,73,.15);color:var(--crit);border:1px solid var(--crit)}
+  .b-warn{background:rgba(210,153,34,.15);color:var(--warn);border:1px solid var(--warn)}
+  .b-info{background:rgba(88,166,255,.15);color:var(--info);border:1px solid var(--info)}
+  .b-ok{background:rgba(63,185,80,.15);color:var(--ok);border:1px solid var(--ok)}
+  .file{background:var(--panel);border:1px solid var(--border);border-radius:8px;margin:18px 0;overflow:hidden}
+  .file-head{padding:10px 14px;background:#1b2230;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:13px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+  .file-head .path{color:#79c0ff}
+  table.diff{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12.5px}
+  table.diff td{padding:1px 8px;vertical-align:top;white-space:pre-wrap;word-break:break-word}
+  td.ln{width:46px;text-align:right;color:#6e7681;user-select:none;border-right:1px solid var(--border)}
+  tr.add td{background:var(--add-line)} tr.add td.sign{color:var(--ok)}
+  tr.del td{background:var(--del-line)} tr.del td.sign{color:var(--crit)}
+  tr.ctx td{color:var(--muted)}
+  td.sign{width:14px;text-align:center;user-select:none}
+  .note{margin:0;padding:10px 14px;font-family:-apple-system,system-ui,sans-serif;font-size:13px;border-top:1px dashed var(--border);background:#11161f}
+  .note .badge{margin-right:8px;vertical-align:1px}
+  .note b{color:#e6edf3}
+  code{font-family:var(--mono);background:#21262d;padding:1px 5px;border-radius:4px;font-size:12px}
+  .meta{color:var(--muted);font-size:12.5px;margin:4px 0 0}
+  .pill{display:inline-block;font-size:11px;color:var(--muted);border:1px solid var(--border);border-radius:20px;padding:2px 10px;margin-right:6px}
+  footer{color:var(--muted);font-size:12px;border-top:1px solid var(--border);padding:20px 40px;text-align:center}
+</style>
+</head>
+<body>
+<div style="position:sticky;top:0;z-index:99;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:9px 22px;background:#010409;border-bottom:1px solid #30363d;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:12.5px">
+  <a href="pr-writeup.html" style="color:#8b949e;text-decoration:none">← Tổng quan PR</a>
+  <span style="color:#6e7681;font-family:'SFMono-Regular',Consolas,monospace">Audit · 2 / 4 · Annotated diff</span>
+  <a href="implementation-plan.html" style="color:#79c0ff;text-decoration:none;font-weight:600">Risk register →</a>
+</div>
+<header>
+  <h1>Code Review — <span style="color:#79c0ff">Threads API v2</span></h1>
+  <div class="sub">PR: <b>chore: remove dead imports + security/perf audit</b> &nbsp;·&nbsp; branch <code style="color:#79c0ff">dev</code> &nbsp;·&nbsp; 4 files changed, 5 deletions &nbsp;·&nbsp; 9 annotated findings</div>
+  <div class="meta">Reviewer: automated audit · Scope: full repo (29k LOC, 27 modules) · Typecheck after changes: <span class="b-ok badge">PASS (exit 0)</span></div>
+</header>
+<div class="wrap">
+
+  <div class="legend">
+    <span class="badge b-crit">critical</span>
+    <span class="badge b-warn">warning</span>
+    <span class="badge b-info">info</span>
+    <span class="badge b-ok">applied / safe</span>
+  </div>
+  <p class="meta">Two change sets below. <b>Part 1</b> = applied edits (dead-import removal, verified by typecheck). <b>Part 2</b> = audit findings on existing code, shown as <i>proposed</i> diffs with severity + rationale. Part 2 is intentionally <b>not</b> auto-applied — each touches runtime/security behavior and needs author sign-off.</p>
+
+  <h2>Part 1 — Applied: dead-import removal <span class="badge b-ok">merged in working tree</span></h2>
+  <p class="meta">Source of truth: <code>tsc --noUnusedLocals</code> reported 79 TS6133 hits. Only <b>4</b> were genuine unused <i>import statements</i>; the other 75 were unused parameters (Express <code>req/res/next</code> — positional, must stay), side-effecting bindings (<code>const worker = new Worker()</code>), dead class fields, or locals in seed scripts. Only the 4 safe ones were removed.</p>
+
+  <div class="file">
+    <div class="file-head"><span class="path">src/middlewares/auth.ts</span><span class="pill">−1</span></div>
+    <table class="diff">
+      <tr class="ctx"><td class="ln">3</td><td class="sign"> </td><td>import { ForbiddenException, UnauthorizedException } from "@/errors/error";</td></tr>
+      <tr class="del"><td class="ln">4</td><td class="sign">−</td><td>import { userRoleService } from "@/modules/access-control/role/service/user-role.service";</td></tr>
+      <tr class="ctx"><td class="ln">5</td><td class="sign"> </td><td>import { jwtService } from "@/modules/jwt/service/jwt.service";</td></tr>
+    </table>
+    <p class="note"><span class="badge b-ok">applied</span><span class="badge b-info">info</span> Imported but never referenced. Removing it cuts an unnecessary module-load edge in the auth hot path (this middleware runs on every authenticated request).</p>
+  </div>
+
+  <div class="file">
+    <div class="file-head"><span class="path">src/modules/access-control/repositories/access-control.repository.ts</span><span class="pill">−2</span></div>
+    <table class="diff">
+      <tr class="del"><td class="ln">1</td><td class="sign">−</td><td>import prisma from "@/config/prisma";</td></tr>
+      <tr class="del"><td class="ln">2</td><td class="sign">−</td><td></td></tr>
+      <tr class="ctx"><td class="ln">3</td><td class="sign"> </td><td>class AccessControlRepository {</td></tr>
+      <tr class="ctx"><td class="ln">4</td><td class="sign"> </td><td>  // Common access control methods if any</td></tr>
+    </table>
+    <p class="note"><span class="badge b-ok">applied</span><span class="badge b-warn">warning</span> Import removed, but the underlying smell remains: this is an <b>empty stub class</b> exported as a singleton. Either implement it or delete the file — empty placeholders are a maintainability tax reviewers notice.</p>
+  </div>
+
+  <div class="file">
+    <div class="file-head"><span class="path">src/modules/access-control/role/repository/user-role.repository.ts</span><span class="pill">−1</span></div>
+    <table class="diff">
+      <tr class="ctx"><td class="ln">1</td><td class="sign"> </td><td>import prisma from "@/config/prisma";</td></tr>
+      <tr class="del"><td class="ln">2</td><td class="sign">−</td><td>import type { Prisma } from "@prisma/client";</td></tr>
+      <tr class="ctx"><td class="ln">3</td><td class="sign"> </td><td></td></tr>
+    </table>
+    <p class="note"><span class="badge b-ok">applied</span><span class="badge b-info">info</span> Type-only import never used. Zero runtime impact; pure clarity win.</p>
+  </div>
+
+  <div class="file">
+    <div class="file-head"><span class="path">src/modules/access-control/role/service/role.service.ts</span><span class="pill">−1</span></div>
+    <table class="diff">
+      <tr class="del"><td class="ln">1</td><td class="sign">−</td><td>import { ConflictException } from "@/errors/error";</td></tr>
+      <tr class="ctx"><td class="ln">2</td><td class="sign"> </td><td>import { roleRepository } from "../repository/role.repository";</td></tr>
+    </table>
+    <p class="note"><span class="badge b-ok">applied</span><span class="badge b-warn">warning</span> <code>ConflictException</code> was imported but never thrown — a hint that <b>role create/update lacks duplicate-name conflict handling</b>. Removing the import is correct now; the missing validation is logged as a follow-up.</p>
+  </div>
+
+  <h2>Part 2 — Audit findings (proposed diffs) <span class="badge b-warn">needs author review</span></h2>
+
+  <div class="file">
+    <div class="file-head"><span class="path">src/middlewares/logger.ts</span><span class="pill">SECURITY</span></div>
+    <table class="diff">
+      <tr class="ctx"><td class="ln">12</td><td class="sign"> </td><td>  serializers: {</td></tr>
+      <tr class="ctx"><td class="ln">13</td><td class="sign"> </td><td>    req(req) {</td></tr>
+      <tr class="del"><td class="ln">20</td><td class="sign">−</td><td>        body: req.body,</td></tr>
+      <tr class="add"><td class="ln">20</td><td class="sign">+</td><td>        // body removed from logs; see redact config below</td></tr>
+      <tr class="add"><td class="ln">+</td><td class="sign">+</td><td>// in pino(): redact:{ paths:["req.body.password","req.body.token","req.headers.authorization"], remove:true }</td></tr>
+    </table>
+    <p class="note"><span class="badge b-crit">critical</span> <b>Plaintext credential leakage (OWASP A09 / A02).</b> The request serializer logs the <b>entire</b> <code>req.body</code> on every request — including <code>POST /auth/login</code>, <code>/auth/register</code>, and <code>/auth/reset-password</code>. Every login password is written to logs in cleartext. If logs ship anywhere (CloudWatch, files, a 3rd-party aggregator) you have a credential breach. <b>Fix:</b> remove <code>body</code> from the serializer or configure pino <code>redact</code> for sensitive paths.</p>
+  </div>
+
+  <div class="file">
+    <div class="file-head"><span class="path">src/middlewares/leonardo-webhook.ts</span><span class="pill">SECURITY</span></div>
+    <table class="diff">
+      <tr class="del"><td class="ln">11</td><td class="sign">−</td><td>  baseLogger.info(`Authenticating Leonardo webhook with headers: ${JSON.stringify(req.headers)}`);</td></tr>
+      <tr class="ctx"><td class="ln">..</td><td class="sign"> </td><td>  const token = receivedAuthorization?.startsWith("Bearer ") ? ... : ...;</td></tr>
+      <tr class="del"><td class="ln">23</td><td class="sign">−</td><td>  baseLogger.info(`Received Leonardo webhook bearer token: ${token}`);</td></tr>
+    </table>
+    <p class="note"><span class="badge b-crit">critical</span> <b>Secret-in-logs (OWASP A09).</b> The webhook handler logs the full header set <i>and</i> the bearer token in cleartext on every call. Anyone with log read access can replay the webhook. The <code>timingSafeEqual</code> comparison further down is good practice — but it's undermined by logging the secret it's protecting. <b>Fix:</b> delete both log lines (or log only a SHA-256 prefix at debug level).</p>
+  </div>
+
+  <div class="file">
+    <div class="file-head"><span class="path">src/middlewares/hook-hls.ts &nbsp;+&nbsp; src/config/hook-secret.config.ts</span><span class="pill">SECURITY</span></div>
+    <table class="diff">
+      <tr class="del"><td class="ln">16</td><td class="sign">−</td><td>    if (signature !== configService.HOOK_SECRET_KEY) {   // non-constant-time</td></tr>
+      <tr class="add"><td class="ln">16</td><td class="sign">+</td><td>    if (!safeEqual(signature, configService.HOOK_SECRET_KEY)) {  // crypto.timingSafeEqual</td></tr>
+      <tr class="del"><td class="ln">·</td><td class="sign">−</td><td>HOOK_SECRET_KEY: z.string().default('default_hook_secret_key')</td></tr>
+      <tr class="add"><td class="ln">·</td><td class="sign">+</td><td>HOOK_SECRET_KEY: z.string().min(32)   // required, no public default</td></tr>
+    </table>
+    <p class="note"><span class="badge b-warn">warning</span> <b>Weak webhook auth (OWASP A07).</b> Two issues: (1) the secret falls back to a hard-coded public default <code>'default_hook_secret_key'</code> — if prod forgets to set it, the HLS callback is forgeable by anyone reading this repo; (2) the comparison is <code>!==</code> (non-constant-time, timing-leakable), inconsistent with the Leonardo hook which correctly uses <code>timingSafeEqual</code>. <b>Fix:</b> require the env var (no default) and use a constant-time compare. Better: HMAC the payload, not a static shared secret.</p>
+  </div>
+
+  <div class="file">
+    <div class="file-head"><span class="path">src/app.ts &nbsp;+&nbsp; src/middlewares/ratelimit.ts</span><span class="pill">SECURITY / SCALE</span></div>
+    <table class="diff">
+      <tr class="del"><td class="ln">41</td><td class="sign">−</td><td>app.use('/api/v1', apiLimiter, router);   // single global 100/15min, in-memory</td></tr>
+      <tr class="add"><td class="ln">41</td><td class="sign">+</td><td>app.use('/api/v1/auth', authLimiter);     // strict: e.g. 10/15min/IP, Redis-backed</td></tr>
+      <tr class="add"><td class="ln">42</td><td class="sign">+</td><td>app.use('/api/v1', apiLimiter, router);   // store: new RedisStore({ client })</td></tr>
+    </table>
+    <p class="note"><span class="badge b-warn">warning</span> <b>Brute-force exposure + broken under horizontal scale (OWASP A07).</b> The limiter is <code>express-rate-limit</code> with the <b>default in-memory store</b> and one global rule for all routes. Two problems: (1) no stricter limit on <code>/auth/*</code>, so login/credential-stuffing only hits the generic 100/15min; (2) in-memory state is per-process and resets on restart — your compose runs <code>api</code> + <code>worker</code> and is meant to scale, so the limit is silently multiplied and inconsistent. <b>Fix:</b> Redis store + a dedicated tight auth limiter.</p>
+  </div>
+
+  <div class="file">
+    <div class="file-head"><span class="path">src/middlewares/multer.ts</span><span class="pill">SECURITY</span></div>
+    <table class="diff">
+      <tr class="ctx"><td class="ln">7</td><td class="sign"> </td><td>    fileFilter: (req, file, cb) => {</td></tr>
+      <tr class="del"><td class="ln">8</td><td class="sign">−</td><td>      if (!file.mimetype.startsWith('image/') && !file.mimetype.startsWith('video/'))</td></tr>
+      <tr class="add"><td class="ln">8</td><td class="sign">+</td><td>      // mimetype is client-controlled — validate magic bytes after buffer load,</td></tr>
+      <tr class="add"><td class="ln">+</td><td class="sign">+</td><td>      // enforce an extension allowlist, and rely on sharp/ffmpeg re-encode to reject fakes</td></tr>
+    </table>
+    <p class="note"><span class="badge b-warn">warning</span> <b>Upload content-type spoofing (OWASP A04/A08).</b> Validation trusts the client-supplied <code>file.mimetype</code>, which is forgeable. A 20MB cap and downstream <code>sharp</code> re-encode mitigate image abuse, but videos pass to <code>ffmpeg</code> with no magic-byte check. <b>Fix:</b> verify real content type from the buffer (e.g. <code>file-type</code>), enforce an extension allowlist, and serve R2 objects from a non-executable path.</p>
+  </div>
+
+  <div class="file">
+    <div class="file-head"><span class="path">prisma/schema.prisma — model Post</span><span class="pill">PERFORMANCE</span></div>
+    <table class="diff">
+      <tr class="ctx"><td class="ln">·</td><td class="sign"> </td><td>  @@index([userId, createdAt])</td></tr>
+      <tr class="ctx"><td class="ln">·</td><td class="sign"> </td><td>  @@index([createdAt])</td></tr>
+      <tr class="add"><td class="ln">+</td><td class="sign">+</td><td>  @@index([isDeleted, isHidden, visibility, createdAt, id])  // covers every feed query</td></tr>
+    </table>
+    <p class="note"><span class="badge b-warn">warning</span> <b>Missing composite index = table scans (performance, High).</b> Every feed/timeline query filters <code>isDeleted=false AND isHidden=false AND visibility=PUBLIC</code> ordered by <code>createdAt DESC, id DESC</code>, but no single index covers that predicate+sort. At scale MySQL filters then filesorts. <b>Fix:</b> add the composite above and confirm with <code>EXPLAIN</code> before/after (great resume artifact).</p>
+  </div>
+
+  <div class="file">
+    <div class="file-head"><span class="path">src/modules/auth/service/follower.service.ts (and counter writes)</span><span class="pill">CORRECTNESS</span></div>
+    <table class="diff">
+      <tr class="del"><td class="ln">136</td><td class="sign">−</td><td>  await followRepository.updateStatusByFollowId(existingFollow.id, false);</td></tr>
+      <tr class="del"><td class="ln">137</td><td class="sign">−</td><td>  await userRepository.decrementFollowersCount(targetUserId);   // separate tx</td></tr>
+      <tr class="add"><td class="ln">136</td><td class="sign">+</td><td>  await transactionService.doInTransaction(async (tx) => {  /* both writes atomic */ });</td></tr>
+    </table>
+    <p class="note"><span class="badge b-warn">warning</span> <b>Denormalized counter drift (data integrity).</b> Follow-state update and the <code>followersCount</code> increment/decrement run as two independent DB calls. A failure between them permanently desyncs the cached count. Post creation already uses <code>doInTransaction</code> correctly — apply the same here. <b>Fix:</b> wrap state-change + counter in one transaction.</p>
+  </div>
+
+  <div class="file">
+    <div class="file-head"><span class="path">src/modules/jwt/service/jwt.service.ts &nbsp;+&nbsp; src/config/jwt.ts</span><span class="pill">SECURITY</span></div>
+    <table class="diff">
+      <tr class="del"><td class="ln">4</td><td class="sign">−</td><td>JWT_SECRET: z.string().min(1)</td></tr>
+      <tr class="add"><td class="ln">4</td><td class="sign">+</td><td>JWT_SECRET: z.string().min(32)</td></tr>
+      <tr class="del"><td class="ln">·</td><td class="sign">−</td><td>jwt.verify(token, privateKey, (err, decoded) => {...})</td></tr>
+      <tr class="add"><td class="ln">·</td><td class="sign">+</td><td>jwt.verify(token, privateKey, { algorithms: ['HS256'] }, (err, decoded) => {...})</td></tr>
+    </table>
+    <p class="note"><span class="badge b-info">info</span> <b>JWT hardening (OWASP A02), Low.</b> Secret length is only floor-checked at 1 char (allows a trivially brute-forceable secret), and <code>verify</code> doesn't pin the algorithm. Pinning <code>algorithms:['HS256']</code> is defense-in-depth against algorithm-confusion. <b>Fix:</b> raise the min length and pass the algorithm allowlist explicitly.</p>
+  </div>
+
+  <div class="file">
+    <div class="file-head"><span class="path">Positive findings <span style="color:var(--ok)">(no change needed)</span></span><span class="pill">GOOD</span></div>
+    <p class="note"><span class="badge b-ok">good</span> <b>SQL injection — not present.</b> Every <code>$queryRaw</code>/<code>$executeRaw</code> uses tagged templates or <code>Prisma.sql</code> with bound parameters (verified in post, statistics, user, topic, quest repos). No string concatenation into SQL.</p>
+    <p class="note"><span class="badge b-ok">good</span> <b>Error handler</b> returns generic messages in production and only attaches stack traces when <code>NODE_ENV==='development'</code>. Prisma error codes mapped to clean HTTP statuses. No info leak.</p>
+    <p class="note"><span class="badge b-ok">good</span> <b>Secrets hygiene:</b> <code>.env</code> / <code>.env.prod</code> are gitignored and untracked. <code>helmet</code>, <code>compression</code>, and a <code>1mb</code> JSON body cap are wired in <code>app.ts</code>. Refresh tokens hashed in DB; access tokens blacklisted on logout.</p>
+  </div>
+
+  <h2>Note on "bundle size / render-blocking assets"</h2>
+  <p class="meta">Those are <b>frontend</b> metrics and don't apply — this repository is a backend API with no client bundle. The equivalent backend performance axes were audited instead: query/index efficiency (finding above), N+1 in feed building (<b>mitigated</b> — author IDs are batched, not per-row), payload compression (<b>present</b>), and Docker image weight (<b>heavy</b>: <code>ffmpeg-static</code> + <code>sharp</code> + full AWS SDK bloat the image — consider slimming or splitting the video worker into its own image).</p>
+
+</div>
+<footer>Generated audit · Threads API v2 · severity model: critical = exploitable credential/data exposure · warning = real risk under load/abuse · info = hardening / hygiene</footer>
+</body>
+</html>

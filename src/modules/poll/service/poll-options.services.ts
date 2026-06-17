@@ -23,6 +23,22 @@ class PollOptionsService {
   findByPollId(pollId: number, tx?: Prisma.TransactionClient) {
     return pollOptionsRepository.findByPollId(pollId, tx);
   }
+
+  findByIdAndPollId(
+    id: number,
+    pollId: number,
+    tx?: Prisma.TransactionClient,
+  ) {
+    return pollOptionsRepository.findByIdAndPollId(id, pollId, tx);
+  }
+
+  incrementVotesCount(
+    id: number,
+    pollId: number,
+    tx?: Prisma.TransactionClient,
+  ) {
+    return pollOptionsRepository.incrementVotesCount(id, pollId, tx);
+  }
 }
 
 export const pollOptionsService = new PollOptionsService();

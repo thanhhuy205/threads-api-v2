@@ -51,19 +51,13 @@ class AuthController {
   async refreshToken(req: Request<{}, {}, {}>, res: Response) {
     if (!req.refreshToken) {
       return res.error(400, AUTH_MESSAGE.INVALID_CREDENTIALS);
-    }
-    console.log(req.refreshToken);
-    const tokenPair = await authService.refreshToken({ refreshToken: req.refreshToken }, {
+    }    const tokenPair = await authService.refreshToken({ refreshToken: req.refreshToken }, {
       ip: req.ip ?? "unknown",
       userAgent: req.headers["user-agent"]?.toString() ?? "unknown",
     });
-    console.log(tokenPair);
-
     if (!tokenPair) {
       return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
-    }
-    console.log(tokenPair);
-    return res.success(200, AUTH_MESSAGE.REFRESH_TOKEN_SUCCESS, tokenPair);
+    }    return res.success(200, AUTH_MESSAGE.REFRESH_TOKEN_SUCCESS, tokenPair);
   }
 
   async resendVerifyEmail(req: Request, res: Response) {

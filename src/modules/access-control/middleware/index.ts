@@ -53,15 +53,9 @@ export const checkPermission = (permission: string) => {
 };
 
 export const checkRole = (role: UserRoleType) => {
-  return async (req: Request, res: Response, next: NextFunction) => {
-    console.log(req.user);
-    if (!req.user) {
+  return async (req: Request, res: Response, next: NextFunction) => {    if (!req.user) {
       throw new UnauthorizedException("User not found");
-    }
-    console.log(req.user.roles);
-    console.log(role);
-
-    if (!req.user.roles.includes(role)) {
+    }    if (!req.user.roles.includes(role)) {
       throw new ForbiddenException("Role not found");
     }
 

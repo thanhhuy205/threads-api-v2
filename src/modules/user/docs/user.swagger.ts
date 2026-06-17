@@ -282,6 +282,30 @@ export const userSwaggerSchemas = {
         },
         required: ['success', 'message', 'data'],
     },
+    UserStatusProfileData: {
+        type: 'object',
+        properties: {
+            isSuccessFollow: { type: 'boolean', example: true },
+            isSuccessBio: { type: 'boolean', example: true },
+            isSuccessPost: { type: 'boolean', example: true },
+            isSuccessAvatar: { type: 'boolean', example: true },
+        },
+        required: [
+            'isSuccessFollow',
+            'isSuccessBio',
+            'isSuccessPost',
+            'isSuccessAvatar',
+        ],
+    },
+    UserStatusProfileSuccessResponse: {
+        type: 'object',
+        properties: {
+            success: { type: 'boolean', example: true },
+            message: { type: 'string', example: 'User status profile retrieved successfully' },
+            data: { $ref: '#/components/schemas/UserStatusProfileData' },
+        },
+        required: ['success', 'message', 'data'],
+    },
 
 };
 
@@ -372,29 +396,6 @@ export const userSwaggerPaths = {
             },
         },
     },
-    '/me/usernames': {
-        get: {
-            tags: ['User'],
-            summary: 'Get usernames from following or accepted friends of current user',
-            security: bearerAuthSecurity,
-            parameters: followersPaginationQueryParameters,
-            responses: {
-                200: {
-                    description: 'Usernames retrieved',
-                    content: {
-                        'application/json': {
-                            schema: {
-                                $ref: '#/components/schemas/UserUsernamesPaginatedResponse',
-                            },
-                        },
-                    },
-                },
-                401: {
-                    description: AUTH_MESSAGE.TOKEN_INVALID,
-                },
-            },
-        },
-    },
     '/me/friend-requests/received': {
         get: {
             tags: ['User'],
@@ -460,6 +461,25 @@ export const userSwaggerPaths = {
             responses: {
                 200: {
                     description: USER_MESSAGE.FRIEND_REQUEST_PROCESSED,
+                },
+            },
+        },
+    },
+    '/me/{username}/friend-requests': {
+        post: {
+            tags: ['User'],
+            summary: 'Send friend request from current user',
+            security: bearerAuthSecurity,
+            parameters: usernamePathParameter,
+            responses: {
+                200: {
+                    description: USER_MESSAGE.FRIEND_REQUEST_SENT,
+                },
+                401: {
+                    description: AUTH_MESSAGE.TOKEN_INVALID,
+                },
+                404: {
+                    description: USER_MESSAGE.USER_NOT_FOUND,
                 },
             },
         },
@@ -543,7 +563,7 @@ export const userSwaggerPaths = {
         get: {
             tags: ['User'],
             summary: 'Search usernames for mentions',
-            security: bearerAuthSecurity,
+            security: [],
             parameters: userMentionQueryParameters,
             responses: {
                 200: {
@@ -555,9 +575,6 @@ export const userSwaggerPaths = {
                             },
                         },
                     },
-                },
-                401: {
-                    description: AUTH_MESSAGE.TOKEN_INVALID,
                 },
             },
         },
@@ -585,42 +602,25 @@ export const userSwaggerPaths = {
             },
         },
     },
-    '/users/me/karma': {
+    '/users/me/status-profile': {
         get: {
             tags: ['User'],
-            summary: 'Get current user karma summary',
+            summary: 'Get current user profile completion status',
             security: bearerAuthSecurity,
             responses: {
                 200: {
-                    description: 'User karma retrieved successfully',
+                    description: 'User status profile retrieved successfully',
                     content: {
                         'application/json': {
-                            schema: { $ref: '#/components/schemas/UserKarmaSuccessResponse' },
+                            schema: { $ref: '#/components/schemas/UserStatusProfileSuccessResponse' },
                         },
                     },
                 },
                 401: {
                     description: AUTH_MESSAGE.TOKEN_INVALID,
                 },
-            },
-        },
-    },
-    '/users/me/badges': {
-        get: {
-            tags: ['User'],
-            summary: 'Get current user badges',
-            security: bearerAuthSecurity,
-            responses: {
-                200: {
-                    description: 'User badges retrieved successfully',
-                    content: {
-                        'application/json': {
-                            schema: { $ref: '#/components/schemas/UserBadgesSuccessResponse' },
-                        },
-                    },
-                },
-                401: {
-                    description: AUTH_MESSAGE.TOKEN_INVALID,
+                404: {
+                    description: USER_MESSAGE.USER_NOT_FOUND,
                 },
             },
         },

@@ -20,7 +20,7 @@ const reportTargetTypeMap = {
 
 class ReportManagementService {
   async listReports(input: ListReportsInput) {
-    const targetType = reportTargetTypeMap["post"];
+    const targetType = reportTargetTypeMap[input.type ?? "post"];
     const [reports, totalReports] = await Promise.all([
       reportManagementRepository.findAllPaginated({
         page: input.page,
@@ -46,7 +46,7 @@ class ReportManagementService {
     }
     const row = await this.attachTargets([{ ...report }], report.targetType);
 
-    return row;
+    return row[0];
   }
 
 

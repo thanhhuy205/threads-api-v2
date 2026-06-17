@@ -15,3 +15,4 @@ export { likeWorker } from './like.worker';
 export { messageWorker } from './message.worker';
 export { notificationWorker } from './notification.worker';
 export { pineWorker } from './pine.worker';
+export { surveySyncWorker } from './survey-sync.worker';

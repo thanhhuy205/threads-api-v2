@@ -110,6 +110,15 @@ class FollowRepository {
     });
   }
 
+  async countActiveFollowing(userId: string) {
+    return prisma.follow.count({
+      where: {
+        userId,
+        isFollowing: true,
+      },
+    });
+  }
+
   async create(userId: string, followingId: string) {
     return prisma.follow.create({
       data: {

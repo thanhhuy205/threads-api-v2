@@ -42,6 +42,18 @@ export type PostFeedResponse = Omit<
   }[];
   isDisinformation: boolean;
   isSurvey: boolean;
+  isVoted: boolean;
+  poll: {
+    id: number;
+    expiresAt: Date;
+    pollOptions: {
+      id: number;
+      option: string;
+      voteCount: number;
+    }[];
+    isExpired: boolean;
+    voteCount: number;
+  } | null;
 };
 export type UserSnapshot = {
   id: string;
@@ -75,18 +87,25 @@ export class PostMapper {
       createdAt: post.createdAt.toISOString() ?? new Date().toISOString(),
     };
   }
-  static toFeedResponse(post: PostFeedItem, userId?: string): PostFeedResponse {
+  static toFeedResponse(post: any, userId?: string): PostFeedResponse {
     baseLogger.info(
       `Mapping post with id ${post.publicId} to feed response for user ${userId}. Post derivatives: ${JSON.stringify(post.derivatives)}, Likes: ${JSON.stringify(post.likes)}`,
     );
     const topics: string[] =
       post?.topicsPosts
-        ?.map((tp) => tp.topic?.name)
-        .filter((name): name is string => !!name) ?? [];
+        ?.map((tp: { topic?: { name?: string | null } | null }) => tp.topic?.name)
+        .filter((name: string | null | undefined): name is string => !!name) ?? [];
 
     const repliesCount = post._count?.children ?? 0;
     const repostsCountAndQuoteCount = post._count?.derivatives ?? 0;
-
+    const poll = post.poll ?? null;
+    const isVoted = post.poll?.pollOptions.some((op: {
+      votes: [
+        {
+          pollOptionId: number
+        }
+      ]
+    }) => op.votes != null) ?? false;
     return {
       userId: post.userId,
       createdAt: post.createdAt,
@@ -105,12 +124,13 @@ export class PostMapper {
       isGhost: post.isGhost,
       isSurvey: post.isSurvey,
       isDisinformation: post.isDisinformation,
-      polls: post.polls,
+      poll: poll ?? null,
+      isVoted,
       origin: post.origin,
       viewsCount: post.viewsCount,
       parent: post.parent,
       media: post.media?.map(({ ...media }) => media) ?? [],
-      mentions: post.mentions.map(m => ({
+      mentions: post.mentions.map((m: { userId: string; user: { username: string } }) => ({
         userId: m.userId,
         username: m.user.username,
       })),

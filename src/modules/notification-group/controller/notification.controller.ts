@@ -71,6 +71,7 @@ class NotificationController {
     }
 
     await notificationService.markGroupAsRead(userId);
+    return res.success(200, "Notifications marked as read", { isRead: true });
   }
 }
 

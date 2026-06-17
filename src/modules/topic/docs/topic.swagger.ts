@@ -132,19 +132,6 @@ export const topicSwaggerSchemas = {
     },
 };
 
-const topicNamePathParameter = [
-    {
-        name: 'name',
-        in: 'path',
-        required: true,
-        schema: {
-            type: 'string',
-            example: 'nestjs',
-        },
-        description: 'Topic path segment used by the current route',
-    },
-];
-
 const topicSearchQueryParameters = [
     {
         name: 'q',
@@ -182,17 +169,21 @@ export const topicSwaggerPaths = {
     '/topic': {
         get: {
             tags: ['Topic'],
-            summary: 'Get topic names',
+            summary: 'Search topics by query',
+            parameters: topicSearchQueryParameters,
             responses: {
                 200: {
-                    description: 'Topics retrieved',
+                    description: 'Topic retrieved',
                     content: {
                         'application/json': {
                             schema: {
-                                $ref: '#/components/schemas/TopicNamesResponse',
+                                $ref: '#/components/schemas/TopicSearchResponse',
                             },
                         },
                     },
+                },
+                400: {
+                    description: COMMON_MESSAGE.VALIDATION_FAILED,
                 },
             },
         },
@@ -222,34 +213,6 @@ export const topicSwaggerPaths = {
                 },
                 400: {
                     description: COMMON_MESSAGE.VALIDATION_FAILED,
-                },
-            },
-        },
-    },
-    '/topic/{name}': {
-        get: {
-            tags: ['Topic'],
-            summary: 'Search topic by name',
-            parameters: [
-                ...topicNamePathParameter,
-                ...topicSearchQueryParameters,
-            ],
-            responses: {
-                200: {
-                    description: 'Topic retrieved',
-                    content: {
-                        'application/json': {
-                            schema: {
-                                $ref: '#/components/schemas/TopicSearchResponse',
-                            },
-                        },
-                    },
-                },
-                400: {
-                    description: COMMON_MESSAGE.VALIDATION_FAILED,
-                },
-                404: {
-                    description: 'Topic not found',
                 },
             },
         },

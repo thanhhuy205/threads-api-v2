@@ -90,8 +90,6 @@ const buildSnapshot = (u: SeedUser) => ({
 });
 
 async function main() {
-    console.log("🚀 Seeding likes + replies + quotes + reposts + notifications...\n");
-
     // ─── Load data thực tế ────────────────────────────────────────────────────────
     const users = await prisma.user.findMany({
         where: { deletedAt: null, status: "ACTIVE" },
@@ -119,20 +117,11 @@ async function main() {
         },
     });
     if (posts.length < 3) throw new Error("Cần ít nhất 3 posts");
-
-    console.log(`📦 Loaded: ${users.length} users, ${posts.length} posts\n`);
-
     let totalLikes = 0;
     let totalReplies = 0;
     let totalQuotes = 0;
     let totalReposts = 0;
     let totalNotifs = 0;
-
-    // ═══════════════════════════════════════════════════════════════════════════════
-    // PHASE 1 — LIKES
-    // ═══════════════════════════════════════════════════════════════════════════════
-    console.log("❤️  Phase 1: Creating likes...");
-
     for (const post of posts) {
         const otherUsers = users.filter((u) => u.id !== post.userId);
         const likers = pickN(otherUsers, randInt(3, Math.min(12, otherUsers.length)));
@@ -190,16 +179,7 @@ async function main() {
                 originPostId: post.publicId,
             },
         });
-        totalNotifs++;
-
-        console.log(`   ✓ Post ${post.publicId}: +${newLikerIds.length} likes`);
-    }
-
-    // ═══════════════════════════════════════════════════════════════════════════════
-    // PHASE 2 — REPLIES
-    // ═══════════════════════════════════════════════════════════════════════════════
-    console.log("\n💬 Phase 2: Creating replies...");
-
+        totalNotifs++;    }
     for (const post of posts) {
         const otherUsers = users.filter((u) => u.id !== post.userId);
         const repliers = pickN(otherUsers, randInt(2, Math.min(8, otherUsers.length)));
@@ -243,16 +223,7 @@ async function main() {
                 });
                 totalNotifs++;
             }
-        }
-
-        console.log(`   ✓ Post ${post.publicId}: +${repliers.length} replies`);
-    }
-
-    // ═══════════════════════════════════════════════════════════════════════════════
-    // PHASE 3 — QUOTES
-    // ═══════════════════════════════════════════════════════════════════════════════
-    console.log("\n🔁 Phase 3: Creating quotes...");
-
+        }    }
     for (const post of posts) {
         const otherUsers = users.filter((u) => u.id !== post.userId);
         const quoters = pickN(otherUsers, randInt(1, Math.min(4, otherUsers.length)));
@@ -295,16 +266,7 @@ async function main() {
                 });
                 totalNotifs++;
             }
-        }
-
-        console.log(`   ✓ Post ${post.publicId}: +${quoters.length} quotes`);
-    }
-
-    // ═══════════════════════════════════════════════════════════════════════════════
-    // PHASE 4 — REPOSTS (không có content, không có userSnapshot)
-    // ═══════════════════════════════════════════════════════════════════════════════
-    console.log("\n🔄 Phase 4: Creating reposts...");
-
+        }    }
     for (const post of posts) {
         const otherUsers = users.filter((u) => u.id !== post.userId);
         const reposters = pickN(otherUsers, randInt(1, Math.min(5, otherUsers.length)));
@@ -345,36 +307,14 @@ async function main() {
                 });
                 totalNotifs++;
             }
-        }
-
-        console.log(`   ✓ Post ${post.publicId}: +${reposters.length} reposts`);
-    }
+        }    }
 
     // ─── Summary ──────────────────────────────────────────────────────────────────
     const dbNotifs = await prisma.notificationGroup.count();
     const dbLikes = await prisma.like.count({ where: { isLike: true } });
     const dbReplies = await prisma.post.count({ where: { type: PostType.REPLY } });
     const dbQuotes = await prisma.post.count({ where: { type: PostType.QUOTE } });
-    const dbReposts = await prisma.post.count({ where: { type: PostType.REPOST } });
-
-    console.log(`
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✅ Done!
-   Likes created  : ${totalLikes}
-   Replies created: ${totalReplies}
-   Quotes created : ${totalQuotes}
-   Reposts created: ${totalReposts}
-   Notifs created : ${totalNotifs}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📊 DB totals:
-   likes (isLike=true)      : ${dbLikes}
-   posts (REPLY)            : ${dbReplies}
-   posts (QUOTE)            : ${dbQuotes}
-   posts (REPOST)           : ${dbReposts}
-   notification_groups      : ${dbNotifs}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  `);
-}
+    const dbReposts = await prisma.post.count({ where: { type: PostType.REPOST } });}
 
 main()
     .catch((e) => {

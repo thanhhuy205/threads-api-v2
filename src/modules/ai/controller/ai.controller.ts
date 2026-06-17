@@ -18,9 +18,7 @@ class AiController {
         });
         const publicSdGenerationJob = { ...sdGenerationJob } as Record<string, unknown>;
         delete publicSdGenerationJob.apiCreditCost;
-        delete publicSdGenerationJob.cost;
-        console.log("AI Controller - Generated image caption", { publicSdGenerationJob });
-        return res.success(200, "Image generation job created", { sdGenerationJob: publicSdGenerationJob });
+        delete publicSdGenerationJob.cost;        return res.success(200, "Image generation job created", { sdGenerationJob: publicSdGenerationJob });
     }
 }
 

@@ -1,6 +1,10 @@
-import { BadRequestException } from "@/errors/error";
+import { BadRequestException, NotFoundException } from "@/errors/error";
 import type { Prisma } from "@prisma/client";
-import { pollRepository } from "../repository/poll.repository";
+import {
+  pollRepository,
+  type PollVoteCountUpdate,
+} from "../repository/poll.repository";
+import { voteRepository } from "../repository/vote.repository";
 import {
   pollOptionsService,
   type PollOptionInput,
@@ -41,6 +45,45 @@ class PollService {
 
   findByPostId(postId: number, tx?: Prisma.TransactionClient) {
     return pollRepository.findByPostId(postId, tx);
+  }
+
+  async assertPollOptionBelongsToPoll(
+    pollOptionId: number,
+    pollId: number,
+    tx?: Prisma.TransactionClient,
+  ) {
+    const pollOption = await pollOptionsService.findByIdAndPollId(
+      pollOptionId,
+      pollId,
+      tx,
+    );
+
+    if (!pollOption) {
+      throw new NotFoundException("Poll option not found");
+    }
+
+    return pollOption;
+  }
+
+  incrementPollOptionVotesCount(
+    pollOptionId: number,
+    pollId: number,
+    tx?: Prisma.TransactionClient,
+  ) {
+    return pollOptionsService.incrementVotesCount(pollOptionId, pollId, tx);
+  }
+
+  async getCountVoted(pollId: number, tx?: Prisma.TransactionClient) {
+    const count = await voteRepository.countByPollId(pollId, tx);
+
+    return { count };
+  }
+
+  syncVoteCounts(
+    updates: PollVoteCountUpdate[],
+    tx?: Prisma.TransactionClient,
+  ) {
+    return pollRepository.bulkUpdateVoteCount(updates, tx);
   }
 
   private normalizeOptions(options: PollOptionInput[]) {

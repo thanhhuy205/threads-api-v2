@@ -1,4 +1,3 @@
-import { ConflictException } from "@/errors/error";
 import { roleRepository } from "../repository/role.repository";
 
 class RoleService {

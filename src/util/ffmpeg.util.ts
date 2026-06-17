@@ -15,12 +15,8 @@ ffmpeg.setFfprobePath(ffprobePath);
 async function generateThumbnail(filePath: string, outputDir: string) {
     return new Promise((resolve, reject) => {
         ffmpeg(filePath)
-            .on('filenames', function (filenames) {
-                console.log('Generating thumbnail:', filenames);
-            })
-            .on('end', function () {
-                console.log('Thumbnail generation completed.');
-            })
+            .on('filenames', function (filenames) {            })
+            .on('end', function () {            })
             .on('error', function (err) {
                 console.error('Error generating thumbnail:', err);
                 reject(err);
@@ -37,9 +33,7 @@ async function generateThumbnail(filePath: string, outputDir: string) {
 export async function generateVideoSegments(filePath: string, outputDir: string, filename: string, outputCloudDir: string) {
     return new Promise((resolve, reject) => {
         ffmpeg(filePath)
-            .on('filenames', function (filename) {
-                console.log('Generating Video Segments:', filename);
-            })
+            .on('filenames', function (filename) {            })
             .outputOptions([
                 '-c:v libx264', // Specifies the H.264 video codec.
                 '-c:a aac', // Specifies the AAC audio codec.
@@ -57,9 +51,7 @@ export async function generateVideoSegments(filePath: string, outputDir: string,
             ])
             .on('end', async () => {
                 await unlink(filePath);
-                await uploadDirToR2(outputDir, outputCloudDir);
-                console.log('Video segments generation completed.');
-                return resolve(true);
+                await uploadDirToR2(outputDir, outputCloudDir);                return resolve(true);
             })
             .on('error', (err) => {
                 console.error('FFmpeg error:', err);
