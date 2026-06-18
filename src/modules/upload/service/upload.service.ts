@@ -75,7 +75,7 @@ class UploadService {
         baseLogger.info(`Added video to temp directory: ${fileName}, path: ${path.join(tempDirectory, fileName)}`);
         await videoProcedure.addHlsQueue({
             fileName,
-            filePath: path.join(tempDirectory, fileName),
+            inputPath: path.join(tempDirectory, fileName),
             outputCloudDir: `hls/${folder}`,
             outputDir: tempDir,
             title: folder,

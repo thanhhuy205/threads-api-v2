@@ -30,9 +30,9 @@ async function generateThumbnail(filePath: string, outputDir: string) {
     });
 }
 
-export async function generateVideoSegments(filePath: string, outputDir: string, filename: string, outputCloudDir: string) {
+export async function generateVideoSegments(inputPath: string, outputDir: string, filename: string, outputCloudDir: string) {
     return new Promise((resolve, reject) => {
-        ffmpeg(filePath)
+        ffmpeg(inputPath)
             .on('filenames', function (filename) {            })
             .outputOptions([
                 '-c:v libx264', // Specifies the H.264 video codec.
@@ -50,7 +50,7 @@ export async function generateVideoSegments(filePath: string, outputDir: string,
                 `-hls_segment_filename ${path.join(outputDir, 'segment%03d.ts')}`
             ])
             .on('end', async () => {
-                await unlink(filePath);
+                await unlink(inputPath);
                 await uploadDirToR2(outputDir, outputCloudDir);                return resolve(true);
             })
             .on('error', (err) => {

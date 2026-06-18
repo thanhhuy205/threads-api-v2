@@ -4,12 +4,19 @@ import { Router } from "express";
 import { userController } from "./controller/user.controller";
 import { followersQuerySchema } from "./dto/request/followers.query.dto";
 import { friendRequestSchema } from "./dto/request/friend-id.params.dto";
+import { updateProfileSchema } from "./dto/request/update-profile.request.dto";
 import { friendRequestParamsSchema } from "./dto/request/user-id.params.dto";
 import { usernameParamsSchema } from "./dto/request/username.params.dto";
 
 const userRouter = Router();
 
 userRouter.use(authorization);
+
+userRouter.patch(
+  "/profile",
+  validate(updateProfileSchema),
+  userController.updateProfile,
+);
 
 userRouter.get(
   "/followers",

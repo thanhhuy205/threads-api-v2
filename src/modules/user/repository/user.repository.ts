@@ -7,6 +7,7 @@ const userProfileSelect = {
   username: true,
   name: true,
   bio: true,
+  links: true,
   avatar: true,
   verifiedAt: true,
   status: true,
@@ -24,6 +25,7 @@ const userByUsernameSelect = {
   username: true,
   name: true,
   bio: true,
+  links: true,
   avatar: true,
   verifiedAt: true,
   followersCount: true,
@@ -90,6 +92,19 @@ class UserRepository {
         username,
       },
       select: userByUsernameSelect,
+    });
+  }
+
+  async updateProfile(
+    id: string,
+    data: Prisma.UserUpdateInput,
+  ): Promise<UserProfile> {
+    return prisma.user.update({
+      where: {
+        id,
+      },
+      data,
+      select: userProfileSelect,
     });
   }
 

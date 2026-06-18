@@ -20,16 +20,16 @@ class HlsWorker {
     });
 
     async addJobGenerateHls(data: HlsQueueDto) {
-        const { filePath, outputDir, title, fileName, outputCloudDir } = data;
-        baseLogger.info(`Generating HLS for title: ${title}, filePath: ${filePath}, outputDir: ${outputDir}`);
-        await generateVideoSegments(filePath, outputDir, fileName, outputCloudDir);
+        const { inputPath, outputDir, title, fileName, outputCloudDir } = data;
+        baseLogger.info(`Generating HLS for title: ${title}, filePath: ${inputPath}, outputDir: ${outputDir}`);
+        await generateVideoSegments(inputPath, outputDir, fileName, outputCloudDir);
 
         const webhookPayload: HlsWebhookRequestDto = {
             title,
             outputCloudDir,
             data: {
                 status: 'ready',
-                url: `https://${process.env.R2_ENDPOINT}/${process.env.R2_BUCKET_NAME}/${outputCloudDir}/index.m3u8`,
+                url: `${process.env.R2_ENDPOINT}/${process.env.R2_BUCKET_NAME}/${outputCloudDir}/index.m3u8`,
                 key: title,
             },
             type: 'video.asset.ready',

@@ -1,6 +1,9 @@
 import { postService } from "@/modules/post/service/post.service";
 import { userRepository } from "@/modules/user/repository/user.repository";
+import { redisKey } from "@/constants/resolve-key/redis-key";
+import { redisService } from "@/providers/redis.provider";
 import { Prisma } from "@prisma/client";
+import type { UpdateProfileDto } from "../dto/request/update-profile.request.dto";
 import { mapUserProfileForFE } from "../mapper/user.mapper";
 import { followRepository } from "../repository/follow.repository";
 
@@ -9,6 +12,31 @@ type GetNetworkUsernamesInput = {
 };
 
 class UserService {
+  async updateProfile(userId: string, payload: UpdateProfileDto) {
+    const data: Prisma.UserUpdateInput = {};
+
+    if (payload.name !== undefined) {
+      data.name = payload.name;
+    }
+
+    if (payload.bio !== undefined) {
+      data.bio = payload.bio;
+    }
+
+    if (payload.links !== undefined) {
+      data.links = payload.links === null ? Prisma.DbNull : payload.links;
+    }
+
+    if (payload.isPrivate !== undefined) {
+      data.isPrivate = payload.isPrivate;
+    }
+
+    const user = await userRepository.updateProfile(userId, data);
+    await redisService.del(redisKey.auth.me(userId));
+
+    return user;
+  }
+
   async getMyKarma(userId: string) {
     return {
       userId,

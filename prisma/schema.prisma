@@ -296,6 +296,7 @@ model User {
   isPrivate Boolean @default(false) @map("is_private")
   location  String? @db.VarChar(255)
   website   String? @db.VarChar(255)
+  links     Json?
 
   deletedAt DateTime? @map("deleted_at")
   createdAt DateTime  @default(now()) @map("created_at")

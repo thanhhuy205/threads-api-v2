@@ -11,9 +11,20 @@ import type { FollowersQueryDto } from "../dto/request/followers.query.dto";
 import {
   FriendRequestDto
 } from "../dto/request/friend-id.params.dto";
+import type { UpdateProfileDto } from "../dto/request/update-profile.request.dto";
 import type { UserNameMentionQueryDto, UsernameParamsDto } from "../dto/request/username.params.dto";
 
 class UserController {
+  async updateProfile(req: Request<{}, {}, UpdateProfileDto>, res: Response) {
+    const userId = req.user?.sub;
+    if (!userId) {
+      return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
+    }
+
+    const user = await userService.updateProfile(userId, req.body);
+    return res.success(200, "Profile updated successfully", user);
+  }
+
   async getMyFollowers(
     req: Request<{}, {}, {}, FollowersQueryDto>,
     res: Response,

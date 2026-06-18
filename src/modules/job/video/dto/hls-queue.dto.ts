@@ -1,6 +1,6 @@
 export interface HlsQueueDto {
     fileName: string;
-    filePath: string;
+    inputPath: string;
     outputDir: string;
     title: string;
     outputCloudDir: string;
