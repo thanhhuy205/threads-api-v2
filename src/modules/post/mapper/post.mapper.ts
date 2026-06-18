@@ -20,17 +20,26 @@ export type PostFeedItem = Prisma.PostGetPayload<{
     userId: string;
   }[];
   derivatives?: PostOriginItem[] | null;
+  postInteractions?: {
+    userId: string;
+  }[];
   isFollowingAuthor?: boolean;
   isFollowedByAuthor?: boolean;
 };
 
 export type PostFeedResponse = Omit<
   PostFeedItem,
-  "likes" | "topicsPosts" | "mentions" | "_count" | "derivatives"
+  | "likes"
+  | "topicsPosts"
+  | "mentions"
+  | "_count"
+  | "derivatives"
+  | "postInteractions"
 > & {
   media: Array<Omit<NonNullable<PostFeedItem["media"]>[number], "postId">>;
   isLikedByAuth: boolean;
   isRepostByAuth: boolean;
+  isSavedByAuth: boolean;
   isFollowingAuthor: boolean;
   isFollowedByAuthor: boolean;
   repliesCount: number;
@@ -106,6 +115,8 @@ export class PostMapper {
         }
       ]
     }) => op.votes != null) ?? false;
+
+    const isSavedByAuth = Boolean(userId && post.postInteractions?.length);
     return {
       userId: post.userId,
       createdAt: post.createdAt,
@@ -140,6 +151,7 @@ export class PostMapper {
       ),
       isFollowingAuthor: post.isFollowingAuthor ?? false,
       isFollowedByAuthor: post.isFollowedByAuthor ?? false,
+      isSavedByAuth,
     };
   }
 }

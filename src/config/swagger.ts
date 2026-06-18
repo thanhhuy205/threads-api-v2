@@ -44,10 +44,6 @@ import {
     messageGroupSwaggerSchemas,
 } from '../modules/message-group/docs/message-group.swagger';
 import {
-    museumSwaggerPaths,
-    museumSwaggerSchemas,
-} from '../modules/museum/docs/museum.swagger';
-import {
     notificationSwaggerPaths,
     notificationSwaggerSchemas,
 } from '../modules/notification-group/docs/notification.swagger';
@@ -146,10 +142,6 @@ export const swaggerDocument = {
             description: 'Quest and reward APIs',
         },
         {
-            name: 'Museum',
-            description: 'Museum archive APIs',
-        },
-        {
             name: 'Search',
             description: 'Search APIs',
         },
@@ -180,7 +172,6 @@ export const swaggerDocument = {
         ...messageGroupSwaggerPaths,
         ...topicSwaggerPaths,
         ...questSwaggerPaths,
-        ...museumSwaggerPaths,
         ...searchSwaggerPaths,
         ...pusherSwaggerPaths,
         ...pollSwaggerPaths,
@@ -202,7 +193,6 @@ export const swaggerDocument = {
             ...messageGroupSwaggerSchemas,
             ...topicSwaggerSchemas,
             ...questSwaggerSchemas,
-            ...museumSwaggerSchemas,
             ...searchSwaggerSchemas,
             ...pusherSwaggerSchemas,
             ...pollSwaggerSchemas,

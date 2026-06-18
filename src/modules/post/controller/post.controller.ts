@@ -6,7 +6,9 @@ import { Request, Response } from "express";
 import { CreatePostDto, UpdatePostDto } from "../dto/post.dto";
 import type { LikeDto } from "../dto/request/like.request";
 import type {
+  HidePostDto,
   ReportDto,
+  SavePostDto,
   SimilarPostsDto,
 } from "../dto/request/post.request";
 import {
@@ -312,26 +314,36 @@ class PostController {
     return res.success(201, POST_MESSAGE.CREATED, quote);
   }
 
-  async savePost(req: Request<PublicIdParamsDto>, res: Response) {
+  async savePost(
+    req: Request<PublicIdParamsDto, {}, SavePostDto>,
+    res: Response,
+  ) {
     const userId = req.user?.sub;
 
     if (!userId) {
       return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
     }
 
-    await postService.save(req.params.publicId, userId);
-    return res.success(200, POST_MESSAGE.RETRIEVED, { saved: true });
+    await postService.save(req.params.publicId, userId, req.body.isSaved);
+    return res.success(200, POST_MESSAGE.RETRIEVED, {
+      saved: req.body.isSaved,
+    });
   }
 
-  async hidePost(req: Request<PublicIdParamsDto>, res: Response) {
+  async hidePost(
+    req: Request<PublicIdParamsDto, {}, HidePostDto>,
+    res: Response,
+  ) {
     const userId = req.user?.sub;
 
     if (!userId) {
       return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
     }
 
-    await postService.hide(req.params.publicId, userId);
-    return res.success(200, POST_MESSAGE.RETRIEVED, { hidden: true });
+    await postService.hide(req.params.publicId, userId, req.body.isHidden);
+    return res.success(200, POST_MESSAGE.RETRIEVED, {
+      hidden: req.body.isHidden,
+    });
   }
 
   async reportPost(

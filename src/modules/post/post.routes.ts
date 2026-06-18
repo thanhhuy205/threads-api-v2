@@ -5,10 +5,12 @@ import { postController } from "./controller/post.controller";
 import { createPostSchema, updatePostSchema } from "./dto/post.dto";
 import {
   cursorPaginationQuerySchema,
+  hidePostSchema,
   newsFeedQuerySchema,
   postIdParamsSchema,
   publicIdParamsSchema,
   reportSchema,
+  savePostSchema,
   similarPostsSchema,
   usernameParamsSchema,
 } from "./dto/request/post.request";
@@ -116,11 +118,13 @@ postRouter.post(
 postRouter.post(
   "/:publicId/save",
   validate(publicIdParamsSchema, "params"),
+  validate(savePostSchema),
   postController.savePost,
 );
 postRouter.post(
   "/:publicId/hide",
   validate(publicIdParamsSchema, "params"),
+  validate(hidePostSchema),
   postController.hidePost,
 );
 postRouter.post(

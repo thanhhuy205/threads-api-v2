@@ -52,3 +52,21 @@ export const reportSchema = z.object({
 });
 
 export type ReportDto = z.infer<typeof reportSchema>;
+
+export const savePostSchema = z.object({
+    isSaved: z.boolean({
+        required_error: 'isSaved is required',
+        invalid_type_error: 'isSaved must be a boolean value',
+    }),
+});
+
+export type SavePostDto = z.infer<typeof savePostSchema>;
+
+export const hidePostSchema = z.object({
+    isHidden: z.boolean({
+        required_error: 'isHidden is required',
+        invalid_type_error: 'isHidden must be a boolean value',
+    }),
+});
+
+export type HidePostDto = z.infer<typeof hidePostSchema>;

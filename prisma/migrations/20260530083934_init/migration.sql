@@ -556,20 +556,6 @@ CREATE TABLE `cpr_sessions` (
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- CreateTable
-CREATE TABLE `circle_soul_stones` (
-    `id` VARCHAR(191) NOT NULL,
-    `circleId` VARCHAR(191) NOT NULL,
-    `summary` TEXT NOT NULL,
-    `peakHp` INTEGER NOT NULL,
-    `livedDays` INTEGER NOT NULL,
-    `topPostIds` JSON NOT NULL,
-    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
-
-    UNIQUE INDEX `circle_soul_stones_circleId_key`(`circleId`),
-    INDEX `circle_soul_stones_createdAt_idx`(`createdAt`),
-    PRIMARY KEY (`id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
 CREATE TABLE `circle_invitations` (
@@ -787,9 +773,6 @@ ALTER TABLE `user_restrictions` ADD CONSTRAINT `user_restrictions_user_id_fkey` 
 
 -- AddForeignKey
 ALTER TABLE `cpr_sessions` ADD CONSTRAINT `cpr_sessions_circleId_fkey` FOREIGN KEY (`circleId`) REFERENCES `circles`(`publicId`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `circle_soul_stones` ADD CONSTRAINT `circle_soul_stones_circleId_fkey` FOREIGN KEY (`circleId`) REFERENCES `circles`(`publicId`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `circle_invitations` ADD CONSTRAINT `circle_invitations_circle_id_fkey` FOREIGN KEY (`circle_id`) REFERENCES `circles`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;

@@ -335,6 +335,7 @@ model User {
   webHookPreviewImages WebHookPreviewImage[]
   limitActionAIs       LimitActionAI[]
   votes                Vote[]
+  postInteractions     PostInteraction[]
 
   @@index([email], map: "idx_users_email")
   @@index([name], map: "idx_users_name")
@@ -344,6 +345,22 @@ model User {
   @@index([status, bannedUntil], map: "idx_users_status_banned_until")
   @@fulltext([username, name], map: "idx_users_username_name_fulltext")
   @@map("users")
+}
+
+model PostInteraction {
+  id        Int             @id @default(autoincrement())
+  userId    String          @map("user_id")
+  postId    Int             @map("post_id")
+  type      InteractionType @map("type_enum")
+  createdAt DateTime        @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+  post Post @relation(fields: [postId], references: [id])
+
+  @@unique([userId, postId, type], map: "uq_saves_user_post_type")
+  @@index([userId], map: "idx_saves_user_id")
+  @@index([postId], map: "idx_saves_post_id")
+  @@map("post_interactions")
 }
 
 model Report {
@@ -496,6 +513,7 @@ model Post {
   circleExpLogs           CircleExpLog[]
   originPostNotifications NotificationGroup[]    @relation("NotificationOriginPost")
   poll                    Poll?
+  postInteractions        PostInteraction[]
 
   @@index([userId, createdAt])
   @@index([parentId])
@@ -720,7 +738,6 @@ model Circle {
   circleInvitations     CircleInvitation[]
   circleEnergies        CircleEnergy[]
   circlePostQualityLogs CirclePostQualityLog[]
-  circleSoulStone       CircleSoulStone?
   circleExpLogs         CircleExpLog[]
   heroBadges            HeroBadge[]
   circleJoinRequests    CircleJoinRequest[]
@@ -965,21 +982,6 @@ model UserRestriction {
   @@index([type], map: "idx_user_restrictions_type")
   @@index([expiresAt], map: "idx_user_restrictions_expires_at")
   @@map("user_restrictions")
-}
-
-model CircleSoulStone {
-  id         String   @id @default(cuid())
-  circleId   String   @unique
-  summary    String   @db.Text
-  peakHp     Int
-  livedDays  Int
-  topPostIds Json // String[]
-  createdAt  DateTime @default(now())
-
-  circle Circle @relation(fields: [circleId], references: [publicId])
-
-  @@index([createdAt])
-  @@map("circle_soul_stones")
 }
 
 model CircleInvitation {

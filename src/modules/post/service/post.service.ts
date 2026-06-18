@@ -38,6 +38,7 @@ import {
 import { transactionService } from "@/shared/transaction/transaction.service";
 import {
   ActionType,
+  InteractionType,
   PostType,
   Prisma,
   ReplyPermission,
@@ -47,6 +48,7 @@ import {
 } from "@prisma/client";
 import { CreatePostDto, UpdatePostDto } from "../dto/post.dto";
 import { normalizeTopic } from "../helper/nomalize.hepler";
+import { postInteractionRepository } from "../repository/post-interaction.repository";
 import { PostRecord, postRepository } from "../repository/post.repository";
 import { topicsPostRepository } from "../repository/topics-post.repository";
 
@@ -932,16 +934,50 @@ class PostService {
     return result;
   }
 
-  async hide(publicId: string, userId: string): Promise<void> {
+  async hide(
+    publicId: string,
+    userId: string,
+    isHidden: boolean,
+  ): Promise<void> {
     const post = await postRepository.findByPublicId(publicId);
     if (!post) {
-      throw new Error("Post not found");
+      throw new NotFoundException("Post not found");
     }
     if (post.visibility === VisibilityPost.CIRCLE) {
-      throw new Error("Circle posts cannot be hidden");
+      throw new BadRequestException("Circle posts cannot be hidden");
     }
     if (post.userId === userId) {
-      throw new Error("Users cannot hide their own posts");
+      throw new ForbiddenException("Users cannot hide their own posts");
+    }
+
+    const hiddenPayload = {
+      userId,
+      postId: post.id,
+      type: InteractionType.HIDE,
+    };
+
+    if (isHidden) {
+      const saved = await postInteractionRepository.findByStatus({
+        userId,
+        postId: post.id,
+        type: InteractionType.SAVE,
+      });
+
+      if (saved) {
+        throw new BadRequestException(
+          "You must unsave this post before hiding it",
+        );
+      }
+
+      await postInteractionRepository.create(hiddenPayload);
+    } else {
+      const hidden = await postInteractionRepository.findByStatus(hiddenPayload);
+
+      if (!hidden) {
+        throw new BadRequestException("No hidden post found");
+      }
+
+      await postInteractionRepository.deleteByUserPostAndType(hiddenPayload);
     }
 
     await this.bumpPostListCacheVersion();
@@ -966,9 +1002,35 @@ class PostService {
     await this.bumpPostListCacheVersion();
   }
 
-  async save(publicId: string, userId: string): Promise<void> {
-    // stub: no-op
-    return;
+  async save(
+    publicId: string,
+    userId: string,
+    isSaved: boolean,
+  ): Promise<void> {
+    const post = await postRepository.findByPublicId(publicId);
+    if (!post) {
+      throw new NotFoundException("Post not found");
+    }
+
+    const savedPayload = {
+      userId,
+      postId: post.id,
+      type: InteractionType.SAVE,
+    };
+
+    if (isSaved) {
+      await postInteractionRepository.create(savedPayload);
+    } else {
+      const saved = await postInteractionRepository.findByStatus(savedPayload);
+
+      if (!saved) {
+        throw new BadRequestException("No saved post found");
+      }
+
+      await postInteractionRepository.deleteByUserPostAndType(savedPayload);
+    }
+
+    await this.bumpPostListCacheVersion();
   }
 
   private resolveDeleteActionType(postType: PostType): ActionType {

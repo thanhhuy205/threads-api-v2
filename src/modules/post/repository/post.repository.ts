@@ -8,6 +8,7 @@ import {
   postSelectRepository,
 } from "@/modules/post/selector/post.selector";
 import {
+  InteractionType,
   PostMediaStatus,
   PostMediaType,
   PostType,
@@ -102,7 +103,21 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
     );
     return prisma.post.findMany({
       where: {
-        AND: [{ isDeleted: false }, { isHidden: false }, where ?? {}],
+        AND: [
+          { isDeleted: false },
+          { isHidden: false },
+          userId
+            ? {
+              postInteractions: {
+                none: {
+                  userId,
+                  type: InteractionType.HIDE,
+                },
+              },
+            }
+            : {},
+          where ?? {},
+        ],
       },
       orderBy: sortOrder,
       take: after ? take + 1 : take,
@@ -142,7 +157,17 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
                 userId: true,
               },
               take: 1,
-            }
+            },
+            postInteractions: {
+              where: {
+                userId: userId,
+                type: InteractionType.SAVE,
+              },
+              select: {
+                userId: true,
+              },
+              take: 1,
+            },
           }
           : {}),
       },
@@ -452,6 +477,20 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
       select: {
         id: true,
         ...this.buildFeedSelect(userId),
+        ...(userId
+          ? {
+            postInteractions: {
+              where: {
+                userId,
+                type: InteractionType.SAVE,
+              },
+              select: {
+                userId: true,
+              },
+              take: 1,
+            },
+          }
+          : {}),
       },
     });
   }
@@ -699,6 +738,16 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
         isDeleted: false,
         isHidden: false,
         visibility: VisibilityPost.PUBLIC,
+        ...(userId
+          ? {
+            postInteractions: {
+              none: {
+                userId,
+                type: InteractionType.HIDE,
+              },
+            },
+          }
+          : {}),
       },
       select: {
         ...this.buildFeedSelect(userId),
@@ -727,6 +776,16 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
               },
               select: {
                 publicId: true,
+                userId: true,
+              },
+              take: 1,
+            },
+            postInteractions: {
+              where: {
+                userId,
+                type: InteractionType.SAVE,
+              },
+              select: {
                 userId: true,
               },
               take: 1,
