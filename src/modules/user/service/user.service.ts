@@ -1,6 +1,6 @@
+import { redisKey } from "@/constants/resolve-key/redis-key";
 import { postService } from "@/modules/post/service/post.service";
 import { userRepository } from "@/modules/user/repository/user.repository";
-import { redisKey } from "@/constants/resolve-key/redis-key";
 import { redisService } from "@/providers/redis.provider";
 import { Prisma } from "@prisma/client";
 import type { UpdateProfileDto } from "../dto/request/update-profile.request.dto";
@@ -23,8 +23,12 @@ class UserService {
       data.bio = payload.bio;
     }
 
-    if (payload.links !== undefined) {
-      data.links = payload.links === null ? Prisma.DbNull : payload.links;
+    if (payload.labelWebsite !== undefined) {
+      data.labelWebsite = payload.labelWebsite;
+    }
+
+    if (payload.website !== undefined) {
+      data.website = payload.website;
     }
 
     if (payload.isPrivate !== undefined) {
@@ -34,7 +38,13 @@ class UserService {
     const user = await userRepository.updateProfile(userId, data);
     await redisService.del(redisKey.auth.me(userId));
 
-    return user;
+    return {
+      name: user.name,
+      bio: user.bio,
+      labelWebsite: user.labelWebsite,
+      website: user.website,
+      isPrivate: user.isPrivate,
+    };
   }
 
   async getMyKarma(userId: string) {

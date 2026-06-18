@@ -196,6 +196,7 @@ export const userSwaggerSchemas = {
             postsCount: { type: 'integer' },
             isPrivate: { type: 'boolean' },
             location: { type: 'string', nullable: true },
+            labelWebsite: { type: 'string', nullable: true },
             website: { type: 'string', nullable: true },
             hasReceivedFriendRequest: { type: 'boolean' },
             hasSentFriendRequest: { type: 'boolean' },

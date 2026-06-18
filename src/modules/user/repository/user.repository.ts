@@ -7,7 +7,6 @@ const userProfileSelect = {
   username: true,
   name: true,
   bio: true,
-  links: true,
   avatar: true,
   verifiedAt: true,
   status: true,
@@ -17,6 +16,7 @@ const userProfileSelect = {
   isPrivate: true,
   location: true,
   website: true,
+  labelWebsite: true,
   createdAt: true,
 } as const;
 
@@ -25,7 +25,6 @@ const userByUsernameSelect = {
   username: true,
   name: true,
   bio: true,
-  links: true,
   avatar: true,
   verifiedAt: true,
   followersCount: true,
@@ -34,6 +33,7 @@ const userByUsernameSelect = {
   isPrivate: true,
   location: true,
   website: true,
+  labelWebsite: true,
 } as const;
 
 const userBasicIdentitySelect = {
