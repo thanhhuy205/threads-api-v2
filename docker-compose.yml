@@ -38,8 +38,7 @@ services:
     container_name: threads-mysql
     restart: unless-stopped
     env_file:
-      - .env
-    command: --mysql-native-password=ON
+      - .envgit
     environment:
       MYSQL_DATABASE: ${DB_NAME}
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
@@ -72,7 +71,7 @@ services:
           mysqldump -h mysql -u root -p$$DB_ROOT_PASSWORD $$DB_NAME > $$DUMP_FILE
           test -s $$DUMP_FILE && rclone copy /backup gdrive:threads-backups/mysql --config /config/rclone/rclone.conf || echo 'Backup failed.'
           rm -f /backup/*.sql
-          sleep 30
+          sleep 43200 
       done
       "
     environment:
