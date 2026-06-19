@@ -981,6 +981,7 @@ class PostService {
     }
 
     await this.bumpPostListCacheVersion();
+
   }
 
   async actionAdmin(publicId: string, action: {

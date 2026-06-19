@@ -28,9 +28,56 @@ services:
     image: redis:alpine # Khuyên dùng bản alpine thường cho nhẹ và ổn định
     container_name: threads-redis
     restart: unless-stopped
+    volumes:
+      - ./docker/redis-data:/data
     networks:
       - threads-network
 
+  mysql:
+    image: mysql:8.4
+    container_name: threads-mysql
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+    networks:
+      - threads-network
+    volumes:
+      - ./docker/mysql-data:/var/lib/mysql
+
+  backup:
+    build: ./backup
+    container_name: threads-backup
+    restart: unless-stopped
+    depends_on:
+      - mysql
+    volumes:
+      - ./docker/rclone:/config/rclone
+      - ./docker/backup:/backup
+    entrypoint: /bin/sh
+
+    command: |
+      -c "
+      echo 'MySQL is ready.'
+      until mysqladmin ping -h mysql -u root -p$$DB_ROOT_PASSWORD --silent; do
+          echo 'MySQL not ready, waiting...'
+          sleep 5
+      done
+      while true; do
+          DUMP_FILE=/backup/dump_$$(date +%Y%m%d_%H%M%S).sql
+          mysqldump -h mysql -u root -p$$DB_ROOT_PASSWORD --all-databases > $$DUMP_FILE
+          test -s $$DUMP_FILE && rclone copy /backup gdrive:threads-backups/mysql --config /config/rclone/rclone.conf || echo 'Backup failed.'
+          rm -f /backup/*.sql
+          sleep 30
+      done
+      "
+    environment:
+      DB_ROOT_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+    networks:
+      - threads-network
   soketi:
     image: quay.io/soketi/soketi:1.6.1-16-alpine
     container_name: threads-soketi
@@ -64,3 +111,6 @@ services:
 networks:
   threads-network:
     driver: bridge
+volumes:
+  mysql-data:
+  redis-data:
