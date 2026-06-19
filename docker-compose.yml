@@ -46,7 +46,6 @@ services:
       - threads-network
     volumes:
       - ./docker/mysql-data:/var/lib/mysql
-
   backup:
     build: ./backup
     container_name: threads-backup
@@ -60,14 +59,16 @@ services:
 
     command: |
       -c "
-      echo 'MySQL is ready.'
+      echo 'Đã vào Rclone Backup Container, bắt đầu quá trình backup...'
       until mysqladmin ping -h mysql -u root -p$$DB_ROOT_PASSWORD --silent; do
-          echo 'MySQL not ready, waiting...'
+          echo 'Chờ MySQL sẵn sàng...'
           sleep 5
       done
+      echo 'MySQL đã sẵn sàng, bắt đầu backup định kỳ...'
+
       while true; do
           DUMP_FILE=/backup/dump_$$(date +%Y%m%d_%H%M%S).sql
-          mysqldump -h mysql -u root -p$$DB_ROOT_PASSWORD --all-databases > $$DUMP_FILE
+          mysqldump -h mysql -u root -p$$DB_ROOT_PASSWORD $$DB_NAME > $$DUMP_FILE
           test -s $$DUMP_FILE && rclone copy /backup gdrive:threads-backups/mysql --config /config/rclone/rclone.conf || echo 'Backup failed.'
           rm -f /backup/*.sql
           sleep 30
