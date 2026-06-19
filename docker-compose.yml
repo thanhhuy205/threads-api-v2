@@ -39,6 +39,7 @@ services:
     restart: unless-stopped
     env_file:
       - .env
+    command: --mysql-native-password=ON
     environment:
       MYSQL_DATABASE: ${DB_NAME}
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}

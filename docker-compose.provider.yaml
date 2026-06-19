@@ -12,6 +12,8 @@ services:
       - threads-network
     volumes:
       - ./docker/mysql-data:/var/lib/mysql
+    ports:
+      - "3308:3306"
 
   backup:
     build: ./backup
@@ -33,7 +35,7 @@ services:
       done
       while true; do
           DUMP_FILE=/backup/dump_$$(date +%Y%m%d_%H%M%S).sql
-          mysqldump -h mysql -u root -p$$DB_ROOT_PASSWORD --all-databases > $$DUMP_FILE
+          mysqldump -h mysql -u root -p$$DB_ROOT_PASSWORD $$DB_NAME > $$DUMP_FILE
           test -s $$DUMP_FILE && rclone copy /backup gdrive:threads-backups/mysql --config /config/rclone/rclone.conf || echo 'Backup failed.'
           rm -f /backup/*.sql
           sleep 30
