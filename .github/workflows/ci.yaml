@@ -70,7 +70,7 @@ jobs:
           envs: AWS_ACCOUNT_ID,AWS_REGION,REPOSITORY
           script: |
             set -e
-            cd threads-api
+            cd api/threads
 
             REGISTRY_URL="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
 
@@ -83,7 +83,6 @@ jobs:
 
             docker compose -f docker-compose.yml up -d --remove-orphans
             docker exec threads-api npx prisma migrate deploy 
-            docker exec threads-nginx nginx -s reload
             docker system df
         env:
           AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
