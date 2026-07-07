@@ -18,7 +18,6 @@ import { pusherChannel } from "@/modules/pusher/channel/pusher-channel";
 import { pusherService } from "@/modules/pusher/service/pusher.service";
 import { reportRepository } from "@/modules/report/repository/report.repository";
 import { pineconeIndex } from "@/providers/pinecone.provider";
-import { redisService } from "@/providers/redis.provider";
 import { redisVersion } from "@/shared/redis-version";
 import { ReportStatus, ReportTargetType } from "@prisma/client";
 import { EVALUATION_JOB_NAME, QUEUE_NAME } from "../src/constants/queue";

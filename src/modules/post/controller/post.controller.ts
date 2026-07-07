@@ -17,6 +17,9 @@ import {
   PublicIdParamsDto,
   UsernameParamsDto
 } from "../dto/request/post.request";
+import { postActionService } from "../service/post-action.service";
+import { postFeedService } from "../service/post-feed.service";
+import { postUserService } from "../service/post-user.service";
 import { postService } from "../service/post.service";
 
 type SearchQueryDto = {
@@ -34,7 +37,7 @@ class PostController {
     const { after, take } = getPagination(req);
     const userId = await jwtService.requestAuthToken(req);
 
-    const { posts, pagination } = await postService.getNewsFeed({
+    const { posts, pagination } = await postFeedService.getNewsFeed({
       after: after ?? undefined,
       take,
       userId,
@@ -55,7 +58,7 @@ class PostController {
     }
 
     const { after, take } = getPagination(req);
-    const { posts, pagination } = await postService.getPostMe({
+    const { posts, pagination } = await postFeedService.getPostMe({
       after: after ?? undefined,
       take,
       userId,
@@ -75,7 +78,7 @@ class PostController {
     }
 
     const myUserId = await jwtService.requestAuthToken(req);
-    const { posts, pagination } = await postService.getPostsByUser({
+    const { posts, pagination } = await postUserService.getPostsByUser({
       after: after ?? undefined,
       take,
       userId: user.id,
@@ -91,7 +94,7 @@ class PostController {
   ) {
     const { after, take } = getPagination(req);
     const userId = await jwtService.requestAuthToken(req);
-    const { posts, pagination } = await postService.getReplies({
+    const { posts, pagination } = await postFeedService.getReplies({
       after: after ?? undefined,
       take,
       publicId: req.params.publicId,
@@ -112,7 +115,7 @@ class PostController {
     }
 
     const { after, take } = getPagination(req);
-    const { posts, pagination } = await postService.getRepliesByUser({
+    const { posts, pagination } = await postUserService.getRepliesByUser({
       after: after ?? undefined,
       take,
       userId,
@@ -134,7 +137,7 @@ class PostController {
     }
 
     const myUserId = await jwtService.requestAuthToken(req);
-    const { posts, pagination } = await postService.getRepliesByUser({
+    const { posts, pagination } = await postUserService.getRepliesByUser({
       after: after ?? undefined,
       take,
       userId: user.id,
@@ -155,7 +158,7 @@ class PostController {
     }
 
     const { after, take } = getPagination(req);
-    const { posts, pagination } = await postService.getQuote({
+    const { posts, pagination } = await postFeedService.getQuote({
       after: after ?? undefined,
       take,
       userId,
@@ -177,7 +180,7 @@ class PostController {
     }
 
     const myUserId = await jwtService.requestAuthToken(req);
-    const { posts, pagination } = await postService.getQuote({
+    const { posts, pagination } = await postFeedService.getQuote({
       after: after ?? undefined,
       take,
       userId: user.id,
@@ -211,7 +214,7 @@ class PostController {
 
   async getThread(req: Request<PublicIdParamsDto>, res: Response) {
     const userId = await jwtService.requestAuthToken(req);
-    const post = await postService.getById(req.params.publicId, userId);
+    const post = await postFeedService.getById(req.params.publicId, userId);
 
     if (!post) {
       return res.error(404, "Post not found");
@@ -222,7 +225,7 @@ class PostController {
 
   async getPost(req: Request<PublicIdParamsDto>, res: Response) {
     const userId = await jwtService.requestAuthToken(req);
-    const post = await postService.getById(req.params.publicId, userId);
+    const post = await postFeedService.getById(req.params.publicId, userId);
 
     if (!post) {
       return res.error(404, "Post not found");
@@ -267,9 +270,9 @@ class PostController {
       return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
     }
 
-    await postService.like(req.params.publicId, userId, req.body.isLiked);
+    const result = await postActionService.like(req.params.publicId, userId, req.body.isLiked);
     return res.success(200, POST_MESSAGE.RETRIEVED, {
-      liked: req.body.isLiked,
+      liked: result,
     });
   }
 
@@ -312,7 +315,7 @@ class PostController {
       return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
     }
 
-    await postService.save(req.params.publicId, userId, req.body.isSaved);
+    await postActionService.save(req.params.publicId, userId, req.body.isSaved);
     return res.success(200, POST_MESSAGE.RETRIEVED, {
       saved: req.body.isSaved,
     });
@@ -328,7 +331,7 @@ class PostController {
       return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
     }
 
-    await postService.hide(req.params.publicId, userId, req.body.isHidden);
+    await postActionService.hide(req.params.publicId, userId, req.body.isHidden);
     return res.success(200, POST_MESSAGE.RETRIEVED, {
       hidden: req.body.isHidden,
     });
@@ -344,7 +347,7 @@ class PostController {
       return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
     }
 
-    const report = await postService.report(req.params.publicId, {
+    const report = await postActionService.report(req.params.publicId, {
       ...req.body,
       reporterId: userId,
     });
@@ -361,7 +364,7 @@ class PostController {
       return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
     }
 
-    await postService.delete(req.params.publicId, userId);
+    await postActionService.delete(req.params.publicId, userId);
     return res.success(200, POST_MESSAGE.RETRIEVED, { deleted: true });
   }
 
@@ -375,7 +378,7 @@ class PostController {
       return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
     }
 
-    const post = await postService.update(
+    const post = await postActionService.update(
       req.params.publicId,
       userId,
       req.body,

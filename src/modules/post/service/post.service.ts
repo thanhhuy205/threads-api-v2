@@ -1,80 +1,37 @@
-import { QUEUE_NAME } from "@/constants/queue";
 import { redisKey } from "@/constants/resolve-key/redis-key";
 import {
   BadRequestException,
-  ForbiddenException,
   NotFoundException,
 } from "@/errors/error";
 import { baseLogger } from "@/middlewares/logger";
-import { evaluationProducer } from "@/modules/job/evaluation-post/producer/evaluation.producer";
 import { pineProducer } from "@/modules/job/pine-vector/producer/pine.producer";
 import { mixedBreadService } from "@/modules/mixed-bread/service/mixed-bread.service";
 import { notificationService } from "@/modules/notification-group/service/notification.service";
 import { pineconeService } from "@/modules/pinecone/service/pinecone.service";
-import { NewFeedType } from "@/modules/post/enum";
-import {
-  buildNewFeedWhere,
-  buildQuoteWhere,
-  buildRepliesWhere,
-  buildUserPostsWhere,
-} from "@/modules/post/helper";
 import type {
   CreateCirclePostPayload,
   CreatePostPayload
 } from "@/modules/post/interfaces/create-post-payload";
-import type { GetPostWithPublicId } from "@/modules/post/interfaces/get-post-with-public-id";
-import type { GetPostWithUser } from "@/modules/post/interfaces/get-post-with-user";
-import type { NewsFeedPayload } from "@/modules/post/interfaces/news-feed-payload";
 import { PostMapper } from "@/modules/post/mapper/post.mapper";
-import { reportService } from "@/modules/report/service/report.service";
 import { userActionLogService } from "@/modules/user-action-log/service/user-action-log.service";
 import { followerService } from "@/modules/user/service/follower.service";
 import { userService } from "@/modules/user/service/user.service";
 import { redisService } from "@/providers/redis.provider";
-import {
-  buildCursorPagination,
-  buildPagination,
-} from "@/shared/pagination/cursor-pagination";
 import { redisVersion } from "@/shared/redis-version";
 import { transactionService } from "@/shared/transaction/transaction.service";
 import {
-  ActionType,
-  InteractionType,
-  PostType,
   Prisma,
   ReplyPermission,
-  ReportStatus,
-  ReportTargetType,
   VisibilityPost,
 } from "@prisma/client";
-import { CreatePostDto, UpdatePostDto } from "../dto/post.dto";
+import { CreatePostDto } from "../dto/post.dto";
 import { normalizeTopic } from "../helper/nomalize.hepler";
-import { postInteractionRepository } from "../repository/post-interaction.repository";
 import { PostRecord, postRepository } from "../repository/post.repository";
-import { topicsPostRepository } from "../repository/topics-post.repository";
-
-type ReportSubmissionResult = {
-  id: string;
-  targetType: ReportTargetType;
-  targetId: string;
-  reason: string;
-  status: ReportStatus;
-  createdAt: Date;
-  evaluationQueued: boolean;
-};
-
-type CreatePostMeta = {
-  topic?: string;
-  mentionIds: string[];
-};
+import { postMentionService } from "./post-mention.service";
+import { postMetaService, type CreatePostMeta } from "./post-meta.service";
 
 class PostService {
-  private readonly postListCacheTtlSeconds = 60;
   private readonly similarPostsCacheTtlSeconds = 300;
-  private readonly circlePostTypes = new Set<PostType>([
-    PostType.CIRCLE,
-    PostType.CIRCLE_REPLY,
-  ]);
 
   private resolveReplyPermission(
     replyPermission?: ReplyPermission,
@@ -139,406 +96,19 @@ class PostService {
 
       if (!post.id) throw new BadRequestException("Failed to create post");
 
-      await this.attachPostMeta(tx, post.id, meta);
+      await postMetaService.attachPostMeta(tx, post.id, meta);
       return post;
     });
   }
 
-  private async validateMentions(
-    mentions?: CreatePostPayload["mentions"],
-  ): Promise<string[]> {
-    if (!mentions?.length) {
-      return [];
-    }
-
-    if (mentions.length > 5) {
-      throw new BadRequestException("Mentions must be at most 5 users");
-    }
-
-    const mentionIds = mentions.map((mention) => mention.userId);
-    const uniqueMentionIds = [...new Set(mentionIds)];
-
-    if (uniqueMentionIds.length !== mentionIds.length) {
-      throw new BadRequestException(
-        "Mentions must not contain duplicate users",
-      );
-    }
-
-    const existingIds = await userService.findExistingIds(uniqueMentionIds);
-
-    if (existingIds.length !== uniqueMentionIds.length) {
-      throw new BadRequestException("One or more mentioned users do not exist");
-    }
-
-    return uniqueMentionIds;
-  }
-
-  private async dispatchMentionNotifications({
-    mentionIds,
-    actorId,
-    username,
-    avatar,
-    targetPostId,
-    originPostId,
-    postOwnerId,
-    content,
-  }: {
-    mentionIds: string[];
-    actorId: string;
-    username: string;
-    avatar?: string;
-    targetPostId: string;
-    originPostId: string;
-    postOwnerId: string;
-    content: string;
-  }): Promise<void> {
-    if (!mentionIds.length) return;
-
-    const recipientIds = mentionIds.filter((recipientId) => recipientId !== actorId);
-    if (!recipientIds.length) return;
-
-    const results = await Promise.allSettled(
-      recipientIds.map((recipientId) =>
-        notificationService.handleMention({
-          mentionContent: content,
-          actorId,
-          recipientId,
-          targetPostId,
-          originPostId,
-          username,
-          avatar,
-          postOwnerId,
-        }),
-      ),
-    );
-
-    results.forEach((result, index) => {
-      if (result.status === "fulfilled") return;
-      const recipientId = recipientIds[index];
-      const message =
-        result.reason instanceof Error ? result.reason.message : String(result.reason);
-      baseLogger.error(
-        `[mention-notification] Failed to enqueue mention notification for recipient ${recipientId}: ${message}`,
-      );
-    });
-  }
-
-  private async attachPostMeta(
-    tx: Prisma.TransactionClient,
-    postId: number,
-    payload?: CreatePostMeta,
-  ): Promise<void> {
-    if (!payload) return;
-    if (payload.mentionIds.length) {
-      await tx.postMention.createMany({
-        data: payload.mentionIds.map((userId) => ({
-          postId,
-          userId,
-        })),
-      });
-    }
-
-    const normalizedTopic = normalizeTopic(payload.topic);
-
-    if (normalizedTopic) {
-      await topicsPostRepository.create(
-        {
-          postId,
-          topicName: normalizedTopic,
-        },
-        tx,
-      );
-    }
-
-  }
-
-  private async paginatePosts({
-    after,
-    take,
-    where,
-    userId,
-  }: {
-    after?: string;
-    take: number;
-    where: Prisma.PostWhereInput;
-    userId?: string | null;
-  }) {
-    const { currentAfter, currentLimit } = buildPagination({ after, take });
-
-    const posts = await postRepository.findAll({
-      after: currentAfter ?? undefined,
-      take: currentLimit + 1,
-      where,
-      props: {
-        userId,
-        orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-      },
-    });
-
-    const authorIds = [...new Set(posts.map((post) => post.userId))];
-    const following = await followerService.getUserFollowingPostByAuth(userId ?? "", authorIds);
-    const follower = await followerService.getUserFollowersByAuth(userId ?? "", authorIds);
-    const followingSet = new Set(
-      following.map((row) => row.followingId)
-    );
-    const followerSet = new Set(
-      follower.map((row) => row.userId)
-    );
-
-    // Poll
-    const mapPostIdToPollId = new Map<string, number>();
-    const voteCountMap = new Map<number, any>()
-    posts.forEach((post) => {
-      if (post.isSurvey && post.poll?.id) {
-        mapPostIdToPollId.set(post.publicId, post.poll.id);
-      }
-    });
-
-    if (mapPostIdToPollId.size > 0) {
-      const pollIds = Array.from(mapPostIdToPollId.values())
-      const keys = pollIds.map(id => redisKey.poll.countVote(id))
-      const voteCountAll = await redisService.mGet(keys);
-      console.log(voteCountAll);
-      pollIds.forEach((pollId, index) => {
-        if (voteCountAll[index] !== null) {
-          voteCountMap.set(pollId, JSON.parse(voteCountAll[index]))
-        }
-      })
-    }
-
-    console.log(voteCountMap)
-    const data = posts.map((post) => ({
-      ...post,
-      isFollowingAuthor: followingSet.has(post.userId),
-      isFollowedByAuthor: followerSet.has(post.userId),
-      poll: post?.poll && mapPostIdToPollId.has(post.publicId) ? {
-        ...post.poll,
-        voteCount: voteCountMap.get(post?.poll.id) ?? post.poll?.voteCount ?? 0,
-      } : null
-    }));
-
-
-    const rows = data.map((post) =>
-      PostMapper.toFeedResponse(post, userId ?? undefined),
-    );
-    const paginationResult = buildCursorPagination({
-      rows,
-      take: currentLimit,
-      getAfter: (item) => item.publicId,
-    });
-
-    return {
-      posts: paginationResult.rows,
-      pagination: paginationResult.pagination,
-    };
-  }
-
-  private cacheSegment(value?: string | null) {
-    return encodeURIComponent(value ?? "none");
-  }
-
-  private buildPostListNamespace(params: {
-    scope: string;
-    after?: string;
-    take: number;
-    userId?: string | null;
-    extra?: string;
-  }) {
-    return redisKey.post.list(
-      this.cacheSegment(params.scope),
-      this.cacheSegment(params.after),
-      params.take,
-      this.cacheSegment(params.userId),
-      this.cacheSegment(params.extra),
-    );
-  }
-
-  async getNewsFeed({
-    after,
-    take,
-    userId,
-    feedType = NewFeedType.FOR_YOU,
-  }: NewsFeedPayload) {
-    const where = buildNewFeedWhere({
-      after,
-      userId,
-      feedType,
-    });
-    baseLogger.info(
-      `Getting news feed for user ${JSON.stringify(userId)} with feed type ${JSON.stringify(feedType)}. Generated where clause: ${JSON.stringify(where)}`,
-    );
-    const namespace = this.buildPostListNamespace({
-      scope: "news-feed",
-      after,
-      take,
-      userId,
-      extra: feedType,
-    });
-    return redisVersion.wrapperCacheVersion(
-      namespace,
-      this.postListCacheTtlSeconds,
-      () =>
-        this.paginatePosts({
-          userId,
-          after,
-          take,
-          where,
-        }),
-    );
-  }
-
-  async getPostMe({ after, take, userId }: GetPostWithUser) {
-    const namespace = this.buildPostListNamespace({
-      scope: "post-me",
-      after,
-      take,
-      userId,
-      extra: userId,
-    });
-
-    return redisVersion.wrapperCacheVersion(
-      namespace,
-      this.postListCacheTtlSeconds,
-      () =>
-        this.paginatePosts({
-          after,
-          take,
-          userId,
-          where: buildUserPostsWhere({
-            after,
-            userId,
-            postType: PostType.POST,
-          }),
-        }),
-    );
-  }
-
-  async getPostsByUser({ after, take, userId, myUserId }: GetPostWithUser) {
-    const namespace = this.buildPostListNamespace({
-      scope: "post-user",
-      after,
-      take,
-      userId: myUserId,
-      extra: userId,
-    });
-    return redisVersion.wrapperCacheVersion(
-      namespace,
-      this.postListCacheTtlSeconds,
-      () =>
-        this.paginatePosts({
-          after,
-          take,
-          userId: myUserId,
-          where: buildUserPostsWhere({
-            after,
-            userId,
-            postType: PostType.POST,
-          }),
-        }),
-    );
-  }
-
-  async getRepliesByUser({ after, take, userId, myUserId }: GetPostWithUser) {
-    const namespace = this.buildPostListNamespace({
-      scope: "reply-user",
-      after,
-      take,
-      userId: myUserId,
-      extra: userId,
-    });
-    return redisVersion.wrapperCacheVersion(
-      namespace,
-      this.postListCacheTtlSeconds,
-      () =>
-        this.paginatePosts({
-          after,
-          take,
-          userId: myUserId,
-          where: buildUserPostsWhere({
-            after,
-            userId,
-            postType: PostType.REPLY,
-          }),
-        }),
-    );
-  }
-
-  async getReplies({ after, take, publicId, userId }: GetPostWithPublicId) {
-    const namespace = this.buildPostListNamespace({
-      scope: "reply-post",
-      after,
-      take,
-      userId,
-      extra: publicId,
-    });
-    return redisVersion.wrapperCacheVersion(
-      namespace,
-      this.postListCacheTtlSeconds,
-      () =>
-        this.paginatePosts({
-          after,
-          take,
-          userId,
-          where: buildRepliesWhere({
-            after,
-            publicId,
-          }),
-        }),
-    );
-  }
-
-  async getCircleReplies({ after, take, publicId }: GetPostWithPublicId) {
-    const namespace = this.buildPostListNamespace({
-      scope: "reply-circle-post",
-      after,
-      take,
-      extra: publicId,
-    });
-    return redisVersion.wrapperCacheVersion(
-      namespace,
-      this.postListCacheTtlSeconds,
-      () =>
-        this.paginatePosts({
-          after,
-          take,
-          where: {
-            parentPublicId: publicId,
-            type: PostType.CIRCLE_REPLY,
-          },
-        }),
-    );
-  }
-
-  async getQuote({ after, take, userId, myUserId }: GetPostWithUser) {
-    const namespace = this.buildPostListNamespace({
-      scope: "quote-user",
-      after,
-      take,
-      userId: myUserId,
-      extra: userId,
-    });
-    return redisVersion.wrapperCacheVersion(
-      namespace,
-      this.postListCacheTtlSeconds,
-      () =>
-        this.paginatePosts({
-          after,
-          take,
-          userId: myUserId,
-          where: buildQuoteWhere({
-            after,
-            userId,
-          }),
-        }),
-    );
-  }
+  // ---- Creation flows ----
 
   async create(payload: CreatePostPayload) {
     const snapshot = await this.resolveUser(payload.userId);
     const options = this.resolvePostOptions(payload);
     const normalizedTopic = normalizeTopic(payload.topic);
     //Validate mentions
-    const mentionIds = await this.validateMentions(payload.mentions);
+    const mentionIds = await postMentionService.validateMentions(payload.mentions);
 
     // Create post and attach meta in a transaction
     const post = await this.createInTransaction(
@@ -561,7 +131,7 @@ class PostService {
           source: "POST",
         },
       }),
-      this.dispatchMentionNotifications({
+      postMentionService.dispatchMentionNotifications({
         mentionIds,
         actorId: payload.userId,
         username: snapshot.username,
@@ -616,7 +186,7 @@ class PostService {
 
   async reply(publicId: string, payload: CreatePostDto & { userId: string }) {
     const snapshot = await this.resolveUser(payload.userId);
-    const mentionIds = await this.validateMentions(payload.mentions);
+    const mentionIds = await postMentionService.validateMentions(payload.mentions);
     const options = this.resolvePostOptions(payload);
     const existPost = await postRepository.findByPublicId(publicId);
     if (!existPost) {
@@ -637,7 +207,7 @@ class PostService {
     );
     baseLogger.info("Created reply post, adding notification group");
     const notificationTasks: Promise<unknown>[] = [
-      this.dispatchMentionNotifications({
+      postMentionService.dispatchMentionNotifications({
         mentionIds,
         actorId: payload.userId,
         username: snapshot.username,
@@ -683,7 +253,7 @@ class PostService {
     payload: CreatePostDto & { userId: string },
   ) {
     const snapshot = await this.resolveUser(payload.userId);
-    const mentionIds = await this.validateMentions(payload.mentions);
+    const mentionIds = await postMentionService.validateMentions(payload.mentions);
     const options = this.resolvePostOptions({
       visibility: payload.visibility ?? VisibilityPost.CIRCLE,
       replyPermission: payload.replyPermission ?? ReplyPermission.EVERYONE,
@@ -708,15 +278,6 @@ class PostService {
     );
 
     baseLogger.info("Created circle reply post, adding notification group");
-    // await notificationService.handleNewComment({
-
-    //   actorId: payload.userId,
-    //   recipientId: existPost.userId,
-    //   targetPostId: post.publicId,
-    //   originPostId: existPost.publicId,
-    //   postOwnerId: existPost.userId,
-    //   username: snapshot.username,
-    // });
 
     await redisVersion.bumpPostListCacheVersion(redisKey.post.listNamespace());
     return {
@@ -766,7 +327,7 @@ class PostService {
   async quote(publicId: string, payload: CreatePostDto & { userId: string }) {
     const snapshot = await this.resolveUser(payload.userId);
     const originPost = await this.resolveOriginPost(publicId);
-    const mentionIds = await this.validateMentions(payload.mentions);
+    const mentionIds = await postMentionService.validateMentions(payload.mentions);
     const options = this.resolvePostOptions(payload);
     const resolvedOriginPostId =
       originPost.rootPostId ?? originPost.originPostId ?? originPost.id;
@@ -794,7 +355,7 @@ class PostService {
           originPostId: resolvedOriginPostId,
         },
       }),
-      this.dispatchMentionNotifications({
+      postMentionService.dispatchMentionNotifications({
         mentionIds,
         actorId: payload.userId,
         username: snapshot.username,
@@ -841,19 +402,6 @@ class PostService {
 
   async count(userId: string) {
     return postRepository.countPostBydUserId(userId);
-  }
-
-  async getById(publicId: string, userId?: string | null) {
-    const post = await postRepository.findByPublicId(publicId, userId);
-
-    if (!post) {
-      return null;
-    }
-
-    return {
-      id: post.id,
-      ...PostMapper.toFeedResponse(post, userId ?? undefined),
-    };
   }
 
   async getSimilarPosts(
@@ -923,331 +471,10 @@ class PostService {
     return result;
   }
 
-  async hide(
-    publicId: string,
-    userId: string,
-    isHidden: boolean,
-  ): Promise<void> {
-    const post = await postRepository.findByPublicId(publicId);
-    if (!post) {
-      throw new NotFoundException("Post not found");
-    }
-    if (post.visibility === VisibilityPost.CIRCLE) {
-      throw new BadRequestException("Circle posts cannot be hidden");
-    }
-    if (post.userId === userId) {
-      throw new ForbiddenException("Users cannot hide their own posts");
-    }
-
-    const hiddenPayload = {
-      userId,
-      postId: post.id,
-      type: InteractionType.HIDE,
-    };
-
-    if (isHidden) {
-      const saved = await postInteractionRepository.findByStatus({
-        userId,
-        postId: post.id,
-        type: InteractionType.SAVE,
-      });
-
-      if (saved) {
-        throw new BadRequestException(
-          "You must unsave this post before hiding it",
-        );
-      }
-
-      await postInteractionRepository.create(hiddenPayload);
-    } else {
-      const hidden = await postInteractionRepository.findByStatus(hiddenPayload);
-
-      if (!hidden) {
-        throw new BadRequestException("No hidden post found");
-      }
-
-      await postInteractionRepository.deleteByUserPostAndType(hiddenPayload);
-    }
-
-    await redisVersion.bumpPostListCacheVersion(redisKey.post.listNamespace());
-
-  }
-
-  async actionAdmin(publicId: string, action: {
-    isHidden?: boolean;
-    isDeleted?: boolean;
-    isDisinformation?: boolean;
-  }): Promise<void> {
-    const post = await postRepository.findByPublicId(publicId);
-    if (!post) {
-      throw new Error("Post not found");
-    }
-    if (post.visibility === VisibilityPost.CIRCLE) {
-      throw new Error("Circle posts cannot be hidden");
-    }
-
-    await postRepository.updateStatusByPublicId(publicId, {
-      ...action
-    });
-    await redisVersion.bumpPostListCacheVersion(redisKey.post.listNamespace());
-  }
-
-  async save(
-    publicId: string,
-    userId: string,
-    isSaved: boolean,
-  ): Promise<void> {
-    const post = await postRepository.findByPublicId(publicId);
-    if (!post) {
-      throw new NotFoundException("Post not found");
-    }
-
-    const savedPayload = {
-      userId,
-      postId: post.id,
-      type: InteractionType.SAVE,
-    };
-
-    if (isSaved) {
-      await postInteractionRepository.create(savedPayload);
-    } else {
-      const saved = await postInteractionRepository.findByStatus(savedPayload);
-
-      if (!saved) {
-        throw new BadRequestException("No saved post found");
-      }
-
-      await postInteractionRepository.deleteByUserPostAndType(savedPayload);
-    }
-
-    await redisVersion.bumpPostListCacheVersion(redisKey.post.listNamespace());
-  }
-
-  private resolveDeleteActionType(postType: PostType): ActionType {
-    if (postType === PostType.QUOTE) {
-      return ActionType.QUOTE_DELETED;
-    }
-
-    if (postType === PostType.REPOST) {
-      return ActionType.SHARE_DELETED;
-    }
-
-    return ActionType.POST_DELETED;
-  }
-
-  // Kỉ thuật lạ l cập nhập like theo pop
-  async like(
-    publicId: string,
-    userId: string,
-    isLiked: boolean,
-  ): Promise<number> {
-    const likeKey = redisKey.post.likesSet(publicId);
-    const countKey = redisKey.post.likeCount(publicId);
-
-    baseLogger.info(`User ${userId} is ${isLiked ? "liking" : "unliking"} post ${publicId}`);
-    baseLogger.info(`Like key: ${likeKey}, Count key: ${countKey}`);
-
-    const event = JSON.stringify({
-      postPublicId: publicId,
-      createdAt: new Date().toISOString(),
-      userId,
-      isLiked,
-    });
-    const changed = await redisService.eval(
-      `
-        local changed
-        if ARGV[2] == "1" then
-          changed = redis.call("SADD", KEYS[1], ARGV[1])
-          if changed == 1 then
-            redis.call("INCR", KEYS[2])
-          end
-        else
-          changed = redis.call("SREM", KEYS[1], ARGV[1])
-          if changed == 1 then
-            redis.call("DECR", KEYS[2])
-          end
-        end
-
-        if changed == 1 then
-          redis.call("LPUSH", KEYS[3], ARGV[3])
-        end
-
-        return changed
-      `,
-      {
-        keys: [likeKey, countKey, QUEUE_NAME.POST_LIKE_EVENT_QUEUE],
-        arguments: [userId, isLiked ? "1" : "0", event],
-      },
-    );
-
-    baseLogger.info({
-      changed,
-      isLiked,
-      postPublicId: publicId,
-      userId,
-    }, "Updated like state and enqueued event");
-
-    if (changed === 1 && isLiked) {
-      await userActionLogService.logLikeCreated({
-        userId,
-        targetId: publicId,
-        metadata: {
-          postPublicId: publicId,
-        },
-      });
-    }
-    const likeCount = await redisService.sCard(likeKey);
-    const post = await postRepository.findByPublicId(publicId);
-    if (!post) {
-      throw new NotFoundException("Post not found");
-    }
-
-    await redisVersion.bumpPostListCacheVersion(redisKey.post.listNamespace());
-    return likeCount + (post.likesCount ?? 0);
-  }
-
-  async delete(publicId: string, userId: string): Promise<void> {
-    const post = await postRepository.findDeleteTargetByPublicId(publicId);
-
-    if (!post) {
-      throw new NotFoundException("Post not found");
-    }
-
-    if (post.userId !== userId) {
-      throw new ForbiddenException("Users can only delete their own posts");
-    }
-
-    await postRepository.softDeleteByPublicId(publicId);
-    await userActionLogService.logAction({
-      userId,
-      type: this.resolveDeleteActionType(post.type),
-      targetId: publicId,
-      metadata: {
-        postType: post.type,
-      },
-    });
-    await redisVersion.bumpPostListCacheVersion(redisKey.post.listNamespace());
-  }
-
-  async update(
-    publicId: string,
-    userId: string,
-    payload: UpdatePostDto,
-  ): Promise<PostRecord> {
-    const post = await postRepository.findByPublicId(publicId);
-
-    if (!post) {
-      throw new NotFoundException("Post not found");
-    }
-
-    if (post.userId !== userId) {
-      throw new ForbiddenException("Users can only update their own posts");
-    }
-
-    const updatedPost = await postRepository.updateByPublicId(publicId, payload);
-    await redisVersion.bumpPostListCacheVersion(redisKey.post.listNamespace());
-    return updatedPost;
-  }
-
-  async report(
-    publicId: string,
-    payload: {
-      reason: string;
-      type: ReportTargetType;
-      reporterId: string;
-    },
-  ): Promise<ReportSubmissionResult> {
-    if (payload.type === ReportTargetType.USER) {
-      const targetUser = await userService.findByUserId(publicId);
-      if (!targetUser) {
-        throw new NotFoundException("User not found");
-      }
-
-      if (targetUser.id === payload.reporterId) {
-        throw new ForbiddenException("Users cannot report themselves");
-      }
-
-      const report = await reportService.create({
-        reporterId: payload.reporterId,
-        targetType: ReportTargetType.USER,
-        targetId: targetUser.id,
-        reason: payload.reason,
-        status: ReportStatus.PENDING,
-      });
-
-      return {
-        id: report.id,
-        targetType: report.targetType,
-        targetId: report.targetId,
-        reason: report.reason,
-        status: report.status,
-        createdAt: report.createdAt,
-        evaluationQueued: false,
-      };
-    }
-
-    const targetPost = await postRepository.findReportTargetByPublicId(publicId);
-    if (!targetPost) {
-      throw new NotFoundException("Post not found");
-    }
-
-    if (targetPost.userId === payload.reporterId) {
-      throw new ForbiddenException("Users cannot report their own posts");
-    }
-
-    const isCirclePost = this.circlePostTypes.has(targetPost.type);
-    if (payload.type === ReportTargetType.POST && isCirclePost) {
-      throw new BadRequestException(
-        "type post only supports non-circle posts",
-      );
-    }
-
-    if (payload.type === ReportTargetType.CIRCLE && !isCirclePost) {
-      throw new BadRequestException(
-        "type circle only supports circle posts",
-      );
-    }
-    const existingReport = await reportService.findExistingReport({
-      reporterId: payload.reporterId,
-      targetType: payload.type,
-      targetId: targetPost.publicId,
-    });
-
-    if (existingReport) {
-      throw new BadRequestException("You have already reported this content");
-    }
-    const report = await reportService.create({
-      reporterId: payload.reporterId,
-      targetType: payload.type,
-      targetId: targetPost.publicId,
-      reason: payload.reason,
-      status: ReportStatus.PENDING,
-    });
-
-    await evaluationProducer.enqueueEvaluationReport({
-      reportId: report.id,
-      type: payload.type,
-      targetPublicId: targetPost.publicId,
-      targetContent: targetPost.content,
-      reason: payload.reason,
-      reporterId: payload.reporterId,
-      reportedUserId: targetPost.userId,
-    });
-
-    return {
-      id: report.id,
-      targetType: report.targetType,
-      targetId: report.targetId,
-      reason: report.reason,
-      status: report.status,
-      createdAt: report.createdAt,
-      evaluationQueued: true,
-    };
-  }
-
   async findById(id: number): Promise<{ publicId: string } | null> {
     return postRepository.findById(id);
   }
+
   async searchByContent({
     query,
     after,

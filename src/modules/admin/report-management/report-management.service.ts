@@ -1,5 +1,5 @@
 import { NotFoundException } from "@/errors/error";
-import { postService } from "@/modules/post/service/post.service";
+import { postActionService } from "@/modules/post/service/post-action.service";
 import { buildPaginationResponse } from "@/shared/pagination/pagination";
 import { ReportStatus, ReportTargetType } from "@prisma/client";
 import type { ModerateReportDataDto } from "./dto/response/moderate-report.response.dto";
@@ -67,19 +67,19 @@ class ReportManagementService {
         break;
       case "hide_post":
         status = ReportStatus.RESOLVED;
-        await postService.actionAdmin(report.targetId, {
+        await postActionService.actionAdmin(report.targetId, {
           isHidden: true,
         });
         break;
       case "delete_post":
         status = ReportStatus.RESOLVED;
-        await postService.actionAdmin(report.targetId, {
+        await postActionService.actionAdmin(report.targetId, {
           isDeleted: true,
         });
         break;
       case "mark_disinformation":
         status = ReportStatus.RESOLVED;
-        await postService.actionAdmin(report.targetId, {
+        await postActionService.actionAdmin(report.targetId, {
           isDisinformation: true,
         });
         break;

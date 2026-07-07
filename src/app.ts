@@ -3,7 +3,6 @@ import { corsOrigin } from '@/middlewares/cors';
 import { errorHandler } from '@/middlewares/error-handler';
 import { logger } from '@/middlewares/logger';
 import { notFoundHandler } from '@/middlewares/not-found';
-import { apiLimiter } from '@/middlewares/ratelimit';
 import router from '@/routes/index';
 import compression from 'compression';
 import cors from 'cors';
@@ -38,7 +37,7 @@ app.use(logger);
 app.use(responseHandler);
 
 
-app.use('/api/v1', apiLimiter, router);
+app.use('/api/v1', router);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

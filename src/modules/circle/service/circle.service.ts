@@ -11,6 +11,7 @@ import { checkCirclePermission } from "@/modules/circle/policy/check-circle-perm
 import { CIRCLE_LEVEL_CONFIG, toCircleLevel } from "@/modules/circle/policy/check-level-up";
 import { emailProducer } from "@/modules/job/email/producer/email.producer";
 import { notificationService } from "@/modules/notification-group/service/notification.service";
+import { postFeedService } from "@/modules/post/service/post-feed.service";
 import { postService } from "@/modules/post/service/post.service";
 import { pusherService } from "@/modules/pusher/service/pusher.service";
 import { userActionLogService } from "@/modules/user-action-log/service/user-action-log.service";
@@ -521,7 +522,7 @@ class CircleService {
     }
 
     const take = query.take ?? 20;
-    const { posts, pagination } = await postService.getCircleReplies({
+    const { posts, pagination } = await postFeedService.getCircleReplies({
       after: query.after ?? undefined,
       take,
       publicId: postPublicId,
