@@ -19,6 +19,7 @@ import { pusherService } from "@/modules/pusher/service/pusher.service";
 import { reportRepository } from "@/modules/report/repository/report.repository";
 import { pineconeIndex } from "@/providers/pinecone.provider";
 import { redisService } from "@/providers/redis.provider";
+import { redisVersion } from "@/shared/redis-version";
 import { ReportStatus, ReportTargetType } from "@prisma/client";
 import { EVALUATION_JOB_NAME, QUEUE_NAME } from "../src/constants/queue";
 import { createWorker } from "../src/providers/bullmq.provider";
@@ -136,7 +137,7 @@ const processEvaluationPost = async (job: EvaluationPostJob) => {
         ]);
         const post = await postService.findById(job.postId);
         if (post) {
-            await redisService.incr(redisKey.post.listVersion());
+            await redisVersion.bumpPostListCacheVersion(redisKey.post.listNamespace());
         }
         await Promise.all([
             circleEnergyService.addExpAndHp(circle.id, formatResult.expDelta, formatResult.hpDelta),
@@ -189,7 +190,7 @@ const processEvaluationReport = async (job: EvaluationReportJob) => {
             [ReportTargetType.POST, ReportTargetType.CIRCLE].includes(job.type as any)
         ) {
             await postRepository.updateIsHidden(job.targetPublicId, true);
-            await redisService.incr(redisKey.post.listVersion());
+            await redisVersion.bumpPostListCacheVersion(redisKey.post.listNamespace());
             await pusherService.trigger(pusherChannel.privateNotification(job.reporterId), 'report-processed', {
                 reportId: job.reportId,
                 targetPublicId: job.targetPublicId,
@@ -207,7 +208,7 @@ const processEvaluationReport = async (job: EvaluationReportJob) => {
 
         if (result.isDisinformation) {
             await postRepository.updateIsDisinformation(job.targetPublicId, true);
-            await redisService.incr(redisKey.post.listVersion());
+            await redisVersion.bumpPostListCacheVersion(redisKey.post.listNamespace());
             await pusherService.trigger(pusherChannel.privateNotification(job.reporterId), 'report-processed', {
                 reportId: job.reportId,
                 targetPublicId: job.targetPublicId,

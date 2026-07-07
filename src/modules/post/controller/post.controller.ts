@@ -14,9 +14,8 @@ import type {
 import {
   CursorPaginationQueryDto,
   NewsFeedQueryDto,
-  PostIdParamsDto,
   PublicIdParamsDto,
-  UsernameParamsDto,
+  UsernameParamsDto
 } from "../dto/request/post.request";
 import { postService } from "../service/post.service";
 
@@ -242,17 +241,6 @@ class PostController {
     );
 
     return res.success(200, POST_MESSAGE.RETRIEVED, posts);
-  }
-
-  async getJudgeStatus(req: Request<PostIdParamsDto>, res: Response) {
-    const userId = req.user?.sub;
-
-    if (!userId) {
-      return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
-    }
-
-    const judgeStatus = await postService.getJudgeStatus(req.params.postId);
-    return res.success(200, "Judge status retrieved successfully", judgeStatus);
   }
 
   async replyPost(

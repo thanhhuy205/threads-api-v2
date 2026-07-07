@@ -11,7 +11,6 @@ const USER_PERMISSION_CACHE_SUFFIX = ":permission";
 const POST_PREFIX = "post:";
 const POST_LIKES_SUFFIX = ":likes";
 const POST_LIKE_COUNT_SUFFIX = ":likeCount";
-const POST_LIST_CACHE_VERSION_KEY = "post:list:version";
 const LIKE_SYNC_INIT_LOCK = "like:sync:init:lock";
 const USER_POST_INTERACTION_PREFIX = "user:";
 const USER_POST_INTERACTION_POST_SEGMENT = ":post:";
@@ -49,16 +48,15 @@ export const redisKey = {
 
     replyCount: (publicId: string) => `${POST_PREFIX}${publicId}:replyCount`,
     similars: (publicId: string) => `${POST_PREFIX}${publicId}:similars`,
-    listVersion: () => POST_LIST_CACHE_VERSION_KEY,
+    listNamespace: () => `${POST_PREFIX}list`,
     list: (
-      version: number,
       scope: string,
       after: string,
       take: number,
       userId: string,
       extra: string,
     ) =>
-      `${POST_PREFIX}list:v${version}:scope:${scope}:after:${after}:take:${take}:user:${userId}:extra:${extra}`,
+      `${POST_PREFIX}list:scope:${scope}:after:${after}:take:${take}:user:${userId}:extra:${extra}`,
   },
   interaction: {
     userPost: (userId: string, postId: string, type: RedisInteractionType) =>

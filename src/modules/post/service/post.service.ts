@@ -35,6 +35,7 @@ import {
   buildCursorPagination,
   buildPagination,
 } from "@/shared/pagination/cursor-pagination";
+import { redisVersion } from "@/shared/redis-version";
 import { transactionService } from "@/shared/transaction/transaction.service";
 import {
   ActionType,
@@ -74,17 +75,6 @@ class PostService {
     PostType.CIRCLE,
     PostType.CIRCLE_REPLY,
   ]);
-
-  async getJudgeStatus(postId: number) {
-    return {
-      postId,
-      status: "pending" as "pending" | "done",
-      score: undefined,
-      category: undefined,
-      hpDelta: undefined,
-      expDelta: undefined,
-    };
-  }
 
   private resolveReplyPermission(
     replyPermission?: ReplyPermission,
@@ -303,7 +293,6 @@ class PostService {
         mapPostIdToPollId.set(post.publicId, post.poll.id);
       }
     });
-    console.log("mapPostIdToPollId", mapPostIdToPollId)
 
     if (mapPostIdToPollId.size > 0) {
       const pollIds = Array.from(mapPostIdToPollId.values())
@@ -348,49 +337,20 @@ class PostService {
     return encodeURIComponent(value ?? "none");
   }
 
-  private async getPostListCacheVersion() {
-    const versionRaw = await redisService.get(redisKey.post.listVersion());
-    const version = Number(versionRaw);
-    return Number.isFinite(version) && version >= 0 ? version : 0;
-  }
-
-  private async bumpPostListCacheVersion() {
-    await redisService.incr(redisKey.post.listVersion());
-  }
-
-  private async getCachedPostList(params: {
+  private buildPostListNamespace(params: {
     scope: string;
     after?: string;
     take: number;
     userId?: string | null;
     extra?: string;
-    resolver: () => Promise<{ posts: any[]; pagination: any }>;
   }) {
-    const version = await this.getPostListCacheVersion();
-    const cacheKey = redisKey.post.list(
-      version,
+    return redisKey.post.list(
       this.cacheSegment(params.scope),
       this.cacheSegment(params.after),
       params.take,
       this.cacheSegment(params.userId),
       this.cacheSegment(params.extra),
     );
-    const cached = await redisService.get(cacheKey);
-
-    if (cached) {
-      try {
-        return JSON.parse(cached) as { posts: any[]; pagination: any };
-      } catch {
-        // Ignore malformed cache and read fresh data.
-      }
-    }
-
-    const result = await params.resolver();
-    await redisService.set(cacheKey, JSON.stringify(result), {
-      EX: this.postListCacheTtlSeconds,
-    });
-
-    return result;
   }
 
   async getNewsFeed({
@@ -407,30 +367,39 @@ class PostService {
     baseLogger.info(
       `Getting news feed for user ${JSON.stringify(userId)} with feed type ${JSON.stringify(feedType)}. Generated where clause: ${JSON.stringify(where)}`,
     );
-    return this.getCachedPostList({
+    const namespace = this.buildPostListNamespace({
       scope: "news-feed",
       after,
       take,
       userId,
       extra: feedType,
-      resolver: () =>
+    });
+    return redisVersion.wrapperCacheVersion(
+      namespace,
+      this.postListCacheTtlSeconds,
+      () =>
         this.paginatePosts({
           userId,
           after,
           take,
           where,
         }),
-    });
+    );
   }
 
   async getPostMe({ after, take, userId }: GetPostWithUser) {
-    return this.getCachedPostList({
+    const namespace = this.buildPostListNamespace({
       scope: "post-me",
       after,
       take,
       userId,
       extra: userId,
-      resolver: () =>
+    });
+
+    return redisVersion.wrapperCacheVersion(
+      namespace,
+      this.postListCacheTtlSeconds,
+      () =>
         this.paginatePosts({
           after,
           take,
@@ -441,17 +410,21 @@ class PostService {
             postType: PostType.POST,
           }),
         }),
-    });
+    );
   }
 
   async getPostsByUser({ after, take, userId, myUserId }: GetPostWithUser) {
-    return this.getCachedPostList({
+    const namespace = this.buildPostListNamespace({
       scope: "post-user",
       after,
       take,
       userId: myUserId,
       extra: userId,
-      resolver: () =>
+    });
+    return redisVersion.wrapperCacheVersion(
+      namespace,
+      this.postListCacheTtlSeconds,
+      () =>
         this.paginatePosts({
           after,
           take,
@@ -462,17 +435,21 @@ class PostService {
             postType: PostType.POST,
           }),
         }),
-    });
+    );
   }
 
   async getRepliesByUser({ after, take, userId, myUserId }: GetPostWithUser) {
-    return this.getCachedPostList({
+    const namespace = this.buildPostListNamespace({
       scope: "reply-user",
       after,
       take,
       userId: myUserId,
       extra: userId,
-      resolver: () =>
+    });
+    return redisVersion.wrapperCacheVersion(
+      namespace,
+      this.postListCacheTtlSeconds,
+      () =>
         this.paginatePosts({
           after,
           take,
@@ -483,17 +460,21 @@ class PostService {
             postType: PostType.REPLY,
           }),
         }),
-    });
+    );
   }
 
   async getReplies({ after, take, publicId, userId }: GetPostWithPublicId) {
-    return this.getCachedPostList({
+    const namespace = this.buildPostListNamespace({
       scope: "reply-post",
       after,
       take,
       userId,
       extra: publicId,
-      resolver: () =>
+    });
+    return redisVersion.wrapperCacheVersion(
+      namespace,
+      this.postListCacheTtlSeconds,
+      () =>
         this.paginatePosts({
           after,
           take,
@@ -503,16 +484,20 @@ class PostService {
             publicId,
           }),
         }),
-    });
+    );
   }
 
   async getCircleReplies({ after, take, publicId }: GetPostWithPublicId) {
-    return this.getCachedPostList({
+    const namespace = this.buildPostListNamespace({
       scope: "reply-circle-post",
       after,
       take,
       extra: publicId,
-      resolver: () =>
+    });
+    return redisVersion.wrapperCacheVersion(
+      namespace,
+      this.postListCacheTtlSeconds,
+      () =>
         this.paginatePosts({
           after,
           take,
@@ -521,17 +506,21 @@ class PostService {
             type: PostType.CIRCLE_REPLY,
           },
         }),
-    });
+    );
   }
 
   async getQuote({ after, take, userId, myUserId }: GetPostWithUser) {
-    return this.getCachedPostList({
+    const namespace = this.buildPostListNamespace({
       scope: "quote-user",
       after,
       take,
       userId: myUserId,
       extra: userId,
-      resolver: () =>
+    });
+    return redisVersion.wrapperCacheVersion(
+      namespace,
+      this.postListCacheTtlSeconds,
+      () =>
         this.paginatePosts({
           after,
           take,
@@ -541,7 +530,7 @@ class PostService {
             userId,
           }),
         }),
-    });
+    );
   }
 
   async create(payload: CreatePostPayload) {
@@ -582,7 +571,7 @@ class PostService {
         postOwnerId: payload.userId,
         content: payload.content,
       }),
-      this.bumpPostListCacheVersion(),
+      redisVersion.bumpPostListCacheVersion(redisKey.post.listNamespace()),
     ]);
     return post;
   }
@@ -621,7 +610,7 @@ class PostService {
       },
     });
 
-    await this.bumpPostListCacheVersion();
+    await redisVersion.bumpPostListCacheVersion(redisKey.post.listNamespace());
     return post;
   }
 
@@ -677,7 +666,7 @@ class PostService {
 
     await Promise.all([
       ...notificationTasks,
-      this.bumpPostListCacheVersion(),
+      redisVersion.bumpPostListCacheVersion(redisKey.post.listNamespace()),
     ]);
     return {
       publicId: post.publicId,
@@ -729,7 +718,7 @@ class PostService {
     //   username: snapshot.username,
     // });
 
-    await this.bumpPostListCacheVersion();
+    await redisVersion.bumpPostListCacheVersion(redisKey.post.listNamespace());
     return {
       publicId: post.publicId,
       content: post.content!,
@@ -763,7 +752,7 @@ class PostService {
         originPostId: resolvedOriginPostId,
       },
     });
-    await this.bumpPostListCacheVersion();
+    await redisVersion.bumpPostListCacheVersion(redisKey.post.listNamespace());
     return {
       publicId: post.publicId,
       content: post.content,
@@ -815,7 +804,7 @@ class PostService {
         postOwnerId: originPost.userId,
         content: payload.content,
       }),
-      this.bumpPostListCacheVersion(),
+      redisVersion.bumpPostListCacheVersion(redisKey.post.listNamespace()),
     ]);
     return {
       publicId: post.publicId,
@@ -980,7 +969,7 @@ class PostService {
       await postInteractionRepository.deleteByUserPostAndType(hiddenPayload);
     }
 
-    await this.bumpPostListCacheVersion();
+    await redisVersion.bumpPostListCacheVersion(redisKey.post.listNamespace());
 
   }
 
@@ -1000,7 +989,7 @@ class PostService {
     await postRepository.updateStatusByPublicId(publicId, {
       ...action
     });
-    await this.bumpPostListCacheVersion();
+    await redisVersion.bumpPostListCacheVersion(redisKey.post.listNamespace());
   }
 
   async save(
@@ -1031,7 +1020,7 @@ class PostService {
       await postInteractionRepository.deleteByUserPostAndType(savedPayload);
     }
 
-    await this.bumpPostListCacheVersion();
+    await redisVersion.bumpPostListCacheVersion(redisKey.post.listNamespace());
   }
 
   private resolveDeleteActionType(postType: PostType): ActionType {
@@ -1113,7 +1102,7 @@ class PostService {
       throw new NotFoundException("Post not found");
     }
 
-    await this.bumpPostListCacheVersion();
+    await redisVersion.bumpPostListCacheVersion(redisKey.post.listNamespace());
     return likeCount + (post.likesCount ?? 0);
   }
 
@@ -1137,7 +1126,7 @@ class PostService {
         postType: post.type,
       },
     });
-    await this.bumpPostListCacheVersion();
+    await redisVersion.bumpPostListCacheVersion(redisKey.post.listNamespace());
   }
 
   async update(
@@ -1156,7 +1145,7 @@ class PostService {
     }
 
     const updatedPost = await postRepository.updateByPublicId(publicId, payload);
-    await this.bumpPostListCacheVersion();
+    await redisVersion.bumpPostListCacheVersion(redisKey.post.listNamespace());
     return updatedPost;
   }
 

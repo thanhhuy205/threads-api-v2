@@ -7,12 +7,11 @@ import {
   cursorPaginationQuerySchema,
   hidePostSchema,
   newsFeedQuerySchema,
-  postIdParamsSchema,
   publicIdParamsSchema,
   reportSchema,
   savePostSchema,
   similarPostsSchema,
-  usernameParamsSchema,
+  usernameParamsSchema
 } from "./dto/request/post.request";
 
 const postRouter = Router();
@@ -68,13 +67,6 @@ postRouter.post(
 );
 
 postRouter.use(authorization);
-
-postRouter.get(
-  "/:postId/judge-status",
-  validate(postIdParamsSchema, "params"),
-  postController.getJudgeStatus,
-);
-
 
 postRouter.get(
   "/me/replies",
