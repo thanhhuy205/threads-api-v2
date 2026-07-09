@@ -5,6 +5,7 @@ import { hookSecretKeyConfig } from '@/config/hook-secret.config';
 import { jwtConfig } from '@/config/jwt';
 import { leonardoConfig } from '@/config/leonardo';
 import { mixedbreadAIConfig } from '@/config/mixedbread-ai';
+import { mongodbConfig } from '@/config/mongodb';
 import { nodemailerConfig } from '@/config/nodemailer';
 import { notionConfig } from '@/config/notion';
 import { openRouterConfig } from '@/config/openrouter';
@@ -37,6 +38,7 @@ const envSchema = z.object({
     ...notionConfig.shape,
     ...groQConfig.shape,
     ...hookSecretKeyConfig.shape,
+    ...mongodbConfig.shape,
 });
 
 const parsedEnv = envSchema.safeParse(process.env);

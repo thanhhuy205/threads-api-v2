@@ -1142,11 +1142,15 @@ class CircleService {
               recipientId: invitation.userId,
               actorId: managerId,
               type: NotificationType.INVITATION,
+              lastActor: {
+                id: managerId,
+                username: invitation.user?.username ?? "Anonymous user",
+                avatar: invitation.user?.avatar ?? "",
+              },
               targetType: "RESENT_INVITATION",
               targetId: circle.publicId,
               count: 0,
             },
-            tx,
           );
         }
 
@@ -1570,7 +1574,7 @@ class CircleService {
         targetType: "CIRCLE_JOIN_REQUEST",
         targetId: circle.publicId,
         count: 0,
-      }, tx);
+      });
     });
 
 
@@ -1692,7 +1696,6 @@ class CircleService {
             targetId: circle.publicId,
             count: 0,
           },
-          tx,
         )])
     });
 

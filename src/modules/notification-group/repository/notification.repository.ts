@@ -1,98 +1,58 @@
 import prisma from "@/config/prisma";
+import { collections } from "@/providers/mongodb.provider";
 import { buildPagination } from "@/shared/pagination/cursor-pagination";
-import { NotificationType, Prisma } from "@prisma/client";
+import { NotificationType } from "@prisma/client";
+import { Sort } from "mongodb";
 
-const notificationGroupSelect = {
-    id: true,
-    publicId: true,
-    recipientId: true,
-    type: true,
-    targetType: true,
-    targetId: true,
-    count: true,
-    isRead: true,
-    lastActorId: true,
-    lastEventAt: true,
-    createdAt: true,
-    updatedAt: true,
-    lastActor: {
-        select: {
-            username: true,
-            avatar: true,
-        },
-    },
-    // bài gốc cmt
-    originPost: {
-        select: {
-            publicId: true,
-        }
-    }
-} satisfies Prisma.NotificationGroupSelect;
-
-class NotificationRepository
-    implements
-    ICursorPagination<
-        Prisma.NotificationGroupWhereInput,
-        Prisma.NotificationGroupGetPayload<{
-            select: typeof notificationGroupSelect;
-        }>
-    > {
+class NotificationRepository {
     findAll({
         after,
         take,
         where,
-        cursor,
-        select,
         orderBy,
     }: {
         after?: string;
         take?: number;
-        where?: Prisma.NotificationGroupWhereInput;
-        cursor?: Prisma.NotificationGroupWhereUniqueInput;
-        select?: Prisma.NotificationGroupSelect;
-        orderBy?:
-        | Prisma.NotificationGroupOrderByWithRelationInput
-        | Prisma.NotificationGroupOrderByWithRelationInput[];
+        where?: Record<string, any>;
+        orderBy?: Sort;
     }) {
         const { currentAfter, currentLimit } = buildPagination({ after, take });
-
-        return prisma.notificationGroup.findMany({
-            where,
-            take: currentLimit + 1,
-            skip: currentAfter ? 1 : 0,
-            cursor: currentAfter ? cursor : undefined,
-            select: select ?? notificationGroupSelect,
-            orderBy: orderBy ?? [{ lastEventAt: "desc" }, { publicId: "desc" }],
-        });
+        const defaultOrderBy = { lastEventAt: -1, publicId: -1 } as Sort;
+        return collections('notifications')
+            .find(where ?? {})
+            .sort(orderBy as Sort ?? defaultOrderBy)
+            .skip(currentAfter ? 1 : 0)
+            .limit(currentLimit + 1)
+            .toArray();
     }
 
-    create(
-        data: {
-            recipientId: string;
-            type: NotificationType;
-            targetType: string;
-            targetId: string;
-            actorIds: Prisma.InputJsonValue;
-            lastActorId: string;
-            lastEventAt: Date;
-            count?: number;
-            isRead?: boolean;
-        },
-        tx: Prisma.TransactionClient = prisma,
-    ) {
-        return tx.notificationGroup.create({
-            data: {
-                recipientId: data.recipientId,
-                type: data.type,
-                targetType: data.targetType,
-                targetId: data.targetId,
-                actorIds: data.actorIds,
-                count: data.count,
-                isRead: data.isRead,
-                lastActorId: data.lastActorId,
-                lastEventAt: data.lastEventAt,
-            },
-            select: notificationGroupSelect,
+    create(data: {
+        recipientId: string;
+        type: NotificationType;
+        targetType: string;
+        targetId: string;
+        actorIds: any;
+        lastActorId: string;
+        lastActor?: {
+            id: string,
+            username: string,
+            avatar: string,
+        };
+        lastEventAt: Date;
+        count?: number;
+        isRead?: boolean;
+    }) {
+        return collections('notifications').insertOne({
+            recipientId: data.recipientId,
+            type: data.type,
+            targetType: data.targetType,
+            targetId: data.targetId,
+            actorIds: data.actorIds,
+            count: data.count ?? 1,
+            isRead: data.isRead ?? false,
+            lastActorId: data.lastActorId,
+            lastActor: data.lastActor,
+            lastEventAt: data.lastEventAt,
         });
     }
 
@@ -108,45 +68,16 @@ class NotificationRepository
         return this.findAll({
             after,
             take,
-            where: {
-                recipientId,
-            },
-            select: {
-                publicId: true,
-                type: true,
-                targetType: true,
-                targetId: true,
-                count: true,
-                isRead: true,
-                createdAt: true,
-                lastEventAt: true,
-                lastActor: {
-                    select: {
-                        username: true,
-                        avatar: true,
-                    },
-                },
-                originPost: {
-                    select: {
-                        publicId: true,
-                        content: true,
-                    }
-                }
-            },
-            cursor: after ? { publicId: after } : undefined,
+            where: { recipientId },
         });
     }
 
     findPostTargetsByPublicIds(publicIds: string[]) {
-        if (!publicIds.length) {
-            return Promise.resolve([]);
-        }
+        if (!publicIds.length) return Promise.resolve([]);
 
         return prisma.post.findMany({
             where: {
-                publicId: {
-                    in: publicIds,
-                },
+                publicId: { in: publicIds },
             },
             select: {
                 publicId: true,
@@ -160,61 +91,46 @@ class NotificationRepository
     }
 
     findUnreadByRecipientId(recipientId: string) {
-        return prisma.notificationGroup.findFirst({
-            where: {
-                recipientId,
-                isRead: false,
-            },
-            select: {
-                id: true,
-            },
+        return collections('notifications').findOne({
+            recipientId,
+            isRead: false,
         });
     }
 
-    createMany(
-        data: {
-            recipientId: string;
-            type: NotificationType;
-            targetType: string;
-            targetId: string;
-            originPostId: string;
-            actorIds: Prisma.InputJsonValue;
-            lastActorId: string;
-            lastEventAt: Date;
-            count?: number;
-            isRead?: boolean;
-        }[],
-        tx: Prisma.TransactionClient = prisma,
-    ) {
-        return tx.notificationGroup.createMany({
-            data: data.map((item) => ({
+    createMany(data: {
+        recipientId: string;
+        type: NotificationType;
+        targetType: string;
+        targetId: string;
+        originPostId: string;
+        actorIds: any;
+        lastActorId: string;
+        lastEventAt: Date;
+        count?: number;
+        isRead?: boolean;
+    }[]) {
+        return collections('notifications').insertMany(
+            data.map((item) => ({
                 recipientId: item.recipientId,
-                type: item.type as NotificationType,
+                type: item.type,
                 targetType: item.targetType,
                 targetId: item.targetId,
                 actorIds: item.actorIds,
-                count: item.count,
-                isRead: item.isRead,
+                count: item.count ?? 1,
+                isRead: item.isRead ?? false,
                 lastActorId: item.lastActorId,
                 lastEventAt: item.lastEventAt,
                 originPostId: item.originPostId,
-
             })),
-            skipDuplicates: true,
-        });
+            { ordered: false }, // tương đương skipDuplicates
+        );
     }
 
-
     markGroupAsRead(userId: string) {
-        return prisma.notificationGroup.updateMany({
-            where: {
-                recipientId: userId,
-                isRead: false,
-            },
-            data: {
-                isRead: true,
-            },
-        });
+        return collections('notifications').updateMany(
+            { recipientId: userId, isRead: false },
+            { $set: { isRead: true } },
+        );
     }
 }
 

@@ -1,5 +1,5 @@
 import { redisKey } from "@/constants/resolve-key/redis-key";
-import { postService } from "@/modules/post/service/post.service";
+import { postSearchService } from "@/modules/post/service/post-search.service";
 import { userRepository } from "@/modules/user/repository/user.repository";
 import { redisService } from "@/providers/redis.provider";
 import { Prisma } from "@prisma/client";
@@ -87,7 +87,7 @@ class UserService {
     const [user, followingCount, postCount] = await Promise.all([
       userRepository.findStatusProfileById(userId),
       followRepository.countActiveFollowing(userId),
-      postService.count(userId)
+      postSearchService.count(userId)
     ]);
 
     if (!user) {
@@ -122,7 +122,7 @@ class UserService {
     }
 
     if (!userId) {
-      const postCount = await postService.count(user.id);
+      const postCount = await postSearchService.count(user.id);
       return mapUserProfileForFE({
         ...user,
         postsCount: postCount,
@@ -133,7 +133,7 @@ class UserService {
     const [requestUser, follower, postCount] = await Promise.all([
       userRepository.findUserRequestFriend(userId, user.id),
       userRepository.findUserFollowing(userId, user.id),
-      postService.count(user.id),
+      postSearchService.count(user.id),
     ]);
 
     return mapUserProfileForFE({

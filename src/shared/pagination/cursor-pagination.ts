@@ -76,7 +76,7 @@ export function buildCursorPagination<T>({
 }: {
   rows: T[];
   take: number;
-  getAfter: (item: T) => string;
+  getAfter: (item: T) => string | null;
   before?: boolean;
 }): { rows: T[]; pagination: PaginationResponse<string | number | null> } {
   const hasMore = rows.length > take;

@@ -13,7 +13,7 @@ import { circlePostQualityLogService } from "@/modules/circle/service/circle-pos
 import { mixedBreadService } from "@/modules/mixed-bread/service/mixed-bread.service";
 import { pineconeService } from "@/modules/pinecone/service/pinecone.service";
 import { postRepository } from "@/modules/post/repository/post.repository";
-import { postService } from "@/modules/post/service/post.service";
+import { postSearchService } from "@/modules/post/service/post-search.service";
 import { pusherChannel } from "@/modules/pusher/channel/pusher-channel";
 import { pusherService } from "@/modules/pusher/service/pusher.service";
 import { reportRepository } from "@/modules/report/repository/report.repository";
@@ -134,7 +134,7 @@ const processEvaluationPost = async (job: EvaluationPostJob) => {
                 embedding, // You can choose to generate an embedding for the post content if needed
             }),
         ]);
-        const post = await postService.findById(job.postId);
+        const post = await postSearchService.findById(job.postId);
         if (post) {
             await redisVersion.bumpPostListCacheVersion(redisKey.post.listNamespace());
         }

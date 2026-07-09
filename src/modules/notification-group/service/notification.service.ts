@@ -17,7 +17,7 @@ import {
   buildCursorPagination,
   type PaginationResponse,
 } from "@/shared/pagination/cursor-pagination";
-import { NotificationType, Prisma } from "@prisma/client";
+import { NotificationType } from "@prisma/client";
 
 type NotificationGroupListRow = Awaited<
   ReturnType<typeof notificationRepository.findByRecipientId>
@@ -28,7 +28,7 @@ type NotificationTargetPost = Awaited<
 >[number];
 
 class NotificationService {
-  create(data: CreateNotificationGroupInput, tx?: Prisma.TransactionClient) {
+  create(data: CreateNotificationGroupInput) {
     return notificationRepository.create(
       {
         recipientId: data.recipientId,
@@ -38,9 +38,9 @@ class NotificationService {
         actorIds: [data.actorId],
         count: data.count,
         lastActorId: data.actorId,
+        lastActor: data.lastActor,
         lastEventAt: data.lastEventAt ?? new Date(),
       },
-      tx,
     );
   }
 
@@ -81,7 +81,7 @@ class NotificationService {
     return buildCursorPagination({
       rows,
       take,
-      getAfter: (item) => item.publicId,
+      getAfter: (item) => item?.targetPost?.publicId ?? null,
     });
   }
 

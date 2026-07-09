@@ -1,4 +1,4 @@
-import { postService } from "@/modules/post/service/post.service";
+import { postSearchService } from "@/modules/post/service/post-search.service";
 import { topicService } from "@/modules/topic/service/topic.service";
 import { buildCursorPagination } from "@/shared/pagination/cursor-pagination";
 
@@ -24,7 +24,7 @@ class SearchService {
       serpType = "default";
     }
 
-    const posts = await postService.searchByContent({
+    const posts = await postSearchService.searchByContent({
       query: q,
       after,
       take,

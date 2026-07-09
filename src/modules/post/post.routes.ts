@@ -10,7 +10,6 @@ import {
   publicIdParamsSchema,
   reportSchema,
   savePostSchema,
-  similarPostsSchema,
   usernameParamsSchema
 } from "./dto/request/post.request";
 
@@ -59,13 +58,6 @@ postRouter.get(
   validate(cursorPaginationQuerySchema, "query"),
   postController.getQuote,
 );
-postRouter.post(
-  "/:publicId/similar",
-  validate(publicIdParamsSchema, "params"),
-  validate(similarPostsSchema),
-  postController.getSimilarPosts,
-);
-
 postRouter.use(authorization);
 
 postRouter.get(

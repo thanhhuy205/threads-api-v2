@@ -179,7 +179,8 @@ async function main() {
                 originPostId: post.publicId,
             },
         });
-        totalNotifs++;    }
+        totalNotifs++;
+    }
     for (const post of posts) {
         const otherUsers = users.filter((u) => u.id !== post.userId);
         const repliers = pickN(otherUsers, randInt(2, Math.min(8, otherUsers.length)));
@@ -223,7 +224,8 @@ async function main() {
                 });
                 totalNotifs++;
             }
-        }    }
+        }
+    }
     for (const post of posts) {
         const otherUsers = users.filter((u) => u.id !== post.userId);
         const quoters = pickN(otherUsers, randInt(1, Math.min(4, otherUsers.length)));
@@ -266,7 +268,8 @@ async function main() {
                 });
                 totalNotifs++;
             }
-        }    }
+        }
+    }
     for (const post of posts) {
         const otherUsers = users.filter((u) => u.id !== post.userId);
         const reposters = pickN(otherUsers, randInt(1, Math.min(5, otherUsers.length)));
@@ -307,14 +310,16 @@ async function main() {
                 });
                 totalNotifs++;
             }
-        }    }
+        }
+    }
 
     // ─── Summary ──────────────────────────────────────────────────────────────────
     const dbNotifs = await prisma.notificationGroup.count();
     const dbLikes = await prisma.like.count({ where: { isLike: true } });
     const dbReplies = await prisma.post.count({ where: { type: PostType.REPLY } });
     const dbQuotes = await prisma.post.count({ where: { type: PostType.QUOTE } });
-    const dbReposts = await prisma.post.count({ where: { type: PostType.REPOST } });}
+    const dbReposts = await prisma.post.count({ where: { type: PostType.REPOST } });
+}
 
 main()
     .catch((e) => {

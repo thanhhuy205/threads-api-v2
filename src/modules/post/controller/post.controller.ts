@@ -9,7 +9,6 @@ import type {
   HidePostDto,
   ReportDto,
   SavePostDto,
-  SimilarPostsDto,
 } from "../dto/request/post.request";
 import {
   CursorPaginationQueryDto,
@@ -19,6 +18,7 @@ import {
 } from "../dto/request/post.request";
 import { postActionService } from "../service/post-action.service";
 import { postFeedService } from "../service/post-feed.service";
+import { postSearchService } from "../service/post-search.service";
 import { postUserService } from "../service/post-user.service";
 import { postService } from "../service/post.service";
 
@@ -234,18 +234,6 @@ class PostController {
     return res.success(200, POST_MESSAGE.RETRIEVED, post);
   }
 
-  async getSimilarPosts(
-    req: Request<PublicIdParamsDto, {}, SimilarPostsDto>,
-    res: Response,
-  ) {
-    const posts = await postService.getSimilarPosts(
-      req.params.publicId,
-      req.body,
-    );
-
-    return res.success(200, POST_MESSAGE.RETRIEVED, posts);
-  }
-
   async replyPost(
     req: Request<PublicIdParamsDto, {}, CreatePostDto>,
     res: Response,
@@ -394,7 +382,7 @@ class PostController {
       page: req.query.page ?? "",
     };
 
-    const results = await postService.search(query);
+    const results = await postSearchService.search(query);
 
     return res.success(200, POST_MESSAGE.SEARCH_SUCCESS, results);
   }

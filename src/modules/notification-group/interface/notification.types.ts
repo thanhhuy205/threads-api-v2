@@ -9,6 +9,11 @@ export type CreateNotificationGroupInput = {
     lastEventAt?: Date;
     count?: number;
     userId?: string | null;
+    lastActor?: {
+        id: string,
+        username: string,
+        avatar: string,
+    }
 };
 
 export type FindAllNotificationGroupsInput = {

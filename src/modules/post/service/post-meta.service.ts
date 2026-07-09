@@ -1,6 +1,9 @@
+import { redisKey } from "@/constants/resolve-key/redis-key";
+import { redisVersion } from "@/shared/redis-version";
 import { Prisma } from "@prisma/client";
 import { normalizeTopic } from "../helper/nomalize.hepler";
 import { topicsPostRepository } from "../repository/topics-post.repository";
+import { postMentionService } from "./post-mention.service";
 
 export type CreatePostMeta = {
   topic?: string;
@@ -34,6 +37,19 @@ class PostMetaService {
         tx,
       );
     }
+  }
+
+  async finalizePostCreation(params: {
+    actionLog?: Promise<unknown>;
+    mentionNotification?: Parameters<typeof postMentionService.dispatchMentionNotifications>[0];
+  }): Promise<void> {
+    await Promise.all([
+      params.actionLog,
+      params.mentionNotification
+        ? postMentionService.dispatchMentionNotifications(params.mentionNotification)
+        : undefined,
+      redisVersion.bumpPostListCacheVersion(redisKey.post.listNamespace()),
+    ]);
   }
 }
 

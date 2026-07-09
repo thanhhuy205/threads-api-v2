@@ -153,19 +153,6 @@ enum FriendRequestStatus {
   CANCELLED
 }
 
-enum NotificationType {
-  POST
-  LIKE
-  FOLLOW
-  QUOTE
-  SHARE
-  MESSAGE
-  REPLY
-  MENTION
-  INVITATION
-  JOIN_REQUEST
-}
-
 enum UserRestrictionType {
   POSTING
   POST_AND_USE_KARMA
@@ -309,7 +296,6 @@ model User {
   followers            Follow[]              @relation("FollowFollowing")
   circles              Circle[]              @relation("CircleCreated")
   circleMembers        CircleMember[]
-  notifications        NotificationGroup[]
   circleInvitations    CircleInvitation[]    @relation("CircleInvitationUser")
   circleInvited        CircleInvitation[]    @relation("CircleInvitationInviter")
   likes                Like[]
@@ -505,15 +491,14 @@ model Post {
   isHidden         Boolean @default(false) @map("is_hidden") // bot ẩn bài viết khỏi feed, chỉ hiển thị khi truy cập trực tiếp, dùng cho trường hợp bài viết bị report nhiều lần hoặc vi phạm chính sách nhưng chưa đến mức xóa hoàn toàn
   isDisinformation Boolean @default(false) @map("is_disinformation") // bot đánh dấu bài viết có nội dung sai
 
-  media                   PostMedia[]
-  mentions                PostMention[]
-  topicsPosts             TopicsPost[]
-  likes                   Like[]
-  circlePostQualityLogs   CirclePostQualityLog[]
-  circleExpLogs           CircleExpLog[]
-  originPostNotifications NotificationGroup[]    @relation("NotificationOriginPost")
-  poll                    Poll?
-  postInteractions        PostInteraction[]
+  media                 PostMedia[]
+  mentions              PostMention[]
+  topicsPosts           TopicsPost[]
+  likes                 Like[]
+  circlePostQualityLogs CirclePostQualityLog[]
+  circleExpLogs         CircleExpLog[]
+  poll                  Poll?
+  postInteractions      PostInteraction[]
 
   @@index([userId, createdAt])
   @@index([parentId])
@@ -1036,30 +1021,4 @@ model WebHookPreviewImage {
 
   @@index([generationId], map: "idx_webhook_preview_images_draft_id")
   @@map("webhook_preview_images")
-}
-
-model NotificationGroup {
-  id          Int    @id @default(autoincrement())
-  publicId    String @unique @default(cuid()) @map("public_id")
-  recipientId String @map("recipient_id")
-
-  type       NotificationType
-  targetType String           @map("target_type")
-  targetId   String           @map("target_id")
-  actorIds   Json             @map("actor_ids")
-
-  count        Int      @default(1)
-  isRead       Boolean  @default(false) @map("is_read")
-  lastActorId  String   @map("last_actor_id")
-  lastEventAt  DateTime @map("last_event_at")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
-  originPostId String?  @map("origin_post") // dùng để lưu publicId của bài gốc trong trường hợp notification liên quan đến bài viết, giúp tránh việc phải join nhiều bảng để lấy thông tin bài gốc khi hiển thị notification
-  lastActor    User?    @relation(fields: [lastActorId], references: [id])
-
-  originPost Post? @relation("NotificationOriginPost", fields: [originPostId], references: [publicId])
-
-  @@index([recipientId, isRead, lastEventAt])
-  @@index([recipientId, type, targetType, targetId])
-  @@map("notification_groups")
 }
