@@ -13,18 +13,16 @@ import { PostRecord, postRepository } from "../repository/post.repository";
 import { postMetaService } from "./post-meta.service";
 
 class PostService {
-  // ---- Creation flows ----
-
   async create(payload: CreatePostPayload) {
     const builder = PostBuilder.user(payload.userId)
       .replyPermission(payload.replyPermission)
       .visibility(payload.visibility)
       .mentions(payload.mentions);
+
     const { snapshot, options, mentionIds } = await builder.build();
 
-    // Create post and attach meta
     const post = await builder.createPost(
-      (tx) => postRepository.create({ ...payload, ...options }, snapshot, tx),
+      () => postRepository.create({ ...payload, ...options }, snapshot),
       { topic: payload.topic, mentionIds },
     );
 
@@ -94,7 +92,7 @@ class PostService {
       throw new NotFoundException("Origin post not found");
     }
     const post = await builder.createPost(
-      (tx) =>
+      () =>
         postRepository.createReply(
           { ...payload, ...options },
           {
@@ -102,7 +100,6 @@ class PostService {
             publicId: existPost.publicId,
           },
           snapshot,
-          tx,
         ),
       { topic: payload.topic, mentionIds },
     );
@@ -164,7 +161,7 @@ class PostService {
     }
 
     const post = await builder.createPost(
-      (tx) =>
+      () =>
         postRepository.createCircleReply(
           { ...payload, ...options },
           {
@@ -172,7 +169,6 @@ class PostService {
             publicId: existPost.publicId,
           },
           snapshot,
-          tx,
         ),
       { topic: payload.topic, mentionIds },
     );
@@ -252,13 +248,12 @@ class PostService {
     }
 
     const post = await builder.createPost(
-      (tx) =>
+      () =>
         postRepository.createQuote(
           { ...payload, ...options },
           resolvedOriginPublicId,
           snapshot,
           resolvedOriginPostId,
-          tx,
         ),
       { topic: payload.topic, mentionIds },
     );

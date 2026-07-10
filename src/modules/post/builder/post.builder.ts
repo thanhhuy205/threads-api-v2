@@ -6,7 +6,7 @@ import {
 import type { CreatePostPayload } from "@/modules/post/interfaces/create-post-payload";
 import { PostMapper } from "@/modules/post/mapper/post.mapper";
 import { userService } from "@/modules/user/service/user.service";
-import { Prisma, ReplyPermission, VisibilityPost } from "@prisma/client";
+import { ReplyPermission, VisibilityPost } from "@prisma/client";
 import { PostRecord, postRepository } from "../repository/post.repository";
 import { postMentionService } from "../service/post-mention.service";
 import { postMetaService, type CreatePostMeta } from "../service/post-meta.service";
@@ -94,7 +94,7 @@ class PostBuilder {
   }
 
   async build(): Promise<PostBuildResult> {
-    await Promise.all([this.pending]);
+    await this.pending;
 
     const result: PostBuildResult = {
       snapshot: this.snapshot!,
@@ -115,10 +115,10 @@ class PostBuilder {
   }
 
   async createPost(
-    createFn: (tx: Prisma.TransactionClient) => Promise<PostRecord>,
+    createFn: () => Promise<PostRecord>,
     meta?: CreatePostMeta,
   ): Promise<PostRecord> {
-    const post = await createFn(prisma);
+    const post = await createFn();
 
     if (!post.id) throw new BadRequestException("Failed to create post");
 
