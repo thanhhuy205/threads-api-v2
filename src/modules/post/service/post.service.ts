@@ -288,6 +288,10 @@ class PostService {
     } as PostRecord;
   }
 
+  updateLike(count: number) {
+    return postRepository.updateLike(count);
+  }
+
 }
 
 export const postService = new PostService();

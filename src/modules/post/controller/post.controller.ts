@@ -4,7 +4,6 @@ import { userService } from "@/modules/user/service/user.service";
 import { getPagination } from "@/shared/pagination/cursor-pagination";
 import { Request, Response } from "express";
 import { CreatePostDto, UpdatePostDto } from "../dto/post.dto";
-import type { LikeDto } from "../dto/request/like.request";
 import type {
   HidePostDto,
   ReportDto,
@@ -251,14 +250,14 @@ class PostController {
     return res.success(201, POST_MESSAGE.CREATED, reply);
   }
 
-  async likePost(req: Request<PublicIdParamsDto, {}, LikeDto>, res: Response) {
+  async likePost(req: Request<PublicIdParamsDto>, res: Response) {
     const userId = req.user?.sub;
 
     if (!userId) {
       return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
     }
 
-    const result = await postActionService.like(req.params.publicId, userId, req.body.isLiked);
+    const result = await postActionService.like(req.params.publicId, userId);
     return res.success(200, POST_MESSAGE.RETRIEVED, {
       liked: result,
     });

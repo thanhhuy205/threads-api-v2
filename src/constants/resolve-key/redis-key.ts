@@ -42,6 +42,7 @@ export const redisKey = {
       `${USER_PERMISSION_CACHE_PREFIX}${userId}${USER_PERMISSION_CACHE_SUFFIX}`,
   },
   post: {
+    unlikeSet: (publicId: string) => `${POST_PREFIX}${publicId}:unlikeSet`,
     likesSet: (publicId: string) => `${POST_PREFIX}${publicId}${POST_LIKES_SUFFIX}`,
     likeCount: (publicId: string) =>
       `${POST_PREFIX}${publicId}${POST_LIKE_COUNT_SUFFIX}`,

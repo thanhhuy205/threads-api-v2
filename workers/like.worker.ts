@@ -1,8 +1,7 @@
 import { baseLogger } from "@/middlewares/logger";
-import { notificationService } from "@/modules/notification-group/service/notification.service";
-import { likeEventService } from "@/modules/post/service/like-event.service";
+import { likeService } from "@/modules/post/service/like-service.service";
+import { postService } from "@/modules/post/service/post.service";
 import { LIKE_JOB_NAME, QUEUE_NAME } from "../src/constants/queue";
-import { redisKey } from "../src/constants/resolve-key/redis-key";
 import { createWorker } from "../src/providers/bullmq.provider";
 import { redisService } from "../src/providers/redis.provider";
 
@@ -14,9 +13,6 @@ type LikeEvent = {
 };
 
 class LikeWorker {
-  private readonly syncLockKey = redisKey.job.likeSyncInitLock();
-  private readonly syncLockTtlSeconds = 30;
-
   private readonly worker = createWorker(QUEUE_NAME.LIKE_QUEUE, async (job) => {
     switch (job.name) {
       case LIKE_JOB_NAME.INIT_SYNC_JOB:
@@ -27,17 +23,9 @@ class LikeWorker {
   });
 
   async initSyncJob() {
-    const lockToken = `${process.pid}:${Date.now()}:${Math.random().toString(36).slice(2)}`;
-    const isLocked = await this.acquireSyncLock(lockToken);
-
-    if (!isLocked) {
-      return;
-    }
-
     try {
       await this.processLikeEvents();
     } finally {
-      await this.releaseSyncLock(lockToken);
     }
   }
 
@@ -46,47 +34,33 @@ class LikeWorker {
       QUEUE_NAME.POST_LIKE_EVENT_QUEUE,
       500,
     );
-
-    for (const [index, event] of events.entries()) {
-      let result;
-
-      try {
-        result = await likeEventService.applyEvent({
-          userId: event.userId,
-          postId: event.postPublicId,
-          isLiked: event.isLiked,
-        });
-      } catch (error) {
-        baseLogger.error({
-          error,
-          event,
-        }, "Failed to process like event");
-
-        await this.restoreEvents(events.slice(index));
-        return;
-      }
-
-      if (!result.changed || !event.isLiked) {
-        continue;
-      }
-
-      try {
-        await notificationService.sendLikeCountUpdateNotification(
-          event.postPublicId,
-          result.ownerId,
-          result.likesCount,
-          [{
-            postPublicId: event.postPublicId,
-            createdAt: new Date(event.createdAt),
-            userId: event.userId,
-          }],
-        );
-      } catch (error) {
-        baseLogger.error({
-          error,
-          event,
-        }, "Failed to send like notification");
-      }
+    if (events.length === 0) {
+      console.log(events);
+      return;
+    }
+    const likes = events.filter((event) => event.isLiked).map((event) => ({
+      userId: event.userId,
+      postId: event.postPublicId,
+      isLike: true,
+    }));
+    const unlikes = events.filter((event) => !event.isLiked).map((event) => ({
+      userId: event.userId,
+      postId: event.postPublicId,
+      isLike: false,
+    }));
+    console.log(unlikes);
+    const count = likes.length - unlikes.length;
+    try {
+      await Promise.all([
+        postService.updateLike(count),
+        likeService.createMany(likes),
+        likeService.deleteMany(unlikes),
+      ]);
+    } catch (error) {
+      await postService.updateLike(-count);
+      baseLogger.error({ error }, "Failed to process like events");
+      await this.restoreEvents(events);
+      return;
     }
   }
 
@@ -125,7 +99,6 @@ class LikeWorker {
         typeof event.postPublicId !== "string"
         || typeof event.createdAt !== "string"
         || typeof event.userId !== "string"
-        || typeof event.isLiked !== "boolean"
       ) {
         return null;
       }
@@ -133,22 +106,6 @@ class LikeWorker {
       return event as LikeEvent;
     } catch {
       return null;
-    }
-  }
-
-  private async acquireSyncLock(token: string): Promise<boolean> {
-    const result = await redisService.set(this.syncLockKey, token, {
-      NX: true,
-      EX: this.syncLockTtlSeconds,
-    });
-    return result === "OK";
-  }
-
-  private async releaseSyncLock(token: string): Promise<void> {
-    const currentToken = await redisService.get(this.syncLockKey);
-
-    if (currentToken === token) {
-      await redisService.del(this.syncLockKey);
     }
   }
 }

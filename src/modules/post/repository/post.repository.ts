@@ -842,6 +842,13 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
       data: { isDisinformation },
     });
   }
+
+  async updateLike(count: number): Promise<void> {
+    await prisma.$executeRaw`
+      UPDATE posts
+      SET likes_count = GREATEST(likes_count + ${count}, 0)
+    `;
+  }
 }
 
 export const postRepository = new PostRepository();

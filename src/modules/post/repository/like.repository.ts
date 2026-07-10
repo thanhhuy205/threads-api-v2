@@ -4,7 +4,7 @@ import { Prisma } from "@prisma/client";
 type LikeDbClient = Prisma.TransactionClient | typeof prisma;
 
 class LikeRepository {
-  async createMany(payloads: { userId: string; postId: string, isLike: boolean }[]) {
+  async createMany(payloads: { userId: string; postId: string }[]) {
     return prisma.like.createMany({
       data: payloads,
       skipDuplicates: true,

@@ -5,7 +5,6 @@ import {
   ForbiddenException,
   NotFoundException,
 } from "@/errors/error";
-import { baseLogger } from "@/middlewares/logger";
 import { evaluationProducer } from "@/modules/job/evaluation-post/producer/evaluation.producer";
 import { reportService } from "@/modules/report/service/report.service";
 import { userActionLogService } from "@/modules/user-action-log/service/user-action-log.service";
@@ -155,68 +154,53 @@ class PostActionService {
   async like(
     publicId: string,
     userId: string,
-    isLiked: boolean,
   ): Promise<number> {
-    const likeKey = redisKey.post.likesSet(publicId);
-    const countKey = redisKey.post.likeCount(publicId);
-
-    baseLogger.info(`User ${userId} is ${isLiked ? "liking" : "unliking"} post ${publicId}`);
-    baseLogger.info(`Like key: ${likeKey}, Count key: ${countKey}`);
-
-    const event = JSON.stringify({
-      postPublicId: publicId,
-      createdAt: new Date().toISOString(),
-      userId,
-      isLiked,
-    });
-    const changed = await redisService.eval(
-      `
-        local changed
-        if ARGV[2] == "1" then
-          changed = redis.call("SADD", KEYS[1], ARGV[1])
-          if changed == 1 then
-            redis.call("INCR", KEYS[2])
-          end
-        else
-          changed = redis.call("SREM", KEYS[1], ARGV[1])
-          if changed == 1 then
-            redis.call("DECR", KEYS[2])
-          end
-        end
-
-        if changed == 1 then
-          redis.call("LPUSH", KEYS[3], ARGV[3])
-        end
-
-        return changed
-      `,
-      {
-        keys: [likeKey, countKey, QUEUE_NAME.POST_LIKE_EVENT_QUEUE],
-        arguments: [userId, isLiked ? "1" : "0", event],
-      },
-    );
-
-    baseLogger.info({
-      changed,
-      isLiked,
-      postPublicId: publicId,
-      userId,
-    }, "Updated like state and enqueued event");
-
-    if (changed === 1 && isLiked) {
-      await userActionLogService.logLikeCreated({
-        userId,
-        targetId: publicId,
-        metadata: {
-          postPublicId: publicId,
-        },
-      });
-    }
-    const likeCount = await redisService.sCard(likeKey);
     const post = await postRepository.findByPublicId(publicId);
     if (!post) {
       throw new NotFoundException("Post not found");
     }
+    const likeKey = redisKey.post.likesSet(publicId);
+    const countKey = redisKey.post.likeCount(publicId);
+    const changed = await redisService.eval(
+      `
+    local changed = redis.call("SADD", KEYS[1], ARGV[1])
+
+    if changed == 1 then
+      redis.call("INCR", KEYS[2])
+      redis.call("LPUSH", KEYS[3], ARGV[2])  -- isLiked: true
+    else
+      redis.call("SREM", KEYS[1], ARGV[1])
+      redis.call("DECR", KEYS[2])
+      redis.call("LPUSH", KEYS[3], ARGV[3])  -- isLiked: false
+    end
+
+    return changed
+  `,
+      {
+        keys: [
+          likeKey,
+          countKey,
+          QUEUE_NAME.POST_LIKE_EVENT_QUEUE,
+        ],
+        arguments: [
+          userId,
+          JSON.stringify({
+            postPublicId: publicId,
+            userId,
+            isLiked: true,
+            createdAt: new Date().toISOString(),
+          }),
+          JSON.stringify({
+            postPublicId: publicId,
+            userId,
+            isLiked: false,
+            createdAt: new Date().toISOString(),
+          }),
+        ],
+      },
+    );
+    console.log(changed);
+    const likeCount = await redisService.sCard(likeKey);
 
     await redisVersion.bumpPostListCacheVersion(redisKey.post.listNamespace());
     return likeCount + (post.likesCount ?? 0);
