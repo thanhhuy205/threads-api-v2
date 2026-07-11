@@ -1,7 +1,7 @@
 import prisma from "@/config/prisma";
+import type { NotificationType } from "@/modules/notification-group/model/notification.model";
 import { collections } from "@/providers/mongodb.provider";
 import { buildPagination } from "@/shared/pagination/cursor-pagination";
-import { NotificationType } from "@prisma/client";
 import { Sort } from "mongodb";
 
 class NotificationRepository {

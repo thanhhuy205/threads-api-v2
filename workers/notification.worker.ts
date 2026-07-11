@@ -4,11 +4,11 @@ import type {
   PendingCommentNotificationRedisKey,
   PendingCommentNotificationRedisMeta,
 } from "@/modules/notification-group/interface/notification.types";
+import type { NotificationType } from "@/modules/notification-group/model/notification.model";
 import { notificationRepository } from "@/modules/notification-group/repository/notification.repository";
 import { pusherChannel } from "@/modules/pusher/channel/pusher-channel";
 import { pusher } from "@/providers/pusher.provider";
 import { redisService } from "@/providers/redis.provider";
-import { NotificationType } from "@prisma/client";
 import { NOTIFICATION_JOB_KEY, NOTIFICATION_JOB_NAME, QUEUE_NAME } from "../src/constants/queue";
 import { baseLogger } from "../src/middlewares/logger";
 import { createWorker } from "../src/providers/bullmq.provider";
@@ -78,9 +78,9 @@ class NotificationWorker {
     const { isOwner, count, username } = meta;
     const firstName = username;
     const isMentionNotification =
-      meta.type === NotificationType.MENTION || meta.key === "mention";
+      meta.type === "MENTION" || meta.key === "mention";
     const isMessageNotification =
-      meta.type === NotificationType.MESSAGE || meta.key === "message";
+      meta.type === "MESSAGE" || meta.key === "message";
 
     if (isMessageNotification) {
       if (actorCount === 1) return `${firstName} đã gửi một tin nhắn mới trong cuộc trò chuyện của bạn`;

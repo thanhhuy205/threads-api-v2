@@ -1,7 +1,10 @@
 
 
-const type = ['POST', 'LIKE', 'FOLLOW', 'QUOTE', 'SHARE', 'MESSAGE', 'REPLY', 'MENTION', 'INVITATION', 'JOIN_REQUEST'];
-const targetType = ['POST', 'MESSAGE_GROUP', 'RESENT_INVITATION', 'CIRCLE_JOIN_REQUEST', 'ADMIN_INVITATION'];
+export const type = ['POST', 'LIKE', 'FOLLOW', 'QUOTE', 'SHARE', 'MESSAGE', 'REPLY', 'MENTION', 'INVITATION', 'JOIN_REQUEST'] as const;
+export const targetType = ['POST', 'MESSAGE_GROUP', 'RESENT_INVITATION', 'CIRCLE_JOIN_REQUEST', 'ADMIN_INVITATION'] as const;
+
+export type NotificationType = typeof type[number];
+export type NotificationTargetType = typeof targetType[number];
 export const notificationCollection = {
     validator: {
         $jsonSchema: {

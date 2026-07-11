@@ -1,4 +1,4 @@
-import { NotificationType } from "@prisma/client";
+import type { NotificationType } from "@/modules/notification-group/model/notification.model";
 
 const PRIVATE_CHAT_PREFIX = "private-chat-room-";
 const PRIVATE_USER_PREFIX = "private-user-";

@@ -25,7 +25,6 @@ import {
   BadgeType,
   CircleInvitationStatus,
   KarmaReason,
-  NotificationType,
   PostScoreLabel,
   Prisma,
   RequestStatus,
@@ -1141,7 +1140,7 @@ class CircleService {
             {
               recipientId: invitation.userId,
               actorId: managerId,
-              type: NotificationType.INVITATION,
+              type: "INVITATION",
               lastActor: {
                 id: managerId,
                 username: invitation.user?.username ?? "Anonymous user",
@@ -1570,7 +1569,7 @@ class CircleService {
       await notificationService.create({
         recipientId: circle.createdBy.id,
         actorId: userId,
-        type: NotificationType.JOIN_REQUEST,
+        type: "JOIN_REQUEST",
         targetType: "CIRCLE_JOIN_REQUEST",
         targetId: circle.publicId,
         count: 0,
@@ -1691,7 +1690,7 @@ class CircleService {
           {
             recipientId: user.id,
             actorId: inviterId,
-            type: NotificationType.INVITATION,
+            type: "INVITATION",
             targetType: "ADMIN_INVITATION",
             targetId: circle.publicId,
             count: 0,

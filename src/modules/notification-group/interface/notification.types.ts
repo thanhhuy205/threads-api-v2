@@ -1,10 +1,10 @@
-import { NotificationType } from "@prisma/client";
+import type { NotificationType, NotificationTargetType } from "../model/notification.model";
 
 export type CreateNotificationGroupInput = {
     recipientId: string;
     actorId: string;
     type: NotificationType;
-    targetType: string;
+    targetType: NotificationTargetType;
     targetId: string;
     lastEventAt?: Date;
     count?: number;
@@ -32,7 +32,7 @@ export type PendingCommentNotificationRedisKey =
 export type PendingCommentNotificationRedisMeta = {
     key: string;
     type: NotificationType;
-    targetType: string;
+    targetType: NotificationTargetType;
     groupKey: PendingCommentNotificationGroupKey;
     originPostId: string;
     targetPostId: string;
@@ -58,7 +58,7 @@ export type EnqueuePendingNotificationInput = {
     avatar?: string;
     postOwnerId: string;
     type: NotificationType;
-    targetType: string;
+    targetType: NotificationTargetType;
     key: string;
     groupKey?: PendingCommentNotificationGroupKey;
 };

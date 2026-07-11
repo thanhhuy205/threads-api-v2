@@ -17,7 +17,6 @@ import {
   buildCursorPagination,
   type PaginationResponse,
 } from "@/shared/pagination/cursor-pagination";
-import { NotificationType } from "@prisma/client";
 
 type NotificationGroupListRow = Awaited<
   ReturnType<typeof notificationRepository.findByRecipientId>
@@ -172,7 +171,7 @@ class NotificationService {
   async handleNewComment(relyNotification: ReplyNotification) {
     return this.enqueuePendingNotification({
       ...relyNotification,
-      type: NotificationType.REPLY,
+      type: "REPLY",
       targetType: "POST",
       key: "comment",
     });
@@ -181,7 +180,7 @@ class NotificationService {
   async handleMention(mentionNotification: MentionNotification) {
     return this.enqueuePendingNotification({
       ...mentionNotification,
-      type: NotificationType.MENTION,
+      type: "MENTION",
       targetType: "POST",
       key: "mention",
     });
@@ -196,7 +195,7 @@ class NotificationService {
       senderId,
       content,
       avatar: avatar ?? "",
-      type: NotificationType.MESSAGE,
+      type: "MESSAGE",
       targetType: "MESSAGE_GROUP",
     };
     baseLogger.info(`Enqueuing message notification for recipient ${recipientId} in group ${groupPublicId}`);
@@ -239,7 +238,7 @@ class NotificationService {
       actorIds,
       content: likeCount >= 2 ? `${user?.username} và ${likeCount - 1} người khác đã thích bài viết của bạn` : `${user?.username ?? "Một người dùng"} đã thích bài viết của bạn`,
       avatar: user?.avatar ?? "",
-      type: NotificationType.LIKE,
+      type: "LIKE",
       targetType: "POST",
     };
 
@@ -252,7 +251,7 @@ class NotificationService {
     await Promise.all([
       notificationRepository.create({
         recipientId,
-        type: NotificationType.LIKE,
+        type: "LIKE",
         targetType: "POST",
         targetId: postPublicId,
         actorIds: actorNotIncludeOwner.length > 0 ? actorNotIncludeOwner : [recipientId],
