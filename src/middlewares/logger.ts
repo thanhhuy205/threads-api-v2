@@ -1,18 +1,14 @@
+import pino from "pino";
 import { pinoHttp } from "pino-http";
 
-export const logger = pinoHttp({
-    transport:
-        process.env.NODE_ENV !== "production"
-            ? {
-                target: "pino-pretty",
-                options: {
-                    colorize: true,
-                    translateTime: "SYS:standard",
-                    ignore: "pid,hostname",
-                },
-            }
-            : undefined,
+export const baseLogger = pino({
+    transport: process.env.NODE_ENV !== "production"
+        ? { target: "pino-pretty", options: { colorize: true, translateTime: "SYS:standard" } }
+        : undefined
+});
 
+export const logger = pinoHttp({
+    logger: baseLogger,
     serializers: {
         req(req) {
             return {
@@ -21,6 +17,7 @@ export const logger = pinoHttp({
                 url: req.url,
                 query: req.query,
                 params: req.params,
+                body: req.body,
             };
         },
 
@@ -39,3 +36,5 @@ export const logger = pinoHttp({
         },
     },
 });
+
+

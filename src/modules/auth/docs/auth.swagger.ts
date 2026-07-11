@@ -1,10 +1,20 @@
+import { AUTH_MESSAGE, COMMON_MESSAGE } from '@/constants/message';
+
+const bearerAuthSecurity = [{ bearerAuth: [] }];
+
 export const authSwaggerSchemas = {
     AuthRegisterRequest: {
         type: 'object',
         properties: {
-            login: {
+            username: {
                 type: 'string',
-                description: 'Email or username',
+                description: 'Username',
+                example: 'john_doe',
+            },
+            email: {
+                type: 'string',
+                format: 'email',
+                description: 'Email address',
                 example: 'john@example.com',
             },
             password: {
@@ -16,7 +26,7 @@ export const authSwaggerSchemas = {
                 example: 'Password123',
             },
         },
-        required: ['login', 'password', 'confirmPassword'],
+        required: ['username', 'email', 'password', 'confirmPassword'],
     },
     AuthLoginRequest: {
         type: 'object',
@@ -33,7 +43,118 @@ export const authSwaggerSchemas = {
         },
         required: ['login', 'password'],
     },
+    AuthForgotPasswordRequest: {
+        type: 'object',
+        properties: {
+            email: {
+                type: 'string',
+                format: 'email',
+                example: 'john@example.com',
+            },
+        },
+        required: ['email'],
+    },
+    AuthRefreshTokenRequest: {
+        type: 'object',
+        properties: {
+            refreshToken: {
+                type: 'string',
+                example: '14a39707c8cc5a8ea0421545e7f952171371586b1b4d98eb482e44c2b8d48884',
+            },
+        },
+        required: ['refreshToken'],
+    },
+    AuthUpdateProfileRequest: {
+        type: 'object',
+        properties: {
+            name: {
+                type: 'string',
+                example: 'John Doe',
+            },
+            bio: {
+                type: 'string',
+                example: 'Building in public',
+            },
+            location: {
+                type: 'string',
+                example: 'Ho Chi Minh City',
+            },
+            website: {
+                type: 'string',
+                example: 'https://example.com',
+            },
+            avatar: {
+                type: 'string',
+                nullable: true,
+                example: 'https://cdn.example.com/avatar.png',
+            },
+        },
+    },
+    AuthValidateEmailRequest: {
+        type: 'object',
+        properties: {
+            email: {
+                type: 'string',
+                format: 'email',
+                example: 'john@example.com',
+            },
+        },
+        required: ['email'],
+    },
+    AuthValidateUsernameRequest: {
+        type: 'object',
+        properties: {
+            username: {
+                type: 'string',
+                example: 'john_doe',
+            },
+        },
+        required: ['username'],
+    },
+    AuthValidateTokenRequest: {
+        type: 'object',
+        properties: {
+            token: {
+                type: 'string',
+                example: 'f8c7f1b8d2a44c7c9f3f2a1b0c9d8e7f',
+            },
+        },
+        required: ['token'],
+    },
+    AuthResetPasswordRequest: {
+        type: 'object',
+        properties: {
+            token: {
+                type: 'string',
+                example: 'f8c7f1b8d2a44c7c9f3f2a1b0c9d8e7f',
+            },
+            email: {
+                type: 'string',
+                format: 'email',
+                example: 'john@example.com',
+            },
+            password: {
+                type: 'string',
+                example: 'Password123',
+            },
+            confirmPassword: {
+                type: 'string',
+                example: 'Password123',
+            },
+        },
+        required: ['token', 'email', 'password', 'confirmPassword'],
+    },
     AuthLogoutRequest: {
+        type: 'object',
+        properties: {
+            refreshToken: {
+                type: 'string',
+                example: '14a39707c8cc5a8ea0421545e7f952171371586b1b4d98eb482e44c2b8d48884',
+            },
+        },
+        required: ['refreshToken'],
+    },
+    AuthTokenPairResponse: {
         type: 'object',
         properties: {
             accessToken: {
@@ -44,8 +165,101 @@ export const authSwaggerSchemas = {
                 type: 'string',
                 example: '14a39707c8cc5a8ea0421545e7f952171371586b1b4d98eb482e44c2b8d48884',
             },
+            sessionId: {
+                type: 'string',
+                example: '661ff7eb-e344-4ea0-84ae-fc3a9d882466',
+            },
         },
-        required: ['accessToken', 'refreshToken'],
+        required: ['accessToken', 'refreshToken', 'sessionId'],
+    },
+    AuthForgotPasswordResponse: {
+        type: 'object',
+        properties: {
+            email: {
+                type: 'string',
+                format: 'email',
+                example: 'john@example.com',
+            },
+        },
+        required: ['email'],
+    },
+    AuthValidateUserResponse: {
+        type: 'object',
+        properties: {
+            available: {
+                type: 'boolean',
+                example: true,
+            },
+        },
+        required: ['available'],
+    },
+    AuthValidateEmailSuccessResponse: {
+        type: 'object',
+        properties: {
+            success: {
+                type: 'boolean',
+                example: true,
+            },
+            message: {
+                type: 'string',
+                example: AUTH_MESSAGE.VALIDATE_EMAIL_SUCCESS,
+            },
+            data: {
+                $ref: '#/components/schemas/AuthValidateUserResponse',
+            },
+        },
+        required: ['success', 'message', 'data'],
+    },
+    AuthValidateUsernameSuccessResponse: {
+        type: 'object',
+        properties: {
+            success: {
+                type: 'boolean',
+                example: true,
+            },
+            message: {
+                type: 'string',
+                example: AUTH_MESSAGE.VALIDATE_USERNAME_SUCCESS,
+            },
+            data: {
+                $ref: '#/components/schemas/AuthValidateUserResponse',
+            },
+        },
+        required: ['success', 'message', 'data'],
+    },
+    AuthValidateTokenResponse: {
+        type: 'object',
+        properties: {
+            valid: {
+                type: 'boolean',
+                example: true,
+            },
+        },
+        required: ['valid'],
+    },
+    AuthUpdateProfileResponse: {
+        type: 'object',
+        properties: {
+            updated: {
+                type: 'boolean',
+                example: true,
+            },
+        },
+        required: ['updated'],
+    },
+    AuthMessageSuccessResponse: {
+        type: 'object',
+        properties: {
+            success: {
+                type: 'boolean',
+                example: true,
+            },
+            message: {
+                type: 'string',
+                example: AUTH_MESSAGE.LOGOUT_SUCCESS,
+            },
+        },
+        required: ['success', 'message'],
     },
     AuthSessionResponse: {
         type: 'object',
@@ -196,10 +410,95 @@ export const authSwaggerSchemas = {
             },
             message: {
                 type: 'string',
-                example: 'Register success',
+                example: AUTH_MESSAGE.REGISTER_SUCCESS,
             },
             data: {
                 $ref: '#/components/schemas/AuthSessionResponse',
+            },
+        },
+        required: ['success', 'message', 'data'],
+    },
+    AuthTokenPairSuccessResponse: {
+        type: 'object',
+        properties: {
+            success: {
+                type: 'boolean',
+                example: true,
+            },
+            message: {
+                type: 'string',
+                example: AUTH_MESSAGE.REFRESH_TOKEN_SUCCESS,
+            },
+            data: {
+                $ref: '#/components/schemas/AuthTokenPairResponse',
+            },
+        },
+        required: ['success', 'message', 'data'],
+    },
+    AuthForgotPasswordSuccessResponse: {
+        type: 'object',
+        properties: {
+            success: {
+                type: 'boolean',
+                example: true,
+            },
+            message: {
+                type: 'string',
+                example: AUTH_MESSAGE.FORGOT_PASSWORD_SUCCESS,
+            },
+            data: {
+                $ref: '#/components/schemas/AuthForgotPasswordResponse',
+            },
+        },
+        required: ['success', 'message', 'data'],
+    },
+    AuthValidateUserSuccessResponse: {
+        type: 'object',
+        properties: {
+            success: {
+                type: 'boolean',
+                example: true,
+            },
+            message: {
+                type: 'string',
+                example: AUTH_MESSAGE.VALIDATE_EMAIL_SUCCESS,
+            },
+            data: {
+                $ref: '#/components/schemas/AuthValidateUserResponse',
+            },
+        },
+        required: ['success', 'message', 'data'],
+    },
+    AuthValidateTokenSuccessResponse: {
+        type: 'object',
+        properties: {
+            success: {
+                type: 'boolean',
+                example: true,
+            },
+            message: {
+                type: 'string',
+                example: AUTH_MESSAGE.VALIDATE_RESET_PASSWORD_TOKEN_SUCCESS,
+            },
+            data: {
+                $ref: '#/components/schemas/AuthValidateTokenResponse',
+            },
+        },
+        required: ['success', 'message', 'data'],
+    },
+    AuthUpdateProfileSuccessResponse: {
+        type: 'object',
+        properties: {
+            success: {
+                type: 'boolean',
+                example: true,
+            },
+            message: {
+                type: 'string',
+                example: AUTH_MESSAGE.UPDATE_USER_SUCCESS,
+            },
+            data: {
+                $ref: '#/components/schemas/AuthUpdateProfileResponse',
             },
         },
         required: ['success', 'message', 'data'],
@@ -213,7 +512,7 @@ export const authSwaggerSchemas = {
             },
             message: {
                 type: 'string',
-                example: 'Get me success',
+                example: AUTH_MESSAGE.GET_ME_SUCCESS,
             },
             data: {
                 $ref: '#/components/schemas/AuthMeResponse',
@@ -230,7 +529,7 @@ export const authSwaggerSchemas = {
             },
             message: {
                 type: 'string',
-                example: 'Logout success',
+                example: AUTH_MESSAGE.LOGOUT_SUCCESS,
             },
         },
         required: ['success', 'message'],
@@ -242,6 +541,7 @@ export const authSwaggerPaths = {
         post: {
             tags: ['Auth'],
             summary: 'Register a new user',
+            security: [],
             requestBody: {
                 required: true,
                 content: {
@@ -250,7 +550,8 @@ export const authSwaggerPaths = {
                             $ref: '#/components/schemas/AuthRegisterRequest',
                         },
                         example: {
-                            login: 'john@example.com',
+                            username: 'john_doe',
+                            email: 'john@example.com',
                             password: 'Password123',
                             confirmPassword: 'Password123',
                         },
@@ -259,7 +560,7 @@ export const authSwaggerPaths = {
             },
             responses: {
                 201: {
-                    description: 'Register success',
+                    description: AUTH_MESSAGE.REGISTER_SUCCESS,
                     content: {
                         'application/json': {
                             schema: {
@@ -269,7 +570,7 @@ export const authSwaggerPaths = {
                     },
                 },
                 400: {
-                    description: 'Validation failed',
+                    description: COMMON_MESSAGE.VALIDATION_FAILED,
                 },
             },
         },
@@ -278,6 +579,7 @@ export const authSwaggerPaths = {
         post: {
             tags: ['Auth'],
             summary: 'Login with email or username',
+            security: [],
             requestBody: {
                 required: true,
                 content: {
@@ -294,7 +596,7 @@ export const authSwaggerPaths = {
             },
             responses: {
                 200: {
-                    description: 'Login success',
+                    description: AUTH_MESSAGE.LOGIN_SUCCESS,
                     content: {
                         'application/json': {
                             schema: {
@@ -304,10 +606,86 @@ export const authSwaggerPaths = {
                     },
                 },
                 400: {
-                    description: 'Validation failed',
+                    description: COMMON_MESSAGE.VALIDATION_FAILED,
                 },
                 401: {
-                    description: 'Invalid credentials',
+                    description: AUTH_MESSAGE.INVALID_CREDENTIALS,
+                },
+            },
+        },
+    },
+    '/auth/forgot-password': {
+        post: {
+            tags: ['Auth'],
+            summary: 'Request a forgot password email',
+            security: [],
+            requestBody: {
+                required: true,
+                content: {
+                    'application/json': {
+                        schema: {
+                            $ref: '#/components/schemas/AuthForgotPasswordRequest',
+                        },
+                        example: {
+                            email: 'john@example.com',
+                        },
+                    },
+                },
+            },
+            responses: {
+                200: {
+                    description: AUTH_MESSAGE.FORGOT_PASSWORD_SUCCESS,
+                    content: {
+                        'application/json': {
+                            schema: {
+                                $ref: '#/components/schemas/AuthForgotPasswordSuccessResponse',
+                            },
+                        },
+                    },
+                },
+                400: {
+                    description: COMMON_MESSAGE.VALIDATION_FAILED,
+                },
+                404: {
+                    description: AUTH_MESSAGE.USER_NOT_FOUND,
+                },
+            },
+        },
+    },
+    '/auth/refresh-token': {
+        post: {
+            tags: ['Auth'],
+            summary: 'Refresh token pair',
+            security: [],
+            requestBody: {
+                required: true,
+                content: {
+                    'application/json': {
+                        schema: {
+                            $ref: '#/components/schemas/AuthRefreshTokenRequest',
+                        },
+                        example: {
+                            refreshToken: '14a39707c8cc5a8ea0421545e7f952171371586b1b4d98eb482e44c2b8d48884',
+                        },
+                    },
+                },
+            },
+            responses: {
+                200: {
+                    description: AUTH_MESSAGE.REFRESH_TOKEN_SUCCESS,
+                    content: {
+                        'application/json': {
+                            schema: {
+                                $ref: '#/components/schemas/AuthTokenPairSuccessResponse',
+                            },
+                        },
+                    },
+                },
+                400: {
+                    description: COMMON_MESSAGE.VALIDATION_FAILED,
+                },
+                401: {
+                    description: AUTH_MESSAGE.TOKEN_INVALID,
                 },
             },
         },
@@ -316,10 +694,10 @@ export const authSwaggerPaths = {
         get: {
             tags: ['Auth'],
             summary: 'Get current authenticated user',
-            security: [{ bearerAuth: [] }],
+            security: bearerAuthSecurity,
             responses: {
                 200: {
-                    description: 'Get me success',
+                    description: AUTH_MESSAGE.GET_ME_SUCCESS,
                     content: {
                         'application/json': {
                             schema: {
@@ -329,10 +707,10 @@ export const authSwaggerPaths = {
                     },
                 },
                 401: {
-                    description: 'Token invalid',
+                    description: AUTH_MESSAGE.TOKEN_INVALID,
                 },
                 403: {
-                    description: 'User banned',
+                    description: AUTH_MESSAGE.USER_BANNED,
                 },
             },
         },
@@ -341,6 +719,7 @@ export const authSwaggerPaths = {
         post: {
             tags: ['Auth'],
             summary: 'Logout current session',
+            security: bearerAuthSecurity,
             requestBody: {
                 required: true,
                 content: {
@@ -349,7 +728,6 @@ export const authSwaggerPaths = {
                             $ref: '#/components/schemas/AuthLogoutRequest',
                         },
                         example: {
-                            accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
                             refreshToken: '14a39707c8cc5a8ea0421545e7f952171371586b1b4d98eb482e44c2b8d48884',
                         },
                     },
@@ -357,7 +735,7 @@ export const authSwaggerPaths = {
             },
             responses: {
                 200: {
-                    description: 'Logout success',
+                    description: AUTH_MESSAGE.LOGOUT_SUCCESS,
                     content: {
                         'application/json': {
                             schema: {
@@ -367,7 +745,171 @@ export const authSwaggerPaths = {
                     },
                 },
                 400: {
-                    description: 'Validation failed',
+                    description: COMMON_MESSAGE.VALIDATION_FAILED,
+                },
+            },
+        },
+    },
+    '/auth/resend-verify-email': {
+        post: {
+            tags: ['Auth'],
+            summary: 'Resend verify email to current user',
+            security: bearerAuthSecurity,
+            responses: {
+                200: {
+                    description: AUTH_MESSAGE.RESEND_VERIFY_EMAIL_SUCCESS,
+                    content: {
+                        'application/json': {
+                            schema: {
+                                $ref: '#/components/schemas/AuthEmptySuccessResponse',
+                            },
+                        },
+                    },
+                },
+                401: {
+                    description: AUTH_MESSAGE.TOKEN_INVALID,
+                },
+            },
+        },
+    },
+    '/auth/verify-email': {
+        post: {
+            tags: ['Auth'],
+            summary: 'Verify email with token',
+            requestBody: {
+                required: true,
+                content: {
+                    'application/json': {
+                        schema: {
+                            $ref: '#/components/schemas/AuthValidateTokenRequest',
+                        },
+                        example: {
+                            token: 'f8c7f1b8d2a44c7c9f3f2a1b0c9d8e7f',
+                        },
+                    },
+                },
+            },
+            responses: {
+                200: {
+                    description: AUTH_MESSAGE.VERIFY_EMAIL_SUCCESS,
+                    content: {
+                        'application/json': {
+                            schema: {
+                                $ref: '#/components/schemas/AuthEmptySuccessResponse',
+                            },
+                        },
+                    },
+                },
+                400: {
+                    description: COMMON_MESSAGE.VALIDATION_FAILED,
+                },
+            },
+        },
+    },
+    '/auth/validate/email': {
+        post: {
+            tags: ['Auth'],
+            summary: 'Check whether an email is available',
+            requestBody: {
+                required: true,
+                content: {
+                    'application/json': {
+                        schema: {
+                            $ref: '#/components/schemas/AuthValidateEmailRequest',
+                        },
+                        example: {
+                            email: 'john@example.com',
+                        },
+                    },
+                },
+            },
+            responses: {
+                200: {
+                    description: AUTH_MESSAGE.VALIDATE_EMAIL_SUCCESS,
+                    content: {
+                        'application/json': {
+                            schema: {
+                                $ref: '#/components/schemas/AuthValidateEmailSuccessResponse',
+                            },
+                        },
+                    },
+                },
+                400: {
+                    description: COMMON_MESSAGE.VALIDATION_FAILED,
+                },
+            },
+        },
+    },
+    '/auth/validate/username': {
+        post: {
+            tags: ['Auth'],
+            summary: 'Check whether a username is available',
+            requestBody: {
+                required: true,
+                content: {
+                    'application/json': {
+                        schema: {
+                            $ref: '#/components/schemas/AuthValidateUsernameRequest',
+                        },
+                        example: {
+                            username: 'john_doe',
+                        },
+                    },
+                },
+            },
+            responses: {
+                200: {
+                    description: AUTH_MESSAGE.VALIDATE_USERNAME_SUCCESS,
+                    content: {
+                        'application/json': {
+                            schema: {
+                                $ref: '#/components/schemas/AuthValidateUsernameSuccessResponse',
+                            },
+                        },
+                    },
+                },
+                400: {
+                    description: COMMON_MESSAGE.VALIDATION_FAILED,
+                },
+            },
+        },
+    },
+    '/auth/reset-password': {
+        post: {
+            tags: ['Auth'],
+            summary: 'Reset password with token',
+            requestBody: {
+                required: true,
+                content: {
+                    'application/json': {
+                        schema: {
+                            $ref: '#/components/schemas/AuthResetPasswordRequest',
+                        },
+                        example: {
+                            token: 'f8c7f1b8d2a44c7c9f3f2a1b0c9d8e7f',
+                            email: 'john@example.com',
+                            password: 'Password123',
+                            confirmPassword: 'Password123',
+                        },
+                    },
+                },
+            },
+            responses: {
+                200: {
+                    description: AUTH_MESSAGE.RESET_PASSWORD_SUCCESS,
+                    content: {
+                        'application/json': {
+                            schema: {
+                                $ref: '#/components/schemas/AuthEmptySuccessResponse',
+                            },
+                        },
+                    },
+                },
+                400: {
+                    description: COMMON_MESSAGE.VALIDATION_FAILED,
+                },
+                404: {
+                    description: COMMON_MESSAGE.RESOURCE_NOT_FOUND,
                 },
             },
         },

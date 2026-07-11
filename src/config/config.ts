@@ -1,9 +1,19 @@
+import { cloudflareConfig } from '@/config/cloudflare';
 import { databaseConfig } from '@/config/database';
+import { groQConfig } from '@/config/groq';
+import { hookSecretKeyConfig } from '@/config/hook-secret.config';
 import { jwtConfig } from '@/config/jwt';
+import { leonardoConfig } from '@/config/leonardo';
 import { mixedbreadAIConfig } from '@/config/mixedbread-ai';
+import { mongodbConfig } from '@/config/mongodb';
+import { nodemailerConfig } from '@/config/nodemailer';
+import { notionConfig } from '@/config/notion';
+import { openRouterConfig } from '@/config/openrouter';
 import { pineconeConfig } from '@/config/pinecone';
+import { pusherConfig } from '@/config/pusher';
 import { rateLimitConfig } from '@/config/ratelimit';
 import { redisConfig } from '@/config/redis';
+import { ENV_MESSAGE } from '@/constants/message';
 import dotenv from 'dotenv';
 import { z } from 'zod';
 
@@ -13,20 +23,29 @@ const envSchema = z.object({
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
     PORT: z.coerce.number().int().positive().default(3000),
     CORS_ORIGIN: z.string().default('*'),
+    FRONTEND_URL: z.string().default('http://localhost:5173'),
     ...databaseConfig.shape,
     ...rateLimitConfig.shape,
     ...redisConfig.shape,
     ...jwtConfig.shape,
     ...mixedbreadAIConfig.shape,
     ...pineconeConfig.shape,
-
+    ...nodemailerConfig.shape,
+    ...cloudflareConfig.shape,
+    ...pusherConfig.shape,
+    ...openRouterConfig.shape,
+    ...leonardoConfig.shape,
+    ...notionConfig.shape,
+    ...groQConfig.shape,
+    ...hookSecretKeyConfig.shape,
+    ...mongodbConfig.shape,
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
 
 if (!parsedEnv.success) {
-    console.error('Invalid environment variables:', parsedEnv.error.flatten().fieldErrors);
-    throw new Error('Invalid environment variables');
+    console.error(ENV_MESSAGE.INVALID_ENVIRONMENT_VARIABLES, parsedEnv.error.flatten().fieldErrors);
+    throw new Error(ENV_MESSAGE.INVALID_ENVIRONMENT_VARIABLES);
 }
 
 const configService = parsedEnv.data;

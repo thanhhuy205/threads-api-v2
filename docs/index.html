@@ -1,0 +1,766 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Threads-inspired social platform portfolio hub for recruiters: frontend, backend, repositories, architecture and documentation.">
+  <title>Pham Thanh Huy - Threads Social Platform</title>
+  <style>
+    :root {
+      --ivory:#faf9f5;
+      --paper:#ffffff;
+      --ink:#141413;
+      --muted:#686760;
+      --line:#d7d1c5;
+      --soft:#f0eee6;
+      --soft-2:#e8e2d6;
+      --clay:#d97757;
+      --clay-dark:#aa553d;
+      --olive:#788c5d;
+      --blue:#315f83;
+      --slate:#2f3137;
+      --shadow:0 18px 45px rgba(20,20,19,.10);
+      --serif:ui-serif,Georgia,"Times New Roman",Times,serif;
+      --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      --mono:ui-monospace,"SFMono-Regular",Menlo,Monaco,Consolas,"Liberation Mono",monospace;
+    }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body {
+      margin:0;
+      background:var(--ivory);
+      color:var(--ink);
+      font-family:var(--sans);
+      line-height:1.58;
+      -webkit-font-smoothing:antialiased;
+    }
+    a { color:inherit; }
+    code { font-family:var(--mono); font-size:.92em; }
+    .wrap { width:min(1120px,calc(100% - 44px)); margin:0 auto; padding:0 0 96px; }
+    .masthead {
+      padding:74px 0 36px;
+      border-bottom:1.5px solid var(--line);
+    }
+    .hero {
+      display:grid;
+      grid-template-columns:minmax(0,1fr) 340px;
+      gap:52px;
+      align-items:end;
+    }
+    .eyebrow {
+      display:flex;
+      align-items:center;
+      gap:10px;
+      margin:0 0 18px;
+      color:var(--muted);
+      font:12px var(--mono);
+      letter-spacing:.12em;
+      text-transform:uppercase;
+    }
+    .eyebrow::before {
+      content:"";
+      width:24px;
+      height:1.5px;
+      background:var(--clay);
+    }
+    h1 {
+      max-width:16ch;
+      margin:0;
+      font:500 clamp(40px,5.8vw,68px)/1.04 var(--serif);
+      letter-spacing:-.016em;
+    }
+    h1 em { color:var(--clay); font-style:italic; }
+    .intro {
+      max-width:720px;
+      margin:22px 0 0;
+      color:var(--slate);
+      font-size:17px;
+    }
+    .quick {
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:28px;
+    }
+    .quick a {
+      display:inline-flex;
+      align-items:center;
+      min-height:36px;
+      border:1.5px solid var(--line);
+      border-radius:999px;
+      padding:7px 13px;
+      background:var(--paper);
+      color:var(--slate);
+      font:12px var(--mono);
+      text-decoration:none;
+    }
+    .quick a:hover { border-color:var(--ink); }
+    .figure {
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:14px;
+      align-items:end;
+    }
+    .pane {
+      position:relative;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      min-height:250px;
+      border:1.5px solid var(--line);
+      border-radius:10px;
+      padding:16px;
+      background:var(--paper);
+    }
+    .pane:first-child { transform:rotate(-2deg) translateY(8px); background:var(--soft); }
+    .pane:last-child { transform:rotate(1.4deg); border-color:var(--ink); box-shadow:var(--shadow); }
+    .pane .tag {
+      position:absolute;
+      top:-10px;
+      left:13px;
+      border:1.5px solid var(--line);
+      border-radius:6px;
+      padding:2px 7px;
+      background:var(--ivory);
+      color:var(--muted);
+      font:10px var(--mono);
+      text-transform:uppercase;
+      letter-spacing:.08em;
+    }
+    .pane:last-child .tag { border-color:var(--ink); color:var(--ink); }
+    .line { height:7px; border-radius:10px; background:#d3ccbf; }
+    .line.dark { background:#bdb5a7; }
+    .w95 { width:95%; } .w86 { width:86%; } .w75 { width:75%; } .w62 { width:62%; } .w50 { width:50%; }
+    .mini-map {
+      position:relative;
+      flex:1;
+      display:grid;
+      place-items:center;
+      margin:4px 0;
+      border:1.5px solid var(--line);
+      border-radius:8px;
+      background:linear-gradient(135deg,#f4ede1,#e7ddcc);
+    }
+    .mini-map::before {
+      content:"API";
+      display:grid;
+      place-items:center;
+      width:58px;
+      height:36px;
+      border:2px solid var(--clay);
+      border-radius:8px;
+      color:var(--clay-dark);
+      font:800 11px var(--mono);
+    }
+    .mini-map::after {
+      content:"DB · Redis · Worker";
+      position:absolute;
+      bottom:14px;
+      color:var(--muted);
+      font:10px var(--mono);
+    }
+    nav.toc {
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      padding:26px 0 0;
+    }
+    nav.toc a {
+      display:inline-flex;
+      gap:7px;
+      align-items:center;
+      border:1.5px solid var(--line);
+      border-radius:999px;
+      padding:7px 14px;
+      background:var(--paper);
+      color:var(--slate);
+      font-size:12.5px;
+      text-decoration:none;
+    }
+    nav.toc a span { color:var(--muted); font:10px var(--mono); }
+    nav.toc a:hover { border-color:var(--ink); }
+    section { margin-top:70px; scroll-margin-top:24px; }
+    .sec-head {
+      display:flex;
+      gap:16px;
+      align-items:baseline;
+      margin-bottom:10px;
+    }
+    .idx {
+      color:var(--clay);
+      font:600 13px var(--mono);
+    }
+    h2 {
+      margin:0;
+      font:500 28px/1.2 var(--serif);
+      letter-spacing:-.012em;
+    }
+    .count {
+      border-radius:999px;
+      padding:2px 8px;
+      background:var(--soft);
+      color:var(--muted);
+      font:11px var(--mono);
+    }
+    .sec-intro {
+      max-width:760px;
+      margin:0 0 24px 48px;
+      color:var(--muted);
+      font-size:14.5px;
+    }
+    .hero-cards,
+    .grid,
+    .proof-grid,
+    .infra-grid,
+    .link-grid {
+      margin-left:48px;
+    }
+    .hero-cards {
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:18px;
+    }
+    .card {
+      position:relative;
+      display:flex;
+      min-height:286px;
+      overflow:hidden;
+      flex-direction:column;
+      border:1.5px solid var(--line);
+      border-radius:14px;
+      background:var(--paper);
+      text-decoration:none;
+      transition:transform 150ms ease,border-color 150ms ease,box-shadow 150ms ease;
+    }
+    .card:hover {
+      transform:translateY(-3px);
+      border-color:var(--ink);
+      box-shadow:var(--shadow);
+    }
+    .thumb {
+      display:grid;
+      min-height:128px;
+      place-items:center;
+      border-bottom:1.5px solid var(--line);
+      background:var(--soft);
+    }
+    .card:nth-child(2) .thumb { background:#e8efe8; }
+    .card:nth-child(3) .thumb { background:#e6edf1; }
+    .card:nth-child(4) .thumb { background:#f0e7df; }
+    .glyph {
+      display:grid;
+      width:72px;
+      height:72px;
+      place-items:center;
+      border:2px solid currentColor;
+      border-radius:14px;
+      color:var(--clay-dark);
+      font:800 18px var(--mono);
+      background:rgba(255,255,255,.35);
+    }
+    .card:nth-child(2) .glyph { color:var(--olive); }
+    .card:nth-child(3) .glyph { color:var(--blue); }
+    .card:nth-child(4) .glyph { color:var(--slate); }
+    .card-body { display:flex; flex:1; flex-direction:column; padding:18px; }
+    .meta {
+      display:flex;
+      flex-wrap:wrap;
+      gap:7px;
+      margin-bottom:13px;
+    }
+    .badge {
+      border:1.5px solid var(--line);
+      border-radius:999px;
+      padding:3px 7px;
+      color:var(--muted);
+      font:10px var(--mono);
+      text-transform:uppercase;
+      letter-spacing:.05em;
+    }
+    .badge.live { border-color:#c8dfd4; background:#edf8f2; color:#296c4b; }
+    .badge.repo { border-color:#c9d7e0; background:#edf5f8; color:#315f83; }
+    .card h3,
+    .panel h3,
+    .link-card h3 {
+      margin:0 0 8px;
+      font-size:18px;
+      line-height:1.25;
+      letter-spacing:-.01em;
+    }
+    .card p,
+    .panel p,
+    .link-card p {
+      margin:0;
+      color:var(--muted);
+      font-size:13.5px;
+    }
+    .card-foot {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      margin-top:auto;
+      padding-top:18px;
+      color:var(--slate);
+      font:11px var(--mono);
+    }
+    .arrow {
+      display:grid;
+      flex:0 0 auto;
+      width:28px;
+      height:28px;
+      place-items:center;
+      border-radius:8px;
+      background:var(--soft);
+      color:var(--clay-dark);
+    }
+    .grid,
+    .proof-grid,
+    .infra-grid,
+    .link-grid {
+      display:grid;
+      gap:18px;
+    }
+    .proof-grid { grid-template-columns:repeat(3,1fr); }
+    .panel {
+      border:1.5px solid var(--line);
+      border-radius:14px;
+      padding:20px;
+      background:var(--paper);
+    }
+    .panel strong {
+      display:block;
+      margin-bottom:10px;
+      color:var(--clay-dark);
+      font:700 11px var(--mono);
+      letter-spacing:.08em;
+      text-transform:uppercase;
+    }
+    .stack {
+      display:flex;
+      flex-wrap:wrap;
+      gap:7px;
+      margin-top:16px;
+    }
+    .pill {
+      border:1.5px solid var(--line);
+      border-radius:7px;
+      padding:5px 8px;
+      background:var(--soft);
+      color:var(--slate);
+      font:11px var(--mono);
+    }
+    .system {
+      margin-left:48px;
+      border:1.5px solid var(--ink);
+      border-radius:16px;
+      overflow:hidden;
+      background:var(--paper);
+    }
+    .system-row {
+      display:grid;
+      grid-template-columns:180px 1fr;
+      border-top:1.5px solid var(--line);
+    }
+    .system-row:first-child { border-top:0; }
+    .system-key {
+      padding:16px 18px;
+      background:var(--soft);
+      color:var(--ink);
+      font:700 12px var(--mono);
+    }
+    .system-value {
+      padding:16px 18px;
+      color:var(--muted);
+      font-size:14px;
+    }
+    .infra-grid { grid-template-columns:1fr 1fr; }
+    .flow {
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:0;
+      margin-left:48px;
+      overflow:hidden;
+      border:1.5px solid var(--ink);
+      border-radius:16px;
+      background:var(--ink);
+      color:var(--paper);
+    }
+    .flow div {
+      min-height:112px;
+      padding:17px 14px;
+      border-right:1px solid rgba(255,255,255,.14);
+    }
+    .flow div:last-child { border-right:0; }
+    .flow b {
+      display:block;
+      margin-bottom:8px;
+      font-size:13px;
+    }
+    .flow span {
+      color:#c6c1b7;
+      font:10.5px/1.55 var(--mono);
+    }
+    .link-grid {
+      grid-template-columns:repeat(4,1fr);
+    }
+    .link-card {
+      display:flex;
+      min-height:178px;
+      flex-direction:column;
+      border:1.5px solid var(--line);
+      border-radius:14px;
+      padding:18px;
+      background:var(--paper);
+      text-decoration:none;
+      transition:transform 150ms ease,border-color 150ms ease,box-shadow 150ms ease;
+    }
+    .link-card:hover {
+      transform:translateY(-3px);
+      border-color:var(--ink);
+      box-shadow:var(--shadow);
+    }
+    .link-card .card-foot { padding-top:20px; }
+    .note {
+      margin:18px 0 0 48px;
+      border-left:3px solid var(--clay);
+      padding:12px 16px;
+      background:var(--soft);
+      color:var(--slate);
+      font-size:13.5px;
+    }
+    footer {
+      display:flex;
+      justify-content:space-between;
+      gap:20px;
+      margin-top:78px;
+      padding-top:22px;
+      border-top:1.5px solid var(--line);
+      color:var(--muted);
+      font:11px var(--mono);
+    }
+    @media(max-width:980px) {
+      .hero { grid-template-columns:1fr; }
+      .figure { max-width:360px; }
+      .hero-cards,
+      .proof-grid,
+      .infra-grid,
+      .link-grid,
+      .flow { grid-template-columns:repeat(2,1fr); }
+    }
+    @media(max-width:680px) {
+      .wrap { width:min(100% - 30px,1120px); padding-bottom:70px; }
+      .masthead { padding-top:48px; }
+      h1 { font-size:41px; }
+      .intro { font-size:15.5px; }
+      .sec-head { gap:10px; }
+      .sec-intro,
+      .hero-cards,
+      .grid,
+      .proof-grid,
+      .infra-grid,
+      .link-grid,
+      .system,
+      .flow,
+      .note { margin-left:0; }
+      .hero-cards,
+      .proof-grid,
+      .infra-grid,
+      .link-grid,
+      .flow { grid-template-columns:1fr; }
+      .system-row { grid-template-columns:1fr; }
+      .flow div { border-right:0; border-bottom:1px solid rgba(255,255,255,.14); }
+      .flow div:last-child { border-bottom:0; }
+      footer { flex-direction:column; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <div class="hero">
+      <div>
+        <div class="eyebrow">Pham Thanh Huy · Junior Back-end Developer</div>
+        <h1>Threads-inspired <em>social platform</em></h1>
+        <p class="intro">
+          Full-stack project built with a backend-first mindset: clean REST API, JWT + refresh token rotation,
+          Redis/BullMQ background jobs, realtime notifications, AI-assisted moderation, Cloudflare R2 media,
+          Docker deployment and cost-aware infrastructure decisions.
+        </p>
+        <div class="quick" aria-label="Quick links">
+          <a href="#showcase">Main links</a>
+          <a href="#backend-proof">Backend proof</a>
+          <a href="#old-infra">Current infrastructure</a>
+          <a href="#reference">Plan / QA / Docs</a>
+        </div>
+      </div>
+      <div class="figure" aria-hidden="true">
+        <div class="pane">
+          <span class="tag">frontend</span>
+          <span class="line w95"></span>
+          <span class="line w75"></span>
+          <span class="line w86"></span>
+          <span class="line w62"></span>
+          <span class="line w95"></span>
+          <span class="line w50"></span>
+          <span class="line w75"></span>
+        </div>
+        <div class="pane">
+          <span class="tag">backend</span>
+          <span class="line dark w62"></span>
+          <div class="mini-map"></div>
+          <span class="line dark w86"></span>
+          <span class="line dark w50"></span>
+        </div>
+      </div>
+    </div>
+    <nav class="toc" aria-label="Trang này">
+      <a href="#showcase">Main links <span>4</span></a>
+      <a href="#backend-proof">Backend <span>3</span></a>
+      <a href="#system">System <span>5</span></a>
+      <a href="#old-infra">Infrastructure <span>shared</span></a>
+      <a href="#reference">Docs cuối trang <span>QA</span></a>
+    </nav>
+  </header>
+
+  <main>
+    <section id="showcase">
+      <div class="sec-head"><span class="idx">01</span><h2>Main links for recruiters</h2><span class="count">Frontend · Backend · Frontend repo · Backend repo</span></div>
+      <p class="sec-intro">
+        These are the four links I would send to a recruiter first. Start with the frontend demo to see
+        the product, then open the backend docs to understand the API and system design. The two repo
+        links are there for source review.
+      </p>
+      <div class="hero-cards">
+        <a class="card" href="https://www.huydarealest.com/" target="_blank" rel="noreferrer">
+          <div class="thumb"><div class="glyph">FE</div></div>
+          <div class="card-body">
+            <div class="meta"><span class="badge live">Demo</span><span class="badge">Next.js</span></div>
+            <h3>Frontend Demo</h3>
+            <p>
+              Live product demo from the user side: feed, posts, profiles, follow/friend flows,
+              notifications and the main social interactions. This is the quickest way to understand
+              what the backend is supporting.
+            </p>
+            <div class="card-foot"><span>www.huydarealest.com</span><span class="arrow">-></span></div>
+          </div>
+        </a>
+        <a class="card" href="https://threads.huydarealest.com/api/v1/docs/" target="_blank" rel="noreferrer">
+          <div class="thumb"><div class="glyph">BE</div></div>
+          <div class="card-body">
+            <div class="meta"><span class="badge live">Docs</span><span class="badge">Swagger API</span></div>
+            <h3>Backend API Docs</h3>
+            <p>
+              Backend docs covering routes, modules, API groups and feature flows. They show how a
+              request moves through middleware, validation, controllers, services, repositories,
+              Prisma, Redis and workers.
+            </p>
+            <div class="card-foot"><span>threads.huydarealest.com/api/v1/docs</span><span class="arrow">-></span></div>
+          </div>
+        </a>
+        <a class="card" href="https://github.com/delunsss2345/threads-meta-frontend/tree/production" target="_blank" rel="noreferrer">
+          <div class="thumb"><div class="glyph">FE</div></div>
+          <div class="card-body">
+            <div class="meta"><span class="badge repo">Repo</span><span class="badge">Client</span></div>
+            <h3>Frontend Repo</h3>
+            <p>
+              Frontend source for reviewing screen structure, components, routing, authentication
+              state and API integration. This gives context for how the client works with the backend.
+            </p>
+            <div class="card-foot"><span>github.com/delunsss2345/threads-meta-frontend</span><span class="arrow">-></span></div>
+          </div>
+        </a>
+        <a class="card" href="https://github.com/thanhhuy205/threads-api-v2/tree/production" target="_blank" rel="noreferrer">
+          <div class="thumb"><div class="glyph">BE</div></div>
+          <div class="card-body">
+            <div class="meta"><span class="badge repo">Repo</span><span class="badge">Server</span></div>
+            <h3>Backend Repo</h3>
+            <p>
+              Main backend repository: Express, TypeScript, Prisma schema, domain modules,
+              Redis/BullMQ workers, Docker, CI/CD and deployment config. This is the best place
+              to review my backend work.
+            </p>
+            <div class="card-foot"><span>github.com/thanhhuy205/threads-api-v2</span><span class="arrow">-></span></div>
+          </div>
+        </a>
+      </div>
+    </section>
+
+    <section id="backend-proof">
+      <div class="sec-head"><span class="idx">02</span><h2>Backend highlights</h2><span class="count">From my CV</span></div>
+      <p class="sec-intro">
+        These are the backend parts I want reviewers to notice: a layered API, background workers for
+        heavy work, separate boundaries for realtime/AI/media, and infrastructure choices that keep
+        costs low without making the project unrealistic.
+      </p>
+      <div class="proof-grid">
+        <article class="panel">
+          <strong>Architecture</strong>
+          <h3>Layered REST API</h3>
+          <p>
+            The API is split by domain modules instead of putting business logic inside route handlers.
+            Requests go through middleware, Zod validation, controller mapping, service rules and
+            repository access through Prisma/MySQL.
+          </p>
+          <div class="stack"><span class="pill">Express 5</span><span class="pill">TypeScript</span><span class="pill">Prisma 7</span><span class="pill">Swagger</span></div>
+        </article>
+        <article class="panel">
+          <strong>Async system</strong>
+          <h3>Redis + BullMQ workers</h3>
+          <p>
+            Work that does not need to block the request is moved to Redis/BullMQ: email, Bloom filter updates,
+            like sync, grouped notifications, AI evaluation, vector indexing and media jobs.
+          </p>
+          <div class="stack"><span class="pill">Redis</span><span class="pill">BullMQ</span><span class="pill">Workers</span><span class="pill">Debounce</span></div>
+        </article>
+        <article class="panel">
+          <strong>Cost control</strong>
+          <h3>Self-hosted alternatives</h3>
+          <p>
+            I chose cheaper infrastructure where it made sense: Cloudflare R2 for object storage,
+            self-hosted FFmpeg/HLS instead of a paid encoding service, MySQL full-text/NGram instead of
+            Elasticsearch for social search, and Soketi as a Pusher-compatible realtime option.
+          </p>
+          <div class="stack"><span class="pill">Cloudflare R2</span><span class="pill">FFmpeg</span><span class="pill">Soketi</span><span class="pill">Nginx</span></div>
+        </article>
+      </div>
+    </section>
+
+    <section id="system">
+      <div class="sec-head"><span class="idx">03</span><h2>System snapshot</h2><span class="count">Backend-focused</span></div>
+      <p class="sec-intro">Một màn hình để reviewer nắm nhanh scope kỹ thuật trước khi đi vào route hoặc source.</p>
+      <div class="system">
+        <div class="system-row">
+          <div class="system-key">Core features</div>
+          <div class="system-value">Posts, comments/replies, reposts, follows, friend requests, chat, realtime notifications, upload, search, AI moderation, reports, admin, daily quest và circles.</div>
+        </div>
+        <div class="system-row">
+          <div class="system-key">Security</div>
+          <div class="system-value">JWT access token, refresh token rotation, hashed refresh token in DB, logout blacklist in Redis, email verification, password recovery, Zod validation và rate limiting.</div>
+        </div>
+        <div class="system-row">
+          <div class="system-key">Data</div>
+          <div class="system-value">MySQL/MariaDB với Prisma ORM, repository pattern, full-text search, NGram indexing, cursor pagination và transactional domain writes.</div>
+        </div>
+        <div class="system-row">
+          <div class="system-key">Realtime</div>
+          <div class="system-value">Pusher-compatible realtime layer, private/presence auth, grouped notifications bằng Redis hash/set/zset và worker sync về DB.</div>
+        </div>
+        <div class="system-row">
+          <div class="system-key">Deploy</div>
+          <div class="system-value">Docker image build qua GitHub Actions, push Amazon ECR, deploy EC2 bằng SSH, Nginx reverse proxy, migration chạy sau compose up.</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="old-infra">
+      <div class="sec-head"><span class="idx">04</span><h2>Current shared infrastructure</h2><span class="count">Current setup</span></div>
+      <p class="sec-intro">
+        This is the current shared-infra setup. The idea is simple: keep the reverse proxy, the app,
+        and the data services separate, so Nginx, Redis and MySQL can be reused without putting every
+        container into one large compose file. I will add the newer infrastructure details later.
+      </p>
+      <div class="infra-grid">
+        <article class="panel">
+          <strong>Folder layout</strong>
+          <h3>Folders are split by runtime responsibility</h3>
+          <p>
+            <code>infa/</code> contains shared services such as Redis and MySQL. They are kept outside the app
+            folder so the app can be redeployed without touching database/cache state. <code>proxy/</code> contains
+            Nginx, domain routing and the public entrypoint. <code>threads/</code> contains the Threads app itself:
+            API container, workers, realtime service and app-specific compose/env files.
+          </p>
+          <div class="stack"><span class="pill">infa: redis + mysql</span><span class="pill">proxy: nginx</span><span class="pill">threads: app</span></div>
+        </article>
+        <article class="panel">
+          <strong>Network layout</strong>
+          <h3>Networks follow how containers talk to each other</h3>
+          <p>
+            <code>proxy-app</code> lets Nginx in <code>proxy/</code> reach the app in <code>threads/</code> and forward
+            traffic to the API/realtime service. <code>app-net</code> connects the app to Redis and MySQL in
+            <code>infa/</code>; it is marked <code>external: true</code> because multiple compose projects attach
+            to the same pre-created network. Containers that are only used inside Threads stay on
+            <code>threads-network</code>.
+          </p>
+          <div class="stack"><span class="pill">proxy-app</span><span class="pill">app-net external true</span><span class="pill">threads-network</span></div>
+        </article>
+      </div>
+      <div class="flow" aria-label="Infrastructure flow">
+        <div><b>Internet</b><span>Users reach the app through an HTTPS domain. Requests do not go straight to the app container.</span></div>
+        <div><b>proxy/ nginx</b><span>Nginx handles the domain and forwards traffic to Threads through proxy-app.</span></div>
+        <div><b>threads/ app</b><span>The API handles HTTP, workers process background jobs, and realtime services handle chat/notifications.</span></div>
+        <div><b>infa/ mysql</b><span>MySQL stays in shared infra and is reached through app-net external.</span></div>
+        <div><b>infa/ redis</b><span>Redis is used for cache, queues, Bloom filter and notification debounce through app-net external.</span></div>
+      </div>
+      <p class="note">
+        Note: this repo still has older compose files such as <code>docker-compose.yml</code> and
+        <code>docker-compose.provider.yaml</code>. This section describes the shared-infra layout I want to show
+        in the portfolio: shared infra in <code>infa/</code>, proxy in <code>proxy/</code>, and the app in
+        <code>threads/</code>. The newer infra section can later add domain routing, SSL, backup, monitoring
+        and rollout details.
+      </p>
+    </section>
+
+    <section id="reference">
+      <div class="sec-head"><span class="idx">05</span><h2>Plan, QA và tài liệu phụ</h2><span class="count">Đưa xuống cuối trang</span></div>
+      <p class="sec-intro">Các link này vẫn hữu ích khi reviewer muốn đào sâu, nhưng không đặt trước 4 card tuyển dụng.</p>
+      <div class="link-grid">
+        <a class="link-card" href="full-project-flow.html">
+          <div class="meta"><span class="badge live">Overview</span></div>
+          <h3>Full project flow</h3>
+          <p>Bản đồ toàn hệ thống, route groups, queue coverage và known gaps.</p>
+          <div class="card-foot"><span>full-project-flow.html</span><span class="arrow">→</span></div>
+        </a>
+        <a class="link-card" href="project-docs.html">
+          <div class="meta"><span class="badge">QA</span></div>
+          <h3>Project docs</h3>
+          <p>Checklist/tài liệu tổng hợp để đọc hoặc kiểm thử theo nhóm chức năng.</p>
+          <div class="card-foot"><span>project-docs.html</span><span class="arrow">→</span></div>
+        </a>
+        <a class="link-card" href="review/pr-writeup.html">
+          <div class="meta"><span class="badge">Review</span></div>
+          <h3>Code review & audit</h3>
+          <p>PR write-up, annotated findings, risk register và score improvement plan.</p>
+          <div class="card-foot"><span>review/</span><span class="arrow">→</span></div>
+        </a>
+        <a class="link-card" href="api/current-routes.html">
+          <div class="meta"><span class="badge live">API</span></div>
+          <h3>Current routes</h3>
+          <p>Danh mục route hiện tại để reviewer đối chiếu nhanh với Swagger/source.</p>
+          <div class="card-foot"><span>api/current-routes.html</span><span class="arrow">→</span></div>
+        </a>
+        <a class="link-card" href="13-bonus-features.html">
+          <div class="meta"><span class="badge">Plan</span></div>
+          <h3>Bonus features</h3>
+          <p>Ý tưởng mở rộng sản phẩm, không phải toàn bộ đã production.</p>
+          <div class="card-foot"><span>13-bonus-features.html</span><span class="arrow">→</span></div>
+        </a>
+        <a class="link-card" href="liquidation-stakes-plan.html">
+          <div class="meta"><span class="badge">Plan</span></div>
+          <h3>Liquidation Stakes</h3>
+          <p>Proposal chi tiết cho vòng đời stake/circle và thay đổi backend dự kiến.</p>
+          <div class="card-foot"><span>liquidation-stakes-plan.html</span><span class="arrow">→</span></div>
+        </a>
+        <a class="link-card" href="emotional-butterfly-effect-plan.html">
+          <div class="meta"><span class="badge">Plan</span></div>
+          <h3>Emotional Butterfly Effect</h3>
+          <p>Thiết kế feature cảm xúc, realtime fan-out và AI collaboration.</p>
+          <div class="card-foot"><span>emotional-butterfly-effect-plan.html</span><span class="arrow">→</span></div>
+        </a>
+        <a class="link-card" href="20-feature-doc-template.html">
+          <div class="meta"><span class="badge">Template</span></div>
+          <h3>Feature doc template</h3>
+          <p>Mẫu bổ sung tài liệu cho route, module và side effect mới.</p>
+          <div class="card-foot"><span>20-feature-doc-template.html</span><span class="arrow">→</span></div>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <span>Threads social platform · portfolio hub for recruiters</span>
+    <span>Express · TypeScript · Prisma · Redis · BullMQ · Docker</span>
+  </footer>
+</div>
+</body>
+</html>

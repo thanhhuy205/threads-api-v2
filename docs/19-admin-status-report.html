@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin Frame Status Report</title>
+<style>
+  :root {
+    --ivory: #FAF9F5;
+    --slate: #141413;
+    --clay: #D97757;
+    --oat: #E3DACC;
+    --olive: #788C5D;
+    --rust: #B04A3F;
+    --gray-100: #F0EEE6;
+    --gray-300: #D1CFC5;
+    --gray-500: #87867F;
+    --gray-700: #3D3D3A;
+    --white: #FFFFFF;
+    --serif: ui-serif, Georgia, serif;
+    --sans: system-ui, -apple-system, sans-serif;
+    --mono: ui-monospace, "SF Mono", Menlo, monospace;
+    --radius-panel: 12px;
+    --border: 1.5px solid var(--gray-300);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 56px 24px 120px;
+    background: var(--ivory);
+    color: var(--slate);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .page { max-width: 940px; margin: 0 auto; }
+  header { margin-bottom: 40px; }
+  .header-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  h1 {
+    margin: 0;
+    font-family: var(--serif);
+    font-size: 38px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+  .auto-pill {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--gray-500);
+    background: var(--gray-100);
+    border: var(--border);
+    border-radius: 999px;
+    padding: 5px 11px;
+    white-space: nowrap;
+  }
+  .date-range { color: var(--gray-500); font-size: 14px; }
+  .date-range .repo {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--gray-700);
+  }
+  section { margin-bottom: 52px; }
+  h2 {
+    margin: 0 0 6px;
+    font-family: var(--serif);
+    font-size: 24px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+  hr.rule {
+    border: none;
+    border-top: 1px solid var(--gray-300);
+    margin: 0 0 22px;
+  }
+  .summary-band {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+  @media (max-width: 760px) {
+    .summary-band { grid-template-columns: repeat(2, 1fr); }
+  }
+  .stat-card {
+    background: var(--white);
+    border: var(--border);
+    border-radius: var(--radius-panel);
+    padding: 20px 22px 18px;
+  }
+  .stat-card.warn { border-left: 4px solid var(--clay); padding-left: 19px; }
+  .stat-num {
+    margin-bottom: 8px;
+    font-family: var(--serif);
+    font-size: 42px;
+    font-weight: 500;
+    line-height: 1;
+  }
+  .stat-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--gray-500);
+  }
+  .stat-delta {
+    margin-top: 6px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--gray-500);
+  }
+  .stat-delta.up { color: var(--olive); }
+  .highlights {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .highlights li {
+    position: relative;
+    padding: 0 0 14px 26px;
+    color: var(--gray-700);
+  }
+  .highlights li::before {
+    content: "";
+    position: absolute;
+    left: 6px;
+    top: 8px;
+    width: 7px;
+    height: 7px;
+    border-radius: 2px;
+    background: var(--clay);
+  }
+  .highlights strong { color: var(--slate); font-weight: 600; }
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: var(--white);
+    border: var(--border);
+    border-radius: var(--radius-panel);
+    overflow: hidden;
+  }
+  thead th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--gray-500);
+    background: var(--gray-100);
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--gray-300);
+  }
+  tbody td {
+    padding: 13px 16px;
+    border-bottom: 1px solid var(--gray-100);
+    font-size: 14px;
+    vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: var(--ivory); }
+  code {
+    font-family: var(--mono);
+    font-size: 12px;
+    background: var(--gray-100);
+    padding: 1px 5px;
+    border-radius: 4px;
+    color: var(--gray-700);
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    color: var(--gray-500);
+    white-space: nowrap;
+  }
+  .dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .low { background: var(--olive); }
+  .med { background: var(--clay); }
+  .high { background: var(--rust); }
+  .panel {
+    background: var(--white);
+    border: var(--border);
+    border-radius: var(--radius-panel);
+    padding: 24px 28px 18px;
+  }
+  .panel svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .caption {
+    margin-top: 12px;
+    font-size: 12px;
+    color: var(--gray-500);
+  }
+  .carryover {
+    background: var(--oat);
+    border-radius: var(--radius-panel);
+    padding: 20px 22px;
+  }
+  .carry-item {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    padding: 8px 0;
+  }
+  .carry-item + .carry-item { border-top: 1px solid rgba(20, 20, 19, 0.08); }
+  .carry-tag {
+    flex-shrink: 0;
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--gray-700);
+    background: var(--ivory);
+    border-radius: 4px;
+    padding: 3px 7px;
+  }
+  .carry-body { color: var(--gray-700); font-size: 14px; }
+  footer {
+    margin-top: 64px;
+    padding-top: 20px;
+    border-top: 1px solid var(--gray-300);
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--gray-500);
+  }
+</style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div class="header-top">
+        <h1>Admin Frame Status</h1>
+        <span class="auto-pill">status report</span>
+      </div>
+      <div class="date-range">
+        Generated May 14, 2026 &nbsp;&middot;&nbsp;
+        <span class="repo">threads-api-v2 @ workspace</span>
+      </div>
+    </header>
+
+    <section>
+      <div class="summary-band">
+        <div class="stat-card">
+          <div class="stat-num">1</div>
+          <div class="stat-label">Migration</div>
+          <div class="stat-delta up">Report + bannedUntil</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">4</div>
+          <div class="stat-label">Admin modules</div>
+          <div class="stat-delta up">DTO/Input frame</div>
+        </div>
+        <div class="stat-card warn">
+          <div class="stat-num">1</div>
+          <div class="stat-label">Queue riêng</div>
+          <div class="stat-delta">auto_remove_ban_queue</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num">3</div>
+          <div class="stat-label">Checks</div>
+          <div class="stat-delta up">validate · generate · typecheck</div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Highlights</h2>
+      <hr class="rule">
+      <ul class="highlights">
+        <li><strong>Frame-first implementation.</strong> Admin routes now have typed external DTOs and internal input interfaces, while service orchestration remains intentionally marked as TODO for later business logic.</li>
+        <li><strong>Repository stays data-access focused.</strong> Repositories expose DB create/find/update/count/aggregate methods; they do not decide moderation outcomes such as approve, hide, or delete.</li>
+        <li><strong>Dedicated BullMQ queue added.</strong> Auto-remove-ban has its own queue, producer, queue events file, and worker so it can be monitored separately from like/email/bloom/pinecone jobs.</li>
+        <li><strong>No old HTML docs were removed.</strong> This file was added as a new report and linked from the docs hub.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Change Ledger</h2>
+      <hr class="rule">
+      <table>
+        <thead>
+          <tr><th style="width: 170px;">Area</th><th style="width: 90px;">Action</th><th>Technical change</th><th>Why</th><th style="width: 90px;">Risk</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>prisma/schema.prisma</code></td><td>modified</td><td>Added <code>User.bannedUntil</code>, <code>ReportTargetType</code>, <code>ReportStatus</code>, and <code>Report</code>.</td><td>Gives the admin frame durable tables/fields without inventing service behavior yet.</td><td><span class="badge"><span class="dot med"></span>Med</span></td></tr>
+          <tr><td><code>prisma/migrations/20260514120000...</code></td><td>added</td><td>Adds <code>banned_until</code>, report table, indexes, and reporter foreign key.</td><td>Migration keeps database change explicit and reviewable.</td><td><span class="badge"><span class="dot med"></span>Med</span></td></tr>
+          <tr><td><code>report-management/dto</code></td><td>added</td><td>External body DTO contains <code>action</code> and <code>adminNote</code>.</td><td>These values come from HTTP body, so they belong in DTO, not internal input.</td><td><span class="badge"><span class="dot low"></span>Low</span></td></tr>
+          <tr><td><code>report-management/interfaces</code></td><td>added</td><td><code>ModerateReportInput</code> enriches DTO with <code>reportId</code> and <code>adminId</code>.</td><td>Params/JWT values are internal context, not client body data.</td><td><span class="badge"><span class="dot low"></span>Low</span></td></tr>
+          <tr><td><code>report-management.repository.ts</code></td><td>modified</td><td>Replaced no-op stub with <code>create</code>, <code>findById</code>, and <code>updateById</code>.</td><td>Repository now only exposes DB operations. It does not decide what approve/hide/delete means.</td><td><span class="badge"><span class="dot low"></span>Low</span></td></tr>
+          <tr><td><code>report-management.service.ts</code></td><td>modified</td><td>Returns frame response with report lookup and clear <code>nextStep</code> TODO.</td><td>Keeps route usable while leaving core moderation orchestration for later service work.</td><td><span class="badge"><span class="dot low"></span>Low</span></td></tr>
+          <tr><td><code>user-management/dto</code></td><td>added</td><td>External ban DTO accepts optional <code>bannedUntil</code> and <code>durationHours</code>.</td><td>Both values are caller-provided request data, so they are DTO-level.</td><td><span class="badge"><span class="dot low"></span>Low</span></td></tr>
+          <tr><td><code>user-management/interfaces</code></td><td>added</td><td>Internal inputs add <code>userId</code>, <code>adminId</code>, normalized <code>Date</code>, and expired-ban update data.</td><td>These values are enriched by params/JWT/job runtime.</td><td><span class="badge"><span class="dot low"></span>Low</span></td></tr>
+          <tr><td><code>user-management.repository.ts</code></td><td>modified</td><td>Added DB update methods for ban fields and expired banned users; selected <code>bannedUntil</code> in list users.</td><td>Needed DB primitives for later service logic and hourly worker frame.</td><td><span class="badge"><span class="dot med"></span>Med</span></td></tr>
+          <tr><td><code>hashtag-trending</code></td><td>modified</td><td>Added query DTO/input and repository query ordered by <code>Topic.count desc</code>.</td><td>Turns the route from stub into a DB-backed frame with a normalized limit.</td><td><span class="badge"><span class="dot low"></span>Low</span></td></tr>
+          <tr><td><code>statistics</code></td><td>modified</td><td>Added query DTO/input and repository aggregate/count queries for posts, users, reports, hashtags, and posts per day.</td><td>Stats endpoint now has real DB reads, while shaping policy can still evolve in service later.</td><td><span class="badge"><span class="dot med"></span>Med</span></td></tr>
+          <tr><td><code>src/constants/queue.ts</code></td><td>modified</td><td>Added <code>AUTO_REMOVE_BAN_QUEUE</code>, <code>AUTO_REMOVE_BAN_WORKER</code>, and <code>RUN_AUTO_REMOVE_BAN</code>.</td><td>Matches the existing queue constant pattern and keeps monitoring names stable.</td><td><span class="badge"><span class="dot low"></span>Low</span></td></tr>
+          <tr><td><code>auto-remove-ban producer</code></td><td>added</td><td>Creates a dedicated queue and registers an hourly repeat job with stable job id.</td><td>Separate queue makes remove-ban jobs visible apart from like sync jobs.</td><td><span class="badge"><span class="dot med"></span>Med</span></td></tr>
+          <tr><td><code>workers/auto-remove-ban.worker.ts</code></td><td>added</td><td>Consumes <code>RUN_AUTO_REMOVE_BAN</code>, builds internal input, and calls the DB update hook.</td><td>Worker frame is ready; final service flow can replace the direct call later.</td><td><span class="badge"><span class="dot med"></span>Med</span></td></tr>
+          <tr><td><code>queues/auto-remove-ban.queue.ts</code></td><td>added</td><td>Adds BullMQ <code>QueueEvents</code> logging for waiting/active/completed/failed.</td><td>Follows the existing queue event file format for observability.</td><td><span class="badge"><span class="dot low"></span>Low</span></td></tr>
+          <tr><td><code>src/server.ts</code></td><td>modified</td><td>Initializes auto-remove-ban repeat job after like sync scheduler init.</td><td>Ensures scheduler registration happens at app startup using the repo's current pattern.</td><td><span class="badge"><span class="dot med"></span>Med</span></td></tr>
+          <tr><td><code>docs/index.html</code></td><td>modified</td><td>Added this report card, updated counts, and mapped an icon.</td><td>Keeps the docs hub complete without deleting old docs.</td><td><span class="badge"><span class="dot low"></span>Low</span></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>DTO vs Internal Input</h2>
+      <hr class="rule">
+      <table>
+        <thead>
+          <tr><th style="width: 180px;">Module</th><th>DTO: outside data</th><th>Input: enriched internal data</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>report-management</code></td><td><code>action</code>, <code>adminNote</code> from request body.</td><td><code>reportId</code> from params, <code>adminId</code> from JWT, plus body fields.</td></tr>
+          <tr><td><code>user-management</code></td><td><code>bannedUntil</code>, <code>durationHours</code> from request body.</td><td><code>userId</code> from params, <code>adminId</code> from JWT, parsed <code>Date</code>.</td></tr>
+          <tr><td><code>hashtag-trending</code></td><td><code>limit</code> from query string.</td><td>Normalized numeric <code>limit</code> with default 10.</td></tr>
+          <tr><td><code>statistics</code></td><td><code>startDate</code>, <code>endDate</code> from query string.</td><td>Parsed optional <code>Date</code> range for DB aggregate queries.</td></tr>
+          <tr><td><code>auto-remove-ban</code></td><td><code>triggeredBy</code>, <code>requestedAt</code> from job payload.</td><td><code>now</code>, <code>jobId</code>, and normalized trigger metadata inside worker.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Name Glossary</h2>
+      <hr class="rule">
+      <table>
+        <thead>
+          <tr><th style="width: 190px;">Name</th><th>Definition</th><th>Where it appears</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>bannedUntil</code></td><td>Temporary-ban expiry time. If this Date is in the past, auto-remove-ban can move the user back to <code>ACTIVE</code>. If it is missing/null, the ban has no scheduled expiry in the current frame.</td><td>User DTO, user input, Prisma <code>users.banned_until</code></td></tr>
+          <tr><td><code>durationHours</code></td><td>Relative ban length sent by a caller. It is stored in input for later service logic to convert into <code>bannedUntil</code>.</td><td><code>BanUserRequestDto</code>, <code>BanUserInput</code></td></tr>
+          <tr><td><code>adminId</code></td><td>Authenticated admin user id from JWT context. This is not body data; it is internal metadata for future audit logs.</td><td>Report and user-management inputs</td></tr>
+          <tr><td><code>adminNote</code></td><td>Human explanation written by an admin while handling a report. Later service logic can persist it to <code>reports.admin_note</code>.</td><td>Report DTO/input</td></tr>
+          <tr><td><code>action</code></td><td>Requested moderation action from outside: <code>approve</code>, <code>hide_post</code>, or <code>delete_post</code>. Repository receives only DB data; service will decide how this action maps to writes.</td><td>Report DTO/input</td></tr>
+          <tr><td><code>targetType</code></td><td>Type of reported entity. Current allowed values are <code>POST</code> and <code>USER</code>.</td><td>Prisma <code>Report</code></td></tr>
+          <tr><td><code>targetId</code></td><td>Identifier of the reported entity. It is a string so it can point to either a post public id or a user id depending on <code>targetType</code>.</td><td>Prisma <code>Report</code></td></tr>
+          <tr><td><code>ReportStatus</code></td><td>Moderation queue state: <code>PENDING</code> for new reports, <code>RESOLVED</code> for handled reports, <code>DISMISSED</code> for future reject/ignore flows.</td><td>Prisma enum, stats repository</td></tr>
+          <tr><td><code>AutoRemoveBanJobDto</code></td><td>Serialized BullMQ payload saved in Redis. It is treated like external data because producer and worker communicate through the queue boundary.</td><td>Auto-remove-ban producer/worker</td></tr>
+          <tr><td><code>AutoRemoveBanInput.now</code></td><td>Worker runtime Date used in the DB query <code>bannedUntil &lt; now</code>.</td><td>Auto-remove-ban worker input</td></tr>
+          <tr><td><code>triggeredBy</code></td><td>Source of the auto-remove-ban job. Currently <code>scheduler</code>; <code>manual</code> is reserved for future admin-triggered jobs.</td><td>Auto-remove-ban job DTO/input</td></tr>
+          <tr><td><code>jobId</code></td><td>BullMQ id for the current job. Used only for logging/correlation.</td><td>Auto-remove-ban worker input</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Auto-Remove-Ban Queue Flow</h2>
+      <hr class="rule">
+      <div class="panel">
+        <svg viewBox="0 0 760 190" role="img" aria-label="Auto remove ban queue flow">
+          <rect x="20" y="36" width="160" height="54" rx="10" fill="#F0EEE6" stroke="#D1CFC5" stroke-width="1.5"/>
+          <text x="100" y="58" text-anchor="middle" font-family="system-ui" font-size="12" fill="#141413" font-weight="600">server.ts</text>
+          <text x="100" y="76" text-anchor="middle" font-family="ui-monospace,monospace" font-size="11" fill="#87867F">initAutoRemoveBanJob()</text>
+          <line x1="180" y1="63" x2="250" y2="63" stroke="#87867F" stroke-width="1.5"/>
+          <rect x="250" y="36" width="180" height="54" rx="10" fill="#FAF9F5" stroke="#D97757" stroke-width="1.5"/>
+          <text x="340" y="58" text-anchor="middle" font-family="system-ui" font-size="12" fill="#141413" font-weight="600">Producer</text>
+          <text x="340" y="76" text-anchor="middle" font-family="ui-monospace,monospace" font-size="11" fill="#87867F">repeat every 1h</text>
+          <line x1="430" y1="63" x2="500" y2="63" stroke="#87867F" stroke-width="1.5"/>
+          <rect x="500" y="36" width="220" height="54" rx="10" fill="#E3DACC" stroke="#D1CFC5" stroke-width="1.5"/>
+          <text x="610" y="58" text-anchor="middle" font-family="system-ui" font-size="12" fill="#141413" font-weight="600">auto_remove_ban_queue</text>
+          <text x="610" y="76" text-anchor="middle" font-family="ui-monospace,monospace" font-size="11" fill="#87867F">QueueEvents logs</text>
+          <line x1="610" y1="90" x2="610" y2="122" stroke="#87867F" stroke-width="1.5"/>
+          <rect x="500" y="122" width="220" height="50" rx="10" fill="#FFFFFF" stroke="#788C5D" stroke-width="1.5"/>
+          <text x="610" y="143" text-anchor="middle" font-family="system-ui" font-size="12" fill="#141413" font-weight="600">Worker</text>
+          <text x="610" y="160" text-anchor="middle" font-family="ui-monospace,monospace" font-size="11" fill="#87867F">build input + DB hook</text>
+        </svg>
+        <div class="caption">No per-user delayed job is added at ban time. Current frame uses one hourly scanner. If later service logic needs immediate delayed remove-ban per user, add that job at the end of the ban service after DB commit.</div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Removed or Deferred</h2>
+      <hr class="rule">
+      <div class="carryover">
+        <div class="carry-item"><span class="carry-tag">Removed</span><div class="carry-body">No files were deleted. Stub response flags like <code>implemented: false</code> were removed from admin service responses where a clearer frame response now exists.</div></div>
+        <div class="carry-item"><span class="carry-tag">Deferred</span><div class="carry-body">Moderation decisions for <code>approve</code>, <code>hide_post</code>, and <code>delete_post</code> are not implemented yet. Add that orchestration in <code>report-management.service.ts</code>.</div></div>
+        <div class="carry-item"><span class="carry-tag">Deferred</span><div class="carry-body"><code>durationHours</code> is captured in DTO/input but not converted into <code>bannedUntil</code> yet. Add that rule in <code>user-management.service.ts</code>.</div></div>
+        <div class="carry-item"><span class="carry-tag">Deferred</span><div class="carry-body">Auto-remove-ban worker currently calls the repository DB hook directly. When the service flow is ready, move this call behind service orchestration and keep the worker as trigger/input builder.</div></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Verification</h2>
+      <hr class="rule">
+      <table>
+        <thead>
+          <tr><th style="width: 220px;">Command</th><th>Result</th><th>Notes</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>npx prisma validate</code></td><td><span class="badge"><span class="dot low"></span>Passed</span></td><td>Schema loaded from <code>prisma/schema.prisma</code> and validated successfully.</td></tr>
+          <tr><td><code>npm run db:generate</code></td><td><span class="badge"><span class="dot low"></span>Passed</span></td><td>Prisma Client v7.8.0 generated so TypeScript can see new model/enum fields.</td></tr>
+          <tr><td><code>npm run typecheck</code></td><td><span class="badge"><span class="dot low"></span>Passed</span></td><td><code>tsc -p tsconfig.json --noEmit</code> completed without errors.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <footer>
+      Sources: local diff, Prisma validate, Prisma generate, TypeScript typecheck &mdash; generated May 14 2026.
+    </footer>
+  </div>
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Supporting modules - Threads API v2</title>
+  <style>
+    :root{--ivory:#faf9f5;--paper:#fff;--slate:#141413;--clay:#d97757;--olive:#788c5d;--g100:#f0eee6;--g300:#d1cfc5;--g500:#87867f;--g700:#3d3d3a;--serif:ui-serif,Georgia,"Times New Roman",serif;--sans:system-ui,-apple-system,"Segoe UI",sans-serif;--mono:ui-monospace,Menlo,Consolas,monospace}
+    *{box-sizing:border-box}body{margin:0;background:var(--ivory);color:var(--g700);font:15px/1.65 var(--sans)}main{max-width:1050px;margin:auto;padding:48px 24px 100px}.crumb{color:var(--g500);font:12px var(--mono);margin-bottom:22px}.crumb a{color:var(--clay)}h1,h2{font-family:var(--serif);font-weight:500;color:var(--slate)}h1{font-size:40px;line-height:1.1;margin:0 0 16px}h2{font-size:25px;margin:46px 0 10px}.lead{max-width:800px;font-size:16px}.note{border:1.5px solid var(--olive);border-radius:12px;background:rgba(120,140,93,.07);padding:15px 18px;margin:22px 0}table{width:100%;border-collapse:separate;border-spacing:0;background:var(--paper);border:1.5px solid var(--g300);border-radius:12px;overflow:hidden;margin:16px 0;font-size:13.5px}th{background:var(--g100);color:var(--g500);font:600 10px var(--mono);text-transform:uppercase;letter-spacing:.06em;text-align:left;padding:11px 14px;border-bottom:1px solid var(--g300)}td{padding:12px 14px;border-bottom:1px solid var(--g100);vertical-align:top}tr:last-child td{border-bottom:0}code{font:12px var(--mono);background:var(--g100);padding:2px 5px;border-radius:4px;color:var(--slate)}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.card{background:var(--paper);border:1.5px solid var(--g300);border-radius:12px;padding:17px}.card h3{margin:0 0 8px;color:var(--slate);font-size:15px}.card p{margin:0;font-size:13px}@media(max-width:760px){.grid{grid-template-columns:1fr}table{display:block;overflow:auto}}
+  </style>
+</head>
+<body>
+<main>
+  <div class="crumb"><a href="../index.html">docs</a> / modules / supporting</div>
+  <h1>Supporting modules</h1>
+  <p class="lead">Các module dưới đây không có route prefix riêng nhưng quyết định auth, permission, quota, audit, report và side effect của các domain public. Khi trace một request, service thường đi qua một hoặc nhiều module trong danh sách này.</p>
+  <div class="note">Pattern chính: <code>public domain service → supporting service/repository → Prisma, Redis, queue hoặc provider</code>. Không gọi trực tiếp các module này từ frontend.</div>
+
+  <h2>Security và policy</h2>
+  <div class="grid">
+    <div class="card"><h3>access-control</h3><p>Role, permission, role-permission, user-role và middleware <code>checkRole</code>. Admin router dựa vào ADMIN role; auth register gán USER role.</p></div>
+    <div class="card"><h3>jwt</h3><p>Generate và verify token pair. Payload chứa user id, status, roles và session id; auth middleware kết hợp JWT với Redis blacklist.</p></div>
+    <div class="card"><h3>user-restriction</h3><p>Lưu restriction có type và thời hạn. Circle dùng để chặn hành vi theo policy ngoài trạng thái ban toàn tài khoản.</p></div>
+    <div class="card"><h3>anti-spam</h3><p>Theo dõi hành động user trong ngày để service áp dụng giới hạn nghiệp vụ.</p></div>
+    <div class="card"><h3>limit-action</h3><p>Tạo giới hạn AI khi user vượt quota generate caption/image và lưu thời điểm reset.</p></div>
+    <div class="card"><h3>transaction</h3><p><code>TransactionService</code> bọc Prisma transaction cho post/circle flow có nhiều write phụ thuộc nhau.</p></div>
+  </div>
+
+  <h2>Audit, reward và moderation</h2>
+  <table><thead><tr><th>Module</th><th>Dữ liệu/logic</th><th>Consumer chính</th><th>Side effect</th></tr></thead><tbody>
+    <tr><td>user-action-log</td><td>ActionType, targetId và metadata.</td><td>Quest, post, circle, AI.</td><td>Quest progress và AI quota.</td></tr>
+    <tr><td>report</td><td>Tạo report với target type, reason và status.</td><td>Post, admin.</td><td>Enqueue <code>evaluation_queue</code>.</td></tr>
+    <tr><td>user-karma repositories</td><td>Karma balance và transaction reason.</td><td>Circle, quest, user.</td><td>Claim reward, sacrifice và badge flow.</td></tr>
+    <tr><td>circle policy/services</td><td>Permission map, HP tag, level-up và membership role.</td><td>Circle controller/service.</td><td>Ban/kick, CPR, EXP/HP log.</td></tr>
+  </tbody></table>
+
+  <h2>Search, vector và AI adapters</h2>
+  <table><thead><tr><th>Module/provider</th><th>Vai trò</th><th>Luồng</th></tr></thead><tbody>
+    <tr><td>mixed-bread</td><td>Sinh embedding.</td><td>Post content/query → vector.</td></tr>
+    <tr><td>pinecone</td><td>Lưu/query vector post.</td><td><code>pinecone_queue</code> và post similar/search flow.</td></tr>
+    <tr><td>MySQL/Prisma</td><td>Lưu dữ liệu nguồn cho text search.</td><td>Search module gọi repository trực tiếp.</td></tr>
+    <tr><td>OpenRouter</td><td>Structured JSON scoring/evaluation.</td><td>Evaluation worker cho circle post và report.</td></tr>
+    <tr><td>Groq</td><td>Định dạng markdown caption.</td><td>Circle AI/AI service.</td></tr>
+    <tr><td>Leonardo</td><td>Image generation job và webhook callback.</td><td><code>/ai/generate-image</code> → preview record → webhook.</td></tr>
+  </tbody></table>
+
+  <h2>Job producers</h2>
+  <table><thead><tr><th>Producer</th><th>Queue</th><th>Được gọi khi</th></tr></thead><tbody>
+    <tr><td>emailProducer</td><td>email_queue</td><td>Verify email, forgot password, circle invitation.</td></tr>
+    <tr><td>bloomProducer</td><td>bloom_queue</td><td>Register user.</td></tr>
+
+    <tr><td>pineProducer</td><td>pinecone_queue</td><td>Post cần semantic embedding.</td></tr>
+    <tr><td>likeProducer</td><td>like_queue</td><td>Server bootstrap và like sync.</td></tr>
+    <tr><td>notificationProducer</td><td>notification/message/friend-request queues</td><td>Repeat flush notification; friend-request chưa có worker riêng.</td></tr>
+    <tr><td>evaluationProducer</td><td>evaluation_queue</td><td>Circle post hoặc report cần AI đánh giá.</td></tr>
+    <tr><td>deltaProducer / autoRemoveBanProducer</td><td>delta_hp_queue / auto_remove_ban_queue</td><td>Repeat jobs được khởi tạo trong server bootstrap.</td></tr>
+  </tbody></table>
+</main>
+</body>
+</html>

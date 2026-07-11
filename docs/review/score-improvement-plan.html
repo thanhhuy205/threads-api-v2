@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Score Improvement Plan — Threads API v2</title>
+<style>
+  :root{
+    --bg:#0d1117;--panel:#161b22;--border:#30363d;--text:#c9d1d9;--muted:#8b949e;
+    --crit:#f85149;--high:#ff7b72;--med:#d29922;--low:#58a6ff;--ok:#3fb950;--accent:#79c0ff;
+    --bar-bg:#21262d;--mono:"SFMono-Regular",Consolas,Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);line-height:1.6;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
+  header{padding:34px 40px 24px;border-bottom:1px solid var(--border);background:linear-gradient(180deg,#161b22,#0d1117)}
+  h1{margin:0 0 6px;font-size:24px}
+  .sub{color:var(--muted);font-size:14px}
+  .wrap{max-width:1000px;margin:0 auto;padding:30px 40px 90px}
+  h2{font-size:19px;margin:38px 0 14px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+  h2 .em{color:var(--accent)}
+  p,li{font-size:14.5px}
+  code{font-family:var(--mono);background:#21262d;padding:1px 5px;border-radius:4px;font-size:12.5px;color:#e6edf3}
+
+  /* summary table */
+  .summary{width:100%;border-collapse:collapse;font-size:13.5px;margin:10px 0}
+  .summary th,.summary td{border:1px solid var(--border);padding:9px 11px;text-align:left;vertical-align:middle}
+  .summary th{background:#1b2230;font-size:12px;text-transform:uppercase;letter-spacing:.4px}
+  .scorecell{font-family:var(--mono);font-weight:700}
+  .arrow{color:var(--muted);padding:0 4px}
+  .target{color:var(--ok);font-family:var(--mono);font-weight:700}
+  .bar{height:8px;background:var(--bar-bg);border-radius:6px;overflow:hidden;min-width:90px}
+  .bar i{display:block;height:100%;border-radius:6px}
+  .lift{font-size:11px;color:var(--ok);font-weight:700}
+
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:4px 22px 14px;margin:16px 0}
+  .card h3{font-size:16px;margin:16px 0 4px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .nums{font-family:var(--mono);font-size:13px;color:var(--muted)}
+  .nums b{color:var(--accent)} .nums .t{color:var(--ok)}
+  .why{color:var(--muted);font-size:13.5px;margin:4px 0 8px}
+  .do{margin:6px 0 0}
+  .do li{margin:5px 0}
+  .tag{font-size:10.5px;font-weight:700;letter-spacing:.3px;padding:2px 8px;border-radius:20px;text-transform:uppercase;white-space:nowrap}
+  .t-quick{background:rgba(63,185,80,.14);color:var(--ok);border:1px solid var(--ok)}
+  .t-mid{background:rgba(210,153,34,.14);color:var(--med);border:1px solid var(--med)}
+  .t-big{background:rgba(88,166,255,.14);color:var(--low);border:1px solid var(--low)}
+
+  .lever{display:flex;gap:14px;align-items:flex-start;background:var(--panel);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:8px;padding:12px 18px;margin:10px 0}
+  .lever .rank{font-size:22px;font-weight:800;color:var(--accent);font-family:var(--mono);min-width:34px}
+  .lever b{color:#e6edf3}
+  .quad{width:100%;border-collapse:collapse;font-size:13px;margin:8px 0}
+  .quad th,.quad td{border:1px solid var(--border);padding:8px 10px;text-align:left}
+  .quad th{background:#1b2230}
+  .muted{color:var(--muted);font-size:13px}
+  .pill{display:inline-block;font-size:11px;color:var(--muted);border:1px solid var(--border);border-radius:20px;padding:2px 10px;margin:2px 4px 2px 0}
+  footer{color:var(--muted);font-size:12px;border-top:1px solid var(--border);padding:20px 40px;text-align:center}
+  .legend{margin:8px 0 0}
+  .legend .tag{margin-right:6px}
+</style>
+</head>
+<body>
+<div style="position:sticky;top:0;z-index:99;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:9px 22px;background:#010409;border-bottom:1px solid #30363d;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:12.5px">
+  <a href="implementation-plan.html" style="color:#8b949e;text-decoration:none">← Risk register</a>
+  <span style="color:#6e7681;font-family:'SFMono-Regular',Consolas,monospace">Audit · 4 / 4 · Cải thiện điểm</span>
+  <a href="../index.html" style="color:#3fb950;text-decoration:none;font-weight:600">Hoàn tất · về Docs Hub ✓</a>
+</div>
+<header>
+  <h1>📈 Score Improvement Plan — <span style="color:var(--accent)">Threads API v2</span></h1>
+  <div class="sub">From current scorecard to interview-ready · backend-portfolio lens · effort-ranked actions</div>
+  <div class="legend">
+    <span class="tag t-quick">quick win</span><span class="muted">hours</span> &nbsp;
+    <span class="tag t-mid">medium</span><span class="muted">days</span> &nbsp;
+    <span class="tag t-big">big lift</span><span class="muted">1–2 weeks</span>
+  </div>
+</header>
+<div class="wrap">
+
+  <p class="muted">Current overall reads as a <b>strong-build / weak-operations</b> profile: the engine is impressive, but it isn't tested, monitored, or hardened. Every score below moves with the <i>same</i> handful of changes — depth over features. Targets are realistic within 1–2 months of student effort.</p>
+
+  <h2><span class="em">At-a-glance</span> — current → target</h2>
+  <table class="summary">
+    <thead>
+      <tr><th style="width:22%">Dimension</th><th style="width:12%">Now</th><th style="width:12%">Target</th><th style="width:26%">Trajectory</th><th>Single biggest lever</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Backend Engineering</td>
+        <td class="scorecell" style="color:var(--med)">7.5</td>
+        <td class="target">9.0</td>
+        <td><div class="bar"><i style="width:75%;background:linear-gradient(90deg,#d29922,#3fb950)"></i></div></td>
+        <td>Add tests + DLQ/queue dashboard around the async tier</td>
+      </tr>
+      <tr>
+        <td>Database Design</td>
+        <td class="scorecell" style="color:var(--med)">6.5</td>
+        <td class="target">8.5</td>
+        <td><div class="bar"><i style="width:65%;background:linear-gradient(90deg,#d29922,#3fb950)"></i></div></td>
+        <td>Feed composite index + EXPLAIN proof; transactional counters</td>
+      </tr>
+      <tr>
+        <td>System Design</td>
+        <td class="scorecell" style="color:var(--med)">7.0</td>
+        <td class="target">8.5</td>
+        <td><div class="bar"><i style="width:70%;background:linear-gradient(90deg,#d29922,#3fb950)"></i></div></td>
+        <td>ARCHITECTURE.md + load-test numbers + scale story</td>
+      </tr>
+      <tr>
+        <td>Product Thinking</td>
+        <td class="scorecell" style="color:var(--high)">4.5</td>
+        <td class="target">7.0</td>
+        <td><div class="bar"><i style="width:45%;background:linear-gradient(90deg,#f85149,#3fb950)"></i></div></td>
+        <td>Cut gamification/AI sprawl; frame one sharp product story</td>
+      </tr>
+      <tr>
+        <td>Production Readiness</td>
+        <td class="scorecell" style="color:var(--crit)">3.5</td>
+        <td class="target">8.0</td>
+        <td><div class="bar"><i style="width:35%;background:linear-gradient(90deg,#f85149,#3fb950)"></i></div></td>
+        <td>Fix log-leak crits → tests → observability → distributed rate limit</td>
+      </tr>
+      <tr>
+        <td>Resume Impact</td>
+        <td class="scorecell" style="color:var(--med)">7.0</td>
+        <td class="target">8.5</td>
+        <td><div class="bar"><i style="width:70%;background:linear-gradient(90deg,#d29922,#3fb950)"></i></div></td>
+        <td>Quantified bullets (req/s, p95) backed by load tests</td>
+      </tr>
+      <tr>
+        <td>Interview Potential</td>
+        <td class="scorecell" style="color:var(--med)">7.5</td>
+        <td class="target">9.0</td>
+        <td><div class="bar"><i style="width:75%;background:linear-gradient(90deg,#d29922,#3fb950)"></i></div></td>
+        <td>Be able to whiteboard the Lua like-counter & cache invalidation</td>
+      </tr>
+      <tr>
+        <td>Frontend Engineering</td>
+        <td class="scorecell" style="color:var(--muted)">N/A</td>
+        <td class="target">7.0</td>
+        <td><div class="bar"><i style="width:5%;background:#6e7681"></i></div></td>
+        <td>Attach a real client app — or rebrand as "Backend" portfolio</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2><span class="em">Per-dimension</span> playbook</h2>
+
+  <div class="card">
+    <h3>Backend Engineering <span class="nums"><b>7.5</b> → <span class="t">9.0</span></span></h3>
+    <p class="why">Already the standout: atomic Redis Lua like-counter, 10-queue BullMQ tier, clean route→controller→service→repository layering. What's missing is proof it's <i>robust</i>, not just built.</p>
+    <ul class="do">
+      <li><span class="tag t-mid">medium</span> Add a <b>dead-letter queue</b> + Bull-Board dashboard; drain workers on <code>SIGTERM</code> (currently jobs can be killed mid-flight).</li>
+      <li><span class="tag t-big">big lift</span> <b>Tests</b> on the async paths — prove the like-counter reconciles Redis→DB correctly under concurrent likes. This single test is an interview talking point.</li>
+      <li><span class="tag t-quick">quick win</span> Add <code>npm run typecheck</code> + lint to CI so the build gate is real, not just a Docker push.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3>Database Design <span class="nums"><b>6.5</b> → <span class="t">8.5</span></span></h3>
+    <p class="why">Good normalization (43 tables), 62+ indexes, keyset pagination. Held back by a missing hot-path index and non-transactional denormalized counters.</p>
+    <ul class="do">
+      <li><span class="tag t-quick">quick win</span> Add <code>@@index([isDeleted, isHidden, visibility, createdAt, id])</code> on <code>Post</code> and capture an <b>EXPLAIN before/after screenshot</b> — cheap, and recruiters love measurable wins.</li>
+      <li><span class="tag t-quick">quick win</span> Wrap follow-state + <code>followersCount</code> writes in <code>doInTransaction</code> (you already use this pattern in post-create).</li>
+      <li><span class="tag t-mid">medium</span> Document the deliberate denormalizations (<code>userSnapshot</code>, counters) in a short DB design note — shows intent, not accident.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3>System Design <span class="nums"><b>7.0</b> → <span class="t">8.5</span></span></h3>
+    <p class="why">Sound modular-monolith + async split + Soketi realtime. The architecture is good but <i>invisible</i> — there's no document or numbers that let a reviewer see it without reading code.</p>
+    <ul class="do">
+      <li><span class="tag t-mid">medium</span> Write <code>ARCHITECTURE.md</code>: request lifecycle, sync vs async boundaries, cache layers, failure modes. One diagram beats 1,000 lines of code in a review.</li>
+      <li><span class="tag t-mid">medium</span> <b>Load test</b> the feed (k6/autocannon) and record "X req/s @ p95 Y ms". Numbers turn architecture into evidence.</li>
+      <li><span class="tag t-quick">quick win</span> Make concurrency cluster-aware in the writeup (note BullMQ concurrency is per-instance) — shows you understand horizontal scaling, not just configure it.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3>Product Thinking <span class="nums"><b>4.5</b> → <span class="t">7.0</span></span></h3>
+    <p class="why">Lowest score, and it's about <i>focus</i>, not effort. Gamification (soul stones, HP decay, badges = 23% of module code), 4 AI providers, and a museum module signal breadth-chasing for an app with no users.</p>
+    <ul class="do">
+      <li><span class="tag t-quick">quick win</span> <b>Freeze &amp; de-emphasize</b> gamification + 3 of 4 AI providers in the README narrative. Keep the code; stop leading with it.</li>
+      <li><span class="tag t-quick">quick win</span> Write a one-paragraph <b>product vision</b>: who is this for, what's the core loop (post → feed → engage). Tie every kept feature to it.</li>
+      <li><span class="tag t-mid">medium</span> Pick <b>one</b> "smart" feature (semantic search) and frame the user problem it solves — depth of story beats quantity of features.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3>Production Readiness <span class="nums"><b>3.5</b> → <span class="t">8.0</span></span></h3>
+    <p class="why">The biggest gap and the highest-leverage fix area. Two critical credential-in-logs bugs, zero tests, no monitoring, and an in-memory rate limiter that contradicts the horizontal deploy.</p>
+    <ul class="do">
+      <li><span class="tag t-quick">quick win</span> <b>Stop logging <code>req.body</code></b> + add pino <code>redact</code>; delete the webhook token log lines. ~1 hour, kills a real breach path.</li>
+      <li><span class="tag t-mid">medium</span> Redis-backed rate limiting + a strict <code>/auth/*</code> limiter; require <code>HOOK_SECRET_KEY</code> (no public default) with <code>timingSafeEqual</code>.</li>
+      <li><span class="tag t-big">big lift</span> <b>Observability</b>: request-ID middleware, <code>/metrics</code> (prom-client) + Grafana screenshot, Sentry, real <code>/health/ready</code> probing Redis+DB+queues.</li>
+      <li><span class="tag t-big">big lift</span> A <b>test suite</b> (Vitest + Supertest + Testcontainers) as a CI gate before the Docker build.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3>Resume Impact <span class="nums"><b>7.0</b> → <span class="t">8.5</span></span></h3>
+    <p class="why">The material is strong; the phrasing is generic. Recruiters skim for numbers and scope.</p>
+    <ul class="do">
+      <li><span class="tag t-quick">quick win</span> Rewrite bullets with metrics: <i>"Cut feed query latency from X→Y ms via a covering composite index (EXPLAIN-verified)"</i>; <i>"Sustained N req/s @ p95 M ms"</i>.</li>
+      <li><span class="tag t-quick">quick win</span> Lead with the rare signals: Lua atomic counter, keyset pagination, OIDC CI/CD — not "built a CRUD API".</li>
+      <li><span class="tag t-mid">medium</span> Add a 60-second Loom demo + the <code>ARCHITECTURE.md</code> link at the top of the README.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3>Interview Potential <span class="nums"><b>7.5</b> → <span class="t">9.0</span></span></h3>
+    <p class="why">Strong stories already exist — the risk is not being able to defend them live, or getting caught by the in-memory-limiter contradiction.</p>
+    <ul class="do">
+      <li><span class="tag t-quick">quick win</span> Rehearse whiteboarding the <b>like pipeline</b> (Redis Lua → event queue → DB sync) and <b>cache invalidation</b> (version-bump). These are your differentiators.</li>
+      <li><span class="tag t-quick">quick win</span> Prepare honest answers for the known gaps: "why no tests yet", "why Bloom filter vs unique index", "how would you scale the rate limiter".</li>
+      <li><span class="tag t-mid">medium</span> Fix the limiter + tests so the obvious "gotcha" questions become strengths instead of weaknesses.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3>Frontend Engineering <span class="nums"><b>N/A</b> → <span class="t">7.0</span></span></h3>
+    <p class="why">No client exists in this repo, so a "Fullstack" reviewer scores this as missing. Two valid paths:</p>
+    <ul class="do">
+      <li><span class="tag t-big">big lift</span> Build a focused <b>Next.js/React client</b> for the core loop (auth, feed, post, realtime notifications) — consume your own API, with its own architecture story.</li>
+      <li><span class="tag t-quick">quick win</span> Or <b>rebrand honestly</b> as a <b>Backend Engineer</b> portfolio piece and target backend roles — your strengths are backend anyway.</li>
+    </ul>
+  </div>
+
+  <h2><span class="em">Top 5 levers</span> — most score per hour</h2>
+  <div class="lever"><div class="rank">1</div><div><b>Log redaction (the 2 criticals).</b> ~1 hr. Lifts Production Readiness off the floor and removes the one finding that's outright disqualifying if shipped. <span class="pill">Prod Readiness</span><span class="pill">Interview</span></div></div>
+  <div class="lever"><div class="rank">2</div><div><b>A real test suite + CI gate.</b> ~1 week. The #1 thing reviewers grep for; moves Backend, Production Readiness, and Interview together. <span class="pill">Backend</span><span class="pill">Prod Readiness</span></div></div>
+  <div class="lever"><div class="rank">3</div><div><b>Observability stack</b> (metrics + tracing + Sentry + readiness probe). ~1 week. Turns "can build" into "can operate" — the junior→mid boundary. <span class="pill">Prod Readiness</span><span class="pill">System Design</span></div></div>
+  <div class="lever"><div class="rank">4</div><div><b>Feed index + load test + ARCHITECTURE.md.</b> ~2 days. Produces the EXPLAIN and req/s numbers that power quantified resume bullets. <span class="pill">DB</span><span class="pill">System Design</span><span class="pill">Resume</span></div></div>
+  <div class="lever"><div class="rank">5</div><div><b>Cut the sprawl + write a product vision.</b> ~half day. The only thing that meaningfully moves Product Thinking. <span class="pill">Product</span><span class="pill">Resume</span></div></div>
+
+  <h2><span class="em">Effort × Impact</span> quadrant</h2>
+  <table class="quad">
+    <tr><th></th><th>High impact</th><th>Lower impact</th></tr>
+    <tr><td><b>Low effort</b><br><span class="muted">do first</span></td><td style="color:var(--ok)">Log redaction · feed index + EXPLAIN · transactional counters · CI typecheck/lint gate · quantified resume bullets</td><td class="muted">JWT algo pinning · CORS prod lockdown · remove empty stub class</td></tr>
+    <tr><td><b>High effort</b><br><span class="muted">plan for</span></td><td style="color:var(--low)">Test suite · observability stack · load testing + ARCHITECTURE.md · frontend client</td><td class="muted">More features (gamification, extra AI providers) — <b>actively avoid</b></td></tr>
+  </table>
+
+  <h2><span class="em">Additional feedback</span> — beyond the scores</h2>
+  <ul>
+    <li><b>Your ceiling is operations, not ability.</b> The build quality already signals mid-level instincts. What caps you is everything <i>around</i> the code: tests, monitoring, security hygiene. That's good news — it's a smaller, well-defined surface than "learn to build better".</li>
+    <li><b>Less is more, loudly.</b> A reviewer's time-per-repo is ~3–5 minutes. 27 modules with no tests reads worse than 12 modules that are tested, monitored, and documented. Pruning <i>raises</i> your perceived seniority.</li>
+    <li><b>Make the invisible visible.</b> Your best work (keyset pagination, Lua counter, version-bump cache) is buried in code no one will read. A README that names these decisions, with a diagram and numbers, is worth more than a month of new features.</li>
+    <li><b>Tell the truth about trade-offs.</b> "I chose a modular monolith over microservices because X; here's where it would break and what I'd do next" is a senior signal. Confident honesty about limits beats pretending there are none.</li>
+    <li><b>One clean demo &gt; ten half-features.</b> A 60-second video of the core loop + a live Swagger link removes all friction for a busy reviewer.</li>
+    <li><b>Sequence the work:</b> Phase 1 security hotfix (today) → Phase 2 tests + CI gate → Phase 3 observability → Phase 4 load test + docs → Phase 5 trim sprawl / optional frontend. Each phase is independently shippable and resume-bullet-worthy.</li>
+  </ul>
+
+  <p class="muted" style="margin-top:22px">Net: you do <b>not</b> need more features. Doing levers 1–5 over 1–2 months realistically moves the overall profile from "strong junior, gets interviews" to "credible mid-level, passes them" — without writing a single new endpoint.</p>
+
+</div>
+<footer>Score Improvement Plan · Threads API v2 · companion to code-review-pr.html · pr-writeup.html · implementation-plan.html</footer>
+</body>
+</html>

@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Implementation plan — Emotional Butterfly Effect</title>
+  <style>
+    :root {
+      --ivory:    #FAF9F5;
+      --slate:    #141413;
+      --clay:     #D97757;
+      --oat:      #E3DACC;
+      --olive:    #788C5D;
+      --gray-150: #F0EEE6;
+      --gray-300: #D1CFC5;
+      --gray-500: #87867F;
+      --gray-700: #3D3D3A;
+      --white:    #FFFFFF;
+
+      --mood-blue:   #5B8FD4;
+      --mood-bloom:  #C8845A;
+      --mood-rain:   #6B8EAA;
+
+      --serif: ui-serif, Georgia, 'Times New Roman', serif;
+      --sans:  system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      --mono:  ui-monospace, 'SF Mono', Menlo, Monaco, monospace;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--sans);
+      background: var(--ivory);
+      color: var(--gray-700);
+      line-height: 1.55;
+      padding: 56px 32px 120px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .page { max-width: 1120px; margin: 0 auto; }
+
+    /* ---------- header ---------- */
+
+    header.page-head { margin-bottom: 48px; max-width: 820px; }
+
+    .eyebrow {
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--gray-500);
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      font-family: var(--serif);
+      font-weight: 500;
+      font-size: 38px;
+      line-height: 1.15;
+      color: var(--slate);
+      margin-bottom: 18px;
+      letter-spacing: -0.01em;
+    }
+
+    .prompt-box {
+      background: var(--gray-150);
+      border: 1.5px solid var(--gray-300);
+      border-radius: 12px;
+      padding: 16px 20px;
+      font-size: 14.5px;
+      color: var(--gray-700);
+    }
+    .prompt-box .label {
+      font-family: var(--mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--gray-500);
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    /* ---------- section chrome ---------- */
+
+    section { margin-bottom: 64px; }
+
+    .sec-head {
+      display: flex;
+      align-items: baseline;
+      gap: 14px;
+      margin-bottom: 8px;
+    }
+    .sec-head .num {
+      font-family: var(--mono);
+      font-size: 12px;
+      background: var(--oat);
+      color: var(--slate);
+      padding: 3px 9px;
+      border-radius: 8px;
+    }
+    .sec-head h2 {
+      font-family: var(--serif);
+      font-weight: 500;
+      font-size: 26px;
+      color: var(--slate);
+      letter-spacing: -0.01em;
+    }
+    .sec-intro {
+      font-size: 14.5px;
+      color: var(--gray-500);
+      max-width: 720px;
+      margin-bottom: 28px;
+    }
+
+    /* ---------- summary strip ---------- */
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 64px;
+    }
+    @media (max-width: 900px) { .summary { grid-template-columns: repeat(2, 1fr); } }
+    .summary .cell {
+      background: var(--white);
+      border: 1.5px solid var(--gray-300);
+      border-radius: 12px;
+      padding: 18px 20px;
+    }
+    .summary .k {
+      font-family: var(--mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--gray-500);
+      margin-bottom: 6px;
+    }
+    .summary .v {
+      font-size: 17px;
+      color: var(--slate);
+      font-weight: 600;
+    }
+    .summary .v.accent { color: var(--clay); }
+
+    /* ---------- milestone timeline ---------- */
+
+    .milestones { display: flex; flex-direction: column; gap: 0; }
+    .milestone {
+      display: grid;
+      grid-template-columns: 120px 28px 1fr;
+      gap: 0 18px;
+      position: relative;
+    }
+    .milestone .when {
+      text-align: right;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--gray-500);
+      padding-top: 4px;
+    }
+    .milestone .dot-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .milestone .dot {
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: var(--white);
+      border: 3px solid var(--clay);
+      margin-top: 4px;
+      flex-shrink: 0;
+    }
+    .milestone .dot.done { background: var(--olive); border-color: var(--olive); }
+    .milestone .line {
+      width: 2px;
+      flex: 1;
+      background: var(--gray-300);
+      margin: 4px 0;
+    }
+    .milestone:last-child .line { display: none; }
+    .milestone .body { padding-bottom: 36px; }
+    .milestone .body h3 {
+      font-family: var(--serif);
+      font-weight: 500;
+      font-size: 19px;
+      color: var(--slate);
+      margin-bottom: 4px;
+    }
+    .milestone .body p { font-size: 14px; color: var(--gray-500); margin-bottom: 10px; max-width: 620px; }
+    .milestone .tags { display: flex; gap: 8px; flex-wrap: wrap; }
+    .milestone .tag {
+      font-family: var(--mono);
+      font-size: 11.5px;
+      background: var(--gray-150);
+      border: 1px solid var(--gray-300);
+      border-radius: 6px;
+      padding: 3px 8px;
+      color: var(--gray-700);
+    }
+
+    /* ---------- data flow diagram ---------- */
+
+    .diagram {
+      background: var(--white);
+      border: 1.5px solid var(--gray-300);
+      border-radius: 12px;
+      padding: 28px;
+      overflow-x: auto;
+    }
+    .diagram svg { display: block; min-width: 820px; }
+    .diagram text { font-family: var(--mono); }
+    .caption { font-size: 13px; color: var(--gray-500); margin-top: 12px; }
+
+    /* ---------- mockups ---------- */
+
+    .mocks {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+    }
+    @media (max-width: 900px) { .mocks { grid-template-columns: 1fr; } }
+    .mock {
+      background: var(--white);
+      border: 1.5px solid var(--gray-300);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .mock .mock-label {
+      padding: 12px 18px;
+      border-bottom: 1.5px solid var(--gray-300);
+      font-family: var(--mono);
+      font-size: 11.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--gray-500);
+      background: var(--gray-150);
+    }
+    .mock .mock-body { padding: 22px; }
+
+    /* mood state mock */
+    .mood-frame {
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1.5px solid var(--gray-300);
+    }
+    .mood-bar {
+      padding: 8px 14px;
+      font-size: 11.5px;
+      font-family: var(--mono);
+      letter-spacing: 0.04em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--white);
+      font-weight: 600;
+    }
+    .mood-bar.sad   { background: #4A7A9B; }
+    .mood-bar.happy { background: #C8845A; }
+    .mood-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.6); }
+    .mood-content {
+      padding: 16px;
+      min-height: 140px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+    .mood-content.sad-bg   { background: linear-gradient(160deg, #EBF0F5 0%, #D8E4ED 100%); }
+    .mood-content.happy-bg { background: linear-gradient(160deg, #FDF6EE 0%, #F9E8D6 100%); }
+    .mood-post {
+      background: var(--white);
+      border: 1.5px solid var(--gray-300);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 12.5px;
+      color: var(--gray-700);
+    }
+    .mood-post .mp-author { font-weight: 600; font-size: 11.5px; color: var(--slate); margin-bottom: 3px; }
+    .rain-overlay {
+      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      pointer-events: none;
+      background-image: repeating-linear-gradient(
+        to bottom,
+        transparent 0px, transparent 12px,
+        rgba(100,140,170,0.12) 12px, rgba(100,140,170,0.12) 14px
+      );
+    }
+    .bloom-overlay {
+      position: absolute; top: 8px; right: 12px;
+      font-size: 22px;
+      opacity: 0.6;
+    }
+
+    /* pulse meter mock */
+    .pulse-panel {
+      border: 1.5px solid var(--gray-300);
+      border-radius: 10px;
+      padding: 16px;
+      background: var(--ivory);
+    }
+    .pulse-title {
+      font-size: 11.5px;
+      font-family: var(--mono);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--gray-500);
+      margin-bottom: 14px;
+    }
+    .pulse-bar-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .pulse-label { font-size: 12px; color: var(--gray-700); width: 60px; font-family: var(--mono); }
+    .pulse-track {
+      flex: 1;
+      height: 10px;
+      background: var(--gray-150);
+      border-radius: 999px;
+      overflow: hidden;
+      position: relative;
+    }
+    .pulse-fill { height: 100%; border-radius: 999px; }
+    .pulse-fill.sad   { background: var(--mood-rain); width: 72%; }
+    .pulse-fill.neut  { background: var(--oat); width: 18%; }
+    .pulse-fill.happy { background: var(--mood-bloom); width: 10%; }
+    .pulse-score { font-size: 12px; font-family: var(--mono); color: var(--slate); font-weight: 600; width: 32px; text-align: right; }
+    .threshold-line {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px dashed var(--gray-300);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .threshold-label { font-size: 12px; color: var(--gray-500); }
+    .threshold-badge {
+      font-family: var(--mono);
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-weight: 600;
+      background: #F3D9CC;
+      color: #8A3B1E;
+    }
+
+    /* ---------- code panel ---------- */
+
+    .code-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+    @media (max-width: 980px) { .code-grid { grid-template-columns: 1fr; } }
+    .code-block { display: flex; flex-direction: column; gap: 10px; }
+    .code-block .file-label {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--gray-500);
+    }
+    .code {
+      background: var(--slate);
+      border-radius: 12px;
+      padding: 18px 20px;
+      overflow-x: auto;
+      flex: 1;
+    }
+    .code pre {
+      font-family: var(--mono);
+      font-size: 12.5px;
+      line-height: 1.65;
+      color: #E8E6DE;
+      white-space: pre;
+    }
+    .code .kw  { color: var(--clay); }
+    .code .str { color: var(--olive); }
+    .code .cm  { color: var(--gray-500); }
+    .code .fn  { color: #C9B98A; }
+    .code .num { color: #A8C9A0; }
+
+    /* ---------- risk table ---------- */
+
+    .risks {
+      border: 1.5px solid var(--gray-300);
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--white);
+    }
+    .risks .row {
+      display: grid;
+      grid-template-columns: 1.6fr 90px 1.6fr;
+      gap: 0;
+    }
+    @media (max-width: 780px) { .risks .row { grid-template-columns: 1fr; } }
+    .risks .row + .row { border-top: 1.5px solid var(--gray-300); }
+    .risks .cell { padding: 14px 18px; font-size: 13.5px; }
+    .risks .cell + .cell { border-left: 1.5px solid var(--gray-300); }
+    @media (max-width: 780px) { .risks .cell + .cell { border-left: none; border-top: 1px dashed var(--gray-300); } }
+    .risks .head { background: var(--gray-150); font-weight: 600; color: var(--slate); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .sev {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-weight: 600;
+    }
+    .sev.high { background: #F3D9CC; color: #8A3B1E; }
+    .sev.med  { background: var(--oat); color: var(--slate); }
+    .sev.low  { background: #E4E9DC; color: #4B5C39; }
+
+    /* ---------- open questions ---------- */
+
+    .open-q { display: flex; flex-direction: column; gap: 14px; max-width: 820px; }
+    .q {
+      background: var(--white);
+      border: 1.5px solid var(--gray-300);
+      border-left: 4px solid var(--clay);
+      border-radius: 10px;
+      padding: 16px 20px;
+    }
+    .q .qt { font-weight: 600; font-size: 15px; color: var(--slate); margin-bottom: 4px; }
+    .q .qd { font-size: 13.5px; color: var(--gray-500); }
+    .q .owner {
+      font-family: var(--mono);
+      font-size: 11.5px;
+      color: var(--gray-500);
+      margin-top: 8px;
+    }
+
+    /* ---------- architecture note ---------- */
+    .arch-note {
+      background: var(--white);
+      border: 1.5px solid var(--gray-300);
+      border-left: 4px solid var(--olive);
+      border-radius: 10px;
+      padding: 16px 20px;
+      font-size: 13.5px;
+      color: var(--gray-500);
+      max-width: 820px;
+      margin-bottom: 28px;
+    }
+    .arch-note strong { color: var(--slate); }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <header class="page-head">
+      <div class="eyebrow">Implementation plan · Dự án cá nhân</div>
+      <h1>Emotional Butterfly Effect</h1>
+      <div class="prompt-box">
+        <span class="label">Idea</span>
+        App có "thời tiết cảm xúc" chung. AI phân tích sentiment của hàng loạt bài đăng theo cửa sổ 30–60 giây.
+        Nếu cộng đồng buồn → UI mưa, tông màu hạ, nhạc sầu. Nếu vui → UI nở hoa, sáng hơn, motion nhẹ.
+        Demo dùng event stream + seed data giả lập tải lớn — không hứa xử lý hàng triệu bài thật trong 3 ngày.
+      </div>
+    </header>
+
+    <!-- ============================================================= -->
+
+    <div class="summary">
+      <div class="cell"><div class="k">Effort</div><div class="v accent">~7 ngày</div></div>
+      <div class="cell"><div class="k">Infra mới</div><div class="v">Upstash · Ably</div></div>
+      <div class="cell"><div class="k">API bên ngoài</div><div class="v">3 (Claude, Ably, Upstash)</div></div>
+      <div class="cell"><div class="k">Feature flag</div><div class="v">mood_butterfly_v1</div></div>
+    </div>
+
+    <!-- ============================================================= -->
+
+    <section>
+      <div class="sec-head"><span class="num">01</span><h2>Milestones</h2></div>
+      <p class="sec-intro">Ship theo 5 slice, mỗi slice có thể test độc lập. Không có gì user-visible cho đến slice 3. Slice 5 chỉ là polish và seed data cho demo.</p>
+
+      <div class="milestones">
+
+        <div class="milestone">
+          <div class="when">Ngày 1</div>
+          <div class="dot-col"><span class="dot done"></span><span class="line"></span></div>
+          <div class="body">
+            <h3>Sentiment Adapter</h3>
+            <p>Khi user tạo post, gọi Claude API để lấy điểm cảm xúc <code>{ score: -1..1, label, intensity }</code>.
+            Ghi kết quả vào Upstash Redis bằng sorted set với timestamp làm score — cơ sở cho sliding window.
+            Không block UI: sentiment call là fire-and-forget sau khi POST đã được lưu.</p>
+            <div class="tags">
+              <span class="tag">lib/sentimentAdapter.ts</span>
+              <span class="tag">api/posts/create</span>
+              <span class="tag">upstash · mood:events</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="milestone">
+          <div class="when">Ngày 2–3</div>
+          <div class="dot-col"><span class="dot"></span><span class="line"></span></div>
+          <div class="body">
+            <h3>Mood Aggregator + Ably broadcast</h3>
+            <p>Một Vercel Edge Function chạy mỗi 5 giây: đọc tất cả events trong cửa sổ 60 giây từ Redis
+            (<code>ZRANGEBYSCORE</code>), tính weighted average, so sánh với threshold bảng dưới.
+            Nếu mood state thay đổi → publish lên Ably channel <code>global:mood</code>.
+            Seed data script cũng gọi endpoint này để giả lập 50 posts/phút.</p>
+            <div class="tags">
+              <span class="tag">api/mood/aggregate</span>
+              <span class="tag">lib/moodAggregator.ts</span>
+              <span class="tag">ably · global:mood</span>
+              <span class="tag">scripts/seedMood.ts</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="milestone">
+          <div class="when">Ngày 3–4</div>
+          <div class="dot-col"><span class="dot"></span><span class="line"></span></div>
+          <div class="body">
+            <h3>Global Mood Provider + Theme Overlay</h3>
+            <p>React Context subscribe Ably, expose <code>{ state, score, intensity }</code> cho toàn app.
+            Khi mood thay đổi: cập nhật CSS custom properties (<code>--bg-hue</code>, <code>--brightness</code>, <code>--saturation</code>),
+            trigger overlay animation (rain particles với Canvas hoặc pure CSS, bloom với keyframe),
+            transition thực hiện trong 2–4 giây để tránh flash đột ngột.</p>
+            <div class="tags">
+              <span class="tag">contexts/MoodContext.tsx</span>
+              <span class="tag">components/ThemeOverlay.tsx</span>
+              <span class="tag">components/RainCanvas.tsx</span>
+              <span class="tag">styles/moodTheme.css</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="milestone">
+          <div class="when">Ngày 5</div>
+          <div class="dot-col"><span class="dot"></span><span class="line"></span></div>
+          <div class="body">
+            <h3>Ambient Audio Controller + Energy Pulse + Haptic</h3>
+            <p>Web Audio API: load 3 audio buffers (sad / neutral / happy) khi app mount, nhưng
+            <em>không</em> play cho đến khi có user gesture đầu tiên (autoplay policy).
+            Crossfade 3 giây giữa tracks dùng GainNode. Energy Pulse: khi <code>intensity &gt; 0.85</code>
+            trong 3 lần liên tiếp → <code>navigator.vibrate([80, 40, 80])</code> trên mobile.</p>
+            <div class="tags">
+              <span class="tag">lib/ambientAudio.ts</span>
+              <span class="tag">lib/energyPulse.ts</span>
+              <span class="tag">Web Audio API</span>
+              <span class="tag">Vibration API</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="milestone">
+          <div class="when">Ngày 6–7</div>
+          <div class="dot-col"><span class="dot"></span><span class="line"></span></div>
+          <div class="body">
+            <h3>Seed data, demo UI, polish</h3>
+            <p>Script giả lập kịch bản demo: bắt đầu neutral → flood sad posts (trận thua bóng đá) → rain bật →
+            gradually shift sang happy (tin vui) → bloom. UI hiển thị live score và mood log để
+            người xem demo hiểu điều gì đang xảy ra. Feature flag <code>mood_butterfly_v1</code> bật.</p>
+            <div class="tags">
+              <span class="tag">scripts/demoScenario.ts</span>
+              <span class="tag">components/MoodDebugPanel.tsx</span>
+              <span class="tag">feature flag</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============================================================= -->
+
+    <section>
+      <div class="sec-head"><span class="num">02</span><h2>Data flow</h2></div>
+      <p class="sec-intro">Write path (trái → xuống) tách biệt hoàn toàn với broadcast path (phải). Aggregator là nhịp tim duy nhất poll Redis — các client không bao giờ đọc Redis trực tiếp.</p>
+
+      <div class="diagram">
+        <svg viewBox="0 0 920 380" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="#87867F"/>
+            </marker>
+            <marker id="arrowClay" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="#D97757"/>
+            </marker>
+            <marker id="arrowOlive" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="#788C5D"/>
+            </marker>
+          </defs>
+
+          <!-- boxes -->
+          <g font-size="12" fill="#141413">
+
+            <!-- PostComposer -->
+            <rect x="20" y="20" width="175" height="56" rx="10" fill="#FFFFFF" stroke="#D1CFC5" stroke-width="1.5"/>
+            <text x="107" y="44" text-anchor="middle" font-weight="600">&lt;PostComposer&gt;</text>
+            <text x="107" y="62" text-anchor="middle" fill="#87867F" font-size="10.5">apps/web</text>
+
+            <!-- API posts/create -->
+            <rect x="20" y="160" width="175" height="56" rx="10" fill="#FFFFFF" stroke="#D1CFC5" stroke-width="1.5"/>
+            <text x="107" y="184" text-anchor="middle" font-weight="600">api/posts/create</text>
+            <text x="107" y="202" text-anchor="middle" fill="#87867F" font-size="10.5">Next.js route handler</text>
+
+            <!-- Sentiment Adapter -->
+            <rect x="270" y="160" width="175" height="56" rx="10" fill="#FFFFFF" stroke="#D1CFC5" stroke-width="1.5"/>
+            <text x="357" y="184" text-anchor="middle" font-weight="600">Sentiment Adapter</text>
+            <text x="357" y="202" text-anchor="middle" fill="#87867F" font-size="10.5">Claude API · async</text>
+
+            <!-- Upstash Redis -->
+            <rect x="270" y="290" width="175" height="56" rx="10" fill="#141413" stroke="#141413"/>
+            <text x="357" y="314" text-anchor="middle" font-weight="600" fill="#FAF9F5">Upstash Redis</text>
+            <text x="357" y="332" text-anchor="middle" fill="#C9B98A" font-size="10.5">ZADD mood:events</text>
+
+            <!-- Mood Aggregator -->
+            <rect x="520" y="160" width="175" height="56" rx="10" fill="#FFFFFF" stroke="#D1CFC5" stroke-width="1.5"/>
+            <text x="607" y="184" text-anchor="middle" font-weight="600">Mood Aggregator</text>
+            <text x="607" y="202" text-anchor="middle" fill="#87867F" font-size="10.5">Edge fn · every 5s</text>
+
+            <!-- Ably channel -->
+            <rect x="520" y="290" width="175" height="56" rx="10" fill="#FFFFFF" stroke="#D1CFC5" stroke-width="1.5"/>
+            <text x="607" y="314" text-anchor="middle" font-weight="600">Ably channel</text>
+            <text x="607" y="332" text-anchor="middle" fill="#87867F" font-size="10.5">global:mood</text>
+
+            <!-- MoodContext clients -->
+            <rect x="740" y="160" width="175" height="56" rx="10" fill="#FFFFFF" stroke="#D1CFC5" stroke-width="1.5"/>
+            <text x="827" y="184" text-anchor="middle" font-weight="600">MoodContext</text>
+            <text x="827" y="202" text-anchor="middle" fill="#87867F" font-size="10.5">all connected clients</text>
+
+            <!-- UI effects -->
+            <rect x="740" y="290" width="175" height="56" rx="10" fill="#FFFFFF" stroke="#D1CFC5" stroke-width="1.5"/>
+            <text x="827" y="314" text-anchor="middle" font-weight="600">UI Effects</text>
+            <text x="827" y="332" text-anchor="middle" fill="#87867F" font-size="10.5">CSS · Audio · Vibrate</text>
+
+          </g>
+
+          <!-- solid arrows (write path) -->
+          <g stroke="#87867F" stroke-width="1.5" fill="none">
+            <path d="M107 76 L107 160" marker-end="url(#arrow)"/>
+            <path d="M195 188 L270 188" marker-end="url(#arrow)"/>
+            <path d="M357 216 L357 290" marker-end="url(#arrow)"/>
+          </g>
+
+          <!-- dashed clay arrows (aggregator loop) -->
+          <g stroke="#D97757" stroke-width="1.5" fill="none" stroke-dasharray="5 4">
+            <path d="M445 318 L520 318" marker-end="url(#arrowClay)"/>
+            <path d="M607 290 L607 216" marker-end="url(#arrowClay)"/>
+            <path d="M695 188 L740 188" marker-end="url(#arrowClay)"/>
+          </g>
+
+          <!-- dashed olive arrows (broadcast to UI) -->
+          <g stroke="#788C5D" stroke-width="1.5" fill="none" stroke-dasharray="5 4">
+            <path d="M827 216 L827 290" marker-end="url(#arrowOlive)"/>
+          </g>
+
+          <!-- edge labels -->
+          <g font-size="10.5" fill="#87867F" font-family="ui-monospace, monospace">
+            <text x="114" y="124">POST body</text>
+            <text x="210" y="182">fire-and-forget</text>
+            <text x="364" y="258">ZADD ts score</text>
+            <text x="454" y="312" fill="#D97757">ZRANGEBYSCORE</text>
+            <text x="614" y="258" fill="#D97757">publish if changed</text>
+            <text x="706" y="182" fill="#D97757">subscribe</text>
+            <text x="834" y="258" fill="#788C5D">setState → render</text>
+          </g>
+        </svg>
+        <p class="caption">Solid = write path đồng bộ. Clay dashed = aggregator loop (mỗi 5s). Olive dashed = reactive broadcast xuống UI. Client không bao giờ đọc Redis trực tiếp.</p>
+      </div>
+    </section>
+
+    <!-- ============================================================= -->
+
+    <section>
+      <div class="sec-head"><span class="num">03</span><h2>Mood threshold table</h2></div>
+      <p class="sec-intro">Weighted average của tất cả events trong cửa sổ 60 giây. Weight = <code>intensity</code> của từng event (0–1). Hysteresis ±0.05 để tránh flicker ở ranh giới.</p>
+
+      <div class="risks">
+        <div class="row">
+          <div class="cell head">Mood state</div>
+          <div class="cell head">Score range</div>
+          <div class="cell head">UI effect</div>
+        </div>
+        <div class="row">
+          <div class="cell"><strong>VERY_SAD</strong><br><span style="font-size:12px;color:var(--gray-500)">Cộng đồng rất buồn — trận thua, tin xấu</span></div>
+          <div class="cell"><code style="font-size:12px">≤ −0.6</code></div>
+          <div class="cell">Mưa nặng hạt (Canvas particles), tông màu desaturate −60%, nhạc buồn, <code>vibrate([100,50,100])</code> nếu intensity &gt; 0.9</div>
+        </div>
+        <div class="row">
+          <div class="cell"><strong>SAD</strong><br><span style="font-size:12px;color:var(--gray-500)">Nhiều người đang buồn</span></div>
+          <div class="cell"><code style="font-size:12px">−0.6 → −0.2</code></div>
+          <div class="cell">Mưa nhẹ (opacity 40%), tông màu hạ nhẹ, nhạc neutral-sad</div>
+        </div>
+        <div class="row">
+          <div class="cell"><strong>NEUTRAL</strong><br><span style="font-size:12px;color:var(--gray-500)">Trạng thái mặc định</span></div>
+          <div class="cell"><code style="font-size:12px">−0.2 → +0.2</code></div>
+          <div class="cell">Không có overlay, theme mặc định, nhạc ambient nhẹ</div>
+        </div>
+        <div class="row">
+          <div class="cell"><strong>HAPPY</strong><br><span style="font-size:12px;color:var(--gray-500)">Nhiều người đang vui</span></div>
+          <div class="cell"><code style="font-size:12px">+0.2 → +0.6</code></div>
+          <div class="cell">Hoa nở nhẹ (CSS keyframe), brightness +10%, nhạc upbeat</div>
+        </div>
+        <div class="row">
+          <div class="cell"><strong>VERY_HAPPY</strong><br><span style="font-size:12px;color:var(--gray-500)">Cộng đồng đang hừng hực — tin thắng, lễ hội</span></div>
+          <div class="cell"><code style="font-size:12px">≥ +0.6</code></div>
+          <div class="cell">Hoa nở nhiều + confetti particles, brightness +20%, saturation +30%, nhạc vui, Energy Pulse haptic</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================= -->
+
+    <section>
+      <div class="sec-head"><span class="num">04</span><h2>Mockups</h2></div>
+      <p class="sec-intro">Không pixel-final — chỉ đủ để hình dung UI state SAD vs HAPPY và cách Energy Pulse panel hiển thị live score.</p>
+
+      <div class="mocks">
+        <div class="mock">
+          <div class="mock-label">A · Mood state — SAD (score −0.72)</div>
+          <div class="mock-body">
+            <div class="mood-frame">
+              <div class="mood-bar sad">
+                <span class="mood-dot"></span>
+                VERY_SAD · score −0.72 · 23 events / 60s
+              </div>
+              <div class="mood-content sad-bg">
+                <div class="rain-overlay"></div>
+                <div class="mood-post">
+                  <div class="mp-author">Minh · 2s ago</div>
+                  Thua rồi... cảm giác trống rỗng quá 😞
+                </div>
+                <div class="mood-post">
+                  <div class="mp-author">Lan · 8s ago</div>
+                  Cả đội cố gắng mà vẫn không được, buồn lắm.
+                </div>
+                <div class="mood-post">
+                  <div class="mp-author">Khoa · 15s ago</div>
+                  Không biết nói gì nữa. Thôi ngủ cho quên.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mock">
+          <div class="mock-label">B · Mood state — HAPPY (score +0.68)</div>
+          <div class="mock-body">
+            <div class="mood-frame">
+              <div class="mood-bar happy">
+                <span class="mood-dot"></span>
+                VERY_HAPPY · score +0.68 · 31 events / 60s
+              </div>
+              <div class="mood-content happy-bg">
+                <div class="bloom-overlay">🌸✨🌼</div>
+                <div class="mood-post">
+                  <div class="mp-author">An · 3s ago</div>
+                  Tin vui quá trời ơi!!! Không ngủ được luôn 🎉
+                </div>
+                <div class="mood-post">
+                  <div class="mp-author">Trang · 9s ago</div>
+                  Hôm nay là ngày đẹp nhất năm nay rồi 🥰
+                </div>
+                <div class="mood-post">
+                  <div class="mp-author">Huy · 20s ago</div>
+                  Cả nhà ơi, mình vừa nhận offer!! Vui muốn khóc 😭🎊
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mock">
+          <div class="mock-label">C · Energy Pulse panel (debug / demo overlay)</div>
+          <div class="mock-body">
+            <div class="pulse-panel">
+              <div class="pulse-title">Live mood distribution · cửa sổ 60s</div>
+              <div class="pulse-bar-wrap">
+                <div class="pulse-label">SAD</div>
+                <div class="pulse-track"><div class="pulse-fill sad"></div></div>
+                <div class="pulse-score">72%</div>
+              </div>
+              <div class="pulse-bar-wrap">
+                <div class="pulse-label">NEUTRAL</div>
+                <div class="pulse-track"><div class="pulse-fill neut"></div></div>
+                <div class="pulse-score">18%</div>
+              </div>
+              <div class="pulse-bar-wrap">
+                <div class="pulse-label">HAPPY</div>
+                <div class="pulse-track"><div class="pulse-fill happy"></div></div>
+                <div class="pulse-score">10%</div>
+              </div>
+              <div class="threshold-line">
+                <div class="threshold-label">Energy Pulse threshold vượt ngưỡng</div>
+                <div class="threshold-badge">HAPTIC FIRED</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mock">
+          <div class="mock-label">D · Audio crossfade state machine</div>
+          <div class="mock-body">
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div style="background:var(--ivory);border:1.5px solid var(--gray-300);border-radius:8px;padding:12px 14px;">
+                <div style="font-family:var(--mono);font-size:11px;color:var(--gray-500);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Audio state</div>
+                <div style="font-size:13px;color:var(--slate);">
+                  <span style="background:#EBF2F8;border-radius:4px;padding:2px 7px;font-family:var(--mono);font-size:12px;">sad_piano.mp3</span>
+                  <span style="color:var(--clay);margin:0 8px;font-family:var(--mono);">→ fade out 3s →</span>
+                  <span style="background:#F5EDE4;border-radius:4px;padding:2px 7px;font-family:var(--mono);font-size:12px;">neutral_ambient.mp3</span>
+                </div>
+              </div>
+              <div style="background:var(--ivory);border:1.5px solid var(--gray-300);border-radius:8px;padding:12px 14px;">
+                <div style="font-family:var(--mono);font-size:11px;color:var(--gray-500);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Autoplay gate</div>
+                <div style="font-size:13px;color:var(--gray-700);">
+                  AudioContext bị <strong>suspended</strong> cho đến khi có gesture đầu tiên.
+                  App hiển thị <em>"Nhấn bất kỳ đâu để bật âm thanh"</em> banner một lần duy nhất.
+                </div>
+              </div>
+              <div style="background:var(--ivory);border:1.5px solid var(--gray-300);border-radius:8px;padding:12px 14px;">
+                <div style="font-family:var(--mono);font-size:11px;color:var(--gray-500);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em">Tracks cần chuẩn bị</div>
+                <div style="font-size:13px;color:var(--gray-700);">
+                  <code>sad_piano.mp3</code> · <code>neutral_ambient.mp3</code> · <code>happy_upbeat.mp3</code> —
+                  royalty-free, loop liền mạch, preload khi app mount.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================= -->
+
+    <section>
+      <div class="sec-head"><span class="num">05</span><h2>Key code</h2></div>
+      <p class="sec-intro">Ba đoạn code hay bị viết sai nhất: sliding window trên Redis, crossfade GainNode, và hysteresis để tránh mood flicker.</p>
+
+      <div class="code-grid">
+
+        <div class="code-block">
+          <div class="file-label">lib/sentimentAdapter.ts</div>
+          <div class="code"><pre><span class="kw">export async function</span> <span class="fn">analyzeSentiment</span>(
+  text: string
+): Promise&lt;SentimentResult&gt; {
+  <span class="kw">const</span> res = <span class="kw">await</span> <span class="fn">fetch</span>(<span class="str">'/api/sentiment'</span>, {
+    method: <span class="str">'POST'</span>,
+    body: JSON.<span class="fn">stringify</span>({ text }),
+  });
+  <span class="cm">// returns { score: -1..1, label, intensity }</span>
+  <span class="kw">return</span> res.<span class="fn">json</span>();
+}
+
+<span class="cm">// Gọi fire-and-forget sau khi post đã lưu</span>
+<span class="kw">export async function</span> <span class="fn">recordMoodEvent</span>(
+  score: number, intensity: number
+) {
+  <span class="kw">const</span> ts = Date.<span class="fn">now</span>();
+  <span class="cm">// ZADD mood:events &lt;timestamp&gt; &lt;score:intensity&gt;</span>
+  <span class="kw">await</span> redis.<span class="fn">zadd</span>(<span class="str">'mood:events'</span>, {
+    score: ts,
+    member: <span class="str">`${score}:${intensity}:${ts}`</span>,
+  });
+  <span class="cm">// tự dọn events cũ hơn 120s</span>
+  <span class="kw">await</span> redis.<span class="fn">zremrangebyscore</span>(
+    <span class="str">'mood:events'</span>, <span class="num">0</span>, ts - <span class="num">120_000</span>
+  );
+}</pre></div>
+        </div>
+
+        <div class="code-block">
+          <div class="file-label">lib/moodAggregator.ts</div>
+          <div class="code"><pre><span class="kw">export async function</span> <span class="fn">computeMood</span>(): Promise&lt;MoodState&gt; {
+  <span class="kw">const</span> now = Date.<span class="fn">now</span>();
+  <span class="kw">const</span> members = <span class="kw">await</span> redis.<span class="fn">zrangebyscore</span>(
+    <span class="str">'mood:events'</span>, now - <span class="num">60_000</span>, now
+  );
+  <span class="kw">if</span> (!members.length) <span class="kw">return</span> NEUTRAL;
+
+  <span class="kw">let</span> weightedSum = <span class="num">0</span>, totalWeight = <span class="num">0</span>;
+  <span class="kw">for</span> (<span class="kw">const</span> m <span class="kw">of</span> members) {
+    <span class="kw">const</span> [score, intensity] = m.<span class="fn">split</span>(<span class="str">':'</span>).<span class="fn">map</span>(Number);
+    weightedSum += score * intensity;
+    totalWeight += intensity;
+  }
+  <span class="kw">const</span> avg = weightedSum / totalWeight;
+
+  <span class="cm">// hysteresis: chỉ đổi state nếu vượt ngưỡng ±0.05</span>
+  <span class="kw">return</span> <span class="fn">applyHysteresis</span>(avg, currentState);
+}</pre></div>
+        </div>
+
+        <div class="code-block">
+          <div class="file-label">lib/ambientAudio.ts</div>
+          <div class="code"><pre><span class="kw">class</span> <span class="fn">AmbientAudioController</span> {
+  <span class="kw">private</span> ctx: AudioContext;
+  <span class="kw">private</span> gains: Record&lt;MoodState, GainNode&gt;;
+  <span class="kw">private</span> current: MoodState = <span class="str">'NEUTRAL'</span>;
+
+  <span class="fn">crossfadeTo</span>(next: MoodState, dur = <span class="num">3</span>) {
+    <span class="kw">const</span> now = <span class="kw">this</span>.ctx.currentTime;
+    <span class="cm">// fade out current</span>
+    <span class="kw">this</span>.gains[<span class="kw">this</span>.current].gain
+      .<span class="fn">linearRampToValueAtTime</span>(<span class="num">0</span>, now + dur);
+    <span class="cm">// fade in next</span>
+    <span class="kw">this</span>.gains[next].gain
+      .<span class="fn">linearRampToValueAtTime</span>(<span class="num">1</span>, now + dur);
+    <span class="kw">this</span>.current = next;
+  }
+
+  <span class="cm">// Gọi sau gesture đầu tiên</span>
+  <span class="kw">async</span> <span class="fn">resume</span>() {
+    <span class="kw">await</span> <span class="kw">this</span>.ctx.<span class="fn">resume</span>();
+  }
+}</pre></div>
+        </div>
+
+        <div class="code-block">
+          <div class="file-label">contexts/MoodContext.tsx</div>
+          <div class="code"><pre><span class="kw">export function</span> <span class="fn">MoodProvider</span>({ children }) {
+  <span class="kw">const</span> [mood, setMood] = <span class="fn">useState</span>&lt;MoodState&gt;(<span class="str">'NEUTRAL'</span>);
+
+  <span class="fn">useEffect</span>(() =&gt; {
+    <span class="kw">const</span> ch = ably.channels.<span class="fn">get</span>(<span class="str">'global:mood'</span>);
+    ch.<span class="fn">subscribe</span>(<span class="str">'update'</span>, ({ data }) =&gt; {
+      <span class="fn">setMood</span>(data.state);
+      <span class="cm">// cập nhật CSS vars</span>
+      document.documentElement.style
+        .<span class="fn">setProperty</span>(<span class="str">'--mood-brightness'</span>,
+          THEME[data.state].brightness);
+      <span class="cm">// crossfade audio</span>
+      audio.<span class="fn">crossfadeTo</span>(data.state);
+      <span class="cm">// haptic nếu Energy Pulse</span>
+      <span class="kw">if</span> (data.energyPulse)
+        navigator.<span class="fn">vibrate</span>([<span class="num">80</span>, <span class="num">40</span>, <span class="num">80</span>]);
+    });
+    <span class="kw">return</span> () =&gt; ch.<span class="fn">unsubscribe</span>();
+  }, []);
+
+  <span class="kw">return</span> &lt;MoodCtx.Provider value={mood}&gt;{children}&lt;/MoodCtx.Provider&gt;;
+}</pre></div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============================================================= -->
+
+    <section>
+      <div class="sec-head"><span class="num">06</span><h2>Risks &amp; mitigations</h2></div>
+      <div class="risks">
+        <div class="row">
+          <div class="cell head">Risk</div>
+          <div class="cell head">Sev</div>
+          <div class="cell head">Mitigation</div>
+        </div>
+        <div class="row">
+          <div class="cell">Web Audio API bị block bởi autoplay policy — AudioContext bị suspend trước khi có user gesture, audio không phát khi mood đầu tiên trigger.</div>
+          <div class="cell"><span class="sev high">HIGH</span></div>
+          <div class="cell">Hiển thị một-lần banner "Nhấn để bật âm thanh". Trong <code>AudioController.resume()</code>, gọi <code>ctx.resume()</code> sau bất kỳ click nào. Không cố autoplay trước gesture — browser sẽ chặn im lặng.</div>
+        </div>
+        <div class="row">
+          <div class="cell">Mood flicker: score dao động ở ranh giới threshold (ví dụ −0.19, −0.21, −0.18) gây UI chuyển trạng thái liên tục trong vài giây.</div>
+          <div class="cell"><span class="sev high">HIGH</span></div>
+          <div class="cell">Hysteresis ±0.05: một khi đã ở SAD thì phải đạt −0.15 mới về NEUTRAL, không phải −0.20. Thêm debounce 3s trước khi emit state change lên Ably.</div>
+        </div>
+        <div class="row">
+          <div class="cell">Claude API latency: sentiment call mất 0.5–2s, nếu await trực tiếp trong POST handler sẽ làm chậm UX tạo bài.</div>
+          <div class="cell"><span class="sev med">MED</span></div>
+          <div class="cell">Fire-and-forget: POST handler lưu bài xong trả về ngay, sentiment analysis chạy background bằng <code>waitUntil()</code> hoặc queue job riêng. UI không bao giờ đợi sentiment.</div>
+        </div>
+        <div class="row">
+          <div class="cell">Upstash free tier rate limit: 10,000 commands/ngày. Seed data script 50 posts/phút = 3,000/giờ sẽ vượt nhanh.</div>
+          <div class="cell"><span class="sev med">MED</span></div>
+          <div class="cell">Seed script dùng pipeline (batch nhiều ZADD trong 1 request). Chỉ chạy seed trong demo session, không để chạy liên tục. Upgrade lên $10/tháng nếu cần test dài hơn.</div>
+        </div>
+        <div class="row">
+          <div class="cell">Safari không hỗ trợ Vibration API — <code>navigator.vibrate</code> là <code>undefined</code>, gọi sẽ throw.</div>
+          <div class="cell"><span class="sev low">LOW</span></div>
+          <div class="cell"><code>navigator.vibrate?.(pattern)</code> — optional chaining, không cần polyfill. Energy Pulse vẫn hiển thị visual indicator trên Safari dù không có haptic.</div>
+        </div>
+        <div class="row">
+          <div class="cell">Ably free tier giới hạn 200 connections đồng thời — không đủ nếu demo có nhiều người xem cùng lúc.</div>
+          <div class="cell"><span class="sev low">LOW</span></div>
+          <div class="cell">Cho demo cá nhân thì 200 connections là quá đủ. Nếu show demo công khai, upgrade Ably ($29/tháng) hoặc dùng Pusher Channels free tier (100 connections).</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================= -->
+
+    <section>
+      <div class="sec-head"><span class="num">07</span><h2>Open questions</h2></div>
+      <div class="open-q">
+        <div class="q">
+          <div class="qt">Threshold calibration: lấy số nào từ đâu?</div>
+          <div class="qd">Các threshold −0.6, −0.2, +0.2, +0.6 là ước tính ban đầu dựa trên cảm tính. Sau khi seed data chạy, plot distribution của score thật để xem các giá trị này có hợp lý không.
+          Cân nhắc UI cho phép điều chỉnh threshold trong dev mode để calibrate nhanh.</div>
+          <div class="owner">Quyết định sau · ngày 6 khi có seed data thật</div>
+        </div>
+        <div class="q">
+          <div class="qt">Có nên để user tắt mood overlay không?</div>
+          <div class="qd">Một số user có thể bị khó chịu bởi animation (motion sensitivity) hoặc âm thanh tự bật.
+          Minimal viable: respect <code>prefers-reduced-motion</code> media query để tắt animation.
+          Full: toggle trong Settings để tắt hoàn toàn overlay + audio. Cần quyết định trước slice 3 vì ảnh hưởng cách viết ThemeOverlay component.</div>
+          <div class="owner">Quyết định trước slice 3 · ngày 3</div>
+        </div>
+        <div class="q">
+          <div class="qt">Window 60 giây hay ngắn hơn cho demo?</div>
+          <div class="qd">60 giây cho cảm giác "cộng đồng" thật nhưng demo sẽ chậm — phải chờ 60s để thấy mood shift.
+          Proposal: demo dùng window 15 giây để transition nhanh hơn, production dùng 60 giây. Thêm param <code>?window=15</code> vào aggregator endpoint.</div>
+          <div class="owner">Quyết định trước slice 2 · ngày 2</div>
+        </div>
+        <div class="q">
+          <div class="qt">Graceful degradation khi Ably mất kết nối?</div>
+          <div class="qd">Nếu Ably disconnect (mạng yếu, free tier limit), MoodContext nên giữ nguyên trạng thái cuối hay về NEUTRAL?
+          Giữ nguyên tốt hơn về UX (không flash đột ngột) nhưng có thể hiển thị mood cũ trong nhiều phút.
+          Proposal: giữ nguyên, thêm subtle indicator "mood data paused" sau 30s không nhận update.</div>
+          <div class="owner">Quyết định trước slice 3 · ngày 3</div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</body>
+</html>

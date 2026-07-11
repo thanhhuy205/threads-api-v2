@@ -1,0 +1,1363 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Threads API v2 QA Project Documentation</title>
+  <style>
+    :root {
+      --ivory:    #FAF9F5;
+      --slate:    #141413;
+      --clay:     #D97757;
+      --oat:      #E3DACC;
+      --olive:    #788C5D;
+      --rust:     #B04A3F;
+
+      --gray-100: #F0EEE6;
+      --gray-300: #D1CFC5;
+      --gray-500: #87867F;
+      --gray-700: #3D3D3A;
+
+      --blue-50:    #E6F1FB;
+      --blue-400:   #378ADD;
+      --blue-800:   #0C447C;
+
+      --green-50:   #EAF3DE;
+      --green-600:  #3B6D11;
+
+      --purple-50:  #EEEDFE;
+      --purple-600: #534AB7;
+
+      --amber-50:   #FAEEDA;
+      --amber-600:  #854F0B;
+
+      --serif: ui-serif, Georgia, serif;
+      --sans:  system-ui, -apple-system, sans-serif;
+      --mono:  ui-monospace, "SF Mono", Menlo, monospace;
+
+      --border: 1.5px solid var(--gray-300);
+      --radius: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--ivory);
+      color: var(--slate);
+      font-family: var(--sans);
+      font-size: 16px;
+      line-height: 1.7;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    code {
+      font-family: var(--mono);
+    }
+
+    .topbar {
+      background: var(--ivory);
+      border-bottom: var(--border);
+      height: 56px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .topbar-inner {
+      align-items: center;
+      display: flex;
+      height: 56px;
+      justify-content: space-between;
+      margin: 0 auto;
+      max-width: 1200px;
+      padding: 0 1.25rem;
+    }
+
+    .project-name {
+      color: var(--slate);
+      font-family: var(--serif);
+      font-size: 18px;
+    }
+
+    .header-meta {
+      align-items: center;
+      display: flex;
+      gap: 10px;
+    }
+
+    .version-tag {
+      background: var(--gray-100);
+      border: var(--border);
+      border-radius: 20px;
+      color: var(--gray-700);
+      font-family: var(--mono);
+      font-size: 11px;
+      padding: 2px 9px;
+    }
+
+    .page {
+      margin: 0 auto;
+      max-width: 1200px;
+      padding: 0 1.25rem 3rem;
+    }
+
+    .hero {
+      padding: 3.25rem 0 2rem;
+    }
+
+    h1 {
+      color: var(--slate);
+      font-family: var(--serif);
+      font-size: 48px;
+      font-weight: 600;
+      line-height: 1.12;
+      margin: 0 0 1rem;
+    }
+
+    .hero-summary {
+      color: var(--gray-700);
+      font-size: 16px;
+      line-height: 1.8;
+      margin: 0;
+      max-width: 860px;
+    }
+
+    .hero-meta {
+      color: var(--gray-500);
+      font-family: var(--mono);
+      font-size: 12px;
+      margin-top: 1rem;
+    }
+
+    .architecture {
+      border-top: var(--border);
+      margin-bottom: 2rem;
+      padding: 1.25rem 0 1.75rem;
+    }
+
+    .diagram-title {
+      color: var(--gray-700);
+      font-family: var(--serif);
+      font-size: 15px;
+      margin: 0 0 10px;
+    }
+
+    .architecture svg {
+      display: block;
+      width: 100%;
+    }
+
+    .main-grid {
+      display: grid;
+      gap: 2rem;
+      grid-template-columns: 240px 1fr;
+    }
+
+    .sidebar {
+      align-self: start;
+      border-right: var(--border);
+      max-height: calc(100vh - 76px);
+      overflow: auto;
+      padding-right: 8px;
+      position: sticky;
+      top: 64px;
+    }
+
+    .nav-group {
+      margin-bottom: 8px;
+    }
+
+    .nav-group-label {
+      color: var(--gray-500);
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      padding: 12px 16px 4px;
+      text-transform: uppercase;
+    }
+
+    .nav-item {
+      border-radius: 6px;
+      color: var(--gray-700);
+      display: block;
+      font-size: 13px;
+      padding: 5px 16px;
+      text-decoration: none;
+    }
+
+    .nav-item:hover {
+      background: var(--gray-100);
+      color: var(--slate);
+    }
+
+    .nav-item.active {
+      background: var(--blue-50);
+      color: var(--blue-800);
+      font-weight: 500;
+    }
+
+    .module-section {
+      background: white;
+      border: var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 1.5rem;
+      padding: 2rem;
+      scroll-margin-top: 76px;
+    }
+
+    .section-header {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .module-badge {
+      background: var(--gray-100);
+      border: var(--border);
+      border-radius: 4px;
+      color: var(--gray-500);
+      font-family: var(--mono);
+      font-size: 11px;
+      padding: 2px 8px;
+    }
+
+    .section-title {
+      color: var(--slate);
+      font-family: var(--serif);
+      font-size: 22px;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .section-desc {
+      border-left: 3px solid var(--clay);
+      color: var(--gray-700);
+      font-size: 15px;
+      line-height: 1.75;
+      margin: 0 0 1.5rem;
+      padding-left: 1rem;
+    }
+
+    .status-badge {
+      border-radius: 20px;
+      font-family: var(--sans);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 10px;
+    }
+
+    .status-done {
+      background: var(--green-50);
+      color: var(--green-600);
+    }
+
+    .status-progress {
+      background: var(--amber-50);
+      color: var(--amber-600);
+    }
+
+    .status-planned {
+      background: var(--gray-100);
+      color: var(--gray-500);
+    }
+
+    .method-badge {
+      border-radius: 4px;
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      padding: 2px 7px;
+    }
+
+    .method-get {
+      background: var(--green-50);
+      color: var(--green-600);
+    }
+
+    .method-post {
+      background: var(--blue-50);
+      color: var(--blue-800);
+    }
+
+    .method-put {
+      background: var(--amber-50);
+      color: var(--amber-600);
+    }
+
+    .method-patch {
+      background: var(--purple-50);
+      color: var(--purple-600);
+    }
+
+    .method-delete {
+      background: var(--gray-100);
+      color: var(--rust);
+    }
+
+    .api-table {
+      border-collapse: collapse;
+      font-size: 13px;
+      margin-top: 12px;
+      width: 100%;
+    }
+
+    .api-table th {
+      background: var(--gray-100);
+      border-bottom: var(--border);
+      color: var(--gray-500);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      padding: 8px 12px;
+      text-align: left;
+      text-transform: uppercase;
+    }
+
+    .api-table td {
+      border-bottom: 1px solid var(--gray-100);
+      color: var(--gray-700);
+      padding: 10px 12px;
+      vertical-align: top;
+    }
+
+    .api-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .api-table code {
+      background: var(--blue-50);
+      border-radius: 4px;
+      color: var(--blue-800);
+      font-family: var(--mono);
+      font-size: 12px;
+      padding: 2px 6px;
+    }
+
+    .feature-grid {
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      margin-bottom: 1.5rem;
+    }
+
+    .feature-card {
+      background: var(--gray-100);
+      border: var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.25rem;
+    }
+
+    .feature-title {
+      color: var(--slate);
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .feature-desc {
+      color: var(--gray-700);
+      font-size: 13px;
+      line-height: 1.6;
+      margin-bottom: 10px;
+    }
+
+    .feature-checks {
+      color: var(--green-600);
+      font-size: 12px;
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .feature-checks li {
+      padding: 2px 0;
+    }
+
+    .subsection-title {
+      border-bottom: var(--border);
+      color: var(--gray-500);
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      margin: 1.5rem 0 0.75rem;
+      padding-bottom: 6px;
+      text-transform: uppercase;
+    }
+
+    .footer {
+      border-top: var(--border);
+      color: var(--gray-500);
+      display: flex;
+      font-family: var(--mono);
+      font-size: 12px;
+      gap: 1rem;
+      justify-content: space-between;
+      margin-top: 2.5rem;
+      padding: 1.5rem 0 0;
+    }
+
+    @media (max-width: 900px) {
+      h1 {
+        font-size: 36px;
+      }
+
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        border: var(--border);
+        border-radius: var(--radius);
+        max-height: none;
+        padding: 8px;
+        position: relative;
+        top: 0;
+      }
+
+      .module-section {
+        padding: 1.25rem;
+      }
+
+      .api-table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+
+      .footer {
+        display: block;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="project-name">Threads API v2</div>
+      <div class="header-meta">
+        <span class="status-badge status-done">Completed</span>
+        <span class="version-tag">v1.0.0</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="page">
+    <section class="hero" aria-labelledby="page-title">
+      <h1 id="page-title">QA Project Documentation</h1>
+      <p class="hero-summary">
+        Threads API v2 là backend mạng xã hội dùng Express, TypeScript, Prisma, MySQL, Redis, BullMQ, Cloudflare R2, Pusher và các dịch vụ AI.
+        Tài liệu này liệt kê các module đã có route trong dự án, các endpoint cần kiểm thử, điều kiện xác thực và checklist hành vi cho QA.
+      </p>
+      <div class="hero-meta">Base path: <code>/api/v1</code> · Swagger UI: <code>/api/v1/docs</code> · Route source: <code>src/routes/index.ts</code></div>
+    </section>
+
+    <section class="architecture" aria-labelledby="architecture-title">
+      <h2 id="architecture-title" class="diagram-title">System Architecture Map</h2>
+      <svg viewBox="0 0 960 220" width="100%" role="img" aria-label="System Architecture Map">
+        <defs>
+          <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+            <path d="M0,0 L8,4 L0,8 Z" fill="var(--clay)"></path>
+          </marker>
+        </defs>
+        <text x="30" y="20" font-family="var(--sans)" font-size="11" fill="var(--gray-500)">Frontend</text>
+        <text x="210" y="20" font-family="var(--sans)" font-size="11" fill="var(--gray-500)">API Gateway</text>
+        <text x="410" y="20" font-family="var(--sans)" font-size="11" fill="var(--gray-500)">Services</text>
+        <text x="805" y="20" font-family="var(--sans)" font-size="11" fill="var(--gray-500)">Database</text>
+
+        <rect x="30" y="42" width="110" height="36" rx="10" fill="var(--oat)" stroke="var(--gray-300)" stroke-width="1.5"></rect>
+        <text x="85" y="64" text-anchor="middle" font-family="var(--sans)" font-size="12" fill="var(--slate)">Web App</text>
+        <rect x="30" y="98" width="110" height="36" rx="10" fill="var(--oat)" stroke="var(--gray-300)" stroke-width="1.5"></rect>
+        <text x="85" y="120" text-anchor="middle" font-family="var(--sans)" font-size="12" fill="var(--slate)">Mobile App</text>
+
+        <line x1="140" y1="60" x2="210" y2="82" stroke="var(--clay)" stroke-width="1.5" marker-end="url(#arrow)"></line>
+        <line x1="140" y1="116" x2="210" y2="98" stroke="var(--clay)" stroke-width="1.5" marker-end="url(#arrow)"></line>
+        <rect x="210" y="72" width="150" height="42" rx="10" fill="var(--blue-50)" stroke="var(--blue-400)" stroke-width="1.5"></rect>
+        <text x="285" y="89" text-anchor="middle" font-family="var(--sans)" font-size="12" fill="var(--slate)">API Gateway</text>
+        <text x="285" y="105" text-anchor="middle" font-family="var(--sans)" font-size="12" fill="var(--slate)">Auth Middleware</text>
+
+        <line x1="360" y1="93" x2="400" y2="93" stroke="var(--clay)" stroke-width="1.5" marker-end="url(#arrow)"></line>
+        <rect x="400" y="36" width="78" height="30" rx="10" fill="var(--blue-50)" stroke="var(--blue-400)" stroke-width="1.5"></rect>
+        <text x="439" y="55" text-anchor="middle" font-family="var(--sans)" font-size="12" fill="var(--slate)">Auth</text>
+        <rect x="488" y="36" width="78" height="30" rx="10" fill="var(--blue-50)" stroke="var(--blue-400)" stroke-width="1.5"></rect>
+        <text x="527" y="55" text-anchor="middle" font-family="var(--sans)" font-size="12" fill="var(--slate)">Health</text>
+        <rect x="576" y="36" width="78" height="30" rx="10" fill="var(--blue-50)" stroke="var(--blue-400)" stroke-width="1.5"></rect>
+        <text x="615" y="55" text-anchor="middle" font-family="var(--sans)" font-size="12" fill="var(--slate)">Users</text>
+        <rect x="664" y="36" width="78" height="30" rx="10" fill="var(--blue-50)" stroke="var(--blue-400)" stroke-width="1.5"></rect>
+        <text x="703" y="55" text-anchor="middle" font-family="var(--sans)" font-size="12" fill="var(--slate)">Upload</text>
+
+        <rect x="400" y="82" width="78" height="30" rx="10" fill="var(--blue-50)" stroke="var(--blue-400)" stroke-width="1.5"></rect>
+        <text x="439" y="101" text-anchor="middle" font-family="var(--sans)" font-size="12" fill="var(--slate)">Posts</text>
+        <rect x="488" y="82" width="78" height="30" rx="10" fill="var(--blue-50)" stroke="var(--blue-400)" stroke-width="1.5"></rect>
+        <text x="527" y="101" text-anchor="middle" font-family="var(--sans)" font-size="12" fill="var(--slate)">Search</text>
+        <rect x="576" y="82" width="78" height="30" rx="10" fill="var(--blue-50)" stroke="var(--blue-400)" stroke-width="1.5"></rect>
+        <text x="615" y="101" text-anchor="middle" font-family="var(--sans)" font-size="12" fill="var(--slate)">Circles</text>
+        <rect x="664" y="82" width="78" height="30" rx="10" fill="var(--blue-50)" stroke="var(--blue-400)" stroke-width="1.5"></rect>
+        <text x="703" y="101" text-anchor="middle" font-family="var(--sans)" font-size="12" fill="var(--slate)">Polls</text>
+
+        <rect x="400" y="128" width="78" height="30" rx="10" fill="var(--blue-50)" stroke="var(--blue-400)" stroke-width="1.5"></rect>
+        <text x="439" y="147" text-anchor="middle" font-family="var(--sans)" font-size="12" fill="var(--slate)">Messages</text>
+        <rect x="488" y="128" width="78" height="30" rx="10" fill="var(--blue-50)" stroke="var(--blue-400)" stroke-width="1.5"></rect>
+        <text x="527" y="147" text-anchor="middle" font-family="var(--sans)" font-size="12" fill="var(--slate)">Quests</text>
+        <rect x="576" y="128" width="78" height="30" rx="10" fill="var(--blue-50)" stroke="var(--blue-400)" stroke-width="1.5"></rect>
+        <text x="615" y="147" text-anchor="middle" font-family="var(--sans)" font-size="12" fill="var(--slate)">Museum</text>
+        <rect x="664" y="128" width="78" height="30" rx="10" fill="var(--blue-50)" stroke="var(--blue-400)" stroke-width="1.5"></rect>
+        <text x="703" y="147" text-anchor="middle" font-family="var(--sans)" font-size="12" fill="var(--slate)">AI</text>
+        <rect x="532" y="174" width="78" height="30" rx="10" fill="var(--blue-50)" stroke="var(--blue-400)" stroke-width="1.5"></rect>
+        <text x="571" y="193" text-anchor="middle" font-family="var(--sans)" font-size="12" fill="var(--slate)">Admin</text>
+
+        <line x1="742" y1="97" x2="785" y2="97" stroke="var(--clay)" stroke-width="1.5" marker-end="url(#arrow)"></line>
+        <rect x="785" y="42" width="120" height="32" rx="10" fill="var(--oat)" stroke="var(--gray-300)" stroke-width="1.5"></rect>
+        <text x="845" y="62" text-anchor="middle" font-family="var(--sans)" font-size="12" fill="var(--slate)">MySQL</text>
+        <rect x="785" y="88" width="120" height="32" rx="10" fill="var(--oat)" stroke="var(--gray-300)" stroke-width="1.5"></rect>
+        <text x="845" y="108" text-anchor="middle" font-family="var(--sans)" font-size="12" fill="var(--slate)">Redis</text>
+        <rect x="785" y="134" width="120" height="32" rx="10" fill="var(--oat)" stroke="var(--gray-300)" stroke-width="1.5"></rect>
+        <text x="845" y="154" text-anchor="middle" font-family="var(--sans)" font-size="12" fill="var(--slate)">R2 Storage</text>
+        <rect x="785" y="180" width="120" height="32" rx="10" fill="var(--oat)" stroke="var(--gray-300)" stroke-width="1.5"></rect>
+        <text x="845" y="200" text-anchor="middle" font-family="var(--sans)" font-size="12" fill="var(--slate)">Pinecone</text>
+      </svg>
+    </section>
+
+    <div class="main-grid">
+      <nav class="sidebar" aria-label="Module navigation">
+        <div class="nav-group">
+          <span class="nav-group-label">Auth</span>
+          <a class="nav-item active" href="#authentication-session">Authentication &amp; Session</a>
+        </div>
+        <div class="nav-group">
+          <span class="nav-group-label">Core</span>
+          <a class="nav-item" href="#platform-health-docs">Platform Health &amp; Docs</a>
+          <a class="nav-item" href="#user-profile-social">User Profile &amp; Social Graph</a>
+          <a class="nav-item" href="#upload-media">Upload &amp; Media</a>
+        </div>
+        <div class="nav-group">
+          <span class="nav-group-label">Features</span>
+          <a class="nav-item" href="#posts-feed-interactions">Posts, Feed &amp; Interactions</a>
+          <a class="nav-item" href="#topics-search">Topics &amp; Search</a>
+          <a class="nav-item" href="#circles-communities">Circles &amp; Communities</a>
+          <a class="nav-item" href="#polls-quests">Polls &amp; Quests</a>
+          <a class="nav-item" href="#messaging-realtime">Messaging &amp; Realtime</a>
+          <a class="nav-item" href="#museum-archive">Museum Archive</a>
+        </div>
+        <div class="nav-group">
+          <span class="nav-group-label">Integrations</span>
+          <a class="nav-item" href="#ai-webhooks">AI &amp; Webhooks</a>
+        </div>
+        <div class="nav-group">
+          <span class="nav-group-label">Admin</span>
+          <a class="nav-item" href="#admin-operations">Admin Operations</a>
+        </div>
+      </nav>
+
+      <main>
+        <section id="authentication-session" class="module-section">
+          <div class="section-header">
+            <div class="module-badge">MODULE 01</div>
+            <h2 class="section-title">Authentication &amp; Session</h2>
+            <span class="status-badge status-done">Completed</span>
+          </div>
+          <p class="section-desc">
+            Module xác thực chịu trách nhiệm đăng ký, đăng nhập, refresh token, logout, xác minh email, quên mật khẩu và cập nhật hồ sơ cơ bản. QA cần kiểm tra kỹ định dạng email, username, độ dài mật khẩu, token hết hạn, token bị blacklist sau logout và các phản hồi khi thiếu Bearer token.
+          </p>
+
+          <div class="feature-grid">
+            <div class="feature-card">
+              <div class="feature-title">Registration &amp; Login</div>
+              <div class="feature-desc">Người dùng đăng ký bằng username, email, password và đăng nhập bằng email hoặc username để nhận token pair.</div>
+              <ul class="feature-checks">
+                <li>✓ POST /api/v1/auth/register with valid body → 201 + success true + user data</li>
+                <li>✓ POST /api/v1/auth/register with mismatched confirmPassword → 400 Validation failed</li>
+                <li>✓ POST /api/v1/auth/login with valid login/password → 200 + token pair in data</li>
+                <li>✓ POST /api/v1/auth/login with wrong password → 401 Invalid credentials</li>
+              </ul>
+            </div>
+            <div class="feature-card">
+              <div class="feature-title">Token Lifecycle</div>
+              <div class="feature-desc">Access token được kiểm tra qua middleware, refresh token được hash và dùng để tạo token pair mới.</div>
+              <ul class="feature-checks">
+                <li>✓ POST /api/v1/auth/refresh-token with valid refresh token → 200 + new token pair</li>
+                <li>✓ POST /api/v1/auth/logout with valid Bearer + refresh token → 200 Logout success</li>
+                <li>✓ Reuse blacklisted access token after logout → 401 TOKEN_INVALID</li>
+                <li>✓ Missing Authorization header on protected route → 401 TOKEN_INVALID</li>
+              </ul>
+            </div>
+            <div class="feature-card">
+              <div class="feature-title">Email &amp; Password Recovery</div>
+              <div class="feature-desc">Luồng email xác minh và đặt lại mật khẩu dùng token, validate schema và queue gửi email nền.</div>
+              <ul class="feature-checks">
+                <li>✓ POST /api/v1/auth/forgot-password with valid email → 200 Forgot password success</li>
+                <li>✓ GET /api/v1/auth/reset-password/validate with valid token → 200 token validation result</li>
+                <li>✓ POST /api/v1/auth/reset-password with password shorter than 8 → 400 Validation failed</li>
+                <li>✓ POST /api/v1/auth/verify-email with empty token → 400 Validation failed</li>
+              </ul>
+            </div>
+            <div class="feature-card">
+              <div class="feature-title">Availability &amp; Profile</div>
+              <div class="feature-desc">API kiểm tra email/username và API cập nhật profile hỗ trợ frontend validate dữ liệu trước khi submit.</div>
+              <ul class="feature-checks">
+                <li>✓ POST /api/v1/auth/validate/email with valid email → 200 + availability result</li>
+                <li>✓ POST /api/v1/auth/validate/username with invalid characters → 400 Validation failed</li>
+                <li>✓ GET /api/v1/auth/me with valid Bearer → 200 + current user profile</li>
+                <li>✓ POST /api/v1/auth/profile with bio over 500 chars → 400 Validation failed</li>
+              </ul>
+            </div>
+          </div>
+
+          <h3 class="subsection-title">API Endpoints</h3>
+          <table class="api-table">
+            <thead>
+              <tr><th>Method</th><th>Endpoint</th><th>Description</th><th>Auth</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/auth/register</code></td><td>Đăng ký tài khoản mới, validate username/email/password và trả về dữ liệu user.</td><td>No</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/auth/login</code></td><td>Đăng nhập bằng email hoặc username, trả về token pair khi hợp lệ.</td><td>No</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/auth/forgot-password</code></td><td>Tạo yêu cầu quên mật khẩu và kích hoạt luồng email đặt lại mật khẩu.</td><td>No</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/auth/profile</code></td><td>Cập nhật hồ sơ người dùng hiện tại với name, bio, location, website hoặc avatar.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/auth/refresh-token</code></td><td>Làm mới access token bằng refresh token hợp lệ.</td><td>Refresh token</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/auth/me</code></td><td>Lấy thông tin người dùng từ Bearer token hiện tại.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/auth/logout</code></td><td>Đăng xuất, thu hồi refresh token và blacklist access token.</td><td>Bearer + refresh token</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/auth/resend-verify-email</code></td><td>Gửi lại email xác minh cho tài khoản đang đăng nhập.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/auth/verify-email</code></td><td>Xác minh email bằng token trong body.</td><td>No</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/auth/validate/email</code></td><td>Kiểm tra định dạng và trạng thái tồn tại của email.</td><td>No</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/auth/validate/username</code></td><td>Kiểm tra định dạng và trạng thái tồn tại của username.</td><td>No</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/auth/reset-password/validate</code></td><td>Kiểm tra token reset password qua query string.</td><td>No</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/auth/reset-password</code></td><td>Đặt lại mật khẩu bằng email, token, password và confirmPassword.</td><td>No</td><td><span class="status-badge status-done">Done</span></td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="platform-health-docs" class="module-section">
+          <div class="section-header">
+            <div class="module-badge">MODULE 02</div>
+            <h2 class="section-title">Platform Health &amp; Docs</h2>
+            <span class="status-badge status-done">Completed</span>
+          </div>
+          <p class="section-desc">
+            Module nền tảng cung cấp health check cho uptime monitoring và Swagger UI để QA rà soát contract API. Health endpoint trả về tên service, môi trường và timestamp; Swagger được mount trực tiếp dưới API gateway.
+          </p>
+
+          <div class="feature-grid">
+            <div class="feature-card">
+              <div class="feature-title">Health Probe</div>
+              <div class="feature-desc">Endpoint kiểm tra tình trạng service dùng cho smoke test, deployment check và monitoring.</div>
+              <ul class="feature-checks">
+                <li>✓ GET /api/v1/health → 200 Service is healthy</li>
+                <li>✓ Response data includes service threads-api-v2, status ok, environment, timestamp</li>
+                <li>✓ No Authorization header required for health checks</li>
+              </ul>
+            </div>
+            <div class="feature-card">
+              <div class="feature-title">Swagger UI</div>
+              <div class="feature-desc">Swagger UI được serve bởi `swagger-ui-express` để test thủ công các API đã khai báo trong code.</div>
+              <ul class="feature-checks">
+                <li>✓ GET /api/v1/docs → Swagger UI loads without authentication</li>
+                <li>✓ Swagger server list includes local and production base URLs</li>
+                <li>✓ Tags include Auth, Post, User, Upload, Circle, Admin and integrations</li>
+              </ul>
+            </div>
+          </div>
+
+          <h3 class="subsection-title">API Endpoints</h3>
+          <table class="api-table">
+            <thead>
+              <tr><th>Method</th><th>Endpoint</th><th>Description</th><th>Auth</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/health</code></td><td>Trả về trạng thái sống của service và metadata runtime.</td><td>No</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/docs</code></td><td>Mở Swagger UI cho tài liệu OpenAPI của dự án.</td><td>No</td><td><span class="status-badge status-done">Done</span></td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="user-profile-social" class="module-section">
+          <div class="section-header">
+            <div class="module-badge">MODULE 03</div>
+            <h2 class="section-title">User Profile &amp; Social Graph</h2>
+            <span class="status-badge status-done">Completed</span>
+          </div>
+          <p class="section-desc">
+            Module user gom các API hồ sơ công khai, mention username, chỉ số karma/badge/status profile, follower/following và friend request. QA cần phân biệt route public, route optional token và route bắt buộc Bearer để kiểm thử dữ liệu theo ngữ cảnh người xem.
+          </p>
+
+          <div class="feature-grid">
+            <div class="feature-card">
+              <div class="feature-title">Public Profile Lookup</div>
+              <div class="feature-desc">Cho phép lấy profile bằng username và tìm username để mention trong nội dung.</div>
+              <ul class="feature-checks">
+                <li>✓ GET /api/v1/users/:username with existing username → 200 + user profile</li>
+                <li>✓ GET /api/v1/users/:username with unknown username → 404 User not found</li>
+                <li>✓ GET /api/v1/users/mention?q=a → 200 + username suggestion list</li>
+                <li>✓ GET /api/v1/users/mention without q → 400 Validation failed</li>
+              </ul>
+            </div>
+            <div class="feature-card">
+              <div class="feature-title">Follower Graph</div>
+              <div class="feature-desc">Theo dõi quan hệ follower/following và thao tác follow/unfollow giữa người dùng.</div>
+              <ul class="feature-checks">
+                <li>✓ GET /api/v1/user/:username/followers → 200 + paginated followers</li>
+                <li>✓ GET /api/v1/user/:username/following → 200 + paginated following</li>
+                <li>✓ POST /api/v1/user/:username/follower with Bearer → 200 + follow state result</li>
+                <li>✓ POST /api/v1/user/:username/follower without Bearer → 401 TOKEN_INVALID</li>
+              </ul>
+            </div>
+            <div class="feature-card">
+              <div class="feature-title">Friend Requests</div>
+              <div class="feature-desc">Hỗ trợ gửi, hủy, chấp nhận hoặc từ chối lời mời kết bạn và xem danh sách request.</div>
+              <ul class="feature-checks">
+                <li>✓ POST /api/v1/me/:username/friend-requests with Bearer → 200 Send request</li>
+                <li>✓ PATCH /api/v1/me/friend-requests/:username/accept with isAccept true → 200 processed</li>
+                <li>✓ PATCH /api/v1/me/friend-requests/:username/cancel → 200 processed</li>
+                <li>✓ GET /api/v1/me/friend-requests/received → 200 + paginated rows</li>
+              </ul>
+            </div>
+            <div class="feature-card">
+              <div class="feature-title">User Progress</div>
+              <div class="feature-desc">Các API cá nhân trả về karma, badges và status profile cho trải nghiệm gamification.</div>
+              <ul class="feature-checks">
+                <li>✓ GET /api/v1/users/me/karma with Bearer → 200 + karma payload</li>
+                <li>✓ GET /api/v1/users/me/badges with Bearer → 200 + badges payload</li>
+                <li>✓ GET /api/v1/users/me/status-profile with Bearer → 200 + status profile</li>
+                <li>✓ Any /users/me route with banned account → 403 USER_BANNED</li>
+              </ul>
+            </div>
+          </div>
+
+          <h3 class="subsection-title">API Endpoints</h3>
+          <table class="api-table">
+            <thead>
+              <tr><th>Method</th><th>Endpoint</th><th>Description</th><th>Auth</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/users/mention</code></td><td>Tìm username gợi ý theo query `q` để mention.</td><td>No</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/users/:username</code></td><td>Lấy hồ sơ người dùng theo username, có thể đọc ngữ cảnh viewer nếu có token.</td><td>Optional Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/users/me/karma</code></td><td>Lấy karma của người dùng hiện tại.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/users/me/badges</code></td><td>Lấy danh sách badge của người dùng hiện tại.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/users/me/status-profile</code></td><td>Lấy trạng thái hồ sơ cá nhân của người dùng hiện tại.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/user/:username/followers</code></td><td>Lấy danh sách follower của username.</td><td>No</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/user/:username/following</code></td><td>Lấy danh sách tài khoản mà username đang follow.</td><td>No</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/user/:username/friend-request</code></td><td>Gửi lời mời kết bạn đến username từ route social công khai.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/user/:username/follower</code></td><td>Follow hoặc toggle quan hệ follower với username.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/me/followers</code></td><td>Lấy follower của chính người dùng đang đăng nhập.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/me/:username/friend-requests</code></td><td>Gửi lời mời kết bạn đến username từ route cá nhân.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-patch">PATCH</span></td><td><code>/api/v1/me/friend-requests/:username/cancel</code></td><td>Hủy lời mời kết bạn đã gửi cho username.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-patch">PATCH</span></td><td><code>/api/v1/me/friend-requests/:username/accept</code></td><td>Chấp nhận hoặc từ chối lời mời kết bạn từ username theo `isAccept`.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/me/friend-requests/received</code></td><td>Lấy danh sách lời mời kết bạn đã nhận.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/me/friend-requests/sent</code></td><td>Lấy danh sách lời mời kết bạn đã gửi.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="upload-media" class="module-section">
+          <div class="section-header">
+            <div class="module-badge">MODULE 04</div>
+            <h2 class="section-title">Upload &amp; Media</h2>
+            <span class="status-badge status-done">Completed</span>
+          </div>
+          <p class="section-desc">
+            Module upload nhận file bằng multer memory storage, resize ảnh qua middleware shape và lưu lên Cloudflare R2/S3-compatible storage. QA cần kiểm tra field name đúng (`file` cho avatar, `medias` cho post media), giới hạn số lượng media và quyền truy cập với route media.
+          </p>
+
+          <div class="feature-grid">
+            <div class="feature-card">
+              <div class="feature-title">Avatar Upload</div>
+              <div class="feature-desc">Upload một ảnh avatar, xử lý resize và trả về metadata file đã lưu.</div>
+              <ul class="feature-checks">
+                <li>✓ POST /api/v1/upload/avatar with multipart field file → 201 Upload avatar success</li>
+                <li>✓ Missing file in multipart request → middleware/controller error path is returned</li>
+                <li>✓ Non-image mime type should be rejected by upload/shape middleware</li>
+              </ul>
+            </div>
+            <div class="feature-card">
+              <div class="feature-title">Post Media Upload</div>
+              <div class="feature-desc">Upload tối đa 5 media cho bài viết và trả về danh sách object để gắn vào post payload.</div>
+              <ul class="feature-checks">
+                <li>✓ POST /api/v1/upload/media with Bearer + medias[] → 201 Upload media success</li>
+                <li>✓ More than 5 files in medias[] → upload middleware rejects request</li>
+                <li>✓ Missing Bearer token on media upload → 401 TOKEN_INVALID</li>
+              </ul>
+            </div>
+          </div>
+
+          <h3 class="subsection-title">API Endpoints</h3>
+          <table class="api-table">
+            <thead>
+              <tr><th>Method</th><th>Endpoint</th><th>Description</th><th>Auth</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/upload/avatar</code></td><td>Upload một file avatar bằng multipart field `file`.</td><td>No</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/upload/media</code></td><td>Upload tối đa 5 media bằng multipart field `medias`.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="posts-feed-interactions" class="module-section">
+          <div class="section-header">
+            <div class="module-badge">MODULE 05</div>
+            <h2 class="section-title">Posts, Feed &amp; Interactions</h2>
+            <span class="status-badge status-done">Completed</span>
+          </div>
+          <p class="section-desc">
+            Module post xử lý news feed, đọc post công khai, tạo bài viết, reply, quote, repost, like, save, hide, report, sửa và xóa post. QA cần kiểm tra cursor pagination, quyền chủ sở hữu khi sửa/xóa, validate content tối đa 5000 ký tự, poll trong post và các side effect bất đồng bộ như sync like hoặc indexing semantic search.
+          </p>
+
+          <div class="feature-grid">
+            <div class="feature-card">
+              <div class="feature-title">Feed &amp; Read APIs</div>
+              <div class="feature-desc">Các route đọc post hỗ trợ khách hoặc optional token để cá nhân hóa trạng thái like/save.</div>
+              <ul class="feature-checks">
+                <li>✓ GET /api/v1/posts/news-feed?take=20 → 200 + pagination</li>
+                <li>✓ GET /api/v1/posts/:publicId with existing post → 200 Posts retrieved</li>
+                <li>✓ GET /api/v1/posts/:publicId with unknown post → 404 Post not found</li>
+                <li>✓ GET /api/v1/posts/user/:username with unknown username → 404 User not found</li>
+              </ul>
+            </div>
+            <div class="feature-card">
+              <div class="feature-title">Create, Reply, Quote &amp; Repost</div>
+              <div class="feature-desc">Người dùng đăng nhập có thể tạo post thường, reply, quote và repost; nội dung được validate bằng Zod.</div>
+              <ul class="feature-checks">
+                <li>✓ POST /api/v1/posts with valid content → 201 Post created</li>
+                <li>✓ POST /api/v1/posts with empty content → 400 Validation failed</li>
+                <li>✓ POST /api/v1/posts/:publicId/reply → 201 Post created</li>
+                <li>✓ POST /api/v1/posts/:publicId/quote → 201 Post created</li>
+              </ul>
+            </div>
+            <div class="feature-card">
+              <div class="feature-title">Engagement Actions</div>
+              <div class="feature-desc">Các hành động like, save, hide, report trả về trạng thái rõ ràng để frontend cập nhật UI.</div>
+              <ul class="feature-checks">
+                <li>✓ POST /api/v1/posts/:publicId/like with isLiked true → 200 + liked true</li>
+                <li>✓ POST /api/v1/posts/:publicId/save → 200 + saved true</li>
+                <li>✓ POST /api/v1/posts/:publicId/hide → 200 + hidden true</li>
+                <li>✓ POST /api/v1/posts/:publicId/report without reason → 400 Validation failed</li>
+              </ul>
+            </div>
+            <div class="feature-card">
+              <div class="feature-title">Edit, Delete &amp; Search</div>
+              <div class="feature-desc">Post có thể sửa content/visibility, xóa mềm và tìm kiếm bằng query hoặc semantic similarity.</div>
+              <ul class="feature-checks">
+                <li>✓ PATCH /api/v1/posts/:publicId with content or visibility → 200 + updated post</li>
+                <li>✓ PATCH /api/v1/posts/:publicId with empty body → 400 Validation failed</li>
+                <li>✓ DELETE /api/v1/posts/:publicId by owner → 200 + deleted true</li>
+                <li>✓ POST /api/v1/posts/:publicId/similar with content/topic → 200 + similar posts</li>
+              </ul>
+            </div>
+          </div>
+
+          <h3 class="subsection-title">API Endpoints</h3>
+          <table class="api-table">
+            <thead>
+              <tr><th>Method</th><th>Endpoint</th><th>Description</th><th>Auth</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/posts/news-feed</code></td><td>Lấy news feed với cursor pagination và filter type tùy chọn.</td><td>Optional Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/posts/search</code></td><td>Tìm post bằng query `q`, topics, limit và page.</td><td>No</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/posts/:publicId/replies</code></td><td>Lấy reply của một post theo publicId.</td><td>Optional Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/posts/me</code></td><td>Lấy post của người dùng đang đăng nhập.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/posts/:publicId</code></td><td>Lấy chi tiết post theo publicId.</td><td>Optional Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/posts/user/:username</code></td><td>Lấy post của một username.</td><td>Optional Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/posts/user/:username/replies</code></td><td>Lấy reply của một username.</td><td>Optional Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/posts/user/:username/quotes</code></td><td>Lấy quote post của một username.</td><td>Optional Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/posts/:publicId/similar</code></td><td>Tìm post tương tự dựa trên content và topic truyền vào body.</td><td>No</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/posts/:postId/judge-status</code></td><td>Lấy trạng thái đánh giá/judge của post theo id số.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/posts/me/replies</code></td><td>Lấy reply của người dùng hiện tại.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/posts/me/quote</code></td><td>Lấy quote post của người dùng hiện tại.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/posts</code></td><td>Tạo post mới với content, topic, mentions, media, poll và visibility.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/posts/:publicId/reply</code></td><td>Tạo reply cho post theo publicId.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/posts/:publicId/like</code></td><td>Set trạng thái like/unlike cho post.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/posts/:publicId/repost</code></td><td>Repost một post hiện có.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/posts/:publicId/quote</code></td><td>Tạo quote post kèm content mới.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/posts/:publicId/save</code></td><td>Lưu post vào danh sách cá nhân.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/posts/:publicId/hide</code></td><td>Ẩn post khỏi trải nghiệm của người dùng hiện tại.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/posts/:publicId/report</code></td><td>Báo cáo post/user/circle với reason và type.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-patch">PATCH</span></td><td><code>/api/v1/posts/:publicId</code></td><td>Cập nhật content hoặc visibility của post.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-delete">DELETE</span></td><td><code>/api/v1/posts/:publicId</code></td><td>Xóa post theo publicId.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="topics-search" class="module-section">
+          <div class="section-header">
+            <div class="module-badge">MODULE 06</div>
+            <h2 class="section-title">Topics &amp; Search</h2>
+            <span class="status-badge status-done">Completed</span>
+          </div>
+          <p class="section-desc">
+            Module topic và search phục vụ tìm kiếm post, username, topic và tạo/upsert topic. QA cần kiểm tra query bắt buộc, giới hạn `take` tối đa 100, cursor pagination và sự khác biệt giữa search public `/posts/search` với search có auth dưới `/search`.
+          </p>
+
+          <div class="feature-grid">
+            <div class="feature-card">
+              <div class="feature-title">Topic Lookup &amp; Upsert</div>
+              <div class="feature-desc">Topic có thể được tìm bằng tên và tạo mới hoặc tăng counter khi submit cùng tên.</div>
+              <ul class="feature-checks">
+                <li>✓ GET /api/v1/topic?q=dev → 200 Topics retrieved successfully</li>
+                <li>✓ GET /api/v1/topic without q → 400 Validation failed</li>
+                <li>✓ POST /api/v1/topic with name → 201 Topic upserted</li>
+                <li>✓ POST /api/v1/topic with empty name → 400 Validation failed</li>
+              </ul>
+            </div>
+            <div class="feature-card">
+              <div class="feature-title">Authenticated Search</div>
+              <div class="feature-desc">Search module yêu cầu Bearer để trả kết quả theo ngữ cảnh người dùng.</div>
+              <ul class="feature-checks">
+                <li>✓ GET /api/v1/search/posts?q=hello with Bearer → 200 + paginated posts</li>
+                <li>✓ GET /api/v1/search/posts?take=101 → 400 Validation failed</li>
+                <li>✓ GET /api/v1/search/username?q=h → 200 + usernames</li>
+                <li>✓ GET /api/v1/search/topic without Bearer → 401 TOKEN_INVALID</li>
+              </ul>
+            </div>
+          </div>
+
+          <h3 class="subsection-title">API Endpoints</h3>
+          <table class="api-table">
+            <thead>
+              <tr><th>Method</th><th>Endpoint</th><th>Description</th><th>Auth</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/topic</code></td><td>Tạo hoặc tăng lượt dùng topic theo field `name`.</td><td>No</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/topic</code></td><td>Tìm topic theo query `q`.</td><td>No</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/search/posts</code></td><td>Tìm post theo query, cursor và serp_type.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/search/username</code></td><td>Tìm username theo query `q`.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/search/topic</code></td><td>Tìm topic theo query `q`.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="circles-communities" class="module-section">
+          <div class="section-header">
+            <div class="module-badge">MODULE 07</div>
+            <h2 class="section-title">Circles &amp; Communities</h2>
+            <span class="status-badge status-done">Completed</span>
+          </div>
+          <p class="section-desc">
+            Module circle quản lý cộng đồng riêng gồm tạo circle, lời mời, join request, thành viên, phân quyền, bài viết trong circle, reply, điểm năng lượng, CPR, sacrifice karma, thống kê và hỗ trợ AI định dạng nội dung. Tất cả route circle yêu cầu Bearer; QA cần kiểm tra quyền owner/admin/member và trạng thái invitation/join request theo từng vai trò.
+          </p>
+
+          <div class="feature-grid">
+            <div class="feature-card">
+              <div class="feature-title">Circle Discovery &amp; Creation</div>
+              <div class="feature-desc">Người dùng đăng nhập xem danh sách circle, circle đã tham gia, circle sở hữu và tạo circle mới.</div>
+              <ul class="feature-checks">
+                <li>✓ GET /api/v1/circle with Bearer → 200 + paginated circle list</li>
+                <li>✓ POST /api/v1/circle with description shorter than 40 chars → 400 Validation failed</li>
+                <li>✓ GET /api/v1/circle/:publicId with valid membership context → 200 circle detail</li>
+                <li>✓ Any /api/v1/circle route without Bearer → 401 Unauthorized</li>
+              </ul>
+            </div>
+            <div class="feature-card">
+              <div class="feature-title">Invitations &amp; Join Requests</div>
+              <div class="feature-desc">Circle hỗ trợ mời user, phản hồi lời mời, gửi join request, duyệt/từ chối request và gửi lại invitation.</div>
+              <ul class="feature-checks">
+                <li>✓ POST /api/v1/circle/send-invitation with circleId/userId → 200 invitation sent</li>
+                <li>✓ POST /api/v1/circle/response-invitation with ACCEPTED → 200 invitation accepted message</li>
+                <li>✓ POST /api/v1/circle/:publicId/join-request → 200 sent or cancelled state</li>
+                <li>✓ POST /api/v1/circle/:publicId/manage/join-request/respond with isAccept → 200 response result</li>
+              </ul>
+            </div>
+            <div class="feature-card">
+              <div class="feature-title">Circle Management</div>
+              <div class="feature-desc">Owner/admin quản lý member, role, ban/kick, invitation stats và log chất lượng post.</div>
+              <ul class="feature-checks">
+                <li>✓ GET /api/v1/circle/:publicId/manage/members → 200 + paginated members</li>
+                <li>✓ PATCH /api/v1/circle/:publicId/manage/members/role with role → 200 updated role</li>
+                <li>✓ POST /api/v1/circle/:publicId/manage/members/ban with expiresAt datetime → 200 banned result</li>
+                <li>✓ POST /api/v1/circle/:publicId/manage/members/kick without userId → 400 Validation failed</li>
+              </ul>
+            </div>
+            <div class="feature-card">
+              <div class="feature-title">Circle Posts &amp; Runtime Stats</div>
+              <div class="feature-desc">Circle có bài viết riêng, reply, judge status thông qua log, energy, CPR, sacrifice karma và thống kê theo thời gian.</div>
+              <ul class="feature-checks">
+                <li>✓ POST /api/v1/circle/:publicId/posts with content → 202 Post accepted for judging</li>
+                <li>✓ GET /api/v1/circle/:publicId/posts?sort=quality → 200 + paginated circle posts</li>
+                <li>✓ POST /api/v1/circle/:publicId/cpr with targetComments → 201 CPR session created</li>
+                <li>✓ POST /api/v1/circle/:publicId/sacrifice with karmaAmount → 200 Karma sacrificed successfully</li>
+              </ul>
+            </div>
+          </div>
+
+          <h3 class="subsection-title">API Endpoints</h3>
+          <table class="api-table">
+            <thead>
+              <tr><th>Method</th><th>Endpoint</th><th>Description</th><th>Auth</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/circle</code></td><td>Lấy danh sách circle theo cursor và visibility tùy chọn.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/circle/me-join</code></td><td>Lấy các circle mà người dùng hiện tại đã tham gia.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/circle/me/owner-circle</code></td><td>Lấy các circle do người dùng hiện tại sở hữu.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/circle/request-invitation</code></td><td>Lấy danh sách invitation/join request liên quan đến người dùng hiện tại.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/circle/invitations/me/:publicId</code></td><td>Lấy chi tiết invitation của người dùng hiện tại trong một circle.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/circle</code></td><td>Tạo circle mới với name, description, avatarEmoji, visibility và mediaUrls.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/circle/send-invitation</code></td><td>Gửi invitation đến userId cho circleId.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/circle/response-invitation</code></td><td>Chấp nhận hoặc từ chối invitation bằng status ACCEPTED/REJECTED.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/circle/:publicId/level-up</code></td><td>Nâng cấp level circle nếu đủ điều kiện.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/circle/:publicId/energy</code></td><td>Lấy trạng thái energy của circle.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/circle/:publicId/user-quantity-post</code></td><td>Lấy số lượng post của user hiện tại trong circle.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/circle/:publicId/manage/exp-log</code></td><td>Lấy log điểm kinh nghiệm của circle.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/circle/:publicId/manage/post-quality-log</code></td><td>Lấy log chất lượng post của circle.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/circle/:publicId/manage/members</code></td><td>Lấy danh sách member cho màn quản trị circle.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-patch">PATCH</span></td><td><code>/api/v1/circle/:publicId/manage/members/role</code></td><td>Cập nhật role của member trong circle.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/circle/:publicId/manage/members/ban</code></td><td>Ban member khỏi circle với reason và expiresAt tùy chọn.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/circle/:publicId/manage/members/kick</code></td><td>Kick member khỏi circle.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/circle/:publicId/manage/invitations/stats</code></td><td>Lấy thống kê invitation của circle.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/circle/:publicId/manage/invitations</code></td><td>Lấy danh sách invitation trong màn quản trị circle.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/circle/:publicId/manage/join-requests</code></td><td>Lấy danh sách join request đang chờ duyệt.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/circle/:publicId/manage/resend</code></td><td>Gửi lại invitation theo id invitation.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/circle/:publicId/manage/join-request/respond</code></td><td>Admin/manager duyệt hoặc từ chối join request.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/circle/:publicId/send-invitation/manage</code></td><td>Admin gửi invitation theo username, role và description.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/circle/:publicId/posts</code></td><td>Tạo post trong circle và đưa vào luồng judging.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/circle/:publicId/posts</code></td><td>Lấy danh sách post trong circle theo sort latest hoặc quality.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/circle/:publicId/join-request</code></td><td>Gửi hoặc hủy join request của user hiện tại.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/circle/:publicId/join-request/respond-invitation</code></td><td>User phản hồi invitation/join request bằng isAccept.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/circle/:publicId/posts/:postPublicId/reply</code></td><td>Tạo reply cho post trong circle và đưa vào luồng judging.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/circle/:publicId/posts/:postPublicId/replies</code></td><td>Lấy reply của một post trong circle.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/circle/:publicId/cpr</code></td><td>Tạo CPR session với targetComments.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/circle/:publicId/cpr/status</code></td><td>Lấy trạng thái CPR của circle.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/circle/:publicId/sacrifice</code></td><td>Hy sinh karma cá nhân để hỗ trợ circle.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/circle/:publicId/stats</code></td><td>Lấy thống kê circle theo khoảng 7days, 30days hoặc 90days.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/circle/:publicId/members</code></td><td>Lấy member của circle theo cursor pagination.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/circle/:publicId</code></td><td>Lấy chi tiết circle theo publicId.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/circle-ai/generate-response</code></td><td>Định dạng hoặc hiệu đính content thành Markdown bằng AI cho circle content.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="polls-quests" class="module-section">
+          <div class="section-header">
+            <div class="module-badge">MODULE 08</div>
+            <h2 class="section-title">Polls &amp; Quests</h2>
+            <span class="status-badge status-done">Completed</span>
+          </div>
+          <p class="section-desc">
+            Module poll ghi nhận vote cho survey/poll gắn với post, còn quest quản lý daily quest và claim thưởng karma. QA cần kiểm tra mỗi vote có pollId và pollOptionId hợp lệ, quest code đúng định dạng và không claim trùng khi business rule không cho phép.
+          </p>
+
+          <div class="feature-grid">
+            <div class="feature-card">
+              <div class="feature-title">Poll Voting</div>
+              <div class="feature-desc">Người dùng đăng nhập chọn một option trong poll, service trả về trạng thái vote đã ghi nhận.</div>
+              <ul class="feature-checks">
+                <li>✓ POST /api/v1/polls/:pollId/vote with pollOptionId → 200 Vote created successfully</li>
+                <li>✓ POST /api/v1/polls/:pollId/vote with non-number pollId → 400 Validation failed</li>
+                <li>✓ POST /api/v1/polls/:pollId/vote without Bearer → 401 TOKEN_INVALID</li>
+              </ul>
+            </div>
+            <div class="feature-card">
+              <div class="feature-title">Daily Quest Claim</div>
+              <div class="feature-desc">Daily quest hiển thị nhiệm vụ khả dụng và cho phép claim reward theo code.</div>
+              <ul class="feature-checks">
+                <li>✓ GET /api/v1/quests/daily with Bearer → 200 Daily quests retrieved successfully</li>
+                <li>✓ POST /api/v1/quests/:code/claim with valid code → 200 Quest claimed successfully</li>
+                <li>✓ POST /api/v1/quests/:code/claim with empty code path → route not matched or validation error</li>
+              </ul>
+            </div>
+          </div>
+
+          <h3 class="subsection-title">API Endpoints</h3>
+          <table class="api-table">
+            <thead>
+              <tr><th>Method</th><th>Endpoint</th><th>Description</th><th>Auth</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/polls/:pollId/vote</code></td><td>Tạo hoặc cập nhật vote của user cho một poll option.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/quests/daily</code></td><td>Lấy danh sách daily quest của user hiện tại.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/quests/:code/claim</code></td><td>Claim reward cho daily quest theo code.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="messaging-realtime" class="module-section">
+          <div class="section-header">
+            <div class="module-badge">MODULE 09</div>
+            <h2 class="section-title">Messaging &amp; Realtime</h2>
+            <span class="status-badge status-done">Completed</span>
+          </div>
+          <p class="section-desc">
+            Module messaging quản lý nhóm chat, gửi tin nhắn, trạng thái delivery, danh sách member, notification unread và cấp quyền Pusher private channel. QA cần kiểm tra membership của message group trước khi đọc/gửi tin và xác thực channel name đúng với user hoặc group.
+          </p>
+
+          <div class="feature-grid">
+            <div class="feature-card">
+              <div class="feature-title">Message Groups</div>
+              <div class="feature-desc">Tạo private/crowd group, liệt kê group của user và đọc member trong group.</div>
+              <ul class="feature-checks">
+                <li>✓ POST /api/v1/message-groups with type private and members[] → 201 created</li>
+                <li>✓ POST /api/v1/message-groups with invalid type → 400 Validation failed</li>
+                <li>✓ GET /api/v1/message-groups → 200 + paginated groups</li>
+                <li>✓ GET /api/v1/message-groups/:publicId/members as non-member → 403 or Unauthorized path</li>
+              </ul>
+            </div>
+            <div class="feature-card">
+              <div class="feature-title">Messages &amp; Delivery</div>
+              <div class="feature-desc">Tin nhắn yêu cầu content và clientMessageId để chống gửi trùng từ client.</div>
+              <ul class="feature-checks">
+                <li>✓ POST /api/v1/message-groups/:publicId/messages with content/clientMessageId → 201 Message sent</li>
+                <li>✓ POST message with content over 1000 chars → 400 Validation failed</li>
+                <li>✓ PATCH /api/v1/message-groups/:publicId/messages/:messagePublicId/status with isDelivery true → 200 updated</li>
+                <li>✓ GET /api/v1/message-groups/:publicId/messages → 200 + paginated messages</li>
+              </ul>
+            </div>
+            <div class="feature-card">
+              <div class="feature-title">Notifications</div>
+              <div class="feature-desc">Notification APIs trả về list notification, trạng thái unread, số group chat chưa đọc và số friend request.</div>
+              <ul class="feature-checks">
+                <li>✓ GET /api/v1/notification → 200 + paginated notifications</li>
+                <li>✓ GET /api/v1/notification/unread → 200 + isNotification boolean</li>
+                <li>✓ POST /api/v1/notification/read → 200 + isRead true</li>
+                <li>✓ GET /api/v1/notification/message → 200 + unreadGroupCount</li>
+              </ul>
+            </div>
+            <div class="feature-card">
+              <div class="feature-title">Pusher Private Auth</div>
+              <div class="feature-desc">Pusher auth kiểm tra private channel, socket id và membership trước khi trả signature.</div>
+              <ul class="feature-checks">
+                <li>✓ POST /api/v1/pusher/auth with private notification channel for same user → Pusher auth payload</li>
+                <li>✓ POST /api/v1/pusher/auth with public channel name → 400 Only private channels are supported</li>
+                <li>✓ POST /api/v1/pusher/auth for inaccessible chat channel → 403 Channel is not accessible</li>
+              </ul>
+            </div>
+          </div>
+
+          <h3 class="subsection-title">API Endpoints</h3>
+          <table class="api-table">
+            <thead>
+              <tr><th>Method</th><th>Endpoint</th><th>Description</th><th>Auth</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/notification</code></td><td>Lấy danh sách notification của user hiện tại.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/notification/unread</code></td><td>Kiểm tra user có notification chưa đọc hay không.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/notification/read</code></td><td>Đánh dấu notification group là đã đọc.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/notification/message</code></td><td>Lấy số lượng message group chưa đọc.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/notification/friend-request</code></td><td>Lấy số lượng friend request đã nhận.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/message-groups</code></td><td>Tạo message group private hoặc crowd.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/message-groups</code></td><td>Lấy danh sách message group của user.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/message-groups/:publicId/messages</code></td><td>Gửi message vào group theo publicId.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-patch">PATCH</span></td><td><code>/api/v1/message-groups/:publicId/messages/:messagePublicId/status</code></td><td>Cập nhật trạng thái delivery của message.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/message-groups/:publicId/messages</code></td><td>Lấy tin nhắn trong group theo cursor.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/message-groups/:publicId/members</code></td><td>Lấy danh sách member của group.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/pusher/auth</code></td><td>Cấp quyền subscribe Pusher private channel nếu user hợp lệ.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="museum-archive" class="module-section">
+          <div class="section-header">
+            <div class="module-badge">MODULE 10</div>
+            <h2 class="section-title">Museum Archive</h2>
+            <span class="status-badge status-done">Completed</span>
+          </div>
+          <p class="section-desc">
+            Module museum cung cấp danh sách và chi tiết item lưu trữ theo publicId. Cả hai endpoint đều yêu cầu Bearer token; QA cần kiểm tra query filter, pagination nếu có trong DTO và hành vi khi publicId không tồn tại.
+          </p>
+
+          <div class="feature-grid">
+            <div class="feature-card">
+              <div class="feature-title">Archive Listing</div>
+              <div class="feature-desc">Người dùng đăng nhập xem danh sách museum theo query đã validate.</div>
+              <ul class="feature-checks">
+                <li>✓ GET /api/v1/museum with Bearer → 200 Museum list retrieved successfully</li>
+                <li>✓ GET /api/v1/museum without Bearer → 401 TOKEN_INVALID</li>
+                <li>✓ Invalid query values → 400 Validation failed</li>
+              </ul>
+            </div>
+            <div class="feature-card">
+              <div class="feature-title">Archive Detail</div>
+              <div class="feature-desc">Chi tiết museum trả dữ liệu theo publicId đã validate trong params.</div>
+              <ul class="feature-checks">
+                <li>✓ GET /api/v1/museum/:publicId with valid id → 200 Museum detail retrieved successfully</li>
+                <li>✓ GET /api/v1/museum/:publicId with empty segment → route not matched</li>
+                <li>✓ Unknown publicId should return the service error defined by repository lookup</li>
+              </ul>
+            </div>
+          </div>
+
+          <h3 class="subsection-title">API Endpoints</h3>
+          <table class="api-table">
+            <thead>
+              <tr><th>Method</th><th>Endpoint</th><th>Description</th><th>Auth</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/museum</code></td><td>Lấy danh sách item museum theo query.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/museum/:publicId</code></td><td>Lấy chi tiết một item museum theo publicId.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="ai-webhooks" class="module-section">
+          <div class="section-header">
+            <div class="module-badge">MODULE 11</div>
+            <h2 class="section-title">AI &amp; Webhooks</h2>
+            <span class="status-badge status-done">Completed</span>
+          </div>
+          <p class="section-desc">
+            Module integration gồm tạo job image AI qua Leonardo/OpenRouter flow và nhận webhook từ HLS/Leonardo để cập nhật trạng thái media hoặc generation metadata. QA cần kiểm tra bảo mật webhook bằng header, xử lý event không hỗ trợ và payload trả về khi job được tạo.
+          </p>
+
+          <div class="feature-grid">
+            <div class="feature-card">
+              <div class="feature-title">Image Generation Job</div>
+              <div class="feature-desc">Người dùng đăng nhập gửi content để tạo image generation job; response không trả các field cost nhạy cảm.</div>
+              <ul class="feature-checks">
+                <li>✓ POST /api/v1/ai/generate-image with content → 200 Image generation job created</li>
+                <li>✓ Response data.sdGenerationJob does not expose apiCreditCost or cost</li>
+                <li>✓ Missing Bearer token → 401 TOKEN_INVALID</li>
+                <li>✓ Missing content → 400 Validation failed</li>
+              </ul>
+            </div>
+            <div class="feature-card">
+              <div class="feature-title">HLS Media Webhook</div>
+              <div class="feature-desc">Webhook HLS xác thực bằng `x-webhook-signature` và cập nhật status media theo event ready, errored hoặc deleted.</div>
+              <ul class="feature-checks">
+                <li>✓ POST /api/v1/webhooks/hls with valid signature and video.asset.ready → 200 Webhook received</li>
+                <li>✓ Missing x-webhook-signature → 400 Missing signature</li>
+                <li>✓ Invalid x-webhook-signature → 401 Invalid signature</li>
+                <li>✓ Unsupported event type → 200 with empty response body</li>
+              </ul>
+            </div>
+            <div class="feature-card">
+              <div class="feature-title">Leonardo Webhook</div>
+              <div class="feature-desc">Webhook Leonardo xác thực bằng Bearer hoặc `x-leonardo-webhook-api-key`, cập nhật generation metadata và phát Pusher event.</div>
+              <ul class="feature-checks">
+                <li>✓ POST /api/v1/webhooks/leonardo with valid key → 200 Leonardo webhook received</li>
+                <li>✓ Invalid Leonardo key → 401 Invalid webhook key</li>
+                <li>✓ Payload object other than generation → 200 + received true</li>
+              </ul>
+            </div>
+          </div>
+
+          <h3 class="subsection-title">API Endpoints</h3>
+          <table class="api-table">
+            <thead>
+              <tr><th>Method</th><th>Endpoint</th><th>Description</th><th>Auth</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/ai/generate-image</code></td><td>Tạo job sinh ảnh từ content của user hiện tại.</td><td>Bearer</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/webhooks/hls</code></td><td>Nhận webhook HLS để cập nhật trạng thái media video.</td><td>x-webhook-signature</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/webhooks/leonardo</code></td><td>Nhận webhook Leonardo để cập nhật metadata generation và trigger realtime event.</td><td>Webhook key</td><td><span class="status-badge status-done">Done</span></td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section id="admin-operations" class="module-section">
+          <div class="section-header">
+            <div class="module-badge">MODULE 12</div>
+            <h2 class="section-title">Admin Operations</h2>
+            <span class="status-badge status-done">Completed</span>
+          </div>
+          <p class="section-desc">
+            Module admin cung cấp đăng nhập admin, quản lý user ban/unban, report moderation, trending hashtag, dashboard statistics và daily quest. Ngoại trừ `/admin/login`, các route admin đều đi qua authorization và `checkRole(UserRoleType.ADMIN)`, nên QA cần kiểm tra cả token hợp lệ và role admin.
+          </p>
+
+          <div class="feature-grid">
+            <div class="feature-card">
+              <div class="feature-title">Admin Login &amp; User Controls</div>
+              <div class="feature-desc">Admin đăng nhập bằng credential hợp lệ và quản lý trạng thái ban của user.</div>
+              <ul class="feature-checks">
+                <li>✓ POST /api/v1/admin/login with admin credentials → 200 + token pair</li>
+                <li>✓ GET /api/v1/admin/users with admin Bearer → 200 + paginated users</li>
+                <li>✓ PATCH /api/v1/admin/users/:userId/ban with durationHours → 200 banned result</li>
+                <li>✓ Non-admin Bearer on /api/v1/admin/users → 403 Forbidden</li>
+              </ul>
+            </div>
+            <div class="feature-card">
+              <div class="feature-title">Report Moderation</div>
+              <div class="feature-desc">Admin xem danh sách report, xem chi tiết và xử lý report bằng action hợp lệ.</div>
+              <ul class="feature-checks">
+                <li>✓ GET /api/v1/admin/reports?type=post → 200 + paginated reports</li>
+                <li>✓ GET /api/v1/admin/reports/:reportId → 200 Report details retrieved successfully</li>
+                <li>✓ PATCH /api/v1/admin/reports/:reportId with action → 200 Report moderated successfully</li>
+                <li>✓ PATCH report with invalid action → 400 Validation failed</li>
+              </ul>
+            </div>
+            <div class="feature-card">
+              <div class="feature-title">Dashboard &amp; Trends</div>
+              <div class="feature-desc">Admin lấy số liệu tổng quan và hashtag trending phục vụ CMS/dashboard.</div>
+              <ul class="feature-checks">
+                <li>✓ GET /api/v1/admin/stats with admin Bearer → 200 Admin statistics retrieved successfully</li>
+                <li>✓ GET /api/v1/admin/hashtags/trending → 200 + paginated hashtags</li>
+                <li>✓ Invalid page or limit query → 400 Validation failed</li>
+              </ul>
+            </div>
+            <div class="feature-card">
+              <div class="feature-title">Daily Quest Administration</div>
+              <div class="feature-desc">Admin tạo, liệt kê, xem action options và disable daily quest theo code.</div>
+              <ul class="feature-checks">
+                <li>✓ POST /api/v1/admin/daily-quests with valid payload → 201 Daily quest created successfully</li>
+                <li>✓ GET /api/v1/admin/daily-quests/actions → 200 Daily quest actions retrieved successfully</li>
+                <li>✓ GET /api/v1/admin/daily-quests → 200 + paginated daily quests</li>
+                <li>✓ PATCH /api/v1/admin/daily-quests/:code/disable → 200 Daily quest disabled successfully</li>
+              </ul>
+            </div>
+          </div>
+
+          <h3 class="subsection-title">API Endpoints</h3>
+          <table class="api-table">
+            <thead>
+              <tr><th>Method</th><th>Endpoint</th><th>Description</th><th>Auth</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/admin/login</code></td><td>Đăng nhập admin và trả về token khi credential hợp lệ.</td><td>No</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/admin/users</code></td><td>Lấy danh sách user cho CMS admin.</td><td>Bearer + Admin role</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-patch">PATCH</span></td><td><code>/api/v1/admin/users/:userId/ban</code></td><td>Ban user trong khoảng thời gian `durationHours`.</td><td>Bearer + Admin role</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-patch">PATCH</span></td><td><code>/api/v1/admin/users/:userId/unban</code></td><td>Gỡ ban user.</td><td>Bearer + Admin role</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-patch">PATCH</span></td><td><code>/api/v1/admin/users/:userId/ban-unlimited</code></td><td>Ban user vô thời hạn.</td><td>Bearer + Admin role</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/admin/reports</code></td><td>Lấy danh sách report theo type/status và pagination.</td><td>Bearer + Admin role</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/admin/reports/:reportId</code></td><td>Lấy chi tiết một report.</td><td>Bearer + Admin role</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-patch">PATCH</span></td><td><code>/api/v1/admin/reports/:reportId</code></td><td>Moderate report bằng action và adminNote tùy chọn.</td><td>Bearer + Admin role</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/admin/hashtags/trending</code></td><td>Lấy danh sách hashtag trending cho admin.</td><td>Bearer + Admin role</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/admin/stats</code></td><td>Lấy số liệu dashboard tổng quan.</td><td>Bearer + Admin role</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-post">POST</span></td><td><code>/api/v1/admin/daily-quests</code></td><td>Tạo daily quest mới.</td><td>Bearer + Admin role</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/admin/daily-quests/actions</code></td><td>Lấy danh sách action type hợp lệ cho daily quest.</td><td>Bearer + Admin role</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-get">GET</span></td><td><code>/api/v1/admin/daily-quests</code></td><td>Lấy danh sách daily quest trong CMS admin.</td><td>Bearer + Admin role</td><td><span class="status-badge status-done">Done</span></td></tr>
+              <tr><td><span class="method-badge method-patch">PATCH</span></td><td><code>/api/v1/admin/daily-quests/:code/disable</code></td><td>Disable daily quest theo code.</td><td>Bearer + Admin role</td><td><span class="status-badge status-done">Done</span></td></tr>
+            </tbody>
+          </table>
+        </section>
+      </main>
+    </div>
+
+    <footer class="footer">
+      <div>Doc version v1.0.0 · Last updated 2026-06-17</div>
+      <div>Author: Threads API Engineering Team</div>
+    </footer>
+  </div>
+
+  <script>
+    const navItems = Array.from(document.querySelectorAll('.nav-item'));
+    const sections = navItems
+      .map((item) => document.querySelector(item.getAttribute('href')))
+      .filter(Boolean);
+
+    const setActive = () => {
+      let activeId = sections[0]?.id;
+      for (const section of sections) {
+        const rect = section.getBoundingClientRect();
+        if (rect.top <= 96) {
+          activeId = section.id;
+        }
+      }
+
+      navItems.forEach((item) => {
+        item.classList.toggle('active', item.getAttribute('href') === '#' + activeId);
+      });
+    };
+
+    document.addEventListener('scroll', setActive, { passive: true });
+    window.addEventListener('load', setActive);
+  </script>
+</body>
+</html>

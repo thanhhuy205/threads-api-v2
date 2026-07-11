@@ -1,0 +1,830 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Liquidation Stakes — Luồng nghiệp vụ</title>
+<style>
+  :root {
+    --ivory:    #FAF9F5;
+    --slate:    #141413;
+    --clay:     #D97757;
+    --oat:      #E3DACC;
+    --olive:    #788C5D;
+    --violet:   #7C3AED;
+    --violet-lt:#EDE9FE;
+    --sky:      #6A8CAF;
+    --danger:   #C0392B;
+    --danger-lt:#FDECEA;
+    --gray-150: #F0EEE6;
+    --gray-300: #D1CFC5;
+    --gray-500: #87867F;
+    --gray-700: #3D3D3A;
+    --serif: ui-serif, Georgia, "Times New Roman", serif;
+    --sans:  system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --mono:  ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--ivory);
+    color: var(--slate);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+    padding: 48px 24px 100px;
+  }
+  .sheet { max-width: 1060px; margin: 0 auto; }
+
+  header { margin-bottom: 40px; }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--gray-500);
+    margin-bottom: 10px;
+  }
+  h1 {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 34px;
+    letter-spacing: -0.01em;
+    margin-bottom: 12px;
+  }
+  .lead {
+    font-size: 14.5px;
+    line-height: 1.65;
+    color: var(--gray-700);
+    max-width: 700px;
+    margin-bottom: 22px;
+  }
+
+  /* ── tabs ── */
+  .flow-tabs {
+    display: flex;
+    border: 1.5px solid var(--gray-300);
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--gray-150);
+    width: fit-content;
+    margin-bottom: 32px;
+  }
+  .flow-tabs button {
+    appearance: none; border: none; background: transparent;
+    font-family: var(--mono); font-size: 11.5px;
+    color: var(--gray-500); padding: 10px 18px;
+    cursor: pointer; border-right: 1px solid var(--gray-300);
+    transition: all 100ms; line-height: 1.4; text-align: left;
+  }
+  .flow-tabs button:last-child { border-right: none; }
+  .flow-tabs button.on { background: #fff; color: var(--slate); font-weight: 600; }
+
+  /* ── layout ── */
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(0,1fr) 316px;
+    gap: 26px;
+    align-items: start;
+  }
+  @media(max-width:900px){.layout{grid-template-columns:1fr;}}
+
+  /* ── canvas ── */
+  .canvas {
+    border: 1.5px solid var(--gray-300);
+    border-radius: 14px;
+    background: #fff;
+    padding: 24px;
+    overflow-x: auto;
+  }
+  svg.flow { display: block; width: 100%; height: auto; }
+
+  .flow text { font-family: var(--mono); font-size: 11.5px; fill: var(--slate); pointer-events: none; user-select: none; }
+  .flow .sub  { font-size: 10px; fill: var(--gray-500); }
+  .flow .lbl  { font-size: 10px; fill: var(--gray-500); }
+  .flow .lbl-g { font-size: 10px; fill: var(--olive); }
+  .flow .lbl-r { font-size: 10px; fill: var(--danger); }
+  .flow .lbl-v { font-size: 10px; fill: var(--violet); }
+  .flow .lbl-c { font-size: 10px; fill: var(--clay); }
+
+  .node rect       { fill:#fff; stroke:var(--gray-300); stroke-width:1.5; }
+  .node.term rect  { fill:var(--gray-150); }
+  .node.ai rect    { fill:rgba(124,58,237,0.08); stroke:var(--violet); }
+  .node.db rect    { fill:rgba(20,20,19,0.06); stroke:var(--slate); }
+  .node.ok rect    { fill:rgba(120,140,93,0.12); stroke:var(--olive); }
+  .node.bad rect   { fill:rgba(192,57,43,0.08); stroke:var(--danger); }
+  .node.warn rect  { fill:rgba(217,119,87,0.1); stroke:var(--clay); }
+  .node.cron rect  { fill:rgba(106,140,175,0.12); stroke:var(--sky); }
+  .node.gate path  { fill:#fff; stroke:var(--gray-300); stroke-width:1.5; }
+  .node.gate.g path{ fill:rgba(120,140,93,0.06); stroke:var(--olive); }
+  .node.gate.r path{ fill:rgba(192,57,43,0.06); stroke:var(--danger); }
+  .node.gate.v path{ fill:rgba(124,58,237,0.06); stroke:var(--violet); }
+
+  .node { cursor: pointer; transition: transform 100ms; }
+  .node:hover { transform: translateY(-1px); }
+  .node.active rect,
+  .node.active path { stroke: var(--clay) !important; stroke-width: 2.5 !important; }
+
+  .edge       { stroke:#BFBDB5; stroke-width:1.5; fill:none; marker-end:url(#a-gray); }
+  .edge.g     { stroke:var(--olive);   marker-end:url(#a-olive); }
+  .edge.r     { stroke:var(--danger);  marker-end:url(#a-danger); stroke-dasharray:5 4; }
+  .edge.v     { stroke:var(--violet);  marker-end:url(#a-violet); }
+  .edge.c     { stroke:var(--clay);    marker-end:url(#a-clay); stroke-dasharray:5 4; }
+  .edge.sky   { stroke:var(--sky);     marker-end:url(#a-sky); stroke-dasharray:5 4; }
+
+  /* ── panel ── */
+  aside {
+    position: sticky; top: 24px;
+    border: 1.5px solid var(--gray-300);
+    border-radius: 14px; background: #fff;
+    padding: 20px 20px 22px;
+  }
+  .hint { font-size: 12px; color: var(--gray-500); margin-bottom: 14px; }
+  .p-badge {
+    display: inline-block; font-family: var(--mono);
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em;
+    padding: 3px 9px; border-radius: 6px; margin-bottom: 10px;
+  }
+  .p-badge.step   { background: var(--gray-150); color: var(--gray-700); }
+  .p-badge.ai     { background: var(--violet-lt); color: var(--violet); }
+  .p-badge.db     { background: rgba(20,20,19,0.08); color: var(--slate); }
+  .p-badge.cron   { background: rgba(106,140,175,0.12); color: var(--sky); }
+  .p-badge.ok     { background: rgba(120,140,93,0.12); color: var(--olive); }
+  .p-badge.danger { background: var(--danger-lt); color: var(--danger); }
+  .p-badge.warn   { background: rgba(217,119,87,0.1); color: var(--clay); }
+  aside h3 { font-family: var(--serif); font-weight: 500; font-size: 19px; margin-bottom: 6px; }
+  .p-meta  { font-family: var(--mono); font-size: 10.5px; color: var(--gray-500); margin-bottom: 12px; }
+  .p-body  { font-size: 13.5px; line-height: 1.65; color: var(--gray-700); margin-bottom: 12px; }
+  .p-body code { font-family: var(--mono); font-size: 12px; }
+  aside pre {
+    font-family: var(--mono); font-size: 11.5px; line-height: 1.55;
+    background: var(--gray-150); border: 1px solid var(--gray-300);
+    border-radius: 8px; padding: 10px 12px; white-space: pre-wrap; color: var(--slate);
+  }
+  .p-note {
+    font-size: 12.5px; color: var(--gray-500); border-top: 1px solid var(--gray-300);
+    padding-top: 10px; margin-top: 10px; line-height: 1.55;
+  }
+  .p-note code { font-family: var(--mono); font-size: 11.5px; }
+
+  /* ── legend ── */
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 14px;
+    margin-top: 14px; font-size: 12px; color: var(--gray-700);
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; }
+  .chip { width: 20px; height: 12px; border: 1.5px solid var(--gray-300); border-radius: 3px; background: #fff; }
+  .chip.ai     { background: rgba(124,58,237,0.08); border-color: var(--violet); }
+  .chip.db     { background: rgba(20,20,19,0.06); border-color: var(--slate); }
+  .chip.ok     { background: rgba(120,140,93,0.12); border-color: var(--olive); }
+  .chip.bad    { background: rgba(192,57,43,0.08); border-color: var(--danger); }
+  .chip.cron   { background: rgba(106,140,175,0.12); border-color: var(--sky); }
+  .chip.warn   { background: rgba(217,119,87,0.1); border-color: var(--clay); }
+  .chip.gate   { transform: rotate(45deg); width: 10px; height: 10px; border-radius: 2px; }
+
+  /* ── flow panels ── */
+  .flow-panel { display: none; }
+  .flow-panel.on { display: block; }
+
+  /* ── step table ── */
+  .sec-lbl {
+    font-family: var(--mono); font-size: 11px;
+    letter-spacing: 0.07em; text-transform: uppercase;
+    color: var(--gray-500); margin: 28px 0 12px;
+  }
+  .steps { border: 1.5px solid var(--gray-300); border-radius: 14px; overflow: hidden; background: #fff; }
+  .step-row { display: grid; grid-template-columns: 38px 1fr; border-bottom: 1px solid var(--gray-300); }
+  .step-row:last-child { border-bottom: none; }
+  .step-num { font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--gray-500); padding: 14px 0 14px 14px; border-right: 1px solid var(--gray-300); }
+  .step-body { padding: 14px 16px; font-size: 13.5px; line-height: 1.6; color: var(--gray-700); }
+  .step-body b { color: var(--slate); }
+  .step-body code { font-family: var(--mono); font-size: 12px; }
+  .stag {
+    display: inline-block; font-family: var(--mono); font-size: 10px;
+    padding: 1px 7px; border-radius: 5px; margin-left: 7px; vertical-align: middle;
+  }
+  .stag-ai { background: var(--violet-lt); color: var(--violet); }
+  .stag-async { background: rgba(106,140,175,0.12); color: var(--sky); border: 1px dashed var(--sky); }
+  .stag-db { background: rgba(20,20,19,0.08); color: var(--slate); }
+  .stag-warn { background: rgba(217,119,87,0.1); color: var(--clay); }
+  .stag-ok { background: rgba(120,140,93,0.12); color: var(--olive); }
+  .stag-r { background: var(--danger-lt); color: var(--danger); }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+<header>
+  <div class="eyebrow">The Liquidation Stakes · Next.js + Prisma + MySQL · Luồng nghiệp vụ</div>
+  <h1>Luồng nghiệp vụ — từng bước cụ thể</h1>
+  <p class="lead">
+    3 luồng độc lập nhưng ăn khớp nhau: <strong>Đăng bài → AI Judge → HP</strong>,
+    <strong>Cron drain → Kill → Museum</strong>, và <strong>CPR + Burning Karma</strong>.
+    Click vào từng bước để xem chi tiết kỹ thuật, điều kiện, và điểm dễ sai.
+  </p>
+  <div class="flow-tabs">
+    <button class="on" onclick="sw('post')">① Đăng bài + AI Judge</button>
+    <button onclick="sw('kill')">② Cron drain + Kill + Museum</button>
+    <button onclick="sw('cpr')">③ CPR + Burning Karma</button>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════
+     FLOW 1 — POST + AI JUDGE
+═══════════════════════════════════ -->
+<div id="flow-post" class="flow-panel on">
+<div class="layout">
+<div>
+<div class="canvas">
+<svg class="flow" viewBox="0 0 640 1060">
+<defs>
+  <marker id="a-gray"   viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#BFBDB5"/></marker>
+  <marker id="a-olive"  viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#788C5D"/></marker>
+  <marker id="a-danger" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#C0392B"/></marker>
+  <marker id="a-violet" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7C3AED"/></marker>
+  <marker id="a-clay"   viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#D97757"/></marker>
+  <marker id="a-sky"    viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6A8CAF"/></marker>
+</defs>
+
+<!-- edges -->
+<path class="edge"   d="M320,54 L320,92"/>
+<path class="edge"   d="M320,140 L320,178"/>
+<path class="edge"   d="M320,226 L320,265"/>
+<!-- gate-spam: no = reject -->
+<path class="edge r" d="M278,297 C160,297 160,206 200,206"/>
+<text class="lbl-r" x="106" y="253">spam / quá nhanh</text>
+<!-- gate-spam: yes = queue -->
+<path class="edge g" d="M320,329 L320,368"/>
+<text class="lbl-g" x="328" y="352">hợp lệ</text>
+<!-- queue → 202 -->
+<path class="edge"   d="M320,416 L320,452"/>
+<!-- 202 → ai judge -->
+<path class="edge sky" d="M320,500 L320,538"/>
+<text class="lbl" x="328" y="522">async queue</text>
+<!-- ai judge → gate-score -->
+<path class="edge"   d="M320,586 L320,625"/>
+<!-- gate-score branches -->
+<path class="edge g" d="M282,657 C200,657 180,740 220,740"/>
+<text class="lbl-g" x="120" y="704">score ≥ 6</text>
+<path class="edge r" d="M358,657 C440,657 460,740 430,740"/>
+<text class="lbl-r" x="434" y="704">score ≤ 2</text>
+<path class="edge"   d="M320,689 L320,720"/>
+<text class="lbl"   x="328" y="708">score 3–5</text>
+<!-- all → update energy -->
+<path class="edge"   d="M253,764 C253,820 310,830 310,860"/>
+<path class="edge"   d="M320,768 L320,860"/>
+<path class="edge"   d="M417,764 C417,820 330,830 330,860"/>
+<!-- update energy → lastPostAt -->
+<path class="edge"   d="M320,908 L320,948"/>
+<!-- lastPostAt → done -->
+<path class="edge ok" d="M320,996 L320,1020" style="stroke:var(--olive);"/>
+
+<!-- NODES -->
+<g class="node term" data-flow="post" data-k="p-start">
+  <rect x="222" y="12" width="196" height="42" rx="18"/>
+  <text x="320" y="37" text-anchor="middle">User gửi bài đăng</text>
+</g>
+<g class="node" data-flow="post" data-k="p-api">
+  <rect x="202" y="92" width="236" height="48" rx="8"/>
+  <text x="320" y="112" text-anchor="middle">POST /api/groups/:id/posts</text>
+  <text class="sub" x="320" y="128" text-anchor="middle">Express.js route handler</text>
+</g>
+<g class="node" data-flow="post" data-k="p-check">
+  <rect x="202" y="178" width="236" height="48" rx="8"/>
+  <text x="320" y="198" text-anchor="middle">Kiểm tra rate limit + hash</text>
+  <text class="sub" x="320" y="214" text-anchor="middle">3 posts/phút · sha256(content)</text>
+</g>
+<g class="node gate" data-flow="post" data-k="p-gate-spam">
+  <path d="M320,265 L370,297 L320,329 L270,297 Z"/>
+  <text x="320" y="293" text-anchor="middle">Là spam?</text>
+  <text x="320" y="308" text-anchor="middle">Trùng nội dung?</text>
+</g>
+<g class="node bad" data-flow="post" data-k="p-reject">
+  <rect x="50" y="178" width="180" height="48" rx="8"/>
+  <text x="140" y="198" text-anchor="middle">Reject 429 / 409</text>
+  <text class="sub" x="140" y="214" text-anchor="middle">Trả lỗi, không ghi DB</text>
+</g>
+<g class="node" data-flow="post" data-k="p-queue">
+  <rect x="202" y="368" width="236" height="48" rx="8"/>
+  <text x="320" y="388" text-anchor="middle">Lưu bài vào DB</text>
+  <text class="sub" x="320" y="404" text-anchor="middle">Queue BullMQ job: ai-judge</text>
+</g>
+<g class="node ok" data-flow="post" data-k="p-202">
+  <rect x="202" y="452" width="236" height="48" rx="8"/>
+  <text x="320" y="472" text-anchor="middle">Trả 202 Accepted ngay</text>
+  <text class="sub" x="320" y="488" text-anchor="middle">UI hiện badge "Đang đánh giá..."</text>
+</g>
+<g class="node ai" data-flow="post" data-k="p-llm">
+  <rect x="202" y="538" width="236" height="48" rx="8"/>
+  <text x="320" y="558" text-anchor="middle">AI Judge — LLM chấm điểm</text>
+  <text class="sub" x="320" y="574" text-anchor="middle">Semantic score 0–10 · cache Redis 1h</text>
+</g>
+<g class="node gate v" data-flow="post" data-k="p-gate-score">
+  <path d="M320,625 L370,657 L320,689 L270,657 Z"/>
+  <text x="320" y="653" text-anchor="middle">Score?</text>
+  <text x="320" y="668" text-anchor="middle">0–10</text>
+</g>
+<g class="node ok" data-flow="post" data-k="p-deep">
+  <rect x="160" y="720" width="150" height="44" rx="8"/>
+  <text x="235" y="740" text-anchor="middle">Deep Talk</text>
+  <text class="sub" x="235" y="756" text-anchor="middle">+5 HP cho nhóm</text>
+</g>
+<g class="node bad" data-flow="post" data-k="p-parasite">
+  <rect x="380" y="720" width="150" height="44" rx="8"/>
+  <text x="455" y="740" text-anchor="middle">Parasite</text>
+  <text class="sub" x="455" y="756" text-anchor="middle">−1 HP cho nhóm</text>
+</g>
+<g class="node warn" data-flow="post" data-k="p-neutral">
+  <rect x="248" y="720" width="144" height="44" rx="8"/>
+  <text x="320" y="740" text-anchor="middle">Neutral</text>
+  <text class="sub" x="320" y="756" text-anchor="middle">0 HP delta</text>
+</g>
+<g class="node db" data-flow="post" data-k="p-energy">
+  <rect x="202" y="860" width="236" height="48" rx="8"/>
+  <text x="320" y="880" text-anchor="middle">Update GroupEnergy</text>
+  <text class="sub" x="320" y="896" text-anchor="middle">current ±= hpDelta · save PostQualityLog</text>
+</g>
+<g class="node db" data-flow="post" data-k="p-lastpost">
+  <rect x="202" y="948" width="236" height="48" rx="8"/>
+  <text x="320" y="968" text-anchor="middle">Update lastPostAt = now()</text>
+  <text class="sub" x="320" y="984" text-anchor="middle">Reset đồng hồ drain của nhóm</text>
+</g>
+<g class="node ok term" data-flow="post" data-k="p-done">
+  <rect x="232" y="1020" width="176" height="32" rx="16"/>
+  <text x="320" y="1040" text-anchor="middle">✅ Bài đã được xử lý</text>
+</g>
+</svg>
+</div>
+
+<div class="legend">
+  <span><i class="chip"></i> xử lý</span>
+  <span><i class="chip gate"></i> điều kiện</span>
+  <span><i class="chip ai"></i> AI / LLM</span>
+  <span><i class="chip db"></i> database</span>
+  <span><i class="chip ok"></i> thành công</span>
+  <span><i class="chip bad"></i> lỗi / reject</span>
+</div>
+
+<div class="sec-lbl">Tóm tắt từng bước — Đăng bài + AI Judge</div>
+<div class="steps">
+  <div class="step-row"><div class="step-num">01</div><div class="step-body"><b>Rate limit + hash check</b> <span class="stag stag-warn">guard</span> — 3 posts/phút/user (Redis counter). Nếu vượt → 429. Tính <code>sha256(content)</code>, check Redis cache: nếu đã judge nội dung này → lấy kết quả cũ ngay, không gọi LLM lại.</div></div>
+  <div class="step-row"><div class="step-num">02</div><div class="step-body"><b>Lưu DB + queue job</b> <span class="stag stag-async">async</span> — Save post vào DB với <code>qualityScore = null</code>. Push job <code>ai-judge:{postId}</code> vào BullMQ. Trả <code>202 Accepted</code> ngay — không đợi LLM.</div></div>
+  <div class="step-row"><div class="step-num">03</div><div class="step-body"><b>UI badge "Đang đánh giá"</b> — Client hiện badge chờ trên bài. Poll <code>GET /api/posts/:id/score</code> mỗi 5s cho đến khi <code>qualityScore != null</code>. Hoặc dùng SSE nhẹ hơn polling.</div></div>
+  <div class="step-row"><div class="step-num">04</div><div class="step-body"><b>LLM chấm điểm</b> <span class="stag stag-ai">AI</span> — BullMQ worker gọi LLM với prompt cứng, nhận JSON <code>{score, reason}</code>. Cache kết quả theo <code>sha256(content)</code> trong Redis 1h. Parse safe: nếu LLM trả sai shape → score = 5 (neutral, không cộng/trừ HP).</div></div>
+  <div class="step-row"><div class="step-num">05</div><div class="step-body"><b>HP delta theo score</b> — score ≥ 6 → <b>Deep Talk +5 HP</b>. Score ≤ 2 → <b>Parasite −1 HP</b>. Score 3–5 → 0. Cập nhật <code>GroupEnergy.current</code> với <code>Math.min(max, Math.max(0, current + delta))</code>. Lưu <code>PostQualityLog</code>.</div></div>
+  <div class="step-row"><div class="step-num">06</div><div class="step-body"><b>Reset lastPostAt</b> <span class="stag stag-db">DB</span> — Dù bài là spam hay Deep Talk, chỉ cần POST thành công là <code>lastPostAt = now()</code>. Đây là field cron dùng để xác định nhóm có im lặng không — nên cần update sau mỗi post hợp lệ.</div></div>
+</div>
+</div>
+
+<aside id="panel-post">
+  <div class="hint">← Click bước trong sơ đồ</div>
+  <span class="p-badge step" id="p-badge">trigger</span>
+  <h3 id="p-title">User gửi bài đăng</h3>
+  <div class="p-meta" id="p-meta">Điểm bắt đầu luồng</div>
+  <div class="p-body" id="p-body">User submit form đăng bài trong nhóm. Request gửi lên <code>POST /api/groups/:id/posts</code>. Trước khi chạm DB, phải qua 2 lớp guard: rate limit và content hash check.</div>
+  <pre id="p-code">POST /api/groups/:groupId/posts
+Body: { content: string }
+Auth: session cookie required</pre>
+  <div class="p-note" id="p-note"></div>
+</aside>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════
+     FLOW 2 — CRON + KILL + MUSEUM
+═══════════════════════════════════ -->
+<div id="flow-kill" class="flow-panel">
+<div class="layout">
+<div>
+<div class="canvas">
+<svg class="flow" viewBox="0 0 640 1040">
+
+<!-- edges -->
+<path class="edge"   d="M320,54 L320,92"/>
+<path class="edge"   d="M320,140 L320,178"/>
+<path class="edge"   d="M320,226 L320,265"/>
+<!-- gate-silent: no = skip -->
+<path class="edge"   d="M362,297 C480,297 480,206 430,206"/>
+<text class="lbl" x="450" y="253">có post gần đây</text>
+<!-- gate-silent: yes = drain -->
+<path class="edge r" d="M320,329 L320,368"/>
+<text class="lbl-r" x="328" y="352">im lặng</text>
+<!-- drain → gate-zero -->
+<path class="edge"   d="M320,416 L320,455"/>
+<!-- gate-zero branches -->
+<path class="edge r" d="M320,519 L320,558"/>
+<text class="lbl-r" x="328" y="542">HP = 0</text>
+<path class="edge g" d="M278,487 C180,487 180,700 220,700"/>
+<text class="lbl-g" x="100" y="544">HP &gt; 0</text>
+<!-- soft-delete → soul-stone -->
+<path class="edge"   d="M320,606 L320,645"/>
+<!-- soul-stone → llm summary -->
+<path class="edge sky" d="M320,693 L320,732"/>
+<text class="lbl" x="328" y="716">async</text>
+<!-- llm → save stone -->
+<path class="edge"   d="M320,780 L320,820"/>
+<!-- save stone → ashes badge -->
+<path class="edge"   d="M320,868 L320,908"/>
+<!-- ashes → done-kill -->
+<path class="edge ok" d="M320,956 L320,992" style="stroke:var(--olive);"/>
+<!-- HP > 0 → update -->
+<g class="node db" data-flow="kill" data-k="k-update">
+  <rect x="50" y="700" width="200" height="48" rx="8"/>
+  <text x="150" y="720" text-anchor="middle">Update GroupEnergy</text>
+  <text class="sub" x="150" y="736" text-anchor="middle">current −= 5, log drainAt</text>
+</g>
+<path class="edge g" d="M150,748 C150,990 260,998 280,1000"/>
+
+<!-- NODES -->
+<g class="node cron term" data-flow="kill" data-k="k-cron">
+  <rect x="222" y="12" width="196" height="42" rx="18"/>
+  <text x="320" y="37" text-anchor="middle">Cron: drain-energy.cron.ts</text>
+</g>
+<g class="node cron" data-flow="kill" data-k="k-schedule">
+  <rect x="202" y="92" width="236" height="48" rx="8"/>
+  <text x="320" y="112" text-anchor="middle">Trigger mỗi giờ đúng</text>
+  <text class="sub" x="320" y="128" text-anchor="middle">node-cron: "0 * * * *"</text>
+</g>
+<g class="node" data-flow="kill" data-k="k-find">
+  <rect x="202" y="178" width="236" height="48" rx="8"/>
+  <text x="320" y="198" text-anchor="middle">Query nhóm im lặng</text>
+  <text class="sub" x="320" y="214" text-anchor="middle">lastPostAt &lt; now() − 1h · deletedAt = null</text>
+</g>
+<g class="node gate" data-flow="kill" data-k="k-gate-silent">
+  <path d="M320,265 L370,297 L320,329 L270,297 Z"/>
+  <text x="320" y="293" text-anchor="middle">Nhóm nào</text>
+  <text x="320" y="308" text-anchor="middle">im lặng &gt; 1h?</text>
+</g>
+<g class="node warn" data-flow="kill" data-k="k-skip">
+  <rect x="400" y="178" width="200" height="48" rx="8"/>
+  <text x="500" y="198" text-anchor="middle">Skip — không làm gì</text>
+  <text class="sub" x="500" y="214" text-anchor="middle">Vòng lặp sang nhóm kế</text>
+</g>
+<g class="node bad" data-flow="kill" data-k="k-drain">
+  <rect x="202" y="368" width="236" height="48" rx="8"/>
+  <text x="320" y="388" text-anchor="middle">Trừ 5 HP từ GroupEnergy</text>
+  <text class="sub" x="320" y="404" text-anchor="middle">Math.max(0, current − 5)</text>
+</g>
+<g class="node gate r" data-flow="kill" data-k="k-gate-zero">
+  <path d="M320,455 L370,487 L320,519 L270,487 Z"/>
+  <text x="320" y="483" text-anchor="middle">HP = 0?</text>
+  <text x="320" y="498" text-anchor="middle">Nhóm chết?</text>
+</g>
+<g class="node bad" data-flow="kill" data-k="k-soft">
+  <rect x="202" y="558" width="236" height="48" rx="8"/>
+  <text x="320" y="578" text-anchor="middle">Soft-delete nhóm</text>
+  <text class="sub" x="320" y="594" text-anchor="middle">deletedAt = now() · ẩn khỏi feed</text>
+</g>
+<g class="node ai" data-flow="kill" data-k="k-stone-job">
+  <rect x="202" y="645" width="236" height="48" rx="8"/>
+  <text x="320" y="665" text-anchor="middle">Queue job: gen-soul-stone</text>
+  <text class="sub" x="320" y="681" text-anchor="middle">BullMQ · không block soft-delete</text>
+</g>
+<g class="node ai" data-flow="kill" data-k="k-llm">
+  <rect x="202" y="732" width="236" height="48" rx="8"/>
+  <text x="320" y="752" text-anchor="middle">LLM tóm tắt "cuộc đời" nhóm</text>
+  <text class="sub" x="320" y="768" text-anchor="middle">Top 10 posts · thống kê · lý do tử vong</text>
+</g>
+<g class="node db" data-flow="kill" data-k="k-save-stone">
+  <rect x="202" y="820" width="236" height="48" rx="8"/>
+  <text x="320" y="840" text-anchor="middle">Lưu GroupSoulStone</text>
+  <text class="sub" x="320" y="856" text-anchor="middle">summary · peakHp · livedDays · topPosts</text>
+</g>
+<g class="node ok" data-flow="kill" data-k="k-ashes">
+  <rect x="202" y="908" width="236" height="48" rx="8"/>
+  <text x="320" y="928" text-anchor="middle">Grant Ashes Badge</text>
+  <text class="sub" x="320" y="944" text-anchor="middle">Cho các thành viên đã sacrifice</text>
+</g>
+<g class="node ok term" data-flow="kill" data-k="k-done">
+  <rect x="232" y="992" width="176" height="32" rx="16"/>
+  <text x="320" y="1012" text-anchor="middle">✅ Soul Stone live tại /museum</text>
+</g>
+</svg>
+</div>
+
+<div class="legend">
+  <span><i class="chip cron"></i> cron job</span>
+  <span><i class="chip gate"></i> điều kiện</span>
+  <span><i class="chip ai"></i> AI / LLM</span>
+  <span><i class="chip db"></i> database</span>
+  <span><i class="chip bad"></i> kill path</span>
+  <span><i class="chip ok"></i> museum</span>
+</div>
+
+<div class="sec-lbl">Tóm tắt từng bước — Cron drain + Kill + Museum</div>
+<div class="steps">
+  <div class="step-row"><div class="step-num">01</div><div class="step-body"><b>Cron mỗi giờ</b> <span class="stag stag-async">cron</span> — <code>node-cron "0 * * * *"</code>. Query tất cả nhóm chưa xóa có <code>lastPostAt &lt; now() - 1h</code>. Xử lý từng nhóm theo vòng lặp — không batch update để tránh bỏ sót kill trigger.</div></div>
+  <div class="step-row"><div class="step-num">02</div><div class="step-body"><b>Trừ HP + tính bù</b> <span class="stag stag-warn">critical</span> — Trừ 5 HP. Nhưng nếu server restart → bỏ qua chu kỳ. Fix: lưu <code>lastDrainAt</code> vào <code>GroupEnergy</code>. Khi cron chạy: tính <code>missedCycles = floor((now - lastDrainAt) / 1h)</code> và trừ bù <code>missedCycles × 5</code>.</div></div>
+  <div class="step-row"><div class="step-num">03</div><div class="step-body"><b>Soft-delete khi HP = 0</b> <span class="stag stag-r">kill</span> — Set <code>deletedAt = now()</code>. Nhóm biến khỏi feed ngay lập tức (query luôn thêm <code>WHERE deletedAt IS NULL</code>). Không xóa vật lý — giữ dữ liệu cho Soul Stone generation.</div></div>
+  <div class="step-row"><div class="step-num">04</div><div class="step-body"><b>Soul Stone async</b> <span class="stag stag-ai">AI</span> — Queue job riêng để tránh block cron. Job lấy top 10 posts (by qualityScore), thống kê, gọi LLM tóm tắt ~100 chữ văn bia. Museum page filter <code>WHERE soulStone IS NOT NULL</code> nên không có "nhóm chết chưa có stone".</div></div>
+  <div class="step-row"><div class="step-num">05</div><div class="step-body"><b>Xóa vật lý sau 24h</b> <span class="stag stag-db">cleanup</span> — Cron <code>purge-dead-groups</code> chạy mỗi đêm: tìm nhóm có <code>deletedAt &lt; now() - 24h</code> và <code>soulStone IS NOT NULL</code> → xóa thật. Đảm bảo Stone đã được gen xong trước khi mất data.</div></div>
+</div>
+</div>
+
+<aside id="panel-kill">
+  <div class="hint">← Click bước trong sơ đồ</div>
+  <span class="p-badge cron" id="k-badge">cron</span>
+  <h3 id="k-title">Cron: drain-energy</h3>
+  <div class="p-meta" id="k-meta">Trigger: mỗi giờ · node-cron</div>
+  <div class="p-body" id="k-body">Cron job chạy mỗi giờ đúng. Lấy toàn bộ nhóm active (chưa xóa) có <code>lastPostAt</code> cũ hơn 1 giờ — đây là "nhóm im lặng". Xử lý từng nhóm: trừ HP, check kill condition, trigger museum nếu cần.</div>
+  <pre id="k-code">Schedule: "0 * * * *"
+File: drain-energy.cron.ts
+Action: for each silent group:
+  - currentHP -= 5
+  - if HP == 0: triggerDeath()</pre>
+  <div class="p-note" id="k-note"></div>
+</aside>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════
+     FLOW 3 — CPR + BURNING KARMA
+═══════════════════════════════════ -->
+<div id="flow-cpr" class="flow-panel">
+<div class="layout">
+<div>
+<div class="canvas">
+<svg class="flow" viewBox="0 0 680 1060">
+
+<!-- CPR left branch: top half -->
+<path class="edge"   d="M200,54 L200,92"/>
+<path class="edge"   d="M200,140 L200,178"/>
+<!-- gate-who: left = CPR, right = Karma -->
+<path class="edge r" d="M170,210 C100,210 100,270 130,270"/>
+<text class="lbl-r" x="36" y="248">Admin</text>
+<path class="edge v" d="M230,210 C300,210 300,270 270,270"/>
+<text class="lbl-v" x="302" y="248">Thành viên</text>
+
+<!-- CPR left -->
+<path class="edge"   d="M178,318 L178,358"/>
+<path class="edge"   d="M178,406 L178,446"/>
+<!-- cpr gate: success/fail -->
+<path class="edge g" d="M148,478 C80,478 80,600 120,600"/>
+<text class="lbl-g" x="20" y="540">đủ HP delta</text>
+<path class="edge r" d="M208,478 C260,478 260,600 230,600"/>
+<text class="lbl-r" x="264" y="540">thiếu</text>
+<!-- CPR ok → heal -->
+<path class="edge g" d="M148,648 C148,740 200,760 220,780"/>
+<!-- CPR fail → hấp hối tiếp -->
+<path class="edge r" d="M240,648 L240,700"/>
+
+<!-- Burning Karma right -->
+<path class="edge"   d="M500,318 L500,358"/>
+<path class="edge"   d="M500,406 L500,446"/>
+<!-- karma gate: enough? -->
+<path class="edge r" d="M470,478 C400,478 400,560 420,570"/>
+<text class="lbl-r" x="340" y="518">không đủ</text>
+<path class="edge g" d="M530,478 C580,478 580,560 560,570"/>
+<text class="lbl-g" x="582" y="518">đủ karma</text>
+<!-- not enough → reject -->
+<!-- enough → transaction -->
+<path class="edge"   d="M500,618 L500,660"/>
+<!-- transaction → restriction -->
+<path class="edge"   d="M500,708 L500,750"/>
+<!-- restriction → heal -->
+<path class="edge g" d="M456,778 C380,778 340,780 320,780"/>
+
+<!-- merge heal → update HP -->
+<path class="edge"   d="M270,790 L270,850"/>
+<!-- update → badge -->
+<path class="edge"   d="M270,898 L270,938"/>
+<!-- badge → done -->
+<path class="edge ok" d="M270,986 L270,1024" style="stroke:var(--olive);"/>
+
+<!-- NODES -->
+<g class="node term" data-flow="cpr" data-k="c-detect">
+  <rect x="108" y="12" width="284" height="42" rx="18"/>
+  <text x="250" y="37" text-anchor="middle">Phát hiện: HP &lt; 10% (hấp hối)</text>
+</g>
+<g class="node warn" data-flow="cpr" data-k="c-ui">
+  <rect x="108" y="92" width="284" height="48" rx="8"/>
+  <text x="250" y="112" text-anchor="middle">UI hiện trạng thái DYING</text>
+  <text class="sub" x="250" y="128" text-anchor="middle">Glitch effect · nút CPR + Sacrifice xuất hiện</text>
+</g>
+<g class="node gate" data-flow="cpr" data-k="c-gate-who">
+  <path d="M250,178 L290,210 L250,242 L210,210 Z"/>
+  <text x="250" y="206" text-anchor="middle">Ai kích</text>
+  <text x="250" y="221" text-anchor="middle">hoạt?</text>
+</g>
+
+<!-- CPR branch -->
+<g class="node" data-flow="cpr" data-k="c-cpr-open">
+  <rect x="54" y="270" width="188" height="48" rx="8"/>
+  <text x="148" y="290" text-anchor="middle">Admin: kích hoạt CPR</text>
+  <text class="sub" x="148" y="306" text-anchor="middle">POST /groups/:id/cpr</text>
+</g>
+<g class="node db" data-flow="cpr" data-k="c-cpr-save">
+  <rect x="54" y="358" width="188" height="48" rx="8"/>
+  <text x="148" y="378" text-anchor="middle">Tạo CprSession</text>
+  <text class="sub" x="148" y="394" text-anchor="middle">expiresAt = now() + 24h</text>
+</g>
+<g class="node ai" data-flow="cpr" data-k="c-cpr-window">
+  <rect x="54" y="446" width="188" height="48" rx="8"/>
+  <text x="148" y="466" text-anchor="middle">Cửa sổ 24h mở</text>
+  <text class="sub" x="148" y="482" text-anchor="middle">Members comment → AI judge mỗi bài</text>
+</g>
+<g class="node gate g" data-flow="cpr" data-k="c-gate-cpr">
+  <path d="M178,528 L218,560 L178,592 L138,560 Z"/>
+  <text x="178" y="556" text-anchor="middle">Tổng HP</text>
+  <text x="178" y="571" text-anchor="middle">delta ≥ 50?</text>
+</g>
+<g class="node ok" data-flow="cpr" data-k="c-cpr-ok">
+  <rect x="78" y="600" width="140" height="48" rx="8"/>
+  <text x="148" y="620" text-anchor="middle">CPR thành công</text>
+  <text class="sub" x="148" y="636" text-anchor="middle">Resolved = true</text>
+</g>
+<g class="node bad" data-flow="cpr" data-k="c-cpr-fail">
+  <rect x="158" y="700" width="140" height="48" rx="8"/>
+  <text x="228" y="720" text-anchor="middle">CPR thất bại</text>
+  <text class="sub" x="228" y="736" text-anchor="middle">Nhóm tiếp tục hấp hối</text>
+</g>
+
+<!-- Karma branch -->
+<g class="node" data-flow="cpr" data-k="c-karma-open">
+  <rect x="406" y="270" width="188" height="48" rx="8"/>
+  <text x="500" y="290" text-anchor="middle">User mở Sacrifice Modal</text>
+  <text class="sub" x="500" y="306" text-anchor="middle">Nhập số Karma muốn đốt</text>
+</g>
+<g class="node" data-flow="cpr" data-k="c-karma-validate">
+  <rect x="406" y="358" width="188" height="48" rx="8"/>
+  <text x="500" y="378" text-anchor="middle">POST /groups/:id/sacrifice</text>
+  <text class="sub" x="500" y="394" text-anchor="middle">karmaAmount · userId</text>
+</g>
+<g class="node gate v" data-flow="cpr" data-k="c-gate-karma">
+  <path d="M500,446 L540,478 L500,510 L460,478 Z"/>
+  <text x="500" y="474" text-anchor="middle">user.karma</text>
+  <text x="500" y="489" text-anchor="middle">≥ amount?</text>
+</g>
+<g class="node bad" data-flow="cpr" data-k="c-karma-reject">
+  <rect x="354" y="558" width="148" height="48" rx="8"/>
+  <text x="428" y="578" text-anchor="middle">400 Không đủ</text>
+  <text class="sub" x="428" y="594" text-anchor="middle">Trả lỗi, không làm gì</text>
+</g>
+<g class="node db" data-flow="cpr" data-k="c-transaction">
+  <rect x="436" y="558" width="188" height="60" rx="8"/>
+  <text x="530" y="578" text-anchor="middle">prisma.$transaction</text>
+  <text class="sub" x="530" y="594" text-anchor="middle">1. Trừ karma user</text>
+  <text class="sub" x="530" y="608" text-anchor="middle">2. Cộng HP nhóm (×10, max 500)</text>
+</g>
+<g class="node bad" data-flow="cpr" data-k="c-restrict">
+  <rect x="436" y="660" width="188" height="48" rx="8"/>
+  <text x="530" y="680" text-anchor="middle">Tạo UserRestriction 48h</text>
+  <text class="sub" x="530" y="696" text-anchor="middle">type: POST_LIMIT · không đăng bài được</text>
+</g>
+<g class="node ok" data-flow="cpr" data-k="c-karma-ok">
+  <rect x="404" y="750" width="140" height="48" rx="8"/>
+  <text x="474" y="770" text-anchor="middle">Karma sacrifice xong</text>
+  <text class="sub" x="474" y="786" text-anchor="middle">HP đã được cộng</text>
+</g>
+
+<!-- Merge: heal group -->
+<g class="node ok" data-flow="cpr" data-k="c-heal">
+  <rect x="162" y="750" width="196" height="48" rx="8"/>
+  <text x="260" y="770" text-anchor="middle">Hồi phục nhóm +50% HP</text>
+  <text class="sub" x="260" y="786" text-anchor="middle">GroupEnergy.current = max × 0.5</text>
+</g>
+<g class="node db" data-flow="cpr" data-k="c-log">
+  <rect x="162" y="850" width="196" height="48" rx="8"/>
+  <text x="260" y="870" text-anchor="middle">Ghi UserKarmaLog</text>
+  <text class="sub" x="260" y="886" text-anchor="middle">karmaSpent · hpGained · groupId</text>
+</g>
+<g class="node ok" data-flow="cpr" data-k="c-badge">
+  <rect x="162" y="938" width="196" height="48" rx="8"/>
+  <text x="260" y="958" text-anchor="middle">Badge "Ashes" cho user</text>
+  <text class="sub" x="260" y="974" text-anchor="middle">Hiển thị trên profile vĩnh viễn</text>
+</g>
+<g class="node ok term" data-flow="cpr" data-k="c-done">
+  <rect x="182" y="1024" width="156" height="32" rx="16"/>
+  <text x="260" y="1044" text-anchor="middle">✅ Nhóm được cứu</text>
+</g>
+</svg>
+</div>
+
+<div class="legend">
+  <span><i class="chip gate"></i> điều kiện</span>
+  <span><i class="chip ai"></i> AI judge</span>
+  <span><i class="chip db"></i> transaction</span>
+  <span><i class="chip ok"></i> hồi sinh</span>
+  <span><i class="chip bad"></i> thất bại</span>
+  <span><i class="chip warn"></i> trạng thái</span>
+</div>
+
+<div class="sec-lbl">Tóm tắt từng bước — CPR + Burning Karma</div>
+<div class="steps">
+  <div class="step-row"><div class="step-num">01</div><div class="step-body"><b>Phát hiện HP &lt; 10%</b> — Client polling <code>energyPercent</code> mỗi 30s. Khi &lt; 10% → áp class <code>.dying</code> lên UI: glitch CSS, blur posts, hiện 2 nút: <b>CPR Post</b> (admin only) và <b>Burning Karma</b> (tất cả members).</div></div>
+  <div class="step-row"><div class="step-num">02</div><div class="step-body"><b>CPR Post — cửa sổ 24h</b> <span class="stag stag-ai">AI</span> — Admin kích hoạt → tạo <code>CprSession</code> với <code>expiresAt = now() + 24h</code>. Mọi comment trong cửa sổ được AI judge bình thường. Cron <code>check-cpr</code> chạy sau 24h: tính tổng <code>hpDelta</code> của tất cả comments trong session. Nếu ≥ 50 → success.</div></div>
+  <div class="step-row"><div class="step-num">03</div><div class="step-body"><b>Burning Karma — race condition</b> <span class="stag stag-warn">critical</span> — Nếu 2 user sacrifice cùng lúc → dùng <code>prisma.$transaction</code> với <code>SELECT FOR UPDATE</code> trên row karma. Chỉ 1 transaction chạy qua, cái còn lại rollback → 409 Conflict. Không dùng optimistic locking vì karma là resource critical.</div></div>
+  <div class="step-row"><div class="step-num">04</div><div class="step-body"><b>Tỷ lệ quy đổi + cap</b> — 1 Karma = 10 HP. Max 500 HP/lần sacrifice (50% HP tối đa). Tính: <code>hpGain = Math.min(karmaAmount × 10, 500)</code>. Restriction 48h tạo trong cùng transaction — nếu transaction fail thì restriction cũng không tạo.</div></div>
+  <div class="step-row"><div class="step-num">05</div><div class="step-body"><b>Ashes Badge</b> <span class="stag stag-ok">reward</span> — Sau khi sacrifice thành công hoặc nhóm được hồi sinh qua CPR (với member đã contribute deep talk), grant badge <code>ASHES_HERO</code> vào <code>UserBadge</code> table. Badge hiển thị vĩnh viễn trên profile, ngay cả sau khi nhóm chết hẳn.</div></div>
+</div>
+</div>
+
+<aside id="panel-cpr">
+  <div class="hint">← Click bước trong sơ đồ</div>
+  <span class="p-badge warn" id="c-badge">trạng thái</span>
+  <h3 id="c-title">HP &lt; 10% — Hấp hối</h3>
+  <div class="p-meta" id="c-meta">Trigger: client detect energyPercent &lt; 10</div>
+  <div class="p-body" id="c-body">Khi client polling phát hiện <code>energyPercent &lt; 10</code> → apply class <code>.dying</code> lên toàn bộ GroupPage. Hai lựa chọn xuất hiện: Admin thấy nút CPR Post, tất cả members thấy nút Burning Karma.</div>
+  <pre id="c-code">// hooks/useGroupEnergy.ts
+if (energy.percent < 10) {
+  setStage('dying')
+  // show CPR + Karma buttons
+}</pre>
+  <div class="p-note" id="c-note"></div>
+</aside>
+</div>
+</div>
+
+</div><!-- /sheet -->
+
+<script>
+const DATA = {
+  // ── FLOW 1: POST ──
+  "p-start":   { badge:"step", title:"User gửi bài đăng", meta:"POST /api/groups/:id/posts · Express route", body:"Request gửi lên API với <code>content</code> trong body. Auth middleware check session trước. 2 guard tiếp theo: rate limit và content hash — phải qua cả 2 mới được ghi DB.", code:"POST /api/groups/:id/posts\nBody: { content: string }\nHeaders: Cookie: session=...", note:"" },
+  "p-api":     { badge:"step", title:"Express API Handler", meta:"server/routes/posts.ts", body:"Route handler nhận request, lấy <code>userId</code> từ session, <code>groupId</code> từ params. Gọi tuần tự: (1) rate limit check, (2) hash check, (3) nếu pass → save DB + queue job.", code:"router.post('/:id/posts', auth,\n  rateLimit('3/min'),\n  async (req, res) => {\n    const hash = sha256(req.body.content)\n    // check cache...\n  })", note:"" },
+  "p-check":   { badge:"warn", title:"Rate limit + Hash check", meta:"Redis · 2 lớp guard trước DB", body:"<b>Rate limit</b>: Redis counter <code>rl:{userId}</code>, increment mỗi post, expire 60s. Nếu > 3 → 429.\n\n<b>Hash check</b>: <code>sha256(content)</code> check trong Redis. Nếu đã tồn tại → lấy kết quả judge cũ, không gọi LLM lại. Nếu chưa → tiếp tục.", code:"// rate limit\nconst count = await redis.incr(`rl:${userId}`)\nawait redis.expire(`rl:${userId}`, 60)\nif (count > 3) return res.status(429)\n\n// hash check\nconst cached = await redis.get(`judge:${hash}`)\nif (cached) return applyHp(cached)", note:"⚡ Hash check giải quyết luôn vấn đề spam nội dung giống nhau mà không tốn thêm LLM call." },
+  "p-gate-spam":{ badge:"warn", title:"Kiểm tra spam", meta:"Điều kiện trước khi ghi DB", body:"Nếu rate limit bị vượt <b>hoặc</b> content hash đã có score = 0 (đã từng là spam) → reject không ghi DB. Ngược lại → tiếp tục lưu bài.", code:"if (isRateLimited || isKnownSpam) {\n  return res.status(429).json({\n    error: 'Too many posts or duplicate content'\n  })\n}", note:"" },
+  "p-reject":  { badge:"danger", title:"Reject 429 / 409", meta:"Không ghi bất kỳ gì vào DB", body:"Trả lỗi cho client. UI hiện toast: 'Đăng bài quá nhanh' hoặc 'Nội dung trùng lặp'. Không ghi post, không tốn LLM call, không ảnh hưởng HP.", code:"return res.status(429).json({\n  error: 'rate_limited',\n  retryAfter: 60\n})", note:"" },
+  "p-queue":   { badge:"step", title:"Lưu DB + Queue job", meta:"Prisma save + BullMQ enqueue", body:"Save bài vào bảng <code>posts</code> với <code>qualityScore = null</code>. Ngay sau đó push job <code>ai-judge</code> vào BullMQ với <code>postId</code>. Hai bước này trong cùng 1 async block — nếu DB save fail thì không enqueue.", code:"const post = await prisma.post.create({\n  data: { content, groupId, authorId,\n    qualityScore: null }\n})\nawait aiQueue.add('judge', { postId: post.id })", note:"" },
+  "p-202":     { badge:"ok", title:"Trả 202 Accepted ngay", meta:"Client không đợi LLM · UX nhanh", body:"Trả response ngay với <code>{ postId, status: 'pending_review' }</code>. Client hiện bài đăng với badge 'Đang đánh giá...' và poll <code>GET /api/posts/:id</code> mỗi 5s để check khi <code>qualityScore</code> xuất hiện.", code:"res.status(202).json({\n  postId: post.id,\n  status: 'pending_review'\n})\n// Client polls until qualityScore != null", note:"⚠ Không dùng WebSocket cho đây — polling 5s là đủ, ít phức tạp hơn nhiều." },
+  "p-llm":     { badge:"ai", title:"AI Judge — LLM chấm điểm", meta:"BullMQ worker · ai-judge.service.ts", body:"Worker lấy job, fetch content từ DB, gọi LLM với prompt cứng yêu cầu trả <code>{score: 0-10, reason: string}</code>. Parse safe: nếu LLM trả sai shape → score = 5 (neutral). Cache kết quả theo hash trong Redis 1h.", code:"const {score} = await judgePost(content)\n// score: 0-10\n// reason: 'bài đăng có chiều sâu...'\n// cached in Redis 1h by sha256", note:"⚡ Parse fail fallback = score 5 (neutral, 0 HP delta). Không crash worker, log lỗi để cải thiện prompt." },
+  "p-gate-score":{ badge:"ai", title:"Phân loại theo score", meta:"Ngưỡng: ≥6 Deep Talk · ≤2 Parasite", body:"3 ngưỡng rõ ràng. Score ≥ 6: <b>Deep Talk</b> → +5 HP. Score ≤ 2: <b>Parasite</b> → −1 HP. Score 3–5: <b>Neutral</b> → 0 HP. Delta được áp vào <code>GroupEnergy</code> ngay sau.", code:"const hp = score >= 6 ? 5\n         : score <= 2 ? -1 : 0\n// Deep Talk: +5HP\n// Parasite: -1HP\n// Neutral: 0HP", note:"" },
+  "p-deep":    { badge:"ok", title:"Deep Talk — +5 HP", meta:"score ≥ 6 · hpDelta = +5", body:"Bài được đánh giá là có chiều sâu, chia sẻ kiến thức, hoặc trải nghiệm cá nhân có giá trị. Cộng 5 HP vào GroupEnergy, không vượt quá max (1000).", code:"Math.min(1000, current + 5)", note:"" },
+  "p-parasite":{ badge:"danger", title:"Parasite — −1 HP", meta:"score ≤ 2 · hpDelta = −1", body:"Bài bị đánh giá là spam, emoji đơn lẻ, 'Chấm', 'Hóng'. Trừ 1 HP. Không trừ nhiều để tránh troll có thể phá nhóm bằng cách đăng spam liên tục (đã có rate limit chặn).", code:"Math.max(0, current - 1)", note:"⚠ Kết hợp rate limit (max 3 posts/phút) và −1 HP: troll tối đa chỉ trừ được 3 HP/phút." },
+  "p-neutral": { badge:"warn", title:"Neutral — 0 HP", meta:"score 3–5 · không ảnh hưởng HP", body:"Bài góp ý bình thường, có nội dung nhưng không đặc sắc. Không cộng, không trừ HP. Vẫn được đăng và hiện bình thường.", code:"// hpDelta = 0\n// post saved, visible\n// no HP change", note:"" },
+  "p-energy":  { badge:"db", title:"Update GroupEnergy", meta:"Prisma · GroupEnergy + PostQualityLog", body:"Cập nhật <code>GroupEnergy.current</code> với delta. Đồng thời tạo record <code>PostQualityLog</code> lưu score và hpDelta để debug và analytics sau.", code:"await prisma.$transaction([\n  prisma.groupEnergy.update({\n    where: { groupId },\n    data: { current: { increment: hpDelta } }\n  }),\n  prisma.postQualityLog.create({\n    data: { postId, score, hpDelta }\n  })\n])", note:"" },
+  "p-lastpost":{ badge:"db", title:"Update lastPostAt", meta:"Quan trọng: reset đồng hồ cron drain", body:"<code>lastPostAt = now()</code> là field cron dùng để xác định nhóm có đang im lặng không. Nếu không update field này sau mỗi post hợp lệ → cron sẽ drain HP nhóm dù nhóm vẫn đang active.", code:"await prisma.group.update({\n  where: { id: groupId },\n  data: { lastPostAt: new Date() }\n})", note:"⚠ Cần update ngay cả khi bài là Parasite (−1HP). Vì bài Parasite vẫn là 'có hoạt động'." },
+  "p-done":    { badge:"ok", title:"Bài đã được xử lý ✅", meta:"Hoàn thành · bài hiện trên feed", body:"Bài được lưu, HP đã cập nhật, lastPostAt đã reset. Client poll phát hiện <code>qualityScore != null</code> → update badge trên bài. Nếu Deep Talk → badge xanh '✦ Deep Talk'. Nếu Parasite → badge vàng cảnh báo.", code:"// Trạng thái cuối:\n// post.qualityScore = 7.2\n// group.energy.current = +5\n// group.lastPostAt = now()", note:"" },
+
+  // ── FLOW 2: KILL ──
+  "k-cron":    { badge:"cron", title:"Cron: drain-energy.cron.ts", meta:"node-cron: '0 * * * *' · mỗi giờ", body:"Job cron chạy mỗi đầu giờ. Không trigger theo event — luôn chạy theo lịch. Nếu server restart → có thể bỏ qua chu kỳ. Fix bằng cách lưu <code>lastDrainAt</code> và tính bù khi cron chạy lại.", code:"import cron from 'node-cron'\ncron.schedule('0 * * * *', drainEnergy)\n// Runs at: 00:00, 01:00, 02:00...", note:"⚠ Production: dùng Bull persistent queue thay node-cron để tránh mất chu kỳ khi restart." },
+  "k-schedule":{ badge:"cron", title:"Trigger mỗi giờ đúng", meta:"Thời điểm: mỗi đầu giờ chẵn", body:"Cron expression <code>'0 * * * *'</code> = phút 0 của mỗi giờ. Mỗi lần trigger → query toàn bộ nhóm cần drain trong 1 database call duy nhất.", code:"// '0 * * * *' = at minute 0\n// Equivalent to:\n// Every hour, at :00\n// 00:00, 01:00, 02:00 ...", note:"" },
+  "k-find":    { badge:"step", title:"Query nhóm im lặng", meta:"Prisma findMany · index: deletedAt + lastPostAt", body:"Lấy tất cả nhóm thỏa: <code>deletedAt = null</code> (chưa xóa) VÀ <code>lastPostAt &lt; now() - 1h</code> (im lặng hơn 1 giờ). Index compound trên 2 field này là bắt buộc — không có index sẽ full scan.", code:"const groups = await prisma.group.findMany({\n  where: {\n    deletedAt: null,\n    lastPostAt: {\n      lt: new Date(Date.now() - 3_600_000)\n    }\n  },\n  include: { energy: true }\n})", note:"⚡ Index: @@index([deletedAt, lastPostAt]) trong schema.prisma — đã khai báo rồi." },
+  "k-gate-silent":{ badge:"step", title:"Nhóm nào im lặng > 1h?", meta:"Lọc từ kết quả query", body:"Các nhóm có post trong 1h gần nhất được skip hoàn toàn. Chỉ xử lý nhóm thật sự im lặng. Vòng lặp <code>for...of</code> từng nhóm — không batch để có thể check kill condition riêng cho từng nhóm.", code:"for (const group of silentGroups) {\n  // process each group\n  // check kill condition\n}", note:"" },
+  "k-skip":    { badge:"warn", title:"Skip — không làm gì", meta:"Nhóm có post gần đây → bỏ qua", body:"Nhóm đã có bài đăng trong 1h qua → không bị drain. Vòng lặp tiếp tục sang nhóm kế. Không ghi log cho case này — chỉ log khi drain hoặc kill.", code:"// Group has recent post\n// lastPostAt > now() - 1h\n// => skip, do nothing", note:"" },
+  "k-drain":   { badge:"danger", title:"Trừ 5 HP từ GroupEnergy", meta:"Math.max(0, current − 5) · không âm", body:"Trừ chính xác 5 HP. Floor tại 0: nếu HP còn 3 thì sau khi trừ = 0, không âm. Tính bù: nếu <code>lastDrainAt</code> cho thấy server đã restart và bỏ qua nhiều chu kỳ → drain bù ngay trong lần này.", code:"const missed = Math.floor(\n  (now - group.energy.lastDrainAt) / 3_600_000\n)\nconst drain = missed * 5\nconst newHp = Math.max(0, current - drain)", note:"" },
+  "k-gate-zero":{ badge:"danger", title:"HP = 0? Nhóm chết?", meta:"Điều kiện kill trigger", body:"Sau khi trừ HP, check <code>newHp === 0</code>. Nếu đúng → trigger luồng kill. Nếu không → chỉ update HP và tiếp tục sang nhóm kế.", code:"if (newHp === 0) {\n  await triggerGroupDeath(group.id)\n} else {\n  await prisma.groupEnergy.update({\n    where: { groupId: group.id },\n    data: { current: newHp }\n  })\n}", note:"" },
+  "k-soft":    { badge:"danger", title:"Soft-delete nhóm", meta:"deletedAt = now() · ẩn khỏi feed ngay", body:"Set <code>deletedAt = now()</code>. Tất cả query feed đều có <code>WHERE deletedAt IS NULL</code> → nhóm biến mất khỏi mọi listing ngay lập tức. Data vẫn còn trong DB để gen Soul Stone.", code:"await prisma.group.update({\n  where: { id: groupId },\n  data: { deletedAt: new Date() }\n})\n// Group disappears from all feeds", note:"⚠ Không xóa data thật — cần giữ posts để LLM tóm tắt." },
+  "k-stone-job":{ badge:"ai", title:"Queue job: gen-soul-stone", meta:"BullMQ · không block soft-delete", body:"Sau soft-delete, push job riêng vào queue để gen Soul Stone async. Không await — nếu LLM chậm thì soft-delete đã xong, nhóm đã ẩn. Museum sẽ hiện Stone khi job hoàn thành.", code:"await soulStoneQueue.add(\n  'generate',\n  { groupId },\n  { attempts: 3, backoff: 5000 }\n)\n// 3 retries if LLM fails", note:"" },
+  "k-llm":     { badge:"ai", title:"LLM tóm tắt cuộc đời nhóm", meta:"soul-stone.service.ts · ~5-10s", body:"Fetch top 10 posts (by qualityScore), thống kê: livedDays, peakHp, tổng thành viên, lý do tử vong (bỏ bê bao lâu). Gọi LLM với tất cả data này → nhận ~100 chữ 'văn bia' cho nhóm.", code:"const summary = await llm.complete(`\n  Tóm tắt cuộc đời nhóm này (~100 chữ).\n  Tập trung: đỉnh cao, lý do tử vong,\n  di sản để lại.\n  Data: ${JSON.stringify(groupData)}\n`)", note:"" },
+  "k-save-stone":{ badge:"db", title:"Lưu GroupSoulStone", meta:"Prisma create · table GroupSoulStone", body:"Lưu toàn bộ Stone data: summary text, peakHp, livedDays, topPostIds (JSON array). Museum page query <code>WHERE soulStone IS NOT NULL</code> để chỉ hiện nhóm đã gen xong.", code:"await prisma.groupSoulStone.create({\n  data: {\n    groupId, summary,\n    peakHp: group.energy.peak,\n    livedDays: calcDays(group),\n    topPostIds: posts.map(p => p.id)\n  }\n})", note:"" },
+  "k-ashes":   { badge:"ok", title:"Grant Ashes Badge", meta:"Cho members đã sacrifice", body:"Tìm tất cả <code>UserKarmaLog</code> của nhóm này → lấy unique userIds → grant badge <code>ASHES_HERO</code>. Badge tồn tại vĩnh viễn trên profile, ngay cả khi nhóm đã bị purge khỏi DB.", code:"await grantAshesBadge(\n  karmaLogs.map(l => l.userId)\n)\n// Badge: permanent, survives group purge", note:"" },
+  "k-update":  { badge:"db", title:"Update GroupEnergy (HP > 0)", meta:"Nhóm vẫn sống, chỉ cập nhật HP", body:"Nếu HP > 0 sau khi trừ → chỉ update <code>GroupEnergy.current</code> và <code>lastDrainAt</code>. Nhóm tiếp tục sống, vòng lặp sang nhóm kế.", code:"await prisma.groupEnergy.update({\n  where: { groupId: group.id },\n  data: {\n    current: newHp,\n    lastDrainAt: new Date()\n  }\n})", note:"" },
+  "k-done":    { badge:"ok", title:"Soul Stone live tại /museum ✅", meta:"Museum page hiển thị Stone", body:"Job hoàn thành. Soul Stone xuất hiện tại <code>/museum</code>. Trang museum list các Stone với stats: tên nhóm, thời gian sống, lý do tử vong, số thành viên. Ai cũng có thể xem.", code:"// museum/page.tsx\nconst stones = await prisma.groupSoulStone\n  .findMany({ orderBy: { createdAt: 'desc' } })", note:"" },
+
+  // ── FLOW 3: CPR + KARMA ──
+  "c-detect":  { badge:"warn", title:"Phát hiện HP < 10% — Hấp hối", meta:"Client polling 30s · hooks/useGroupEnergy.ts", body:"Client poll <code>GET /api/groups/:id/energy</code> mỗi 30s. Khi server trả <code>energyPercent &lt; 10</code> → set state <code>stage = 'dying'</code>. Component GroupPage áp class tương ứng và hiện nút cứu nhóm.", code:"const { data } = useSWR(`/api/groups/${id}/energy`,\n  fetcher, { refreshInterval: 30000 })\nconst stage = data.percent < 10 ? 'dying'\n            : data.percent < 30 ? 'sick'\n            : 'healthy'", note:"" },
+  "c-ui":      { badge:"warn", title:"UI hiện trạng thái DYING", meta:"styles/aging.module.css · prefers-reduced-motion", body:"Apply class <code>.dying</code>: grayscale filter, glitch font CSS animation, blur posts (require click/hold to read). Hiện 2 nút: Admin thấy <b>Kích hoạt CPR Post</b>, mọi member thấy <b>Burning Karma</b>.", code:"// aging.module.css\n.dying .group-content {\n  filter: saturate(0.1);\n  animation: glitch 2s infinite;\n}\n@media (prefers-reduced-motion) {\n  .dying { filter: none; }\n}", note:"⚡ Detect <code>prefers-reduced-motion</code>: mobile chỉ đổi màu HP bar sang đỏ, không dùng CSS filter." },
+  "c-gate-who":{ badge:"step", title:"Ai kích hoạt?", meta:"Admin → CPR · Members → Burning Karma", body:"2 luồng độc lập. Admin có thể kích hoạt CPR Post (cộng đồng cứu nhau). Bất kỳ member nào có đủ Karma có thể dùng Burning Karma (hy sinh cá nhân). Hai luồng có thể chạy song song.", code:"// Phân quyền:\n// CPR Post: isAdmin(user, groupId)\n// Burning Karma: isMember(user, groupId)\n//               && user.karma >= MIN_KARMA", note:"" },
+  "c-cpr-open":{ badge:"step", title:"Admin kích hoạt CPR Post", meta:"POST /api/groups/:id/cpr", body:"Admin click nút → <code>POST /api/groups/:id/cpr</code>. Server validate: chỉ admin, nhóm HP &lt; 10%, chưa có CprSession đang mở (chỉ 1 session active/nhóm cùng lúc).", code:"// Validate\nif (!isAdmin) return 403\nif (energy.percent >= 10) return 400\nconst existing = await prisma.cprSession\n  .findFirst({ where: { groupId,\n    resolved: false } })\nif (existing) return 409 'session exists'", note:"" },
+  "c-cpr-save":{ badge:"db", title:"Tạo CprSession", meta:"Prisma create · expiresAt = now() + 24h", body:"Tạo record <code>CprSession</code> với <code>expiresAt = now() + 24h</code>. Trong cửa sổ này, mọi comment trong nhóm đều được AI judge bình thường và HP delta được cộng dồn vào session.", code:"await prisma.cprSession.create({\n  data: {\n    groupId,\n    activatedBy: userId,\n    expiresAt: new Date(Date.now() + 86_400_000),\n    resolved: false\n  }\n})", note:"" },
+  "c-cpr-window":{ badge:"ai", title:"Cửa sổ 24h mở", meta:"AI judge mỗi comment trong cửa sổ", body:"Trong 24h, tất cả bài đăng và comment được AI judge bình thường. HP delta của mỗi bài được ghi vào <code>PostQualityLog</code>. Cron <code>check-cpr</code> sẽ tổng hợp sau.", code:"// Mỗi post trong cửa sổ CPR:\n// 1. AI judge → score\n// 2. hpDelta = score >= 6 ? 5 : ...\n// 3. Cron tổng hợp sau 24h:\n//    SUM(hpDelta WHERE postTime IN session)", note:"" },
+  "c-gate-cpr":{ badge:"step", title:"Tổng HP delta ≥ 50?", meta:"Cron check-cpr chạy sau 24h", body:"Cron <code>check-cpr</code> tìm các session đã expire. Tính <code>SUM(hpDelta)</code> của tất cả posts trong cửa sổ 24h của session đó. Ngưỡng hiện tại: 50. Nếu đạt → success, nhóm hồi sinh.", code:"const totalDelta = await prisma.postQualityLog\n  .aggregate({\n    _sum: { hpDelta: true },\n    where: {\n      post: { groupId,\n        createdAt: { gte: session.createdAt,\n                     lte: session.expiresAt } }\n    }\n  })\nconst success = totalDelta._sum.hpDelta >= 50", note:"⚠ Ngưỡng 50 là tạm thời — cần A/B test với data thật để tìm ngưỡng cân bằng." },
+  "c-cpr-ok":  { badge:"ok", title:"CPR thành công", meta:"resolved = true · success = true", body:"Update CprSession với <code>resolved = true, success = true</code>. Trigger heal group: <code>GroupEnergy.current = max × 0.5</code> (hồi 50% HP). Thông báo cho admin và members.", code:"await prisma.cprSession.update({\n  where: { id: session.id },\n  data: { resolved: true, success: true }\n})\nawait healGroup(groupId, 0.5)", note:"" },
+  "c-cpr-fail":{ badge:"danger", title:"CPR thất bại", meta:"Nhóm tiếp tục hấp hối", body:"<code>resolved = true, success = false</code>. HP không thay đổi. Nhóm vẫn đang dying. Admin có thể kích hoạt CPR lần nữa nếu muốn, nhưng thời gian drain vẫn tiếp tục chạy.", code:"await prisma.cprSession.update({\n  where: { id: session.id },\n  data: { resolved: true, success: false }\n})\n// Group remains dying\n// Cron drain continues", note:"" },
+  "c-karma-open":{ badge:"step", title:"User mở Sacrifice Modal", meta:"components/SacrificeModal.tsx", body:"Modal hiện: số Karma hiện có, slider chọn số Karma muốn đốt, preview HP sẽ nhận được (<code>karmaAmount × 10</code>), và cảnh báo restriction 48h. Nút Xác nhận chỉ active khi amount > 0.", code:"// Preview HP gain:\nhpPreview = Math.min(karmaAmount * 10, 500)\n// Warning:\n// 'Sau khi hiến tế, bạn không thể đăng\n//  bài trong 48h'", note:"" },
+  "c-karma-validate":{ badge:"step", title:"POST /groups/:id/sacrifice", meta:"server/routes/groups.ts", body:"Server nhận request với <code>karmaAmount</code>. Validate: user là member, karmaAmount > 0, karmaAmount <= user.karma. Sau đó chạy transaction atomic.", code:"router.post('/:id/sacrifice', auth,\n  async (req, res) => {\n    const { karmaAmount } = req.body\n    const user = await getUser(req.user.id)\n    if (user.karma < karmaAmount)\n      return res.status(400).json(...)\n  })", note:"" },
+  "c-gate-karma":{ badge:"warn", title:"user.karma ≥ amount?", meta:"Validate trước transaction", body:"Nếu không đủ Karma → 400 Bad Request ngay, không chạm transaction. Nếu đủ → chạy <code>prisma.$transaction</code> với SELECT FOR UPDATE để tránh race condition.", code:"// Check trước transaction:\nif (user.karma < karmaAmount) {\n  return res.status(400).json({\n    error: 'Không đủ Karma',\n    current: user.karma\n  })\n}", note:"" },
+  "c-karma-reject":{ badge:"danger", title:"400 — Không đủ Karma", meta:"Trả lỗi, không làm gì", body:"Client hiện toast 'Bạn không đủ Karma để hiến tế số lượng này'. Modal vẫn mở để user điều chỉnh số lượng.", code:"return res.status(400).json({\n  error: 'insufficient_karma',\n  current: user.karma,\n  required: karmaAmount\n})", note:"" },
+  "c-transaction":{ badge:"db", title:"prisma.$transaction — Atomic", meta:"3 operations trong 1 transaction", body:"<b>1</b>: Trừ karma user. <b>2</b>: Cộng HP nhóm (1 karma = 10 HP, max 500/lần). <b>3</b>: Tạo UserRestriction 48h. Cả 3 phải thành công cùng lúc. Nếu 1 fail → tất cả rollback.", code:"await prisma.$transaction([\n  prisma.user.update({\n    where: { id: userId },\n    data: { karma: { decrement: amount }}\n  }),\n  prisma.groupEnergy.update({\n    where: { groupId },\n    data: { current: { increment:\n      Math.min(amount * 10, 500) }}\n  }),\n  prisma.userRestriction.create({\n    data: { userId, type: 'POST_LIMIT',\n      expiresAt: +172_800_000 }\n  })\n])", note:"⚠ Race condition: 2 sacrifice cùng lúc → SELECT FOR UPDATE trên user row. Prisma $transaction tự xử lý nếu dùng isolation level SERIALIZABLE." },
+  "c-restrict":{ badge:"danger", title:"UserRestriction 48h", meta:"type: POST_LIMIT · expiresAt = now() + 48h", body:"User không thể đăng bài trong 48h. Middleware check <code>UserRestriction</code> trước mỗi POST. Badge 'Ashes' sẽ được grant riêng sau. Restriction tự hết hạn — không cần cron dọn.", code:"// Middleware check:\nconst restriction = await prisma.userRestriction\n  .findFirst({ where: { userId,\n    type: 'POST_LIMIT',\n    expiresAt: { gt: new Date() } } })\nif (restriction) return 403 'restricted'", note:"" },
+  "c-karma-ok":{ badge:"ok", title:"Karma sacrifice xong", meta:"HP đã được cộng vào nhóm", body:"Transaction thành công. HP nhóm đã tăng. Trả response <code>{ hpGain, newKarma, restrictedUntil }</code>. Client hiện modal kết quả với badge 'Bạn là người hùng'.", code:"res.json({\n  hpGain: Math.min(amount * 10, 500),\n  newKarma: user.karma - amount,\n  restrictedUntil: +172_800_000\n})", note:"" },
+  "c-heal":    { badge:"ok", title:"Hồi phục nhóm +50% HP", meta:"GroupEnergy.current = max × 0.5 = 500", body:"Dù qua CPR hay Karma sacrifice → heal về 500 HP (50% của 1000 max). Không heal 100% để tạo cảm giác nhóm vẫn fragile sau khi được cứu. Cần tiếp tục nỗ lực.", code:"await prisma.groupEnergy.update({\n  where: { groupId },\n  data: { current: Math.floor(max * 0.5) }\n})\n// 1000 * 0.5 = 500 HP", note:"💡 Heal 50% thay vì 100% là thiết kế có chủ ý: nhóm vẫn cần nỗ lực sau khi được cứu." },
+  "c-log":     { badge:"db", title:"Ghi UserKarmaLog", meta:"table UserKarmaLog · analytics + Ashes lookup", body:"Log mỗi lần sacrifice với đầy đủ: userId, groupId, karmaSpent, hpGained. Table này dùng để: tìm ai đủ điều kiện nhận Ashes Badge, analytics sau, và lịch sử sacrifice của user.", code:"await prisma.userKarmaLog.create({\n  data: {\n    userId, groupId,\n    karmaSpent: amount,\n    hpGained: hpGain\n  }\n})", note:"" },
+  "c-badge":   { badge:"ok", title:"Badge Ashes cho user", meta:"Vĩnh viễn · hiện trên profile", body:"Grant badge <code>ASHES_HERO</code> cho user đã sacrifice. Badge này tồn tại vĩnh viễn ngay cả khi nhóm sau đó bị chết hẳn và purge khỏi DB. Hiện nổi bật trên trang profile.", code:"await prisma.userBadge.upsert({\n  where: { userId_type:\n    { userId, type: 'ASHES_HERO' } },\n  create: { userId, type: 'ASHES_HERO',\n    groupId, earnedAt: new Date() },\n  update: {} // already have it\n})", note:"" },
+  "c-done":    { badge:"ok", title:"Nhóm được cứu ✅", meta:"HP đã hồi · UI trở về normal", body:"Client polling phát hiện <code>energyPercent > 10</code> → remove class <code>.dying</code>, restore UI bình thường. Glitch effect biến mất, posts hiện rõ trở lại.", code:"// Client:\nif (prev.stage === 'dying' && stage !== 'dying') {\n  // play revival sound effect\n  toast('🎉 Nhóm đã được cứu!')\n}", note:"" }
+};
+
+function updatePanel(flow, k) {
+  const d = DATA[k]; if (!d) return;
+  const pf = {post:'p', kill:'k', cpr:'c'}[flow];
+  document.getElementById(`${pf}-badge`).textContent =
+    ({step:'bước xử lý', ai:'AI / LLM', db:'database', cron:'cron job', ok:'thành công', danger:'kill / lỗi', warn:'cảnh báo'})[d.badge] || d.badge;
+  document.getElementById(`${pf}-badge`).className = `p-badge ${d.badge}`;
+  document.getElementById(`${pf}-title`).textContent = d.title;
+  document.getElementById(`${pf}-meta`).textContent = d.meta;
+  document.getElementById(`${pf}-body`).innerHTML = d.body;
+  document.getElementById(`${pf}-code`).textContent = d.code;
+  document.getElementById(`${pf}-note`).textContent = d.note;
+}
+
+document.querySelectorAll('.node').forEach(n => {
+  n.addEventListener('click', () => {
+    const flow = n.dataset.flow, k = n.dataset.k;
+    document.querySelectorAll(`.node[data-flow="${flow}"]`).forEach(x => x.classList.remove('active'));
+    n.classList.add('active');
+    updatePanel(flow, k);
+  });
+});
+
+function sw(flow) {
+  document.querySelectorAll('.flow-panel').forEach(p => p.classList.remove('on'));
+  document.getElementById('flow-' + flow).classList.add('on');
+  document.querySelectorAll('.flow-tabs button').forEach((b, i) => {
+    b.classList.toggle('on', ['post','kill','cpr'][i] === flow);
+  });
+}
+
+// defaults
+document.querySelector('.node[data-k="p-start"]')?.classList.add('active');
+</script>
+</body>
+</html>

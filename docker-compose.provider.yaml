@@ -1,4 +1,80 @@
 services:
+  mysql:
+    image: mysql:8.4
+    container_name: threads-mysql
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+    networks:
+      - threads-network
+    volumes:
+      - ./docker/mysql-data:/var/lib/mysql
+    ports:
+      - "3308:3306"
+
+  backup:
+    build: ./backup
+    container_name: threads-backup
+    restart: unless-stopped
+    depends_on:
+      - mysql
+    volumes:
+      - ./docker/rclone:/config/rclone
+      - ./docker/backup:/backup
+    entrypoint: /bin/sh
+
+    command: |
+      -c "
+      echo 'MySQL is ready.'
+      until mysqladmin ping -h mysql -u root -p$$DB_ROOT_PASSWORD --silent; do
+          echo 'MySQL not ready, waiting...'
+          sleep 5
+      done
+      while true; do
+          DUMP_FILE=/backup/dump_$$(date +%Y%m%d_%H%M%S).sql
+          mysqldump -h mysql -u root -p$$DB_ROOT_PASSWORD $$DB_NAME > $$DUMP_FILE
+          test -s $$DUMP_FILE && rclone copy /backup gdrive:threads-backups/mysql --config /config/rclone/rclone.conf || echo 'Backup failed.'
+          rm -f /backup/*.sql
+          sleep 30
+      done
+      "
+    environment:
+      DB_ROOT_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+    networks:
+      - threads-network
+  nginx:
+    image: nginx:alpine
+    container_name: threads-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/certs:/etc/nginx/conf.d/cert.pem
+      - ./nginx/certs:/etc/nginx/conf.d/key.pem
+    restart: unless-stopped
+    networks:
+      - threads-network
+
+  soketi:
+    image: quay.io/soketi/soketi:1.6.1-16-alpine
+    container_name: threads-soketi
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      SOKETI_DEFAULT_APP_ID: ${PUSHER_APP_ID}
+      SOKETI_DEFAULT_APP_KEY: ${PUSHER_KEY}
+      SOKETI_DEFAULT_APP_SECRET: ${PUSHER_SECRET}
+      SOKETI_DEFAULT_APP_ENABLE_CLIENT_MESSAGES: "true"
+    ports:
+      - "6001:6001"
+    networks:
+      - threads-network
+
   redis:
     image: redis:8.6.2-alpine
     container_name: threads-redis
@@ -19,8 +95,27 @@ services:
     networks:
       - threads-network
 
+  mongodb:
+    image: mongo:7.0
+    container_name: threads-mongodb
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGODB_NAME}
+    volumes:
+      - ./docker/mongodb-data:/data/db
+    ports:
+      - "127.0.0.1:27018:27017"
+    networks:
+      - threads-network
+
 volumes:
   redis-data:
+  mysql-data:
+  mongodb-data:
 
 networks:
   threads-network:

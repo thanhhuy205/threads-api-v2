@@ -1,3 +1,4 @@
+import { COMMON_MESSAGE } from '@/constants/message';
 import { HttpException } from '@/errors/error';
 import { Prisma } from '@prisma/client';
 import { NextFunction, Request, Response } from 'express';
@@ -8,31 +9,29 @@ export const errorHandler = (error: unknown, _req: Request, res: Response, _next
         return res.error(error.statusCode, error.message, undefined, { errorCode: error.errorCode });
     }
 
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        console.log('Prisma known request error:', error.code, error.meta);
-        switch (error.code) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {        switch (error.code) {
             case 'P2002':
-                return res.error(409, 'Resource already exists', undefined, { field: error.meta?.target });
+                return res.error(409, COMMON_MESSAGE.RESOURCE_ALREADY_EXISTS, undefined, { field: error.meta?.target });
 
             case 'P2025':
-                return res.error(404, 'Resource not found', undefined, { field: error.meta?.target });
+                return res.error(404, COMMON_MESSAGE.RESOURCE_NOT_FOUND, undefined, { field: error.meta?.target });
 
             case 'P2003':
-                return res.error(400, 'Invalid relation reference', undefined, { field: error.meta?.target });
+                return res.error(400, COMMON_MESSAGE.INVALID_RELATION_REFERENCE, undefined, { field: error.meta?.target });
 
             case 'P2011':
             case 'P2012':
             case 'P2013':
-                return res.error(400, 'Missing required data', undefined, { field: error.meta?.target });
+                return res.error(400, COMMON_MESSAGE.MISSING_REQUIRED_DATA, undefined, { field: error.meta?.target });
 
             default:
-                return res.error(400, 'Database request error', undefined, { field: error.meta?.target });
+                return res.error(400, COMMON_MESSAGE.DATABASE_REQUEST_ERROR, undefined, { field: error.meta?.target });
         }
     }
 
     if (env.NODE_ENV === 'development' && error instanceof Error && error.stack) {
-        res.error(500, 'Internal server error', undefined, { stack: error.stack });
+        return res.error(500, COMMON_MESSAGE.INTERNAL_SERVER_ERROR, undefined, { stack: error.stack });
     } else {
-        res.error(500, 'Internal server error');
+        return res.error(500, COMMON_MESSAGE.INTERNAL_SERVER_ERROR);
     }
 };

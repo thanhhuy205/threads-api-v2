@@ -1,0 +1,136 @@
+import prisma from "@/config/prisma";
+import { buildPagination } from "@/shared/pagination/cursor-pagination";
+import { Prisma, StatusMessage } from "@prisma/client";
+
+const memberMessageGroupSelect = {
+  id: true,
+  user: {
+    select: {
+      id: true,
+      username: true,
+      name: true,
+      avatar: true,
+    },
+  },
+
+} satisfies Prisma.MemberMessageGroupSelect;
+
+class MemberMessageGroupRepository {
+  createMany(
+    data: {
+      messageGroupId: number;
+      userId: string;
+    }[],
+    tx: Prisma.TransactionClient = prisma,
+  ) {
+    return tx.memberMessageGroup.createMany({
+      data,
+      skipDuplicates: true,
+    });
+  }
+
+  findByGroupIdAndUserId(messageGroupId: number, userId: string) {
+    return prisma.memberMessageGroup.findUnique({
+      where: {
+        messageGroupId_userId: {
+          messageGroupId,
+          userId,
+        },
+      },
+      select: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            name: true,
+            avatar: true,
+          }
+        }
+      }
+    });
+  }
+
+  findByGroupId({
+    messageGroupId,
+    after,
+    take,
+  }: {
+    messageGroupId: number;
+    after?: string;
+    take: number;
+  }) {
+    const { currentAfter, currentLimit } = buildPagination({ after, take });
+
+    return prisma.memberMessageGroup.findMany({
+      where: {
+        messageGroupId,
+      },
+      orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+      take: currentLimit + 1,
+      skip: currentAfter ? 1 : 0,
+      cursor: currentAfter ? { id: currentAfter } : undefined,
+      select: memberMessageGroupSelect,
+    });
+  }
+
+
+  incrementUnreadCountByGroupId(messageGroupId: number, excludeUserId: string, tx: Prisma.TransactionClient = prisma) {
+    return tx.memberMessageGroup.updateMany({
+      where: {
+        messageGroupId,
+        userId: {
+          not: excludeUserId,
+        },
+      },
+      data: {
+        unreadCount: {
+          increment: 1,
+        },
+      },
+    });
+  }
+
+  updateLastReadAtByGroupIdAndUserId(messageGroupId: number, userId: string, tx: Prisma.TransactionClient = prisma) {
+    return tx.memberMessageGroup.updateMany({
+      where: {
+        messageGroupId,
+        userId,
+      },
+      data: {
+        unreadCount: 0,
+      },
+    });
+  }
+
+  updateUnreadCountToZeroByGroupIdAndUserId(messageGroupId: number, userId: string, tx: Prisma.TransactionClient = prisma) {
+    return tx.memberMessageGroup.updateMany({
+      where: {
+        messageGroupId,
+        userId,
+      },
+      data: {
+        unreadCount: 0,
+      },
+    });
+  }
+  updateMessageStatusReadAll(messageGroupId: number, userId: string, tx: Prisma.TransactionClient = prisma) {
+    return tx.message.updateMany({
+      where: {
+        messageGroupId,
+        senderId: {
+          not: userId,
+        },
+        statusMessage: {
+          notIn: [StatusMessage.READ, StatusMessage.FAILED],
+        },
+      },
+      data: {
+        statusMessage: StatusMessage.READ,
+        lastSeenAt: new Date(),
+      },
+    });
+  }
+}
+
+export const memberMessageGroupRepository =
+  new MemberMessageGroupRepository();

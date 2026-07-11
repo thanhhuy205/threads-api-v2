@@ -1,27 +1,65 @@
 import { NewFeedType } from '@/modules/post/enum';
+import { ReportTargetType } from '@prisma/client';
 import { z } from 'zod';
 
-export const paginationQuerySchema = z.object({
-    page: z.coerce.number().int().positive().optional(),
-    limit: z.coerce.number().int().positive().optional(),
+export const cursorPaginationQuerySchema = z.object({
+    after: z.string().trim().min(1, 'Cursor must not be empty').optional(),
+    take: z.coerce.number().int('Take must be an integer').positive('Take must be a positive number').max(100, 'Take must be at most 100').optional(),
 });
 
-export type PaginationQueryDto = z.infer<typeof paginationQuerySchema>;
+export type CursorPaginationQueryDto = z.infer<typeof cursorPaginationQuerySchema>;
 
-export const newsFeedQuerySchema = paginationQuerySchema.extend({
-    feedType: z.nativeEnum(NewFeedType).optional(),
+export const newsFeedQuerySchema = cursorPaginationQuerySchema.extend({
+    type: z.nativeEnum(NewFeedType, {
+        errorMap: () => ({ message: `Type must be one of: ${Object.values(NewFeedType).join(', ')}` }),
+    }).optional(),
 });
 
 export type NewsFeedQueryDto = z.infer<typeof newsFeedQuerySchema>;
 
+export const publicIdParamsSchema = z.object({
+    publicId: z.string().min(1, 'Post public ID is required'),
+});
+
+export type PublicIdParamsDto = z.infer<typeof publicIdParamsSchema>;
+
 export const postIdParamsSchema = z.object({
-    postId: z.coerce.number().int().positive(),
+    postId: z.coerce.number().int('Post id must be an integer').positive('Post id must be a positive number'),
 });
 
 export type PostIdParamsDto = z.infer<typeof postIdParamsSchema>;
 
-export const userIdParamsSchema = z.object({
-    userId: z.string().min(1),
+export const usernameParamsSchema = z.object({
+    username: z.string().min(1, 'Username is required'),
 });
 
-export type UserIdParamsDto = z.infer<typeof userIdParamsSchema>;
+export type UsernameParamsDto = z.infer<typeof usernameParamsSchema>;
+
+export const reportSchema = z.object({
+    reason: z.string().trim().min(1, 'Report reason is required').max(1000, 'Report reason must be at most 1000 characters'),
+    type: z.enum(['post', 'user', 'circle']).transform((value) => {
+        if (value === 'post') return ReportTargetType.POST;
+        if (value === 'user') return ReportTargetType.USER;
+        return ReportTargetType.CIRCLE;
+    }),
+});
+
+export type ReportDto = z.infer<typeof reportSchema>;
+
+export const savePostSchema = z.object({
+    isSaved: z.boolean({
+        required_error: 'isSaved is required',
+        invalid_type_error: 'isSaved must be a boolean value',
+    }),
+});
+
+export type SavePostDto = z.infer<typeof savePostSchema>;
+
+export const hidePostSchema = z.object({
+    isHidden: z.boolean({
+        required_error: 'isHidden is required',
+        invalid_type_error: 'isHidden must be a boolean value',
+    }),
+});
+
+export type HidePostDto = z.infer<typeof hidePostSchema>;

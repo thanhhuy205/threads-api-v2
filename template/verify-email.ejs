@@ -1,0 +1,168 @@
+<% const brandName = typeof appName !== 'undefined' ? appName : 'Threads'; const
+url = typeof verifyUrl !== 'undefined' ? verifyUrl : '#'; const expires = typeof
+expiresInMinutes !== 'undefined' ? expiresInMinutes : 60; const currentYear =
+typeof year !== 'undefined' ? year : new Date().getFullYear(); %>
+
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Xác minh email</title>
+  </head>
+
+  <body
+    style="
+      margin: 0;
+      padding: 0;
+      background: #eef3f8;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #1f2937;
+    ">
+    <div style="display: none; max-height: 0; overflow: hidden; opacity: 0">
+      Xác minh email của bạn để hoàn tất đăng ký tài khoản <%= brandName %>.
+    </div>
+
+    <table
+      width="100%"
+      cellpadding="0"
+      cellspacing="0"
+      role="presentation"
+      style="background: #eef3f8; padding: 28px 12px">
+      <tr>
+        <td align="center">
+          <h1
+            style="
+              margin: 0 0 24px;
+              font-size: 18px;
+              font-weight: 700;
+              color: #243044;
+            ">
+            <%= brandName %>
+          </h1>
+
+          <table
+            width="100%"
+            cellpadding="0"
+            cellspacing="0"
+            role="presentation"
+            style="max-width: 640px; background: #ffffff; border-radius: 2px">
+            <tr>
+              <td style="padding: 34px 36px">
+                <h2
+                  style="
+                    margin: 0 0 18px;
+                    font-size: 20px;
+                    line-height: 1.4;
+                    color: #243044;
+                  ">
+                  Chào bạn!
+                </h2>
+
+                <p
+                  style="
+                    margin: 0 0 24px;
+                    font-size: 14px;
+                    line-height: 1.7;
+                    color: #536789;
+                  ">
+                  Cảm ơn bạn đã đăng ký tài khoản <%= brandName %>. Vui lòng xác
+                  minh địa chỉ email của bạn để hoàn tất quá trình đăng ký.
+                </p>
+
+                <table
+                  width="100%"
+                  cellpadding="0"
+                  cellspacing="0"
+                  role="presentation">
+                  <tr>
+                    <td align="center" style="padding: 4px 0 28px">
+                      <a
+                        href="<%= url %>"
+                        style="
+                          display: inline-block;
+                          background: #243044;
+                          color: #ffffff;
+                          text-decoration: none;
+                          font-size: 13px;
+                          font-weight: 700;
+                          padding: 12px 22px;
+                          border-radius: 4px;
+                        ">
+                        Xác minh email
+                      </a>
+                    </td>
+                  </tr>
+                </table>
+
+                <p
+                  style="
+                    margin: 0 0 18px;
+                    font-size: 14px;
+                    line-height: 1.7;
+                    color: #536789;
+                  ">
+                  Liên kết này sẽ hết hạn sau <%= expires %> phút.
+                </p>
+
+                <p
+                  style="
+                    margin: 0 0 22px;
+                    font-size: 14px;
+                    line-height: 1.7;
+                    color: #536789;
+                  ">
+                  Nếu bạn không tạo tài khoản này, bạn có thể bỏ qua email này.
+                </p>
+
+                <p
+                  style="
+                    margin: 0 0 26px;
+                    font-size: 14px;
+                    line-height: 1.6;
+                    color: #536789;
+                  ">
+                  Trân trọng,<br />
+                  <%= brandName %>
+                </p>
+
+                <div
+                  style="
+                    height: 1px;
+                    background: #e1e7ef;
+                    margin: 0 0 24px;
+                  "></div>
+
+                <p
+                  style="
+                    margin: 0 0 10px;
+                    font-size: 13px;
+                    line-height: 1.7;
+                    color: #536789;
+                  ">
+                  Nếu bạn gặp sự cố khi nhấn nút "Xác minh email", hãy sao chép
+                  và dán liên kết bên dưới vào trình duyệt của bạn:
+                </p>
+
+                <a
+                  href="<%= url %>"
+                  style="
+                    font-size: 13px;
+                    line-height: 1.6;
+                    color: #2563eb;
+                    word-break: break-all;
+                  ">
+                  <%= url %>
+                </a>
+              </td>
+            </tr>
+          </table>
+
+          <p style="margin: 26px 0 0; font-size: 11px; color: #a0abc0">
+            © <%= currentYear %> <%= brandName %>. All rights reserved.
+          </p>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

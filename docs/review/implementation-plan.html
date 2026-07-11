@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Implementation Plan — Risk Register · Threads API v2</title>
+<style>
+  :root{
+    --bg:#0d1117;--panel:#161b22;--border:#30363d;--text:#c9d1d9;--muted:#8b949e;
+    --crit:#f85149;--high:#ff7b72;--med:#d29922;--low:#58a6ff;--ok:#3fb950;--accent:#79c0ff;
+    --mono:"SFMono-Regular",Consolas,Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);line-height:1.55;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
+  .wrap{max-width:1180px;margin:0 auto;padding:38px 28px 90px}
+  h1{font-size:24px;margin:0 0 4px}
+  .sub{color:var(--muted);font-size:14px;margin-bottom:20px}
+  h2{font-size:18px;margin:34px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin:10px 0}
+  th,td{border:1px solid var(--border);padding:9px 11px;vertical-align:top;text-align:left}
+  th{background:#1b2230;font-size:12px;text-transform:uppercase;letter-spacing:.4px;color:#adbac7}
+  tr:nth-child(even) td{background:#12161d}
+  code{font-family:var(--mono);background:#21262d;padding:1px 5px;border-radius:4px;font-size:11.5px;color:#e6edf3}
+  .sev{font-size:11px;font-weight:700;letter-spacing:.4px;padding:3px 9px;border-radius:20px;text-transform:uppercase;white-space:nowrap}
+  .s-crit{background:rgba(248,81,73,.16);color:var(--crit);border:1px solid var(--crit)}
+  .s-high{background:rgba(255,123,114,.14);color:var(--high);border:1px solid var(--high)}
+  .s-med{background:rgba(210,153,34,.15);color:var(--med);border:1px solid var(--med)}
+  .s-low{background:rgba(88,166,255,.15);color:var(--low);border:1px solid var(--low)}
+  .pri{font-weight:700}
+  .p1{color:var(--crit)}.p2{color:var(--high)}.p3{color:var(--med)}.p4{color:var(--low)}
+  .legend{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0 4px}
+  .phase{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:6px 18px;margin:12px 0}
+  .phase h3{margin:12px 0 6px;font-size:15px;color:#e6edf3}
+  .phase h3 span{font-size:12px;color:var(--muted);font-weight:400}
+  ul{padding-left:20px;font-size:13.5px}
+  .muted{color:var(--muted);font-size:13px}
+  .owasp{font-size:11px;color:var(--muted);font-family:var(--mono)}
+</style>
+</head>
+<body>
+<div style="position:sticky;top:0;z-index:99;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:9px 22px;background:#010409;border-bottom:1px solid #30363d;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:12.5px">
+  <a href="code-review-pr.html" style="color:#8b949e;text-decoration:none">← Annotated diff</a>
+  <span style="color:#6e7681;font-family:'SFMono-Regular',Consolas,monospace">Audit · 3 / 4 · Risk register</span>
+  <a href="score-improvement-plan.html" style="color:#79c0ff;text-decoration:none;font-weight:600">Cải thiện điểm →</a>
+</div>
+<div class="wrap">
+  <h1>🛡️ Implementation Plan — Risk Register</h1>
+  <div class="sub">Threads API v2 · prioritized vulnerability → fix mapping · 10 findings (2 critical · 2 high · 4 medium · 2 low)</div>
+
+  <div class="legend">
+    <span class="sev s-crit">critical</span><span class="sev s-high">high</span>
+    <span class="sev s-med">medium</span><span class="sev s-low">low</span>
+    <span class="muted">· Priority: <b class="p1">P1</b> now · <b class="p2">P2</b> this week · <b class="p3">P3</b> this sprint · <b class="p4">P4</b> backlog</span>
+  </div>
+
+  <h2>Risk table</h2>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:14%">Vulnerability</th>
+        <th style="width:22%">Attack vector</th>
+        <th style="width:18%">Impact</th>
+        <th style="width:30%">Proposed fix</th>
+        <th style="width:8%">Severity</th>
+        <th style="width:8%">Priority</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><b>Plaintext passwords in request logs</b><div class="owasp">A09 · logger.ts</div></td>
+        <td>Logger serializes full <code>req.body</code>; <code>/auth/login</code> &amp; <code>/auth/register</code> bodies (incl. password) written to every log sink.</td>
+        <td>Mass credential compromise via log access (files, CloudWatch, 3rd-party aggregators, support staff).</td>
+        <td>Remove <code>body</code> from serializer; add pino <code>redact</code> for <code>password</code>, <code>token</code>, <code>authorization</code>. Log only method/url/status.</td>
+        <td><span class="sev s-crit">critical</span></td>
+        <td class="pri p1">P1</td>
+      </tr>
+      <tr>
+        <td><b>Webhook secret &amp; headers logged</b><div class="owasp">A09 · leonardo-webhook.ts</div></td>
+        <td>Handler logs <code>JSON.stringify(req.headers)</code> and the raw bearer token on every call.</td>
+        <td>Webhook secret leaks → forged callbacks (trigger image-gen / report flows), token replay.</td>
+        <td>Delete both <code>baseLogger.info</code> lines; at most log a SHA-256 prefix at <code>debug</code> level.</td>
+        <td><span class="sev s-crit">critical</span></td>
+        <td class="pri p1">P1</td>
+      </tr>
+      <tr>
+        <td><b>No brute-force protection on auth</b><div class="owasp">A07 · ratelimit.ts</div></td>
+        <td>Single global 100/15min limit; <code>/auth/login</code> open to credential stuffing. In-memory store resets on restart &amp; is per-process.</td>
+        <td>Account takeover via password guessing; limiter ineffective once horizontally scaled (compose runs api+worker).</td>
+        <td>Add a strict per-IP+per-account <code>authLimiter</code> (e.g. 5–10/15min) on <code>/auth/*</code>; move store to Redis (<code>rate-limit-redis</code>).</td>
+        <td><span class="sev s-high">high</span></td>
+        <td class="pri p2">P2</td>
+      </tr>
+      <tr>
+        <td><b>Weak/default webhook auth (HLS)</b><div class="owasp">A07 · hook-hls.ts</div></td>
+        <td>Secret defaults to public <code>'default_hook_secret_key'</code>; compared with non-constant-time <code>!==</code>.</td>
+        <td>If prod env unset, anyone can forge HLS completion callbacks; timing side-channel on the compare.</td>
+        <td>Require <code>HOOK_SECRET_KEY</code> (no default, <code>min(32)</code>); use <code>crypto.timingSafeEqual</code>; prefer HMAC of payload over static secret.</td>
+        <td><span class="sev s-high">high</span></td>
+        <td class="pri p2">P2</td>
+      </tr>
+      <tr>
+        <td><b>Upload content-type spoofing</b><div class="owasp">A04/A08 · multer.ts</div></td>
+        <td>Validation trusts client <code>file.mimetype</code>; videos reach <code>ffmpeg</code> with no magic-byte check.</td>
+        <td>Malicious/oversized payloads stored in R2; potential parser abuse; storage cost abuse.</td>
+        <td>Verify real type from buffer (<code>file-type</code>), enforce extension allowlist, serve R2 from non-executable path, keep 20MB cap.</td>
+        <td><span class="sev s-med">medium</span></td>
+        <td class="pri p3">P3</td>
+      </tr>
+      <tr>
+        <td><b>Missing feed composite index</b><div class="owasp">PERF · schema.prisma</div></td>
+        <td>Feed query filters <code>isDeleted/isHidden/visibility</code> + sorts <code>createdAt DESC,id DESC</code> with no covering index.</td>
+        <td>Full scan + filesort as <code>posts</code> grows → slow feed, high DB CPU, p95 latency spikes.</td>
+        <td>Add <code>@@index([isDeleted, isHidden, visibility, createdAt, id])</code>; verify with <code>EXPLAIN</code> before/after.</td>
+        <td><span class="sev s-med">medium</span></td>
+        <td class="pri p3">P3</td>
+      </tr>
+      <tr>
+        <td><b>Counter drift (non-transactional)</b><div class="owasp">INTEGRITY · follower.service.ts</div></td>
+        <td>Follow-state write and <code>followersCount</code> +/- are separate DB calls.</td>
+        <td>Permanent desync of denormalized counts on partial failure; wrong follower numbers shown to users.</td>
+        <td>Wrap state-change + counter in <code>transactionService.doInTransaction</code> (pattern already used in post create).</td>
+        <td><span class="sev s-med">medium</span></td>
+        <td class="pri p3">P3</td>
+      </tr>
+      <tr>
+        <td><b>CORS wildcard allowed</b><div class="owasp">A05 · cors.ts</div></td>
+        <td><code>CORS_ORIGIN='*'</code> is a supported config; permissive if used in prod.</td>
+        <td>Any origin can call the API from a browser context (impact bounded — header-based auth, no cookies).</td>
+        <td>Disallow <code>'*'</code> when <code>NODE_ENV==='production'</code>; require explicit origin allowlist.</td>
+        <td><span class="sev s-med">medium</span></td>
+        <td class="pri p3">P3</td>
+      </tr>
+      <tr>
+        <td><b>JWT secret floor + unpinned algo</b><div class="owasp">A02 · jwt.service.ts</div></td>
+        <td><code>JWT_SECRET</code> allowed at 1 char; <code>verify()</code> doesn't pin <code>algorithms</code>.</td>
+        <td>Weak-secret brute force; defense-in-depth gap vs algorithm-confusion.</td>
+        <td><code>z.string().min(32)</code>; pass <code>{ algorithms:['HS256'] }</code> to <code>jwt.verify</code>.</td>
+        <td><span class="sev s-low">low</span></td>
+        <td class="pri p4">P4</td>
+      </tr>
+      <tr>
+        <td><b>No observability / attack detection</b><div class="owasp">A09 · cross-cutting</div></td>
+        <td>No metrics, tracing, error tracking, or request-correlation IDs; health check doesn't probe Redis/queues.</td>
+        <td>Attacks &amp; outages invisible until users complain; slow incident response.</td>
+        <td>Add request-ID middleware, <code>/metrics</code> (prom-client), Sentry, and a real <code>/health/ready</code> dependency probe.</td>
+        <td><span class="sev s-low">low</span></td>
+        <td class="pri p4">P4</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Sequenced rollout</h2>
+
+  <div class="phase">
+    <h3>Phase 1 — Stop the bleeding <span>· ~1–2 hrs · P1</span></h3>
+    <ul>
+      <li>Strip <code>req.body</code> from the logger + add pino <code>redact</code>. <span class="muted">(kills the credential-leak path)</span></li>
+      <li>Delete the two secret-logging lines in <code>leonardo-webhook.ts</code>.</li>
+      <li>Ship as a hotfix branch off <code>dev</code>; no schema/runtime contract change.</li>
+    </ul>
+  </div>
+  <div class="phase">
+    <h3>Phase 2 — Harden the auth perimeter <span>· ~half day · P2</span></h3>
+    <ul>
+      <li>Dedicated Redis-backed <code>authLimiter</code> on <code>/auth/*</code>; migrate global limiter to Redis store.</li>
+      <li>Make <code>HOOK_SECRET_KEY</code> required (no default) + <code>timingSafeEqual</code>.</li>
+    </ul>
+  </div>
+  <div class="phase">
+    <h3>Phase 3 — Integrity, performance &amp; config <span>· ~1 day · P3</span></h3>
+    <ul>
+      <li>Transaction-wrap counter writes; add the feed composite index (capture <code>EXPLAIN</code> diff).</li>
+      <li>Real upload validation (magic bytes + extension allowlist); block CORS <code>'*'</code> in prod.</li>
+    </ul>
+  </div>
+  <div class="phase">
+    <h3>Phase 4 — Maturity layer <span>· 1–2 weeks · P4 · biggest résumé payoff</span></h3>
+    <ul>
+      <li>JWT hardening; observability stack (request IDs, prom-client + Grafana, Sentry); readiness probe.</li>
+      <li>Vitest + Supertest suite (auth, post-create, like, pagination) wired as a CI gate <i>before</i> the Docker build.</li>
+    </ul>
+  </div>
+
+  <p class="muted" style="margin-top:24px">Severity model — <b>critical:</b> directly exposes credentials/secrets, trivially exploitable · <b>high:</b> realistic account-takeover or scale-breaking abuse vector · <b>medium:</b> exploitable under specific conditions or degrades correctness/performance at load · <b>low:</b> defense-in-depth &amp; operational hygiene. No SQL-injection, RCE, or production stack-trace leakage was found.</p>
+</div>
+</body>
+</html>

@@ -1,0 +1,167 @@
+import prisma from "@/config/prisma";
+import { Prisma } from "@prisma/client";
+
+type QuestLogDbClient = Prisma.TransactionClient | typeof prisma;
+
+const userQuestLogSelect = {
+  id: true,
+  userId: true,
+  questId: true,
+  progress: true,
+  completed: true,
+  claimedAt: true,
+  date: true,
+  quest: {
+    select: {
+      code: true,
+      description: true,
+      action: true,
+      requirement: true,
+      karmaReward: true,
+    },
+  },
+} satisfies Prisma.UserQuestLogSelect;
+
+export type UserQuestLogWithQuest = Prisma.UserQuestLogGetPayload<{
+  select: typeof userQuestLogSelect;
+}>;
+
+type CreateQuestLogInput = {
+  userId: string;
+  questId: number;
+  date: Date;
+};
+
+class UserQuestLogRepository {
+  countAllCompletedQuestsByUserAndDate(userId: string, date: Date, tx: QuestLogDbClient = prisma) {
+    return tx.userQuestLog.count({
+      where: {
+        userId,
+        date,
+        completed: true,
+      },
+    });
+  }
+
+  countAllCompletedQuests(date: Date, tx: QuestLogDbClient = prisma) {
+    return tx.userQuestLog.count({
+      where: {
+        date,
+        completed: true,
+      },
+    });
+  }
+
+
+
+  lockUserRow(userId: string, tx: QuestLogDbClient = prisma) {
+    return tx.$queryRaw<{ id: string }[]>`
+      SELECT id
+      FROM users
+      WHERE id = ${userId}
+      FOR UPDATE
+    `;
+  }
+
+  findLogsByUserAndDate(
+    userId: string,
+    date: Date,
+    tx: QuestLogDbClient = prisma,
+  ) {
+    return tx.userQuestLog.findMany({
+      where: {
+        userId,
+        date,
+      },
+      orderBy: [{ id: "asc" }],
+      select: userQuestLogSelect,
+    });
+  }
+
+  createManyLogs(
+    logs: CreateQuestLogInput[],
+    tx: QuestLogDbClient = prisma,
+  ) {
+    if (logs.length === 0) {
+      return Promise.resolve({ count: 0 });
+    }
+
+    return tx.userQuestLog.createMany({
+      data: logs.map((log) => ({
+        userId: log.userId,
+        questId: log.questId,
+        date: log.date,
+      })),
+      skipDuplicates: true,
+    });
+  }
+
+  updateProgress(
+    {
+      id,
+      progress,
+      completed,
+    }: {
+      id: number;
+      progress: number;
+      completed: boolean;
+    },
+    tx: QuestLogDbClient = prisma,
+  ) {
+    return tx.userQuestLog.update({
+      where: {
+        id,
+      },
+      data: {
+        progress,
+        completed,
+      },
+      select: {
+        id: true,
+      },
+    });
+  }
+
+  findLogByUserQuestAndDate(
+    userId: string,
+    codeQuest: string,
+    date: Date,
+    tx: QuestLogDbClient = prisma,
+  ) {
+    return tx.userQuestLog.findFirst({
+      where: {
+        userId,
+        quest: {
+          code: codeQuest,
+        },
+        completed: true,
+        date: {
+          gte: new Date(date.getFullYear(), date.getMonth(), date.getDate()),
+        },
+      },
+      select: userQuestLogSelect,
+    });
+  }
+
+  claimQuest(questLogId: number, tx: QuestLogDbClient = prisma) {
+    return tx.userQuestLog.update({
+      where: {
+        id: questLogId,
+      },
+      data: {
+        claimedAt: new Date(),
+      },
+      select: {
+        id: true,
+        completed: true,
+        quest: {
+          select: {
+            karmaReward: true,
+          },
+        },
+      },
+    });
+  }
+}
+
+export const userQuestLogRepository = new UserQuestLogRepository();

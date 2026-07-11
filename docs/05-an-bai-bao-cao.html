@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hide &amp; Report Post — Implemented Flow</title>
+<style>
+:root{--ivory:#FAF9F5;--slate:#141413;--clay:#D97757;--oat:#E3DACC;--olive:#788C5D;--rust:#B04A3F;--gray-100:#F0EEE6;--gray-300:#D1CFC5;--gray-500:#87867F;--gray-700:#3D3D3A;--white:#FFFFFF;--blue-50:#E6F1FB;--blue-800:#0C447C;--green-50:#EAF3DE;--green-600:#3B6D11;--amber-50:#FAEEDA;--amber-600:#854F0B;--serif:ui-serif,Georgia,serif;--sans:system-ui,-apple-system,sans-serif;--mono:ui-monospace,"SF Mono",Menlo,monospace;--border:1.5px solid var(--gray-300);--radius:12px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--ivory);color:var(--slate);font-family:var(--sans);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;padding:56px 24px 120px}
+.page{max-width:900px;margin:0 auto}
+header{margin-bottom:44px}
+.header-top{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:8px}
+h1{font-family:var(--serif);font-weight:500;font-size:38px;letter-spacing:-0.01em}
+.pill{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--gray-500);background:var(--gray-100);border:var(--border);border-radius:999px;padding:5px 11px}
+.meta{color:var(--gray-500);font-size:14px}
+.meta code{font-family:var(--mono);font-size:13px;color:var(--gray-700)}
+section{margin-bottom:52px}
+h2{font-family:var(--serif);font-weight:500;font-size:24px;letter-spacing:-0.01em;margin-bottom:6px}
+.rule{border:none;border-top:1px solid var(--gray-300);margin-bottom:24px}
+.overview-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px}
+.ov-card{background:var(--white);border:var(--border);border-radius:var(--radius);padding:18px 20px}
+.ov-num{font-family:var(--serif);font-size:34px;font-weight:500;line-height:1;margin-bottom:6px}
+.ov-label{font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:var(--gray-500)}
+.ov-note{font-family:var(--mono);font-size:11px;margin-top:6px;color:var(--gray-500)}
+.badge{display:inline-block;font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:0.04em;padding:3px 8px;border-radius:5px;white-space:nowrap}
+.badge-done{background:var(--green-50);color:var(--green-600)}
+.badge-todo{background:#FDE8E8;color:#991B1B}
+.step-table{width:100%;border-collapse:separate;border-spacing:0;background:var(--white);border:var(--border);border-radius:var(--radius);overflow:hidden}
+.step-table thead th{text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--gray-500);background:var(--gray-100);padding:12px 16px;border-bottom:1px solid var(--gray-300)}
+.step-table tbody td{padding:13px 16px;border-bottom:1px solid var(--gray-100);font-size:14px;vertical-align:top}
+.step-table tbody tr:last-child td{border-bottom:none}
+.step-num{font-family:var(--mono);font-size:12px;color:var(--gray-500)}
+.step-name{font-weight:500;margin-bottom:2px}
+.step-desc{font-size:13px;color:var(--gray-500)}
+code{font-family:var(--mono);font-size:12px;background:var(--gray-100);padding:1px 5px;border-radius:4px;color:var(--gray-700)}
+.note-box{background:var(--oat);border-radius:var(--radius);padding:20px 22px}
+.note-item{display:flex;gap:14px;align-items:baseline;padding:8px 0;border-bottom:1px solid rgba(20,20,19,.08)}
+.note-item:last-child{border-bottom:none}
+.note-tag{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:0.04em;color:var(--gray-700);background:var(--ivory);border-radius:4px;padding:3px 7px;flex-shrink:0}
+.note-body{font-size:14px;color:var(--gray-700)}
+.flow-panel{background:var(--white);border:var(--border);border-radius:var(--radius);padding:28px 24px 20px;overflow-x:auto}
+.flow-panel svg{display:block;width:100%;height:auto}
+.flow-note{font-size:12px;color:var(--gray-500);margin-top:10px}
+.diff-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:700px){.diff-grid{grid-template-columns:1fr}}
+.diff-card{background:var(--white);border:var(--border);border-radius:var(--radius);overflow:hidden}
+.diff-card-head{font-size:12px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:var(--gray-500);background:var(--gray-100);padding:10px 14px;border-bottom:1px solid var(--gray-300)}
+.diff-row{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-bottom:1px solid var(--gray-100);font-size:13px}
+.diff-row:last-child{border-bottom:none}
+.diff-dot{width:7px;height:7px;border-radius:2px;flex-shrink:0;margin-top:5px}
+.diff-dot.done{background:var(--olive)}
+.diff-dot.todo{background:var(--rust)}
+footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--gray-300);font-family:var(--mono);font-size:12px;color:var(--gray-500)}
+</style>
+</head>
+<body>
+<div class="page">
+
+<header>
+  <div class="header-top">
+    <h1>Ẩn bài &amp; Báo cáo vi phạm</h1>
+    <span class="pill">post module</span>
+  </div>
+  <div class="meta">
+    Endpoints: <code>POST /:publicId/hide</code> · <code>POST /:publicId/report</code> &nbsp;·&nbsp;
+    Cơ chế: <code>report repository · evaluation queue · auto-hide (0.96)</code>
+  </div>
+</header>
+
+<section>
+  <div class="overview-strip">
+    <div class="ov-card">
+      <div class="ov-num">3</div>
+      <div class="ov-label">Report Types</div>
+      <div class="ov-note">post · user · circle</div>
+    </div>
+    <div class="ov-card">
+      <div class="ov-num">PENDING</div>
+      <div class="ov-label">Default Status</div>
+      <div class="ov-note">ghi nhận report, admin duyệt sau</div>
+    </div>
+    <div class="ov-card">
+      <div class="ov-num">Queue</div>
+      <div class="ov-label">AI Eval</div>
+      <div class="ov-note">evaluation-report job</div>
+    </div>
+    <div class="ov-card">
+      <div class="ov-num">0.96</div>
+      <div class="ov-label">Auto Hide</div>
+      <div class="ov-note">confidence >= 0.96</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>User Perspective</h2>
+  <hr class="rule">
+  <div class="note-box">
+    <div class="note-item">
+      <span class="note-tag">Ẩn bài</span>
+      <div class="note-body">User có thể ẩn bài khỏi feed bằng route <code>/:publicId/hide</code>. Đây là toggle trực tiếp cờ <code>isGhost</code> trên bài viết (global).</div>
+    </div>
+    <div class="note-item">
+      <span class="note-tag">Báo cáo</span>
+      <div class="note-body">User gửi <code>reason</code> + <code>type</code> vào <code>/:publicId/report</code>. Hệ thống tạo report, lưu người report, target type, target id.</div>
+    </div>
+    <div class="note-item">
+      <span class="note-tag">Tự động</span>
+      <div class="note-body">Với report <code>post/circle</code>, worker AI đánh giá độ tin cậy. Nếu <code>confidence >= 0.96</code> thì bài sẽ bị <code>isHidden=true</code> và bị loại khỏi list/feed.</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Report Flow (Implemented)</h2>
+  <hr class="rule">
+  <div class="flow-panel">
+    <svg viewBox="0 0 860 360" role="img" aria-label="Flowchart report implemented">
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </marker>
+      </defs>
+
+      <rect x="290" y="16" width="280" height="38" rx="8" fill="#F0EEE6" stroke="#D1CFC5" stroke-width="1.5"/>
+      <text x="430" y="40" text-anchor="middle" font-family="system-ui" font-size="13" fill="#141413" font-weight="500">POST /posts/:publicId/report</text>
+
+      <line x1="430" y1="54" x2="430" y2="82" stroke="#87867F" stroke-width="1.5" marker-end="url(#arr)"/>
+      <rect x="220" y="82" width="420" height="46" rx="8" fill="#FFFFFF" stroke="#D97757" stroke-width="1.5"/>
+      <text x="430" y="103" text-anchor="middle" font-family="system-ui" font-size="12" fill="#141413" font-weight="500">Validate body: reason + type(post|user|circle)</text>
+      <text x="430" y="118" text-anchor="middle" font-family="system-ui" font-size="11" fill="#87867F">type được normalize thành enum uppercase</text>
+
+      <line x1="430" y1="128" x2="430" y2="156" stroke="#87867F" stroke-width="1.5" marker-end="url(#arr)"/>
+      <polygon points="430,156 520,186 430,216 340,186" fill="#F0EEE6" stroke="#D1CFC5" stroke-width="1.5"/>
+      <text x="430" y="190" text-anchor="middle" font-family="system-ui" font-size="12" fill="#3D3D3A" font-weight="500">type = USER?</text>
+
+      <line x1="520" y1="186" x2="760" y2="186" stroke="#87867F" stroke-width="1.5" marker-end="url(#arr)"/>
+      <text x="610" y="177" font-family="ui-monospace,monospace" font-size="11" fill="#3B6D11">yes</text>
+      <rect x="690" y="168" width="150" height="36" rx="8" fill="#EAF3DE" stroke="#3B6D11" stroke-width="1.5"/>
+      <text x="765" y="190" text-anchor="middle" font-family="system-ui" font-size="11" fill="#141413" font-weight="500">Create report (PENDING)</text>
+
+      <line x1="430" y1="216" x2="430" y2="248" stroke="#87867F" stroke-width="1.5" marker-end="url(#arr)"/>
+      <text x="440" y="236" font-family="ui-monospace,monospace" font-size="11" fill="#0C447C">no</text>
+      <rect x="210" y="248" width="440" height="44" rx="8" fill="#E6F1FB" stroke="#378ADD" stroke-width="1.5"/>
+      <text x="430" y="269" text-anchor="middle" font-family="system-ui" font-size="12" fill="#141413" font-weight="500">Create report + enqueue evaluation-report job</text>
+      <text x="430" y="284" text-anchor="middle" font-family="system-ui" font-size="11" fill="#0C447C">payload: content, reason, reporterId, reportedUserId, type</text>
+
+      <line x1="430" y1="292" x2="430" y2="322" stroke="#87867F" stroke-width="1.5" marker-end="url(#arr)"/>
+      <rect x="240" y="322" width="380" height="30" rx="8" fill="#FDE8E8" stroke="#991B1B" stroke-width="1.5"/>
+      <text x="430" y="341" text-anchor="middle" font-family="system-ui" font-size="11" fill="#991B1B" font-weight="500">Worker: confidence >= 0.96 -> update post.isHidden = true</text>
+    </svg>
+    <p class="flow-note">Report POST/CIRCLE sẽ được AI đánh giá bất đồng bộ. USER report chỉ tạo record PENDING, chưa có auto-hide.</p>
+  </div>
+</section>
+
+<section>
+  <h2>API Detail</h2>
+  <hr class="rule">
+  <table class="step-table">
+    <thead>
+      <tr>
+        <th style="width:48px">#</th>
+        <th style="width:240px">API / Tính năng</th>
+        <th>Mô tả nghiệp vụ</th>
+        <th style="width:100px">Trạng thái</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="step-num">01</span></td>
+        <td><div class="step-name">POST /:publicId/hide</div><div class="step-desc">Ẩn bài</div></td>
+        <td>Toggle <code>isGhost</code> trên bản ghi post (global). Không cho phép ẩn bài của chính mình.</td>
+        <td><span class="badge badge-done">done</span></td>
+      </tr>
+      <tr>
+        <td><span class="step-num">02</span></td>
+        <td><div class="step-name">POST /:publicId/report</div><div class="step-desc">Báo cáo vi phạm</div></td>
+        <td>Request body gồm <code>reason</code> và <code>type</code>. Hệ thống lưu report bằng <code>reportRepository</code> với <code>status=PENDING</code>.</td>
+        <td><span class="badge badge-done">done</span></td>
+      </tr>
+      <tr>
+        <td><span class="step-num">03</span></td>
+        <td><div class="step-name">Type validation</div><div class="step-desc">post/user/circle</div></td>
+        <td>Zod validate enum lowercase, sau đó normalize sang <code>ReportTargetType</code> uppercase để lưu DB.</td>
+        <td><span class="badge badge-done">done</span></td>
+      </tr>
+      <tr>
+        <td><span class="step-num">04</span></td>
+        <td><div class="step-name">AI Evaluation Worker</div><div class="step-desc">report evaluation</div></td>
+        <td>Worker gọi AI để lấy <code>assistantNote</code> + <code>confidence</code>, ghi lại vào bảng reports.</td>
+        <td><span class="badge badge-done">done</span></td>
+      </tr>
+      <tr>
+        <td><span class="step-num">05</span></td>
+        <td><div class="step-name">Auto-hide threshold</div><div class="step-desc">moderation automation</div></td>
+        <td>Nếu <code>confidence >= 0.96</code> cho type <code>POST/CIRCLE</code>, cập nhật <code>post.isHidden=true</code> và bump cache version.</td>
+        <td><span class="badge badge-done">done</span></td>
+      </tr>
+      <tr>
+        <td><span class="step-num">06</span></td>
+        <td><div class="step-name">Admin moderation</div><div class="step-desc">manual review</div></td>
+        <td>Report vẫn giữ <code>PENDING</code> để admin quyết định bước xử lý cuối cùng.</td>
+        <td><span class="badge badge-todo">todo</span></td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>Implementation Progress</h2>
+  <hr class="rule">
+  <div class="diff-grid">
+    <div class="diff-card">
+      <div class="diff-card-head">✅ Đã có</div>
+      <div class="diff-row"><div class="diff-dot done"></div><div>DTO report gồm reason + type (zod enum + normalize).</div></div>
+      <div class="diff-row"><div class="diff-dot done"></div><div>Lưu report DB với reporterId, targetType, targetId, status PENDING.</div></div>
+      <div class="diff-row"><div class="diff-dot done"></div><div>Queue <code>evaluation-report</code> + worker xử lý AI.</div></div>
+      <div class="diff-row"><div class="diff-dot done"></div><div>Auto-hide bài khi confidence cao và lọc khỏi feed/list bằng <code>isHidden</code>.</div></div>
+    </div>
+    <div class="diff-card">
+      <div class="diff-card-head">⏳ Mở rộng tiếp</div>
+      <div class="diff-row"><div class="diff-dot todo"></div><div>Trang admin xử lý report theo action (resolve/dismiss/hide/delete).</div></div>
+      <div class="diff-row"><div class="diff-dot todo"></div><div>Batch dashboard theo confidence để ưu tiên moderation.</div></div>
+      <div class="diff-row"><div class="diff-dot todo"></div><div>Chuẩn hóa taxonomy reason cho analytics báo cáo.</div></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Design Notes</h2>
+  <hr class="rule">
+  <div class="note-box">
+    <div class="note-item">
+      <span class="note-tag">Target mapping</span>
+      <div class="note-body"><code>type=user</code> dùng <code>:publicId</code> như user id. <code>type=post/circle</code> dùng publicId của bài viết làm target id.</div>
+    </div>
+    <div class="note-item">
+      <span class="note-tag">Safety rule</span>
+      <div class="note-body">Chặn self-report cho cả user target và post target. Duplicate report được phép tạo nhiều bản ghi độc lập.</div>
+    </div>
+    <div class="note-item">
+      <span class="note-tag">Visibility</span>
+      <div class="note-body">Bài <code>isHidden=true</code> không hiện trong list/feed, nhưng vẫn đọc được qua <code>GET /posts/:publicId</code> để phục vụ moderation và audit.</div>
+    </div>
+  </div>
+</section>
+
+<footer>Nguồn: PostService · ReportRepository · EvaluationWorker · AI Service</footer>
+</div>
+</body>
+</html>

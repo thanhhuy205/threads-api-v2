@@ -1,23 +1,80 @@
 import { Prisma } from "@prisma/client";
 
 export const postFeedSelect = Prisma.validator<Prisma.PostSelect>()({
-    id: true,
-    publicId: true,
-    userId: true,
-    content: true,
-    type: true,
-    parentId: true,
-    originPostId: true,
-    rootPostId: true,
-    userSnapshot: true,
-    replyPermission: true,
-    likesCount: true,
-    repliesCount: true,
-    repostsCount: true,
-    quotesCount: true,
-    viewsCount: true,
-    createdAt: true,
-    media: true,
-    mentions: true
+  publicId: true,
+  userId: true,
+  content: true,
+  visibility: true,
+  parentId: true,
+  originPostId: true,
+  origin: true,
+  parent: true,
+  rootPostId: true,
+  userSnapshot: true,
+  replyPermission: true,
+  likesCount: true,
+  viewsCount: true,
+  isGhost: true,
+  isSurvey: true,
+  isDisinformation: true,
+  createdAt: true,
+  poll: {
+    select: {
+      id: true,
+      expiresAt: true,
+      pollOptions: {
+        select: {
+          id: true,
+          optionText: true,
+          votesCount: true,
+        },
+        orderBy: {
+          id: "asc",
+        },
+      },
+      voteCount: true,
+      isExpired: true,
+    },
+  },
+  media: {
+    select: {
+      id: true,
+      url: true,
+      type: true,
+      width: true,
+      height: true,
+      status: true,
+    },
+  },
+  mentions: {
+    select: {
+      userId: true,
+      user: {
+        select: {
+          username: true,
+        }
+      }
+    },
+  },
+  topicsPosts: {
+    select: {
+      topic: {
+        select: {
+          name: true,
+        },
+      }
+    }
+  }
 });
-    
+
+export const postSelectRepository = {
+  id: true,
+  publicId: true,
+  content: true,
+  contentJson: true,
+  userId: true,
+  visibility: true,
+  createdAt: true,
+  userSnapshot: true,
+  isDisinformation: true,
+} satisfies Prisma.PostSelect;

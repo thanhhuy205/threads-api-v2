@@ -1,20 +1,90 @@
 name: Build
-on: [push, pull_request]
-branches:
-  - dev
-  - main
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - production
+      - dev
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: Use Node.js 18.x
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js 20.x
         uses: actions/setup-node@v3
         with:
-          node-version: 18.x
+          node-version: 20.x
 
-      - name: Install dependencies
-        run: npm install
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.ROLE_GITHUB_ACTION }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Run build
-        run: npm run build
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag, and push image to Amazon ECR
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build \
+            -t $REGISTRY/$REPOSITORY:$IMAGE_TAG \
+            -t $REGISTRY/$REPOSITORY:production \
+            .
+
+          docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
+          docker push $REGISTRY/$REPOSITORY:production
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: production
+    if: github.ref == 'refs/heads/production'
+
+    steps:
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v1.0.1
+        with:
+          debug: true
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.PORT }}
+          # chuyển env từ apple boy đem theo vào ec2
+          envs: AWS_ACCOUNT_ID,AWS_REGION,REPOSITORY
+          script: |
+            set -e
+            cd api/threads
+
+            REGISTRY_URL="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
+
+            aws ecr get-login-password --region $AWS_REGION \
+              | docker login --username AWS --password-stdin $REGISTRY_URL
+
+            docker pull $REGISTRY_URL/$REPOSITORY:production
+            docker container prune -f
+            docker system prune -f
+
+            docker compose -f docker-compose.yml up -d --remove-orphans
+            docker exec threads-api npx prisma migrate deploy 
+            docker system df
+        env:
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          REPOSITORY: ${{ secrets.ECR_REPOSITORY }}

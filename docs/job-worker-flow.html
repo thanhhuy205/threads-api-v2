@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Job & Worker Operations Map</title>
+<style>
+  :root {
+    --paper: #fffdf7;
+    --ivory: #FAF9F5;
+    --ink: #151512;
+    --muted: #706E65;
+    --line: #D1CFC5;
+    --soft: #F0EEE6;
+    --oat: #E3DACC;
+    --clay: #D97757;
+    --clay-d: #B85C3E;
+    --olive: #788C5D;
+    --sage: #E8EEDB;
+    --blue: #DCE9EE;
+    --rose: #F8E9E0;
+    --mono: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --serif: ui-serif, Georgia, "Times New Roman", Times, serif;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background:
+      radial-gradient(circle at 80% -10%, rgba(120, 140, 93, .18), transparent 30rem),
+      radial-gradient(circle at 6% 6%, rgba(217, 119, 87, .14), transparent 28rem),
+      linear-gradient(180deg, #FCFAF3 0%, var(--ivory) 46%, #F4EEE1 100%);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.58;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 56px 32px 120px; }
+  .back { color: var(--clay-d); text-decoration-color: var(--oat); text-underline-offset: 3px; font-size: 14px; }
+
+  header.hero {
+    padding: 34px 0 50px;
+    border-bottom: 1.5px solid var(--line);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 380px;
+    gap: 44px;
+    align-items: end;
+  }
+  @media (max-width: 920px) { header.hero { grid-template-columns: 1fr; } }
+  .eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 28px 0 14px; }
+  h1, h2, h3 { font-family: var(--serif); font-weight: 500; color: var(--ink); letter-spacing: -.014em; }
+  h1 { font-size: clamp(38px, 5.8vw, 68px); line-height: 1.02; margin: 0; max-width: 820px; }
+  h1 em { color: var(--clay-d); font-style: italic; }
+  .lead { max-width: 800px; margin: 20px 0 0; color: #3D3D3A; font-size: 16.5px; }
+
+  .ops-card {
+    background: var(--paper);
+    border: 1.5px solid var(--ink);
+    border-radius: 20px;
+    padding: 22px;
+    box-shadow: 0 20px 48px rgba(20,20,19,.10);
+    transform: rotate(.8deg);
+  }
+  .ops-card .label { font-family: var(--mono); color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 14px; }
+  .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .metric { background: var(--soft); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+  .metric .n { font-family: var(--serif); font-size: 32px; line-height: 1; color: var(--clay-d); }
+  .metric .t { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  nav.jump { display: flex; flex-wrap: wrap; gap: 8px; margin: 24px 0 0; }
+  nav.jump a { text-decoration: none; color: #3D3D3A; background: var(--paper); border: 1.5px solid var(--line); border-radius: 999px; padding: 7px 13px; font-size: 13px; }
+  nav.jump a:hover { border-color: var(--ink); color: var(--ink); }
+
+  section { margin-top: 62px; scroll-margin-top: 28px; }
+  .section-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 12px; }
+  .num { font-family: var(--mono); color: var(--clay-d); font-size: 12px; font-weight: 700; }
+  h2 { margin: 0; font-size: 30px; }
+  .section-intro { color: var(--muted); max-width: 820px; margin: 0 0 24px 40px; }
+  @media (max-width: 680px) { .section-intro { margin-left: 0; } }
+
+  code { font-family: var(--mono); font-size: .92em; background: var(--soft); border-radius: 5px; padding: 1px 5px; color: var(--ink); }
+  .chip { display: inline-block; font-family: var(--mono); font-size: 11px; border: 1px solid var(--line); background: var(--soft); border-radius: 999px; padding: 3px 8px; margin: 0 6px 7px 0; }
+  .chip.live { background: var(--sage); border-color: #CBD8AF; color: #42512F; }
+  .chip.partial { background: var(--rose); border-color: #E8C2AE; color: var(--clay-d); }
+
+  .stack {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+  }
+  @media (max-width: 1080px) { .stack { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 680px) { .stack { grid-template-columns: 1fr; } }
+  .stack-card { background: rgba(255,255,255,.80); border: 1.5px solid var(--line); border-radius: 18px; padding: 18px; }
+  .stack-card h3 { margin: 0 0 8px; font-size: 21px; }
+  .stack-card p { margin: 0; color: var(--muted); font-size: 14px; }
+
+  .matrix { display: grid; gap: 16px; }
+  .worker-card {
+    background: var(--paper);
+    border: 1.5px solid var(--line);
+    border-radius: 22px;
+    overflow: hidden;
+  }
+  .worker-top {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr) 260px;
+    border-bottom: 1px solid var(--soft);
+  }
+  @media (max-width: 980px) { .worker-top { grid-template-columns: 1fr; } }
+  .worker-name { padding: 20px; background: var(--soft); }
+  .worker-name .k { font-family: var(--mono); color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; }
+  .worker-name h3 { margin: 6px 0 0; font-size: 26px; }
+  .worker-flow { padding: 20px 24px; }
+  .worker-flow ol { margin: 0; padding-left: 22px; }
+  .worker-flow li { margin: 7px 0; }
+  .worker-state { padding: 20px; background: #FCFAF3; border-left: 1px solid var(--soft); }
+  @media (max-width: 980px) { .worker-state { border-left: 0; border-top: 1px solid var(--soft); } }
+  .worker-bottom { display: grid; grid-template-columns: repeat(3, 1fr); }
+  @media (max-width: 820px) { .worker-bottom { grid-template-columns: 1fr; } }
+  .cell { padding: 16px 18px; border-right: 1px solid var(--soft); }
+  .cell:last-child { border-right: 0; }
+  @media (max-width: 820px) { .cell { border-right: 0; border-bottom: 1px solid var(--soft); } .cell:last-child { border-bottom: 0; } }
+  .cell .label { font-family: var(--mono); font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 8px; }
+
+  .flowline { display: grid; grid-template-columns: repeat(5, minmax(130px, 1fr)); gap: 10px; }
+  @media (max-width: 980px) { .flowline { grid-template-columns: 1fr; } }
+  .step { position: relative; background: var(--paper); border: 1.5px solid var(--line); border-radius: 16px; padding: 16px; }
+  .step::after { content: ""; position: absolute; right: -10px; top: 50%; width: 10px; height: 1.5px; background: var(--line); }
+  .step:last-child::after { display: none; }
+  @media (max-width: 980px) { .step::after { display: none; } }
+  .step .k { font-family: var(--mono); font-size: 11px; color: var(--clay-d); text-transform: uppercase; letter-spacing: .08em; }
+  .step .t { font-weight: 650; margin: 6px 0; }
+  .step p { margin: 0; color: var(--muted); font-size: 14px; }
+
+  .two-col { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); gap: 18px; }
+  @media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+  .panel { background: var(--paper); border: 1.5px solid var(--line); border-radius: 18px; padding: 22px; }
+  .panel h3 { margin: 0 0 12px; font-size: 22px; }
+  .panel ul { margin: 0; padding-left: 20px; }
+  .panel li { margin: 9px 0; }
+
+  .risk-list { display: grid; gap: 12px; }
+  .risk { background: var(--rose); border: 1.5px solid #E8C2AE; border-radius: 15px; padding: 15px 16px; }
+  .risk .tag { font-family: var(--mono); font-size: 11px; color: var(--clay-d); text-transform: uppercase; letter-spacing: .08em; }
+  .risk p { margin: 6px 0 0; color: #4A3B34; }
+
+  .runbook { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  @media (max-width: 900px) { .runbook { grid-template-columns: 1fr; } }
+  .cmd { background: #181715; color: #F5EFE4; border-radius: 16px; padding: 16px; min-height: 136px; }
+  .cmd .name { color: #F4BA93; font-family: var(--mono); font-size: 12px; margin-bottom: 10px; }
+  .cmd pre { margin: 0; white-space: pre-wrap; font-family: var(--mono); font-size: 12px; line-height: 1.55; }
+
+  footer { margin-top: 70px; padding-top: 24px; border-top: 1.5px solid var(--line); display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="index.html">Back to docs hub</a>
+
+  <header class="hero">
+    <div>
+      <div class="eyebrow">Job Module & Workers</div>
+      <h1>Worker operations map cho <em>Threads API v2</em></h1>
+      <p class="lead">
+        Trang này gom toàn bộ producer, queue, worker, QueueEvents và các service đang gọi job.
+        Mục tiêu là mở vào là biết worker nào đang chạy, queue nào đang nhận job, payload đi qua đâu, và những phần nào hiện chỉ có code nhưng chưa được wire đầy đủ.
+      </p>
+      <nav class="jump">
+        <a href="#stack">Runtime stack</a>
+        <a href="#workers">Worker matrix</a>
+        <a href="#callers">Service callers</a>
+        <a href="#like">Like pipeline</a>
+        <a href="#events">Queue events</a>
+        <a href="#runbook">Runbook</a>
+        <a href="#notes">Current notes</a>
+      </nav>
+    </div>
+    <div class="ops-card">
+      <div class="label">current inventory</div>
+      <div class="metric-grid">
+        <div class="metric"><div class="n">4</div><div class="t">BullMQ queues</div></div>
+        <div class="metric"><div class="n">4</div><div class="t">Worker classes</div></div>
+        <div class="metric"><div class="n">6</div><div class="t">Job names</div></div>
+        <div class="metric"><div class="n">2</div><div class="t">Redis list buffers</div></div>
+      </div>
+    </div>
+  </header>
+
+  <section id="stack">
+    <div class="section-head"><span class="num">01</span><h2>Runtime Stack</h2></div>
+    <p class="section-intro">Job system dùng BullMQ cho queue/worker chính, Redis client cho một số data structure riêng, và QueueEvents để quan sát trạng thái job.</p>
+    <div class="stack">
+      <div class="stack-card"><h3>Producers</h3><span class="chip live">src/modules/job</span><p>Các class producer expose method enqueue job. Service gọi producer, producer gọi <code>queue.add</code>.</p></div>
+      <div class="stack-card"><h3>Workers</h3><span class="chip live">workers/*.ts</span><p>Mỗi worker tạo bằng <code>createWorker</code>, switch theo <code>job.name</code>, concurrency mặc định 3.</p></div>
+      <div class="stack-card"><h3>QueueEvents</h3><span class="chip live">queues/*.ts</span><p>Monitor waiting, active, completed, failed cho email/bloom/pinecone. Like chưa có QueueEvents file riêng.</p></div>
+      <div class="stack-card"><h3>Redis</h3><span class="chip live">redisQueue</span><span class="chip live">redisWorker</span><p>BullMQ dùng IORedis riêng. App cũng dùng <code>redisService</code> cho Bloom filter, blacklist, sets và Redis lists.</p></div>
+    </div>
+  </section>
+
+  <section id="workers">
+    <div class="section-head"><span class="num">02</span><h2>Worker Matrix</h2></div>
+    <p class="section-intro">Bảng này là bản đồ chính: queue nào, job name nào, producer nào enqueue, worker nào xử lý, side effect là gì.</p>
+    <div class="matrix">
+      <article class="worker-card">
+        <div class="worker-top">
+          <div class="worker-name"><div class="k">BullMQ</div><h3>EmailWorker</h3></div>
+          <div class="worker-flow">
+            <ol>
+              <li><code>EmailProducer</code> enqueue vào <code>email_queue</code>.</li>
+              <li>Worker nhận <code>send_verification_email</code> hoặc <code>send_forgot_password_email</code>.</li>
+              <li>Render EJS template từ thư mục <code>template/</code>.</li>
+              <li>Gửi mail qua <code>nodemailerService.sendMail</code>.</li>
+            </ol>
+          </div>
+          <div class="worker-state"><span class="chip live">wired</span><p>Được gọi bởi <code>AuthService.forgotPassword</code> và <code>AuthService.resendVerifyEmail</code>.</p></div>
+        </div>
+        <div class="worker-bottom">
+          <div class="cell"><div class="label">queue/jobs</div><code>email_queue</code><br><code>send_verification_email</code><br><code>send_forgot_password_email</code></div>
+          <div class="cell"><div class="label">payload</div><code>{ userName?, userId?, email, token }</code></div>
+          <div class="cell"><div class="label">effects</div>Email verify/reset link tới <code>FRONTEND_URL</code>, log thành công qua logger.</div>
+        </div>
+      </article>
+
+      <article class="worker-card">
+        <div class="worker-top">
+          <div class="worker-name"><div class="k">BullMQ + Redis BF</div><h3>BloomWorker</h3></div>
+          <div class="worker-flow">
+            <ol>
+              <li><code>BloomProducer</code> enqueue <code>generate_bloom</code> sau register.</li>
+              <li>Worker đảm bảo <code>redisService</code> đã connect.</li>
+              <li>Gọi <code>BF.ADD filter:usernames</code> và <code>BF.ADD filter:emails</code>.</li>
+              <li>Validate email/username sau này đọc Bloom bằng <code>BF.EXISTS</code>.</li>
+            </ol>
+          </div>
+          <div class="worker-state"><span class="chip live">wired</span><p>Được gọi bởi <code>AuthService.register</code>. Đây là pipeline availability check nhanh, không phải nguồn chân lý duy nhất.</p></div>
+        </div>
+        <div class="worker-bottom">
+          <div class="cell"><div class="label">queue/job</div><code>bloom_queue</code><br><code>generate_bloom</code></div>
+          <div class="cell"><div class="label">payload</div><code>{ userName, email }</code></div>
+          <div class="cell"><div class="label">effects</div>Ghi Redis Bloom keys <code>filter:usernames</code>, <code>filter:emails</code>.</div>
+        </div>
+      </article>
+
+      <article class="worker-card">
+        <div class="worker-top">
+          <div class="worker-name"><div class="k">BullMQ + AI</div><h3>PineWorker</h3></div>
+          <div class="worker-flow">
+            <ol>
+              <li><code>PostService.create</code> tạo post xong và attach meta trong transaction.</li>
+              <li><code>PineProducer.addToPineconeQueue</code> enqueue <code>post_embedding</code>.</li>
+              <li>Worker gọi <code>mixedBreadService.generateEmbedding</code>.</li>
+              <li>Upsert vector vào Pinecone namespace <code>posts</code>.</li>
+            </ol>
+          </div>
+          <div class="worker-state"><span class="chip live">wired</span><p>Được gọi sau create post. Search hiện query Pinecone trực tiếp bằng embedding từ query.</p></div>
+        </div>
+        <div class="worker-bottom">
+          <div class="cell"><div class="label">queue/job</div><code>pinecone_queue</code><br><code>post_embedding</code></div>
+          <div class="cell"><div class="label">payload</div><code>{ content, topic[], postId, userId }</code></div>
+          <div class="cell"><div class="label">effects</div>Pinecone record id <code>post:&lt;postId&gt;</code>, metadata gồm postId/userId/content/topics/type.</div>
+        </div>
+      </article>
+
+      <article class="worker-card">
+        <div class="worker-top">
+          <div class="worker-name"><div class="k">BullMQ + Redis lists</div><h3>LikeWorker</h3></div>
+          <div class="worker-flow">
+            <ol>
+              <li>Worker support BullMQ jobs <code>sync-post-like</code> và <code>init-sync-job</code>.</li>
+              <li><code>PostService.like</code> hiện không gọi <code>LikeProducer</code>; service ghi trực tiếp Redis set và Redis list.</li>
+              <li>Add like đẩy JSON vào <code>likes_add</code>; unlike đẩy JSON vào <code>likes_remove</code>.</li>
+              <li><code>initSyncJob</code> dự kiến batch pop hai list rồi sync MySQL likes/post count.</li>
+            </ol>
+          </div>
+          <div class="worker-state"><span class="chip partial">partially wired</span><p>Code tồn tại nhưng entrypoint gọi <code>LikeProducer.initSyncJob</code> chưa thấy trong service/startup hiện tại.</p></div>
+        </div>
+        <div class="worker-bottom">
+          <div class="cell"><div class="label">queue/jobs</div><code>like_queue</code><br><code>sync-post-like</code><br><code>init-sync-job</code></div>
+          <div class="cell"><div class="label">redis buffers</div><code>likes_add</code><br><code>likes_remove</code><br><code>post:&lt;publicId&gt;:likes</code></div>
+          <div class="cell"><div class="label">effects</div>Dự kiến insert likes và tăng/giảm <code>posts.likes_count</code>; hiện có notes ở cuối trang.</div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section id="callers">
+    <div class="section-head"><span class="num">03</span><h2>Service Callers</h2></div>
+    <p class="section-intro">Đây là nơi job được enqueue từ business flow. Nếu cần tìm “ai gọi worker”, bắt đầu từ bảng này.</p>
+    <div class="flowline">
+      <div class="step"><div class="k">AuthService.register</div><div class="t">BloomProducer</div><p>Gọi <code>addUserNameAndEmailToBloom</code> sau khi tạo user và token pair.</p></div>
+      <div class="step"><div class="k">AuthService.forgotPassword</div><div class="t">EmailProducer</div><p>Gọi <code>sendForgotPasswordEmail</code> song song với lưu verification token hash.</p></div>
+      <div class="step"><div class="k">AuthService.resendVerifyEmail</div><div class="t">EmailProducer</div><p>Gọi <code>sendVerifyEmail</code> song song với lưu verification token hash.</p></div>
+      <div class="step"><div class="k">PostService.create</div><div class="t">PineProducer</div><p>Gọi <code>addToPineconeQueue</code> sau transaction tạo post + topic/mentions.</p></div>
+      <div class="step"><div class="k">PostService.like</div><div class="t">Redis direct</div><p>Không gọi producer; ghi Redis set/count/list trực tiếp để sync sau.</p></div>
+    </div>
+  </section>
+
+  <section id="like">
+    <div class="section-head"><span class="num">04</span><h2>Like Pipeline Detail</h2></div>
+    <p class="section-intro">Like là phần dễ đọc nhầm nhất vì có cả BullMQ producer và Redis list pipeline. Đây là mô tả hiện trạng, không phải đề xuất sửa.</p>
+    <div class="two-col">
+      <div class="panel">
+        <h3>Request path hiện tại</h3>
+        <ul>
+          <li>Like/unlike gọi <code>PostService.like(publicId, userId, isLiked)</code>.</li>
+          <li>Service dùng Redis set <code>post:&lt;publicId&gt;:likes</code> để add/remove userId.</li>
+          <li>Nếu add/remove thành công, service tăng/giảm <code>post:&lt;publicId&gt;:likeCount</code>.</li>
+          <li>Service đẩy JSON vào list <code>likes_add</code> hoặc <code>likes_remove</code>.</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3>Worker path dự kiến</h3>
+        <ul>
+          <li><code>LikeWorker.initSyncJob</code> chạy <code>processAddLike</code> và <code>processRemoveLike</code>.</li>
+          <li>Mỗi processor gọi <code>rPopCustomBatch(key, 500)</code>, group theo <code>postPublicId</code>.</li>
+          <li>Add path gọi <code>likeRepository.createMany</code> và <code>postRepository.incrementLikedCount</code>.</li>
+          <li>Remove path hiện cũng gọi <code>createMany</code> rồi <code>decrementLikedCount</code>; xem notes bên dưới.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="events">
+    <div class="section-head"><span class="num">05</span><h2>Queue Events Monitor</h2></div>
+    <p class="section-intro">Thư mục <code>queues/</code> không xử lý job; nó subscribe lifecycle events để log trạng thái queue.</p>
+    <div class="flowline">
+      <div class="step"><div class="k">email.queue</div><div class="t">email_queue</div><p>Log waiting, active, completed, failed.</p></div>
+      <div class="step"><div class="k">bloom.queue</div><div class="t">bloom_queue</div><p>Log waiting, active, completed, failed.</p></div>
+      <div class="step"><div class="k">pinecone.queue</div><div class="t">pinecone_queue</div><p>Log waiting, active, completed, failed.</p></div>
+      <div class="step"><div class="k">queues/index</div><div class="t">startup import</div><p><code>npm run queue</code> import các QueueEvents này.</p></div>
+      <div class="step"><div class="k">like</div><div class="t">not present</div><p>Chưa có file QueueEvents riêng cho <code>like_queue</code>.</p></div>
+    </div>
+  </section>
+
+  <section id="runbook">
+    <div class="section-head"><span class="num">06</span><h2>Runbook</h2></div>
+    <p class="section-intro">Cách bật worker/queue monitor hiện tại theo script package.</p>
+    <div class="runbook">
+      <div class="cmd"><div class="name">run workers</div><pre>npm run worker
+# tsx workers/index.ts
+# import 4 worker modules
+# constructors create Worker instances</pre></div>
+      <div class="cmd"><div class="name">run queue events</div><pre>npm run queue
+# tsx queues/index.ts
+# subscribe QueueEvents for email/bloom/pinecone</pre></div>
+      <div class="cmd"><div class="name">script caveat</div><pre>npm run all:workers:queues
+# currently uses &&
+# worker process is long-running
+# queue script may not start after it</pre></div>
+    </div>
+  </section>
+
+  <section id="notes">
+    <div class="section-head"><span class="num">07</span><h2>Current Notes & Sharp Edges</h2></div>
+    <p class="section-intro">Các ghi chú này phản ánh code hiện tại. Theo yêu cầu, tài liệu chỉ ghi lại để team nhìn rõ, không sửa behavior.</p>
+    <div class="risk-list">
+      <div class="risk"><div class="tag">like worker</div><p><code>LikeProducer</code> có <code>initSyncJob</code> repeat mỗi 5 giây, nhưng chưa thấy service/startup nào gọi method này. Nếu không enqueue job đó, <code>processAddLike/processRemoveLike</code> sẽ không chạy.</p></div>
+      <div class="risk"><div class="tag">like batch</div><p><code>rPopCustomBatch</code> gọi <code>lMPop</code> nhưng hiện trả về mảng <code>results</code> rỗng, chưa parse dữ liệu từ Redis response.</p></div>
+      <div class="risk"><div class="tag">like remove</div><p><code>processRemoveLike</code> hiện gọi <code>likeRepository.createMany</code> thay vì <code>deleteMany</code>, sau đó decrement count. Đây là behavior đang đọc được từ code.</p></div>
+      <div class="risk"><div class="tag">sync-post-like</div><p><code>syncPostLike</code> đọc <code>rpop post:&lt;publicId&gt;:likes</code>, trong khi request path đang dùng Redis set <code>sAdd/sRem</code> trên cùng key. Phần xử lý chính bên trong method đang comment nhiều.</p></div>
+      <div class="risk"><div class="tag">queue events</div><p><code>QueueEvents</code> dùng constructor mặc định chưa truyền connection từ <code>redisQueue</code>; nó sẽ dựa vào BullMQ default connection behavior.</p></div>
+      <div class="risk"><div class="tag">constants</div><p><code>BLOOM_KEY.FILTER_USERNAME</code> và <code>BLOOM_KEY.FILTER_EMAIL</code> có trailing spaces trong constant, nhưng worker/service hiện hard-code key không có trailing spaces.</p></div>
+      <div class="risk"><div class="tag">email producer</div><p><code>CreateVerifyEmailProducer</code> có <code>userName</code>, nhưng <code>EmailWorker.sendVerificationEmail</code> chỉ dùng <code>email</code> và <code>token</code>.</p></div>
+    </div>
+  </section>
+
+  <footer>
+    <span>Threads API v2 job/worker map</span>
+    <span>Worker behavior snapshot, not a bugfix patch.</span>
+  </footer>
+</div>
+</body>
+</html>

@@ -3,16 +3,17 @@ interface IPagination<T, R> {
         page,
         limit,
         where,
-        orderBy
+        props: { }
     }: {
         page: number;
         limit: number;
         where?: T;
-        orderBy?: any;
+        props?: any;
     }): Promise<R[]>;
 
     count(params: {
         where?: T;
+        props?: any;
     }): Promise<number>;
 }
 

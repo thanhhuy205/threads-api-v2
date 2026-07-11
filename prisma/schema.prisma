@@ -1,320 +1,1025 @@
 generator client {
-    provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-    provider = "mysql"
+  provider = "mysql"
 }
 
-enum UserRole {
-    USER
-    ADMIN
+enum UserRoleType {
+  USER
+  ADMIN
+  MODERATOR
 }
 
 enum PostType {
-    POST
-    REPLY
-    REPOST
-    QUOTE
+  POST
+  REPLY
+  REPOST
+  QUOTE
+  CIRCLE
+  CIRCLE_REPLY
 }
 
 enum FollowStatus {
-    PENDING
-    ACCEPTED
-    REJECTED
+  PENDING
+  ACCEPTED
+  REJECTED
 }
 
 enum QueueStatus {
-    PENDING
-    PROCESSING
-    SUCCESS
-    FAILED
+  PENDING
+  PROCESSING
+  SUCCESS
+  FAILED
 }
 
 enum VerificationCodeType {
-    FORGOT_PASSWORD
-    RESET_PASSWORD
-    VERIFY_ACCOUNT
+  FORGOT_PASSWORD
+  RESET_PASSWORD
+  VERIFY_ACCOUNT
 }
 
 enum JobStatus {
-    PENDING
-    PROCESSING
-    SUCCESS
-    FAILED
+  PENDING
+  PROCESSING
+  SUCCESS
+  FAILED
 }
 
 enum ReplyPermission {
-    EVERYONE
-    FOLLOWING
-    MENTIONED
+  EVERYONE
+  FOLLOWERS
+  FOLLOWING
+  MENTIONED
 }
 
 enum UserStatus {
-    ACTIVE
-    SUSPENDED
-    BANNED
-    DEACTIVATED
+  ACTIVE
+  SUSPENDED
+  BANNED
+  DEACTIVATED
+}
+
+enum ReportTargetType {
+  POST
+  USER
+  CIRCLE
+}
+
+enum ReportStatus {
+  PENDING
+  RESOLVED
+  DISMISSED
+}
+
+enum Visibility {
+  PUBLIC
+  PRIVATE
+}
+
+enum VisibilityPost {
+  PUBLIC
+  FRIEND
+  PRIVATE
+  CIRCLE
+}
+
+enum ActionType {
+  POST_CREATED
+  POST_DELETED
+  LIKE_CREATED
+  FLOW_FOLLOWER_CREATED
+  FOLLOW_FOLLOWING_CREATED
+  QUOTE_CREATED
+  QUOTE_DELETED
+  SHARE_CREATED
+  SHARE_DELETED
+  INVITE_SENT
+  INVITE_ACCEPTED
+  JOIN_CIRCLE
+  LEAVE_CIRCLE
+  GENERATE_POST_BEAUTIFUL
+  GENERATE_CAPTION_MD
+  GENERATE_IMAGE
+}
+
+enum InteractionType {
+  HIDE
+  SAVE
+}
+
+enum RoleMembership {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum CircleInvitationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  CANCELLED
+}
+
+enum RequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  CANCELLED
+}
+
+enum PostMediaType {
+  IMAGE
+  VIDEO
+  HLS
+  VOICE
+  GIF
+  OTHER
+}
+
+enum PostMediaStatus {
+  TEMPORARY
+  UPLOADING
+  UPLOADED
+  FAILED
+  DELETED
+}
+
+enum FriendRequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  CANCELLED
+}
+
+enum UserRestrictionType {
+  POSTING
+  POST_AND_USE_KARMA
+  AI_GENERATION_CAPTION
+  AI_GENERATION_IMAGE
+}
+
+enum GroupType {
+  PRIVATE
+  CROWD
+}
+
+enum BadgeType {
+  HERO // huy hiệu anh hùng, dành cho những thành viên có đóng góp tích cực cho nhóm, giúp đỡ các thành viên khác, tạo ra nội dung chất lượng cao, hoặc có ảnh hưởng tích cực đến cộng đồng nhóm.
+  LEGEND // thành viên kì cựu
+  KARMA_SACRIFICE // đốt karma cứu nhóm
+  CPR_HERO // comment trong CPR thành công
+  FOUNDER // người tạo nhóm 
+}
+
+enum KarmaReason {
+  QUEST_REWARD // hoàn thành nhiệm vụ
+  BURN_FOR_CIRCLE // đốt cứu nhóm
+  ADMIN_GRANT // admin cấp
+}
+
+enum PostScoreLabel {
+  MASTERPIECE
+  DEEP_TALK
+  SOLID
+  NEUTRAL
+  NOISE
+  TOXIC
+  PENDING
+}
+
+enum ExpReason {
+  POST_MASTERPIECE
+  POST_DEEP_TALK
+  POST_SOLID
+  POST_NEUTRAL
+  POST_NOISE
+  POST_TOXIC
+  CPR_SUCCESS
+  MEMBER_JOIN
+  CPR_SURVIVED
+  CPR_FAIL
+}
+
+enum StatusMessage {
+  PENDING
+  SENT
+  DELIVERED
+  READ
+  FAILED
+}
+
+model Role {
+  id              String           @id @default(cuid())
+  name            String           @unique @db.VarChar(20)
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+  userRoles       UserRole[]
+  rolePermissions RolePermission[]
+
+  @@index([name], map: "idx_roles_name")
+  @@map("roles")
+}
+
+model UserRole {
+  id        String   @id @default(cuid())
+  roleId    String   @map("role_id")
+  role      Role     @relation(fields: [roleId], references: [id])
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([userId], map: "idx_user_roles_user_id")
+  @@index([roleId], map: "idx_user_roles_role_id")
+  @@map("user_roles")
+}
+
+model Permission {
+  id              String           @id @default(cuid())
+  name            String           @unique @db.VarChar(50)
+  code            String           @unique @db.VarChar(50)
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+  rolePermissions RolePermission[]
+
+  @@index([code], map: "idx_permissions_code")
+  @@map("permissions")
+}
+
+model RolePermission {
+  id           String     @id @default(cuid())
+  role         Role       @relation(fields: [roleId], references: [id])
+  roleId       String     @map("role_id")
+  permission   Permission @relation(fields: [permissionId], references: [id])
+  permissionId String     @map("permission_id")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  @@index([roleId], map: "idx_role_permissions_role_id")
+  @@index([permissionId], map: "idx_role_permissions_permission_id")
+  @@map("role_permissions")
 }
 
 model User {
-    id       String @id @default(cuid())
-    email    String @unique @db.VarChar(255)
-    username String @unique @db.VarChar(100)
-    password String @db.VarChar(255)
+  id       String @id @default(cuid())
+  email    String @unique @db.VarChar(255)
+  username String @unique @db.VarChar(100)
+  password String @db.VarChar(255)
 
-    name String? @map("name") @db.VarChar(100)
+  name String? @map("name") @db.VarChar(100)
 
-    bio    String? @db.Text
-    avatar String? @db.VarChar(255)
+  bio         String?    @db.Text
+  avatar      String?    @db.VarChar(255)
+  verifiedAt  DateTime?  @map("verified_at")
+  status      UserStatus @default(ACTIVE)
+  bannedUntil DateTime?  @map("banned_until")
 
-    role       UserRole   @default(USER)
-    verifiedAt DateTime?  @map("verified_at")
-    status     UserStatus @default(ACTIVE)
+  followersCount Int @default(0) @map("followers_count")
+  followingCount Int @default(0) @map("following_count")
+  postsCount     Int @default(0) @map("posts_count")
 
-    followersCount Int @default(0) @map("followers_count")
-    followingCount Int @default(0) @map("following_count")
-    postsCount     Int @default(0) @map("posts_count")
+  isPrivate    Boolean @default(false) @map("is_private")
+  location     String? @db.VarChar(255)
+  website      String? @db.VarChar(255)
+  labelWebsite String? @map("label_website") @db.VarChar(255)
 
-    isPrivate Boolean @default(false) @map("is_private")
-    location  String? @db.VarChar(255)
-    website   String? @db.VarChar(255)
+  deletedAt DateTime? @map("deleted_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
 
-    deletedAt DateTime? @map("deleted_at")
-    createdAt DateTime  @default(now()) @map("created_at")
-    updatedAt DateTime  @updatedAt @map("updated_at")
+  posts                Post[]
+  refreshTokens        RefreshToken[]
+  verificationCodes    VerificationCode[]
+  follows              Follow[]              @relation("FollowUser")
+  followers            Follow[]              @relation("FollowFollowing")
+  circles              Circle[]              @relation("CircleCreated")
+  circleMembers        CircleMember[]
+  circleInvitations    CircleInvitation[]    @relation("CircleInvitationUser")
+  circleInvited        CircleInvitation[]    @relation("CircleInvitationInviter")
+  likes                Like[]
+  messageGroups        MessageGroup[]        @relation("MessageGroupCreator")
+  memberMessageGroups  MemberMessageGroup[]
+  friendRequests       FriendRequest[]       @relation("FriendRequestSender")
+  receivedRequests     FriendRequest[]       @relation("FriendRequestReceiver")
+  userRoles            UserRole[]
+  userKarma            UserKarma?
+  userRestrictions     UserRestriction[]
+  messages             Message[]
+  circleExpLogs        CircleExpLog[]
+  heroBadges           HeroBadge[]
+  karmaTransactions    KarmaTransaction[]
+  userQuestLogs        UserQuestLog[]
+  reports              Report[]              @relation("UserReports")
+  postMentions         PostMention[]
+  circleJoinRequests   CircleJoinRequest[]
+  circleMemberBans     CircleMemberBan[]     @relation("CircleMemberBanUser")
+  circleMemberBansBy   CircleMemberBan[]     @relation("CircleMemberBanBy")
+  dailyQuests          DailyQuest[]
+  userActionLogs       UserActionLog[]
+  webHookPreviewImages WebHookPreviewImage[]
+  limitActionAIs       LimitActionAI[]
+  votes                Vote[]
+  postInteractions     PostInteraction[]
 
-    posts             Post[]
-    refreshTokens     RefreshToken[]
-    verificationCodes VerificationCode[]
-    follows           Follow[]           @relation("FollowUser")
-    followers         Follow[]           @relation("FollowFollowing")
-    likes             Like[]
+  @@index([email], map: "idx_users_email")
+  @@index([name], map: "idx_users_name")
+  @@index([username], map: "idx_users_username")
+  @@index([deletedAt], map: "idx_users_deleted_at")
+  @@index([bannedUntil], map: "idx_users_banned_until")
+  @@index([status, bannedUntil], map: "idx_users_status_banned_until")
+  @@fulltext([username, name], map: "idx_users_username_name_fulltext")
+  @@map("users")
+}
 
-    @@index([deletedAt], map: "idx_users_deleted_at")
-    @@map("users")
+model PostInteraction {
+  id        Int             @id @default(autoincrement())
+  userId    String          @map("user_id")
+  postId    Int             @map("post_id")
+  type      InteractionType @map("type_enum")
+  createdAt DateTime        @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+  post Post @relation(fields: [postId], references: [id])
+
+  @@unique([userId, postId, type], map: "uq_saves_user_post_type")
+  @@index([userId], map: "idx_saves_user_id")
+  @@index([postId], map: "idx_saves_post_id")
+  @@map("post_interactions")
+}
+
+model Report {
+  id               String           @id @default(cuid())
+  reporterId       String           @map("reporter_id")
+  targetType       ReportTargetType @map("target_type")
+  targetId         String           @map("target_id") @db.VarChar(255)
+  reason           String           @db.Text
+  status           ReportStatus     @default(PENDING)
+  assistantNote    String?          @map("assistant_note") @db.Text
+  confidence       Decimal?         @db.Decimal(3, 2) // 0.00 - 1.00, chỉ số này do hệ thống tự động đánh giá dựa trên nội dung report 
+  // và lịch sử của người báo cáo, giúp admin ưu tiên xử lý những report có độ tin cậy cao
+  isDisinformation Boolean          @default(false) @map("is_disinformation") // bot đánh dấu nội dung có khả năng sai sự thật cao, giúp admin ưu tiên xử lý và có thể áp dụng biện pháp nhẹ nhàng hơn như ẩn bài viết khỏi feed trước khi quyết định xóa hoàn toàn
+  adminNote        String?          @map("admin_note") @db.Text
+  createdAt        DateTime         @default(now()) @map("created_at")
+
+  reporter User @relation("UserReports", fields: [reporterId], references: [id])
+
+  @@index([reporterId], map: "idx_reports_reporter_id")
+  @@index([targetType, targetId], map: "idx_reports_target")
+  @@index([status, createdAt], map: "idx_reports_status_created_at")
+  @@map("reports")
 }
 
 model VerificationCode {
-    id        Int                  @id @default(autoincrement())
-    userId    String               @map("user_id")
-    type      VerificationCodeType
-    code      String               @db.VarChar(100)
-    expiresAt DateTime             @map("expires_at")
-    usedAt    DateTime?            @map("used_at")
-    createdAt DateTime             @default(now()) @map("created_at")
+  id        Int                  @id @default(autoincrement())
+  userId    String               @map("user_id")
+  type      VerificationCodeType
+  tokenHash String               @unique @db.VarChar(100)
+  expiresAt DateTime             @map("expires_at")
+  usedAt    DateTime?            @map("used_at")
+  createdAt DateTime             @default(now()) @map("created_at")
 
-    user User @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
-    @@index([userId, type, createdAt], map: "idx_verification_codes_user_type_created")
-    @@index([expiresAt], map: "idx_verification_codes_expires_at")
-    @@index([usedAt], map: "idx_verification_codes_used_at")
-    @@map("verification_codes")
+  @@index([userId, type, createdAt], map: "idx_verification_codes_user_type_created")
+  @@index([expiresAt], map: "idx_verification_codes_expires_at")
+  @@index([usedAt], map: "idx_verification_codes_used_at")
+  @@map("verification_codes")
+}
+
+model MessageGroup {
+  id        Int       @id @default(autoincrement())
+  publicId  String    @unique @default(cuid()) @map("public_id")
+  name      String    @default("") @db.VarChar(255)
+  groupType GroupType @default(PRIVATE)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  createdBy     User                 @relation("MessageGroupCreator", fields: [createdById], references: [id])
+  createdById   String               @map("created_by_id")
+  members       MemberMessageGroup[]
+  messages      Message[]            @relation("MessageGroupMessages")
+  lastMessageAt DateTime             @map("last_message_at")
+
+  @@map("message_groups")
+}
+
+model MemberMessageGroup {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  unreadCount Int      @default(0)
+
+  messageGroup   MessageGroup? @relation(fields: [messageGroupId], references: [id])
+  messageGroupId Int?
+  user           User          @relation(fields: [userId], references: [id])
+
+  @@unique([messageGroupId, userId], map: "uq_member_message_groups_group_user")
+  @@index([userId], map: "idx_messages_sender_id")
+  @@map("member_message_groups")
+}
+
+model Message {
+  id             Int           @id @default(autoincrement())
+  publicId       String        @unique @default(cuid()) @map("public_id")
+  messageGroupId Int           @map("message_group_id")
+  senderId       String        @map("sender_id")
+  content        String        @db.Text
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+  statusMessage  StatusMessage @default(PENDING) @map("status_message_enum")
+  lastSeenAt     DateTime?     @map("last_seen_at")
+
+  sender       User         @relation(fields: [senderId], references: [id])
+  messageGroup MessageGroup @relation("MessageGroupMessages", fields: [messageGroupId], references: [id])
+
+  @@index([senderId], map: "idx_messages_sender_id")
+  @@map("messages")
 }
 
 model Post {
-    id       Int    @id @default(autoincrement())
-    publicId String @unique @default(cuid()) @map("public_id")
+  id       Int    @id @default(autoincrement())
+  publicId String @unique @default(cuid()) @map("public_id")
 
-    userId  String   @map("user_id")
-    content String   @db.Text
-    type    PostType @default(POST)
+  userId      String @map("user_id")
+  content     String @db.Text
+  contentJson Json?  @map("content_json")
 
-    parentId     Int? @map("parent_id") // reply -> parent
-    originPostId Int? @map("origin_post_id") // repost/quote -> original
-    rootPostId   Int? @map("root_post_id") // conversation root
+  type       PostType       @default(POST)
+  visibility VisibilityPost @default(PUBLIC)
 
-    userSnapshot    Json?  @map("user_snapshot")
-    replyPermission String @default("everyone") @map("reply_permission") @db.VarChar(50)
+  parentId     Int? @map("parent_id") // reply -> parent
+  originPostId Int? @map("origin_post_id") // repost/quote -> original
+  rootPostId   Int? @map("root_post_id") // conversation root
 
-    likesCount   Int @default(0) @map("likes_count")
-    repliesCount Int @default(0) @map("replies_count")
-    repostsCount Int @default(0) @map("reposts_count")
-    quotesCount  Int @default(0) @map("quotes_count")
-    viewsCount   Int @default(0) @map("views_count")
+  parentPublicId String? @map("parent_public_id")
+  originPublicId String? @map("origin_public_id")
+  rootPublicId   String? @map("root_public_id")
 
-    isPinned  Boolean   @default(false) @map("is_pinned")
-    isDeleted Boolean   @default(false) @map("is_deleted")
-    deletedAt DateTime? @map("deleted_at")
+  userSnapshot    Json?           @map("user_snapshot")
+  replyPermission ReplyPermission @default(EVERYONE) @map("reply_permission")
 
-    createdAt DateTime @default(now()) @map("created_at")
-    updatedAt DateTime @updatedAt @map("updated_at")
+  likesCount                Int @default(0) @map("likes_count")
+  repliesCount              Int @default(0) @map("replies_count")
+  repostsCountAndQuoteCount Int @default(0) @map("reposts_and_quotes_count")
+  viewsCount                Int @default(0) @map("views_count")
 
-    user User @relation(fields: [userId], references: [id])
+  isQuote  Boolean @default(false) @map("is_quote")
+  isPinned Boolean @default(false) @map("is_pinned")
+  isGhost  Boolean @default(false) @map("is_ghost")
+  isSurvey Boolean @default(false) @map("is_survey")
 
-    parent   Post?  @relation("PostParent", fields: [parentId], references: [id])
-    children Post[] @relation("PostParent")
+  isDeleted Boolean   @default(false) @map("is_deleted")
+  deletedAt DateTime? @map("deleted_at")
 
-    origin      Post?  @relation("PostOrigin", fields: [originPostId], references: [id])
-    derivatives Post[] @relation("PostOrigin")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-    root   Post?  @relation("PostRoot", fields: [rootPostId], references: [id])
-    thread Post[] @relation("PostRoot")
+  user User @relation(fields: [userId], references: [id])
 
-    media       PostMedia[]
-    mentions    PostMention[]
-    likes       Like[]
-    topicsPosts TopicsPost[]
+  parent   Post?  @relation("PostParent", fields: [parentId], references: [id])
+  children Post[] @relation("PostParent")
 
-    @@index([userId, createdAt])
-    @@index([parentId])
-    @@index([originPostId])
-    @@index([rootPostId])
-    @@index([createdAt])
-    @@map("posts")
+  origin      Post?  @relation("PostOrigin", fields: [originPostId], references: [id])
+  derivatives Post[] @relation("PostOrigin")
+
+  root   Post?  @relation("PostRoot", fields: [rootPostId], references: [id])
+  thread Post[] @relation("PostRoot")
+
+  isHidden         Boolean @default(false) @map("is_hidden") // bot ẩn bài viết khỏi feed, chỉ hiển thị khi truy cập trực tiếp, dùng cho trường hợp bài viết bị report nhiều lần hoặc vi phạm chính sách nhưng chưa đến mức xóa hoàn toàn
+  isDisinformation Boolean @default(false) @map("is_disinformation") // bot đánh dấu bài viết có nội dung sai
+
+  media                 PostMedia[]
+  mentions              PostMention[]
+  topicsPosts           TopicsPost[]
+  likes                 Like[]
+  circlePostQualityLogs CirclePostQualityLog[]
+  circleExpLogs         CircleExpLog[]
+  poll                  Poll?
+  postInteractions      PostInteraction[]
+
+  @@index([userId, createdAt])
+  @@index([parentId])
+  @@index([originPostId])
+  @@index([rootPostId])
+  @@index([createdAt])
+  @@index([publicId], map: "idx_posts_public_id")
+  @@fulltext([content], map: "idx_posts_content_fulltext")
+  @@map("posts")
+}
+
+model Poll {
+  id        Int      @id @default(autoincrement())
+  postId    Int      @map("post_id")
+  isExpired Boolean  @default(false) @map("is_expired")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  voteCount Int      @default(0) @map("vote_count")
+
+  post        Post         @relation(fields: [postId], references: [id], onDelete: Restrict)
+  pollOptions PollOption[]
+  votes       Vote[]
+
+  @@unique([postId], map: "uq_polls_post_id")
+  @@index([postId], map: "idx_polls_post_id")
+  @@map("polls")
+}
+
+model PollOption {
+  id         Int      @id @default(autoincrement())
+  pollId     Int      @map("poll_id")
+  optionText String   @map("option_text") @db.VarChar(255)
+  votesCount Int      @default(0) @map("votes_count")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  poll  Poll   @relation(fields: [pollId], references: [id])
+  votes Vote[]
+
+  @@unique([id, pollId], map: "uq_poll_options_id_poll_id") // đảm bảo mỗi option chỉ thuộc về một poll duy nhất
+  @@index([pollId], map: "idx_poll_options_poll_id")
+  @@map("poll_options")
+}
+
+model Vote {
+  id           Int      @id @default(autoincrement())
+  userId       String   @map("user_id")
+  pollId       Int      @map("poll_id")
+  pollOptionId Int      @map("poll_option_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user       User       @relation(fields: [userId], references: [id])
+  pollOption PollOption @relation(fields: [pollOptionId], references: [id])
+  poll       Poll       @relation(fields: [pollId], references: [id])
+
+  @@unique([userId, pollOptionId], map: "uq_votes_user_poll_option")
+  @@unique([userId, pollId], map: "uq_votes_user_poll") // đảm bảo mỗi người dùng chỉ được vote một lần cho mỗi poll
+  @@index([userId], map: "idx_votes_user_id")
+  @@index([pollOptionId], map: "idx_votes_poll_option_id")
+  @@map("votes")
 }
 
 model PostMedia {
-    id        Int      @id @default(autoincrement())
-    postId    Int      @map("post_id")
-    url       String   @db.VarChar(2048)
-    type      String?  @db.VarChar(50)
-    width     Int?
-    height    Int?
-    createdAt DateTime @default(now()) @map("created_at")
+  id        Int              @id @default(autoincrement())
+  postId    Int?             @map("post_id")
+  url       String           @db.VarChar(2048)
+  uploadUrl String?          @map("upload_url") @db.VarChar(2048) // url dùng để upload file, chỉ tồn tại khi media đang ở trạng thái TEMPORARY hoặc UPLOADING
+  assetId   String?          @map("asset_id") @db.VarChar(255) // id của file trên dịch vụ lưu trữ, dùng để quản lý và xóa file khi cần thiết
+  type      PostMediaType?   @map("type_enum")
+  width     Int?
+  height    Int?
+  createdAt DateTime         @default(now()) @map("created_at")
+  key       String           @unique @db.VarChar(255)
+  status    PostMediaStatus? @default(TEMPORARY) @map("status_enum")
+  post      Post?            @relation(fields: [postId], references: [id])
 
-    post Post @relation(fields: [postId], references: [id])
-
-    @@index([postId], map: "idx_post_media_post_id")
-    @@map("post_media")
+  @@index([postId], map: "idx_post_media_post_id")
+  @@map("post_media")
 }
 
 model PostMention {
-    id        Int      @id @default(autoincrement())
-    postId    Int      @map("post_id")
-    userId    String   @map("user_id")
-    createdAt DateTime @default(now()) @map("created_at")
+  id        Int      @id @default(autoincrement())
+  postId    Int      @map("post_id")
+  userId    String   @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at")
 
-    post Post @relation(fields: [postId], references: [id])
+  post Post @relation(fields: [postId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
-    @@unique([postId, userId], map: "uq_post_mentions_post_user")
-    @@index([postId], map: "idx_post_mentions_post_id")
-    @@index([userId], map: "idx_post_mentions_user_id")
-    @@map("post_mentions")
+  @@unique([postId, userId], map: "uq_post_mentions_post_user")
+  @@index([postId], map: "idx_post_mentions_post_id")
+  @@index([userId], map: "idx_post_mentions_user_id")
+  @@map("post_mentions")
 }
 
 model Follow {
-    id          Int          @id @default(autoincrement())
-    userId      String       @map("user_id")
-    followingId String       @map("following_id")
-    status      FollowStatus @default(PENDING)
+  id          Int          @id @default(autoincrement())
+  userId      String       @map("user_id")
+  followingId String       @map("following_id")
+  isFollowing Boolean      @default(true) @map("is_following")
+  status      FollowStatus @default(PENDING)
 
-    createdAt DateTime @default(now()) @map("created_at")
-    updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-    user      User @relation("FollowUser", fields: [userId], references: [id])
-    following User @relation("FollowFollowing", fields: [followingId], references: [id])
+  user      User @relation("FollowUser", fields: [userId], references: [id])
+  following User @relation("FollowFollowing", fields: [followingId], references: [id])
 
-    @@unique([userId, followingId])
-    @@index([userId])
-    @@index([followingId])
-    @@index([followingId, status])
-    @@map("follows")
+  @@unique([userId, followingId])
+  @@index([userId])
+  @@index([followingId])
+  @@index([followingId, status])
+  @@map("follows")
+}
+
+model FriendRequest {
+  id         Int                 @id @default(autoincrement())
+  senderId   String              @map("sender_id")
+  receiverId String              @map("receiver_id")
+  status     FriendRequestStatus @default(PENDING)
+  createdAt  DateTime            @default(now()) @map("created_at")
+  updatedAt  DateTime            @updatedAt @map("updated_at")
+
+  sender   User @relation("FriendRequestSender", fields: [senderId], references: [id])
+  receiver User @relation("FriendRequestReceiver", fields: [receiverId], references: [id])
+
+  @@unique([senderId, receiverId])
+  @@index([senderId])
+  @@index([receiverId])
+  @@map("friend_requests")
 }
 
 model Like {
-    id        Int      @id @default(autoincrement())
-    userId    String   @map("user_id")
-    postId    Int      @map("post_id")
-    createdAt DateTime @default(now()) @map("created_at")
-    updatedAt DateTime @updatedAt @map("updated_at")
+  id        Int      @id @default(autoincrement())
+  userId    String   @map("user_id")
+  postId    String   @map("post_id")
+  isLike    Boolean  @default(false) @map("is_like")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-    user User @relation(fields: [userId], references: [id])
-    post Post @relation(fields: [postId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+  post Post @relation(fields: [postId], references: [publicId])
 
-    @@unique([userId, postId], map: "uq_likes_user_post")
-    @@index([userId], map: "idx_likes_user_id")
-    @@index([postId], map: "idx_likes_post_id")
-    @@map("likes")
+  @@unique([userId, postId], map: "uq_likes_user_post")
+  @@index([userId], map: "idx_likes_user_id")
+  @@index([postId], map: "idx_likes_post_id")
+  @@map("likes")
 }
 
 model Topic {
-    id        Int      @id @default(autoincrement())
-    name      String   @unique @db.VarChar(255)
-    count     Int      @default(1)
-    createdAt DateTime @default(now()) @map("created_at")
-    updatedAt DateTime @updatedAt @map("updated_at")
+  id        Int      @id @default(autoincrement())
+  name      String   @unique @db.VarChar(255)
+  count     Int      @default(1)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-    topicsPosts        TopicsPost[] @relation("TopicPublic")
-    privateTopicsPosts TopicsPost[] @relation("TopicPrivate")
+  topicsPosts        TopicsPost[] @relation("TopicPublic")
+  privateTopicsPosts TopicsPost[] @relation("TopicPrivate")
 
-    @@index([count], map: "idx_topics_count")
-    @@map("topics")
+  @@index([name], map: "idx_topics_name")
+  @@index([count], map: "idx_topics_count")
+  @@fulltext([name], map: "idx_topics_name_fulltext")
+  @@map("topics")
 }
 
 model TopicsPost {
-    id             Int      @id @default(autoincrement())
-    postId         Int      @map("post_id")
-    topicId        Int?     @map("topic_id")
-    privateTopicId Int?     @map("private_topic_id")
-    isPublic       Boolean  @default(true) @map("is_public")
-    createdAt      DateTime @default(now()) @map("created_at")
+  id             Int      @id @default(autoincrement())
+  postId         Int      @map("post_id")
+  topicId        Int?     @map("topic_id")
+  privateTopicId Int?     @map("private_topic_id")
+  isPublic       Boolean  @default(true) @map("is_public")
+  createdAt      DateTime @default(now()) @map("created_at")
 
-    post         Post   @relation(fields: [postId], references: [id])
-    topic        Topic? @relation("TopicPublic", fields: [topicId], references: [id])
-    privateTopic Topic? @relation("TopicPrivate", fields: [privateTopicId], references: [id])
+  post         Post   @relation(fields: [postId], references: [id])
+  topic        Topic? @relation("TopicPublic", fields: [topicId], references: [id])
+  privateTopic Topic? @relation("TopicPrivate", fields: [privateTopicId], references: [id])
 
-    @@index([postId], map: "idx_topics_posts_post_id")
-    @@index([topicId], map: "idx_topics_posts_topic_id")
-    @@index([privateTopicId], map: "idx_topics_posts_private_topic_id")
-    @@index([postId, topicId], map: "idx_topics_posts_post_topic")
-    @@index([postId, privateTopicId], map: "idx_topics_posts_post_private_topic")
-    @@map("topics_posts")
+  @@unique([postId], map: "uq_topics_posts_post_id")
+  @@index([postId], map: "idx_topics_posts_post_id")
+  @@index([topicId], map: "idx_topics_posts_topic_id")
+  @@index([privateTopicId], map: "idx_topics_posts_private_topic_id")
+  @@index([postId, topicId], map: "idx_topics_posts_post_topic")
+  @@index([postId, privateTopicId], map: "idx_topics_posts_post_private_topic")
+  @@map("topics_posts")
 }
 
 model RefreshToken {
-    id        Int      @id @default(autoincrement())
-    userId    String   @map("user_id")
-    token     String   @unique @db.VarChar(512)
-    expireAt  DateTime @map("expire_at")
-    sessionId String   @map("session_id") @db.VarChar(255)
+  id        Int      @id @default(autoincrement())
+  userId    String   @map("user_id")
+  token     String   @unique @db.VarChar(512)
+  expireAt  DateTime @map("expire_at")
+  sessionId String   @map("session_id") @db.VarChar(255)
 
-    revoked   Boolean   @default(false)
-    revokedAt DateTime? @map("revoked_at")
+  revokedAt DateTime? @map("revoked_at")
 
-    userAgent String @default("unknown") @map("user_agent") @db.VarChar(512)
-    ip        String @default("unknown") @db.VarChar(45)
+  userAgent String @default("unknown") @map("user_agent") @db.VarChar(512)
+  ip        String @default("unknown") @db.VarChar(45)
 
-    createdAt DateTime @default(now()) @map("created_at")
-    updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-    user User @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
-    @@index([userId], map: "idx_refresh_tokens_user_id")
-    @@index([expireAt], map: "idx_refresh_tokens_expire_at")
-    @@index([sessionId], map: "idx_refresh_tokens_session_id")
-    @@map("refresh_tokens")
+  @@index([userId], map: "idx_refresh_tokens_user_id")
+  @@index([expireAt], map: "idx_refresh_tokens_expire_at")
+  @@index([sessionId], map: "idx_refresh_tokens_session_id")
+  @@map("refresh_tokens")
 }
 
-model Job {
-    id             Int       @id @default(autoincrement())
-    uuid           String    @unique @db.VarChar(255)
-    queue          String    @db.Text
-    payload        String    @db.LongText
-    recipientEmail String?   @map("recipient_email") @db.VarChar(255)
-    hashToken      String?   @map("hash_token") @db.VarChar(255)
-    status         JobStatus @default(PENDING)
-    createdAt      DateTime  @default(now()) @map("created_at")
-    availableAt    DateTime? @map("available_at")
-    expiresAt      DateTime? @map("expires_at")
+model Circle {
+  id          Int        @id @default(autoincrement())
+  publicId    String     @unique @default(cuid()) @db.VarChar(255)
+  name        String     @db.VarChar(255)
+  description String     @db.Text
+  avatarEmoji String?    @map("avatar_emoji") @db.VarChar(64)
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+  visibility  Visibility @default(PRIVATE)
+  statusPeak  Boolean    @default(false) @map("status_peak") // statusPeak có ánh lửa hiện lên cho ngầu 
 
-    @@index([uuid], map: "idx_jobs_uuid")
-    @@index([status], map: "idx_jobs_status")
-    @@index([createdAt], map: "idx_jobs_created_at")
-    @@index([expiresAt], map: "idx_jobs_expires_at")
-    @@map("jobs")
+  createdBy             User                   @relation("CircleCreated", fields: [createById], references: [id])
+  createById            String                 @map("create_by_id")
+  circleMembers         CircleMember[]
+  circleInvitations     CircleInvitation[]
+  circleEnergies        CircleEnergy[]
+  circlePostQualityLogs CirclePostQualityLog[]
+  circleExpLogs         CircleExpLog[]
+  heroBadges            HeroBadge[]
+  circleJoinRequests    CircleJoinRequest[]
+  circleMemberBans      CircleMemberBan[]
+
+  @@index([createById], map: "idx_circles_created_by")
+  @@map("circles")
 }
 
-model FailedJob {
-    id         Int      @id @default(autoincrement())
-    uuid       String   @unique @db.VarChar(255)
-    connection String   @db.Text
-    queue      String   @db.Text
-    payload    String   @db.LongText
-    exception  String   @db.LongText
-    failedAt   DateTime @map("failed_at") @db.Timestamp(0)
+model CircleMember {
+  id                 Int                    @id @default(autoincrement())
+  circleId           Int                    @map("circle_id")
+  userId             String                 @map("user_id")
+  createdAt          DateTime               @default(now()) @map("created_at")
+  role               RoleMembership         @default(MEMBER)
+  circlePostQuantity CirclePostQualityLog[]
 
-    @@index([uuid], map: "idx_failed_jobs_uuid")
-    @@index([failedAt], map: "idx_failed_jobs_failed_at")
-    @@map("failed_jobs")
+  circle Circle @relation(fields: [circleId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@unique([circleId, userId], map: "uq_circle_members_circle_user")
+  @@index([circleId], map: "idx_circle_members_circle_id")
+  @@index([userId], map: "idx_circle_members_user_id")
+  @@map("circle_members")
+}
+
+model CircleMemberBan {
+  id         Int       @id @default(autoincrement())
+  circleId   Int       @map("circle_id")
+  userId     String    @map("user_id")
+  bannedById String    @map("banned_by_id")
+  reason     String?   @db.VarChar(255)
+  expiresAt  DateTime? @map("expires_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  circle   Circle @relation(fields: [circleId], references: [id])
+  user     User   @relation("CircleMemberBanUser", fields: [userId], references: [id])
+  bannedBy User   @relation("CircleMemberBanBy", fields: [bannedById], references: [id])
+
+  @@unique([circleId, userId], map: "uq_circle_member_bans_circle_user")
+  @@index([circleId], map: "idx_circle_member_bans_circle_id")
+  @@index([userId], map: "idx_circle_member_bans_user_id")
+  @@index([bannedById], map: "idx_circle_member_bans_banned_by_id")
+  @@index([expiresAt], map: "idx_circle_member_bans_expires_at")
+  @@map("circle_member_bans")
+}
+
+model DailyQuest {
+  id          Int        @id @default(autoincrement())
+  code        String     @unique @default(cuid()) @db.VarChar(255)
+  description String     @db.VarChar(255)
+  karmaReward Int // thường là 1, nhiệm vụ khó hơn là 2
+  requirement Int // số lần cần hoàn thành
+  isActive    Boolean    @default(true)
+  action      ActionType @map("action_enum")
+  createById  String     @map("create_by_id")
+  createdAt   DateTime   @default(now()) @map("created_at")
+
+  user          User           @relation(fields: [createById], references: [id])
+  userQuestLogs UserQuestLog[]
+
+  @@map("daily_quests")
+}
+
+model UserQuestLog {
+  id        Int       @id @default(autoincrement())
+  userId    String    @map("user_id")
+  questId   Int       @map("quest_id")
+  progress  Int       @default(0)
+  completed Boolean   @default(false)
+  claimedAt DateTime? @map("claimed_at")
+  date      DateTime  @db.Date // reset mỗi ngày
+
+  user  User       @relation(fields: [userId], references: [id])
+  quest DailyQuest @relation(fields: [questId], references: [id]) // cơ chế nhiệm vụ hàng ngày, 
+  // mỗi ngày sẽ có 1-3 nhiệm vụ khác nhau, người dùng hoàn thành sẽ nhận được karma, có thể tích lũy để đốt cứu nhóm hoặc nhận huy hiệu anh hùng tùy theo số karma đã tích lũy. Nhiệm vụ có thể là: tạo bài viết, bình luận, react, tham gia nhóm, mời bạn bè vào nhóm, v.v.
+
+  @@unique([userId, questId, date])
+  @@map("user_quest_logs")
+}
+
+model UserActionLog {
+  id        Int        @id @default(autoincrement())
+  userId    String     @map("user_id")
+  type      ActionType @map("type_enum")
+  targetId  String
+  metadata  Json?
+  createdAt DateTime   @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, type, targetId], map: "uq_user_action_logs_user_type_target")
+  @@index([userId], map: "idx_user_action_logs_user_id")
+  @@index([type], map: "idx_user_action_logs_type")
+  @@index([createdAt], map: "idx_user_action_logs_created_at")
+  @@map("user_action_logs")
+}
+
+model CircleEnergy {
+  id        Int      @id @default(autoincrement())
+  circleId  Int      @map("circle_id")
+  level     Int      @default(1)
+  exp       Int      @default(0)
+  current   Int      @default(500)
+  max       Int      @default(500)
+  peak      Int      @default(500)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  circle Circle @relation(fields: [circleId], references: [id])
+
+  @@index([circleId], map: "idx_circle_energy_circle_id")
+  @@map("circle_energy")
+}
+
+model HeroBadge {
+  id        Int       @id @default(autoincrement())
+  userId    String    @map("user_id")
+  circleId  Int       @map("circle_id")
+  type      BadgeType
+  expireAt  DateTime? @map("expire_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user   User   @relation(fields: [userId], references: [id])
+  circle Circle @relation(fields: [circleId], references: [id])
+
+  @@unique([userId, circleId], map: "uq_hero_badges_user_circle")
+  @@map("hero_badges")
+}
+
+model KarmaTransaction {
+  id        Int         @id @default(autoincrement())
+  userId    String      @map("user_id")
+  delta     Int // +1 quest, -5 đốt karma
+  reason    KarmaReason
+  circleId  Int         @map("circle_id") // null nếu không liên quan nhóm
+  createdAt DateTime    @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@map("karma_transactions")
+}
+
+model CirclePostQualityLog {
+  id             Int @id @default(autoincrement())
+  circleId       Int @map("circle_id")
+  circleMemberId Int @map("circle_member_id")
+  postId         Int @map("post_id")
+
+  score Int            @default(0) // 0 - 10
+  label PostScoreLabel @default(PENDING) // Masterpiece | Deep Talk | Solid | Neutral | Noise | Toxic
+
+  hpDelta  Int @default(0) @map("hp_delta") // +5, +3, +1, 0, -1, -3
+  expDelta Int @default(0) @map("exp_delta") // +10, +6, +2, 0
+
+  reason     String?  @db.Text
+  confidence Decimal? @db.Decimal(3, 2) // 0.00 - 1.00
+
+  isToxic Boolean @default(false) @map("is_toxic")
+  isSpam  Boolean @default(false) @map("is_spam")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  circle       Circle       @relation(fields: [circleId], references: [id])
+  post         Post         @relation(fields: [postId], references: [id])
+  circleMember CircleMember @relation(fields: [circleMemberId], references: [id])
+
+  @@index([circleId], map: "idx_circle_post_quality_log_circle_id")
+  @@index([postId], map: "idx_circle_post_quality_log_post_id")
+  @@index([score], map: "idx_circle_post_quality_log_score")
+  @@index([label], map: "idx_circle_post_quality_log_label")
+  @@index([isToxic], map: "idx_circle_post_quality_log_is_toxic")
+  @@index([isSpam], map: "idx_circle_post_quality_log_is_spam")
+  @@map("circle_post_quality_logs")
+}
+
+model CircleExpLog {
+  id        Int       @id @default(autoincrement())
+  publicId  String    @unique @default(cuid()) @map("public_id")
+  userId    String    @map("user_id")
+  circleId  Int       @map("circle_id")
+  postId    Int?      @map("post_id")
+  expReason ExpReason @map("exp_reason_enum")
+  expDelta  Int       @default(0) @map("exp_delta") // +5, 0, -1
+  isDelta   Boolean   @default(false) @map("is_delta")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  circle Circle @relation(fields: [circleId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+  post   Post?  @relation(fields: [postId], references: [id])
+
+  @@unique([circleId, postId, expReason], map: "uq_circle_exp_logs_circle_post_reason")
+  @@index([circleId], map: "idx_circle_exp_log_circle_id")
+  @@index([userId], map: "idx_circle_exp_log_user_id")
+  @@index([postId], map: "idx_circle_exp_log_post_id")
+  @@index([expReason], map: "idx_circle_exp_log_exp_reason")
+  @@index([isDelta], map: "idx_circle_exp_log_is_delta")
+  @@index([createdAt], map: "idx_circle_exp_log_created_at")
+  @@map("circle_exp_logs")
+}
+
+model UserKarma {
+  id        Int      @id @default(autoincrement())
+  userId    String   @unique(map: "uq_user_karma_user_id") @map("user_id")
+  karma     Int      @default(1) @map("karma") // default 1 , 1 karma = 5hp cho bất kì nhóm nào 
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("user_karma")
+}
+
+model LimitActionAI {
+  id      Int        @id @default(autoincrement())
+  userId  String     @map("user_id")
+  type    ActionType @map("type_enum")
+  count   Int        @default(5) // mặc định 5 lượt tạo imag,md
+  resetAt DateTime   @map("reset_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId], map: "idx_limit_actions_user_id")
+  @@index([type], map: "idx_limit_actions_type")
+  @@index([resetAt], map: "idx_limit_actions_reset_at")
+  @@map("limit_actions")
+}
+
+model UserRestriction {
+  id        Int                 @id @default(autoincrement())
+  userId    String              @map("user_id")
+  type      UserRestrictionType @map("type_enum")
+  reason    String?             @db.VarChar(255)
+  expiresAt DateTime            @map("expires_at")
+  createdAt DateTime            @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId], map: "idx_user_restrictions_user_id")
+  @@index([type], map: "idx_user_restrictions_type")
+  @@index([expiresAt], map: "idx_user_restrictions_expires_at")
+  @@map("user_restrictions")
+}
+
+model CircleInvitation {
+  id          Int                    @id @default(autoincrement())
+  circleId    Int                    @map("circle_id")
+  userId      String?                @map("user_id")
+  email       String?                @map("email") @db.VarChar(255)
+  role        RoleMembership?        @default(MEMBER)
+  isUser      Boolean                @default(true) @map("is_user") // true nếu invitation dành cho user đã có tài khoản, false nếu chỉ dựa trên email
+  tokenHash   String?                @unique @db.VarChar(100)
+  inviterId   String                 @map("inviter_id")
+  resentCount Int                    @default(0) @map("resent_count") // tối đa 5 lần
+  status      CircleInvitationStatus @default(PENDING)
+  createdAt   DateTime               @default(now()) @map("created_at")
+  updatedAt   DateTime               @updatedAt @map("updated_at")
+
+  circle  Circle @relation(fields: [circleId], references: [id])
+  user    User?  @relation("CircleInvitationUser", fields: [userId], references: [id])
+  inviter User   @relation("CircleInvitationInviter", fields: [inviterId], references: [id])
+
+  @@unique([circleId, userId], map: "uq_circle_invitations_circle_user")
+  @@index([circleId], map: "idx_circle_invitations_circle_id")
+  @@index([userId], map: "idx_circle_invitations_user_id")
+  @@index([inviterId], map: "idx_circle_invitations_inviter_id")
+  @@map("circle_invitations")
+}
+
+model CircleJoinRequest {
+  id        Int           @id @default(autoincrement())
+  userId    String        @map("user_id")
+  circleId  Int
+  status    RequestStatus @default(PENDING)
+  reason    String?       @db.VarChar(255)
+  createdAt DateTime      @default(now())
+
+  circle Circle @relation(fields: [circleId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@map("circle_join_requests")
+}
+
+model WebHookPreviewImage {
+  id           Int      @id @default(autoincrement())
+  userId       String   @map("user_id")
+  generationId String   @unique @map("generation_id")
+  content      String   @db.VarChar(2048)
+  metadata     Json?    @map("metadata") // width, height, size, format, url, v.v.
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([generationId], map: "idx_webhook_preview_images_draft_id")
+  @@map("webhook_preview_images")
 }

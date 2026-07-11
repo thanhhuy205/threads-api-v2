@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PR / Incident Write-up — likeJob sync pipeline</title>
+  <style>
+    :root {
+      --ivory:    #FAF9F5;
+      --slate:    #141413;
+      --clay:     #D97757;
+      --oat:      #E3DACC;
+      --olive:    #788C5D;
+      --gray-150: #F0EEE6;
+      --gray-300: #D1CFC5;
+      --gray-500: #87867F;
+      --gray-700: #3D3D3A;
+      --white:    #FFFFFF;
+
+      --serif: ui-serif, Georgia, 'Times New Roman', serif;
+      --sans:  system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      --mono:  ui-monospace, 'SF Mono', Menlo, Monaco, monospace;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--sans);
+      background: var(--ivory);
+      color: var(--gray-700);
+      line-height: 1.55;
+      padding: 56px 32px 120px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .page { max-width: 1040px; margin: 0 auto; }
+
+    header.page-head { margin-bottom: 44px; max-width: 860px; }
+    .eyebrow {
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--gray-500);
+      margin-bottom: 12px;
+    }
+    h1 {
+      font-family: var(--serif);
+      font-weight: 500;
+      font-size: 36px;
+      line-height: 1.15;
+      color: var(--slate);
+      margin-bottom: 10px;
+      letter-spacing: -0.01em;
+    }
+    .pr-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+      font-family: var(--mono);
+      font-size: 12.5px;
+      color: var(--gray-500);
+      margin-bottom: 18px;
+    }
+    .pr-meta .stat strong { color: var(--slate); font-weight: 600; }
+    .pr-meta .add { color: var(--olive); }
+    .pr-meta .del { color: var(--clay); }
+
+    .prompt-box {
+      background: var(--gray-150);
+      border: 1.5px solid var(--gray-300);
+      border-radius: 12px;
+      padding: 16px 20px;
+      font-size: 14.5px;
+      color: var(--gray-700);
+    }
+    .prompt-box .label {
+      font-family: var(--mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--gray-500);
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 250px;
+      gap: 48px;
+      align-items: start;
+    }
+    @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } .toc { display: none; } }
+
+    section { margin-bottom: 56px; scroll-margin-top: 24px; }
+    h2 {
+      font-family: var(--serif);
+      font-weight: 500;
+      font-size: 25px;
+      color: var(--slate);
+      margin-bottom: 14px;
+      letter-spacing: -0.01em;
+    }
+    p.lede { font-size: 15.5px; max-width: 760px; margin-bottom: 12px; }
+    p + p.lede { margin-top: 12px; }
+
+    .toc {
+      position: sticky;
+      top: 32px;
+      border-left: 1.5px solid var(--gray-300);
+      padding-left: 18px;
+      font-size: 13px;
+    }
+    .toc .t-head {
+      font-family: var(--mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--gray-500);
+      margin-bottom: 10px;
+    }
+    .toc a { display: block; color: var(--gray-700); text-decoration: none; padding: 4px 0; }
+    .toc a:hover { color: var(--clay); }
+    .toc .sub { padding-left: 12px; color: var(--gray-500); font-size: 12.5px; }
+
+    .tldr {
+      background: var(--white);
+      border: 1.5px solid var(--gray-300);
+      border-left: 4px solid var(--clay);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 48px;
+      max-width: 820px;
+    }
+    .tldr .k {
+      font-family: var(--mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--gray-500);
+      margin-bottom: 8px;
+    }
+    .tldr p { font-size: 15px; color: var(--slate); }
+
+    .ba {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin: 22px 0 4px;
+    }
+    @media (max-width: 720px) { .ba { grid-template-columns: 1fr; } }
+    .ba .panel {
+      background: var(--white);
+      border: 1.5px solid var(--gray-300);
+      border-radius: 12px;
+      padding: 18px 20px;
+    }
+    .ba .panel.after { border-color: var(--olive); }
+    .ba .k {
+      font-family: var(--mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--gray-500);
+      margin-bottom: 10px;
+    }
+    .ba .after .k { color: var(--olive); }
+    .ba ul { list-style: none; display: flex; flex-direction: column; gap: 8px; font-size: 13.5px; }
+    .ba li::before { content: '·'; color: var(--gray-500); margin-right: 8px; }
+    .ba .after li::before { color: var(--olive); }
+
+    .file-tour { display: flex; flex-direction: column; gap: 22px; }
+    .file {
+      background: var(--white);
+      border: 1.5px solid var(--gray-300);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .file summary {
+      padding: 14px 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      list-style: none;
+      background: var(--gray-150);
+      border-bottom: 1.5px solid var(--gray-300);
+    }
+    .file[open] summary { border-bottom-color: var(--gray-300); }
+    .file:not([open]) summary { border-bottom: none; }
+    .file summary::-webkit-details-marker { display: none; }
+    .file summary .chev {
+      width: 8px; height: 8px;
+      border-right: 2px solid var(--gray-500);
+      border-bottom: 2px solid var(--gray-500);
+      transform: rotate(-45deg);
+      transition: transform .15s ease;
+      flex-shrink: 0;
+    }
+    .file[open] summary .chev { transform: rotate(45deg); }
+    .file summary .path {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--slate);
+      flex: 1;
+    }
+    .file summary .badge {
+      font-family: var(--mono);
+      font-size: 10.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-weight: 600;
+    }
+    .badge.new { background: #E4E9DC; color: #4B5C39; }
+    .badge.mod { background: var(--oat); color: var(--slate); }
+    .badge.del { background: #F3D9CC; color: #8A3B1E; }
+    .file summary .stat { font-family: var(--mono); font-size: 12px; }
+    .file summary .stat .add { color: var(--olive); }
+    .file summary .stat .del { color: var(--clay); }
+    .file .file-body { padding: 18px 20px 22px; }
+    .file .why {
+      font-size: 14.5px;
+      margin-bottom: 14px;
+      max-width: 760px;
+    }
+    .file .why strong { color: var(--slate); }
+
+    .code {
+      background: var(--slate);
+      border-radius: 10px;
+      padding: 16px 18px;
+      overflow-x: auto;
+    }
+    .code pre {
+      font-family: var(--mono);
+      font-size: 12.5px;
+      line-height: 1.65;
+      color: #E8E6DE;
+      white-space: pre;
+    }
+    .code .kw  { color: var(--clay); }
+    .code .str { color: var(--olive); }
+    .code .cm  { color: var(--gray-500); }
+    .code .fn  { color: #C9B98A; }
+    .code .add { background: rgba(120,140,93,.22); display: inline-block; width: 100%; }
+    .code .del { background: rgba(217,119,87,.18); display: inline-block; width: 100%; text-decoration: line-through; text-decoration-color: rgba(217,119,87,.6); }
+
+    .focus { display: flex; flex-direction: column; gap: 14px; max-width: 840px; }
+    .focus .item {
+      background: var(--white);
+      border: 1.5px solid var(--gray-300);
+      border-radius: 10px;
+      padding: 16px 20px;
+      display: flex;
+      gap: 16px;
+    }
+    .focus .n {
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--white);
+      background: var(--clay);
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .focus .t { font-weight: 600; color: var(--slate); font-size: 15px; margin-bottom: 2px; }
+    .focus .d { font-size: 13.5px; color: var(--gray-500); }
+    .focus .d code { font-size: 12.5px; }
+
+    .tests { display: flex; flex-direction: column; gap: 10px; max-width: 840px; }
+    .test {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      background: var(--white);
+      border: 1.5px solid var(--gray-300);
+      border-radius: 10px;
+      padding: 13px 18px;
+      font-size: 14px;
+    }
+    .test .check {
+      width: 18px; height: 18px;
+      border-radius: 5px;
+      flex-shrink: 0;
+      margin-top: 2px;
+      border: 1.5px solid var(--gray-300);
+    }
+    .test.done .check {
+      background: var(--olive);
+      border-color: var(--olive);
+      position: relative;
+    }
+    .test.done .check::after {
+      content: '';
+      position: absolute;
+      left: 5px; top: 2px;
+      width: 5px; height: 9px;
+      border-right: 2px solid var(--white);
+      border-bottom: 2px solid var(--white);
+      transform: rotate(40deg);
+    }
+    .test .label { color: var(--slate); }
+    .test .note { color: var(--gray-500); font-size: 13px; margin-top: 2px; }
+
+    .rollout { display: flex; gap: 0; max-width: 840px; }
+    @media (max-width: 720px) { .rollout { flex-direction: column; } }
+    .rollout .step {
+      flex: 1;
+      background: var(--white);
+      border: 1.5px solid var(--gray-300);
+      padding: 16px 18px;
+      position: relative;
+    }
+    .rollout .step:first-child { border-radius: 12px 0 0 12px; }
+    .rollout .step:last-child { border-radius: 0 12px 12px 0; }
+    .rollout .step + .step { border-left: none; }
+    @media (max-width: 720px) {
+      .rollout .step, .rollout .step:first-child, .rollout .step:last-child { border-radius: 12px; }
+      .rollout .step + .step { border-left: 1.5px solid var(--gray-300); margin-top: 10px; }
+    }
+    .rollout .step .pct {
+      font-family: var(--mono);
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--clay);
+      margin-bottom: 6px;
+    }
+    .rollout .step .d { font-size: 13px; color: var(--gray-500); }
+    .rollout .step .when { font-family: var(--mono); font-size: 11px; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+
+    .route-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 300px;
+      gap: 24px;
+      align-items: start;
+    }
+    @media (max-width: 920px) { .route-layout { grid-template-columns: 1fr; } }
+
+    .route-canvas {
+      border: 1.5px solid var(--gray-300);
+      border-radius: 14px;
+      background: #fff;
+      padding: 22px;
+      overflow-x: auto;
+    }
+    .route-svg { display: block; width: 100%; height: auto; }
+    .route-svg text {
+      font-family: var(--mono);
+      font-size: 12px;
+      fill: var(--slate);
+      pointer-events: none;
+    }
+    .route-svg .sub { font-size: 10px; fill: var(--gray-500); }
+    .route-svg .lbl { font-size: 10px; fill: var(--gray-500); }
+
+    .route-node rect       { fill: #fff; stroke: var(--gray-300); stroke-width: 1.5; rx: 8; }
+    .route-node.term rect  { fill: var(--gray-150); rx: 18; }
+    .route-node.gate path  { fill: #fff; stroke: var(--gray-300); stroke-width: 1.5; }
+    .route-node.ok rect    { fill: rgba(120,140,93,0.12); stroke: var(--olive); }
+
+    .route-node { cursor: pointer; transition: transform 120ms ease; }
+    .route-node:hover { transform: translateY(-1px); }
+    .route-node.active rect,
+    .route-node.active path { stroke: var(--clay); stroke-width: 2; }
+
+    .route-edge { stroke: var(--gray-500); stroke-width: 1.5; fill: none; marker-end: url(#route-arrow); }
+    .route-edge.yes { stroke: var(--olive); marker-end: url(#route-arrow-olive); }
+    .route-edge.no  { stroke: var(--clay); marker-end: url(#route-arrow-clay); stroke-dasharray: 4 4; }
+
+    .route-panel {
+      position: sticky;
+      top: 22px;
+      border: 1.5px solid var(--gray-300);
+      border-radius: 14px;
+      background: #fff;
+      padding: 18px 18px 20px;
+    }
+    .route-panel .hint {
+      font-size: 12px;
+      color: var(--gray-500);
+      margin-bottom: 12px;
+    }
+    .route-panel h3 {
+      font-family: var(--serif);
+      font-weight: 500;
+      font-size: 19px;
+      margin-bottom: 6px;
+      color: var(--slate);
+    }
+    .route-panel .meta {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--gray-500);
+      margin-bottom: 12px;
+    }
+    .route-panel p {
+      font-size: 13.5px;
+      line-height: 1.6;
+      color: var(--gray-700);
+      margin-bottom: 12px;
+    }
+    .route-panel pre {
+      font-family: var(--mono);
+      font-size: 11.5px;
+      line-height: 1.55;
+      background: var(--gray-150);
+      border: 1px solid var(--gray-300);
+      border-radius: 8px;
+      padding: 10px 12px;
+      white-space: pre-wrap;
+      color: var(--slate);
+    }
+
+    .route-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-top: 14px;
+      font-size: 12px;
+      color: var(--gray-700);
+    }
+    .route-legend span { display: inline-flex; align-items: center; gap: 8px; }
+    .route-chip { width: 20px; height: 12px; border: 1.5px solid var(--gray-300); border-radius: 4px; background: #fff; }
+    .route-chip.gate { transform: rotate(45deg); width: 12px; height: 12px; border-radius: 2px; }
+    .route-chip.ok { background: rgba(120,140,93,0.12); border-color: var(--olive); }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <header class="page-head">
+      <div class="eyebrow">PR + Incident Write-up · Threads API v2</div>
+      <h1>LikeJob Sync: Full Debug Trail, Kỹ Thuật Khóa Trùng, và Cách Ghi Issue</h1>
+      <div class="pr-meta">
+        <span class="stat"><strong>9</strong> files touched</span>
+        <span class="stat"><span class="add">+821</span> / <span class="del">−99</span></span>
+        <span class="stat">incident date <strong>2026-05-14</strong></span>
+        <span class="stat">commit <strong>d5371a5</strong></span>
+        <span class="stat">scope <strong>like queue / worker / redis client</strong></span>
+      </div>
+      <div class="prompt-box">
+        <span class="label">Mục tiêu tài liệu</span>
+        Ghi lại đầy đủ kỹ thuật đã dùng để xử lý lỗi <code>likeJob</code> chạy dày,
+        lock bị đè, lỗi runtime Redis command, và chốt phương án ổn định cuối cùng.
+        Tài liệu này phục vụ review PR, onboarding backend, và tái sử dụng khi mở issue sau này.
+      </div>
+    </header>
+
+    <div class="layout">
+      <main>
+
+        <div class="tldr">
+          <div class="k">TL;DR</div>
+          <p>
+            Vấn đề không phải một bug đơn lẻ, mà là chuỗi lệch pha giữa scheduler, worker concurrency,
+            API Redis runtime, và chiến lược logging. Cách giải quyết hiệu quả là: cô lập triệu chứng theo
+            từng lớp (scheduler → lock → pop batch → parse payload), chứng minh bằng dữ liệu runtime,
+            rồi chốt lại bằng implementation tương thích client hiện tại + issue note để team không lặp lại.
+          </p>
+        </div>
+
+        <section id="why">
+          <h2>1) Bối Cảnh & Triệu Chứng</h2>
+          <p class="lede">
+            Triệu chứng đầu tiên: worker log <code>Processing add like jobs...</code> liên tục, tần suất không đều,
+            nhiều timestamp trùng nhau theo cặp. Cảm giác ban đầu giống "job chạy đúng nhưng không ăn dữ liệu".
+          </p>
+          <p class="lede">
+            Sau khi thêm lock log, tiếp tục thấy nhiều lần trigger và xuất hiện lỗi rỗng <code>error: {}</code>,
+            khiến việc tìm nguyên nhân thật bị mù thông tin.
+          </p>
+
+          <div class="ba">
+            <div class="panel">
+              <div class="k">Before</div>
+              <ul>
+                <li>Queue repeat có dấu hiệu chồng scheduler cũ</li>
+                <li>Job có lúc chạy dày hơn 5s (không đều)</li>
+                <li>Log lỗi thiếu <code>message/stack</code> nên khó truy nguyên</li>
+                <li>Dùng API Redis không tương thích runtime hiện tại</li>
+              </ul>
+            </div>
+            <div class="panel after">
+              <div class="k">After</div>
+              <ul>
+                <li>Scheduler được cleanup trước khi tạo lại</li>
+                <li>Có lock token theo tiến trình để tránh chạy chồng</li>
+                <li>Luồng pop batch dùng API tương thích chắc chắn</li>
+                <li>Tài liệu hóa đủ để tái hiện và mở issue chuẩn</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section id="timeline">
+          <h2>2) Timeline Debug (Theo Thứ Tự Thật)</h2>
+          <div class="tests">
+            <div class="test done"><span class="check"></span><div><div class="label">B1: Xác nhận worker thực sự chạy</div><div class="note">Log xuất hiện đều, chứng tỏ consumer vẫn active.</div></div></div>
+            <div class="test done"><span class="check"></span><div><div class="label">B2: Nghi ngờ scheduler bị trùng</div><div class="note">Do nhịp trigger không giống cố định 5 giây và có cặp log sát nhau.</div></div></div>
+            <div class="test done"><span class="check"></span><div><div class="label">B3: Thêm distributed lock</div><div class="note">Dùng <code>SET key value NX EX</code> + token ownership khi release.</div></div></div>
+            <div class="test done"><span class="check"></span><div><div class="label">B4: Cải thiện log lock để thấy acquired/not acquired</div><div class="note">Tách rõ "trigger" và "được quyền chạy".</div></div></div>
+            <div class="test done"><span class="check"></span><div><div class="label">B5: Lộ lỗi thật</div><div class="note"><code>TypeError: redisService.lMPop is not a function</code>.</div></div></div>
+            <div class="test done"><span class="check"></span><div><div class="label">B6: Tra cứu package + typings cục bộ</div><div class="note">Chốt được API <code>redis@5.12.1</code> không dùng signature như giả định ban đầu.</div></div></div>
+            <div class="test done"><span class="check"></span><div><div class="label">B7: Chuyển sang pop batch tương thích chắc chắn</div><div class="note">Dùng vòng <code>rPop</code> thay vì phụ thuộc method không ổn định.</div></div></div>
+            <div class="test done"><span class="check"></span><div><div class="label">B8: Giảm noise log theo yêu cầu</div><div class="note">Bỏ helper log lỗi rườm rà, giữ luồng xử lý gọn.</div></div></div>
+          </div>
+        </section>
+
+        <section id="investigation">
+          <h2>3) Kỹ Thuật Tra Cứu: Vì Sao Kết Luận Như Vậy</h2>
+          <p class="lede">
+            Điểm quan trọng là phân biệt rõ 3 lớp: docs bên ngoài, type definitions trong local,
+            và behavior runtime thực tế. Kết luận chỉ chốt khi cả 3 cùng khớp.
+          </p>
+
+          <div class="file-tour">
+            <details class="file" open>
+              <summary>
+                <span class="chev"></span>
+                <span class="path">Dữ liệu runtime (log thật)</span>
+                <span class="badge mod">evidence</span>
+              </summary>
+              <div class="file-body">
+                <p class="why"><strong>Bằng chứng quyết định:</strong> lỗi runtime báo trực tiếp <code>lMPop is not a function</code>. Nghĩa là object client hiện tại không expose method đó theo cách đang gọi.</p>
+                <div class="code"><pre>[2026-05-14 13:31:00 +0700] ERROR Like sync job failed
+TypeError: import_redis.redisService.lMPop is not a function
+  at LikeWorker.popElements (.../workers/like.worker.ts:129:41)</pre></div>
+              </div>
+            </details>
+
+            <details class="file" open>
+              <summary>
+                <span class="chev"></span>
+                <span class="path">Tra cứu package cài thật trong project</span>
+                <span class="badge mod">evidence</span>
+              </summary>
+              <div class="file-body">
+                <p class="why">Đã kiểm tra dependency thực tế: <code>redis@5.12.1</code> và <code>@redis/client@5.12.1</code>. Đây là nguồn sự thật của API đang chạy.</p>
+                <div class="code"><pre>npm ls redis @redis/client --depth=1
+threads-api-v2
++-- redis@5.12.1
+`-- @redis/client@5.12.1</pre></div>
+              </div>
+            </details>
+
+            <details class="file" open>
+              <summary>
+                <span class="chev"></span>
+                <span class="path">Tra cứu d.ts để đối chiếu signature</span>
+                <span class="badge mod">evidence</span>
+              </summary>
+              <div class="file-body">
+                <p class="why">Trong declaration cục bộ, có module <code>LMPOP</code>, <code>RPOP</code>, <code>RPOP_COUNT</code>. Nhưng call-site thực tế của client không match assumption trước đó. Kết luận: phải gọi theo API đã kiểm chứng hoặc dùng phương án tương thích tối đa.</p>
+                <div class="code"><pre>node_modules/@redis/client/dist/lib/commands/RPOP.d.ts
+parseCommand(parser, key)  // 1 arg
+
+node_modules/@redis/client/dist/lib/commands/RPOP_COUNT.d.ts
+parseCommand(parser, key, count)
+
+node_modules/@redis/client/dist/lib/commands/LMPOP.d.ts
+exists in command module, but runtime method mapping may differ</pre></div>
+              </div>
+            </details>
+          </div>
+        </section>
+
+        <section id="changes">
+          <h2>4) Thay Đổi Kỹ Thuật Đã Áp Dụng</h2>
+          <p class="lede">Phần này gom cả thay đổi cuối cùng và lý do kiến trúc đằng sau từng thay đổi.</p>
+
+          <div class="file-tour">
+            <details class="file" open>
+              <summary>
+                <span class="chev"></span>
+                <span class="path">workers/like.worker.ts</span>
+                <span class="badge mod">mod</span>
+                <span class="stat"><span class="add">+84</span> <span class="del">−49</span></span>
+              </summary>
+              <div class="file-body">
+                <p class="why"><strong>Distributed lock + pop strategy tương thích.</strong> Bổ sung lock chống chạy chồng, nhóm theo post để giảm write, parse an toàn từng item, và pop tuần tự bằng <code>rPop</code> để không phụ thuộc API không ổn định trong runtime.</p>
+                <div class="code"><pre><span class="add"><span class="kw">const</span> lockToken = `${process.pid}:...`;</span>
+<span class="add"><span class="kw">const</span> isLocked = <span class="kw">await</span> acquireSyncLock(lockToken);</span>
+<span class="add"><span class="kw">if</span> (!isLocked) <span class="kw">return</span>;</span>
+
+<span class="add"><span class="kw">for</span> (<span class="kw">let</span> i = 0; i &lt; count; i++) {</span>
+<span class="add">  <span class="kw">const</span> item = <span class="kw">await</span> redisService.<span class="fn">rPop</span>(key);</span>
+<span class="add">  <span class="kw">if</span> (!item) <span class="kw">break</span>;</span>
+<span class="add">  result.<span class="fn">push</span>(item);</span>
+<span class="add">}</span></pre></div>
+              </div>
+            </details>
+
+            <details class="file" open>
+              <summary>
+                <span class="chev"></span>
+                <span class="path">src/modules/job/like-job/producer/like.producer.ts</span>
+                <span class="badge mod">mod</span>
+                <span class="stat"><span class="add">+43</span> <span class="del">−21</span></span>
+              </summary>
+              <div class="file-body">
+                <p class="why"><strong>Scheduler hygiene.</strong> Trước khi add repeat job mới, cleanup các repeatable meta-job cũ cùng name để tránh tích lũy lịch chạy dư thừa qua nhiều lần restart/deploy.</p>
+                <div class="code"><pre><span class="add"><span class="kw">const</span> jobs = <span class="kw">await</span> likeQueue.<span class="fn">getRepeatableJobs</span>();</span>
+<span class="add"><span class="kw">const</span> duplicates = jobs.<span class="fn">filter</span>(j =&gt; j.name === INIT_SYNC_JOB);</span>
+<span class="add"><span class="kw">await</span> Promise.<span class="fn">all</span>(duplicates.map(j =&gt; likeQueue.<span class="fn">removeRepeatableByKey</span>(j.key)));</span>
+<span class="add"><span class="kw">await</span> likeQueue.<span class="fn">add</span>(INIT_SYNC_JOB, {}, { repeat: { every: 5000 }, attempts: 1 });</span></pre></div>
+              </div>
+            </details>
+
+            <details class="file">
+              <summary>
+                <span class="chev"></span>
+                <span class="path">src/server.ts</span>
+                <span class="badge mod">mod</span>
+                <span class="stat"><span class="add">+45</span> <span class="del">−37</span></span>
+              </summary>
+              <div class="file-body">
+                <p class="why"><strong>Boot sequence an toàn hơn.</strong> Dừng hành vi xóa queue khi start app; chuyển sang init scheduler có bắt lỗi riêng để không làm startup fail âm thầm.</p>
+              </div>
+            </details>
+
+            <details class="file">
+              <summary>
+                <span class="chev"></span>
+                <span class="path">src/modules/post/repository/like.repository.ts</span>
+                <span class="badge mod">mod</span>
+                <span class="stat"><span class="add">+22</span> <span class="del">−16</span></span>
+              </summary>
+              <div class="file-body">
+                <p class="why"><strong>Sửa đúng nghiệp vụ unlike batch.</strong> Đổi điều kiện xóa sang pair-wise <code>OR</code> theo từng <code>userId + postId</code>, tránh xóa chéo ngoài ý muốn.</p>
+              </div>
+            </details>
+
+            <details class="file" open>
+              <summary>
+                <span class="chev"></span>
+                <span class="path">src/modules/post/repository/post.repository.ts</span>
+                <span class="badge mod">mod</span>
+                <span class="stat"><span class="add">+30</span> <span class="del">−35</span></span>
+              </summary>
+              <div class="file-body">
+                <p class="why"><strong>Điểm chốt \"quá chuẩn\" của commit mới nhất.</strong> Hai query tăng/giảm like count đã được đơn giản hóa: bỏ <code>JOIN likes</code>, cập nhật trực tiếp trên bảng <code>posts</code> theo <code>public_id</code>. Cách này giảm coupling vào trạng thái bảng likes tại thời điểm đồng bộ và ổn định hơn khi xử lý batch.</p>
+                <div class="code"><pre><span class="del">UPDATE posts p JOIN likes l ON l.post_id = p.id</span>
+<span class="del">SET p.likes_count = GREATEST(p.likes_count ± ${count}, 0)</span>
+<span class="add">UPDATE posts</span>
+<span class="add">SET likes_count = GREATEST(likes_count ± ${count}, 0)</span>
+<span class="add">WHERE public_id = ${publicId}</span></pre></div>
+              </div>
+            </details>
+          </div>
+        </section>
+
+        <section id="routeflow">
+          <h2>5) Luồng Module Route (Flowchart)</h2>
+          <p class="lede">
+            Section này mô tả luồng đầy đủ từ API route đến worker và repository write path, theo phong cách
+            flowchart tương tác giống tài liệu <code>13-flowchart-diagram</code>.
+          </p>
+
+          <div class="route-layout">
+            <div>
+              <div class="route-canvas">
+                <svg class="route-svg" viewBox="0 0 680 1020">
+                  <defs>
+                    <marker id="route-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                      <path d="M0,0 L10,5 L0,10 z" fill="#87867F"></path>
+                    </marker>
+                    <marker id="route-arrow-olive" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                      <path d="M0,0 L10,5 L0,10 z" fill="#788C5D"></path>
+                    </marker>
+                    <marker id="route-arrow-clay" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                      <path d="M0,0 L10,5 L0,10 z" fill="#D97757"></path>
+                    </marker>
+                  </defs>
+
+                  <path class="route-edge" d="M340,58 L340,94"></path>
+                  <path class="route-edge" d="M340,142 L340,178"></path>
+                  <path class="route-edge" d="M340,226 L340,262"></path>
+                  <path class="route-edge" d="M340,310 L340,350"></path>
+                  <path class="route-edge yes" d="M340,414 C290,430 230,438 170,450"></path>
+                  <text class="lbl" x="266" y="434">isLiked=true</text>
+                  <path class="route-edge no" d="M340,414 C390,430 450,438 510,450"></path>
+                  <text class="lbl" x="398" y="434">isLiked=false</text>
+                  <path class="route-edge" d="M170,498 L290,546"></path>
+                  <path class="route-edge" d="M510,498 L390,546"></path>
+                  <path class="route-edge" d="M340,594 L340,632"></path>
+                  <path class="route-edge" d="M340,680 L340,718"></path>
+                  <path class="route-edge" d="M340,766 L340,804"></path>
+                  <path class="route-edge" d="M340,852 L340,890"></path>
+                  <path class="route-edge" d="M340,938 L340,976"></path>
+
+                  <g class="route-node term" data-r="req">
+                    <rect x="240" y="14" width="200" height="44"></rect>
+                    <text x="340" y="40" text-anchor="middle">POST /api/v1/posts/:id/like</text>
+                  </g>
+
+                  <g class="route-node" data-r="route">
+                    <rect x="230" y="94" width="220" height="48"></rect>
+                    <text x="340" y="114" text-anchor="middle">post.routes.ts</text>
+                    <text class="sub" x="340" y="130" text-anchor="middle">router → middleware chain</text>
+                  </g>
+
+                  <g class="route-node" data-r="validate">
+                    <rect x="230" y="178" width="220" height="48"></rect>
+                    <text x="340" y="198" text-anchor="middle">validate + auth middleware</text>
+                    <text class="sub" x="340" y="214" text-anchor="middle">DTO + user context</text>
+                  </g>
+
+                  <g class="route-node" data-r="controller">
+                    <rect x="230" y="262" width="220" height="48"></rect>
+                    <text x="340" y="282" text-anchor="middle">PostController.like()</text>
+                    <text class="sub" x="340" y="298" text-anchor="middle">delegate to service</text>
+                  </g>
+
+                  <g class="route-node gate" data-r="service">
+                    <path d="M340,350 L390,382 L340,414 L290,382 Z"></path>
+                    <text x="340" y="386" text-anchor="middle">isLiked?</text>
+                  </g>
+
+                  <g class="route-node" data-r="like-branch">
+                    <rect x="60" y="450" width="220" height="48"></rect>
+                    <text x="170" y="470" text-anchor="middle">Service: like branch</text>
+                    <text class="sub" x="170" y="486" text-anchor="middle">SADD + LPUSH likes_add</text>
+                  </g>
+
+                  <g class="route-node" data-r="unlike-branch">
+                    <rect x="400" y="450" width="220" height="48"></rect>
+                    <text x="510" y="470" text-anchor="middle">Service: unlike branch</text>
+                    <text class="sub" x="510" y="486" text-anchor="middle">SREM + LPUSH likes_remove</text>
+                  </g>
+
+                  <g class="route-node" data-r="response">
+                    <rect x="230" y="546" width="220" height="48"></rect>
+                    <text x="340" y="566" text-anchor="middle">HTTP response</text>
+                    <text class="sub" x="340" y="582" text-anchor="middle">return likeCount fast path</text>
+                  </g>
+
+                  <g class="route-node" data-r="scheduler">
+                    <rect x="230" y="632" width="220" height="48"></rect>
+                    <text x="340" y="652" text-anchor="middle">like_queue repeat scheduler</text>
+                    <text class="sub" x="340" y="668" text-anchor="middle">INIT_SYNC_JOB every 5s</text>
+                  </g>
+
+                  <g class="route-node" data-r="lock">
+                    <rect x="230" y="718" width="220" height="48"></rect>
+                    <text x="340" y="738" text-anchor="middle">LikeWorker lock</text>
+                    <text class="sub" x="340" y="754" text-anchor="middle">SET NX EX token</text>
+                  </g>
+
+                  <g class="route-node" data-r="batch-pop">
+                    <rect x="230" y="804" width="220" height="48"></rect>
+                    <text x="340" y="824" text-anchor="middle">Pop Redis batch</text>
+                    <text class="sub" x="340" y="840" text-anchor="middle">rPop loop + JSON parse</text>
+                  </g>
+
+                  <g class="route-node" data-r="db-sync">
+                    <rect x="230" y="890" width="220" height="48"></rect>
+                    <text x="340" y="910" text-anchor="middle">Repository writes</text>
+                    <text class="sub" x="340" y="926" text-anchor="middle">likeRepository + postRepository</text>
+                  </g>
+
+                  <g class="route-node ok term" data-r="done">
+                    <rect x="250" y="976" width="180" height="44"></rect>
+                    <text x="340" y="1002" text-anchor="middle">Sync done</text>
+                  </g>
+                </svg>
+              </div>
+
+              <div class="route-legend">
+                <span><i class="route-chip"></i> process step</span>
+                <span><i class="route-chip gate"></i> decision</span>
+                <span><i class="route-chip ok"></i> terminal success</span>
+              </div>
+            </div>
+
+            <aside class="route-panel" id="route-panel">
+              <div class="hint">Click 1 node trong flowchart →</div>
+              <h3 id="route-title">POST /api/v1/posts/:id/like</h3>
+              <div class="meta" id="route-meta">entrypoint</div>
+              <p id="route-body">
+                Request đi qua route + middleware, tách sync path để trả response nhanh,
+                còn ghi bền DB được đồng bộ theo batch bởi worker.
+              </p>
+              <pre id="route-code">Route -> Middleware -> Controller -> Service
+Service -> Redis state + queue list
+Worker -> batch sync -> repositories</pre>
+            </aside>
+          </div>
+        </section>
+
+        <section id="logging">
+          <h2>6) Chiến Lược Logging Đã Dùng</h2>
+          <p class="lede">Phần này quan trọng vì chính logging strategy quyết định tốc độ tìm root cause.</p>
+
+          <div class="focus">
+            <div class="item">
+              <div class="n">1</div>
+              <div>
+                <div class="t">Log theo pha xử lý, không log theo cảm giác</div>
+                <div class="d">Pha lock, pha start, pha pop batch, pha group, pha write DB. Mỗi log tương ứng một "checkpoint" kỹ thuật.</div>
+              </div>
+            </div>
+            <div class="item">
+              <div class="n">2</div>
+              <div>
+                <div class="t">Đầu tiên log để tìm nguyên nhân, sau đó giảm noise</div>
+                <div class="d">Giai đoạn debug cần log chi tiết để mở khóa thông tin. Khi đã xác định root cause thì có thể dọn log cho clean runtime.</div>
+              </div>
+            </div>
+            <div class="item">
+              <div class="n">3</div>
+              <div>
+                <div class="t">Nếu thấy <code>error: {}</code>, ưu tiên sửa cấu trúc log trước</div>
+                <div class="d">Không có stack thì mọi giả thuyết đều yếu. Mục tiêu là luôn nhìn được vị trí fail cụ thể theo file/line.</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="issue">
+          <h2>7) Note Công Dụng Tạo Issue (Copy-Paste)</h2>
+          <p class="lede">
+            Issue kiểu này rất hữu dụng để team sau không debug lại từ đầu. Nên dùng issue như một
+            hồ sơ kỹ thuật: mô tả triệu chứng, bằng chứng, giả thuyết, thử nghiệm, và quyết định cuối cùng.
+          </p>
+
+          <div class="code"><pre>## [Like Queue] Repeating sync job runs irregularly + Redis command mismatch
+
+### 1) Symptoms
+- Worker logs trigger irregularly (not strictly every 5s)
+- Duplicate-like behavior suspected under repeat scheduling
+- Runtime error observed: `redisService.lMPop is not a function`
+
+### 2) Impact
+- Like sync flow unstable
+- Hard to trust batch processing correctness without root-cause fix
+
+### 3) Root Causes
+- Scheduler duplication risk from repeated bootstrap
+- Runtime API mismatch between assumed Redis command method and installed client
+- Limited observability in early logging phase
+
+### 4) Evidence
+- Runtime stacktrace from worker
+- Local package version: redis@5.12.1
+- Local d.ts verification under node_modules/@redis/client/dist/lib/commands
+
+### 5) Fix Implemented
+- Cleanup repeatable jobs before re-initialization
+- Add lock token with NX/EX strategy
+- Switch pop batch to compatible rPop loop
+- Correct unlike delete condition to pair-wise OR
+
+### 6) Verification
+- Worker acquires lock as expected
+- No `lMPop` TypeError after fix
+- Batch logs show parsed item counts and grouped writes
+
+### 7) Follow-up
+- Add integration test for repeat scheduler duplication
+- Add runbook note in docs/job-worker-flow.html</pre></div>
+        </section>
+
+        <section id="tests">
+          <h2>8) Test Plan / Verification Matrix</h2>
+          <div class="tests">
+            <div class="test done"><span class="check"></span><div><div class="label">Scheduler cleanup works</div><div class="note">Restart app nhiều lần vẫn chỉ còn một scheduler active theo name.</div></div></div>
+            <div class="test done"><span class="check"></span><div><div class="label">Lock prevents overlap</div><div class="note">Khi 2 trigger gần nhau, chỉ 1 lần có quyền chạy đồng bộ.</div></div></div>
+            <div class="test done"><span class="check"></span><div><div class="label">Redis pop path stable</div><div class="note">Không còn lỗi runtime về method không tồn tại.</div></div></div>
+            <div class="test done"><span class="check"></span><div><div class="label">Unlike batch correctness</div><div class="note">Delete theo cặp user/post, tránh xóa chéo.</div></div></div>
+            <div class="test"><span class="check"></span><div><div class="label">E2E regression cho like/unlike burst</div><div class="note">Nên thêm test tạo burst 500 event để đo drain time và count consistency.</div></div></div>
+          </div>
+        </section>
+
+        <section id="rollout">
+          <h2>9) Rollout & Vận Hành</h2>
+          <p class="lede">Với bài toán worker queue, rollout theo thứ tự tiến trình quan trọng hơn rollout theo endpoint API.</p>
+          <div class="rollout">
+            <div class="step"><div class="when">Step 1</div><div class="pct">Server</div><div class="d">Deploy server để refresh scheduler logic và cleanup repeatable jobs cũ.</div></div>
+            <div class="step"><div class="when">Step 2</div><div class="pct">Worker</div><div class="d">Deploy worker logic lock + pop strategy mới.</div></div>
+            <div class="step"><div class="when">Step 3</div><div class="pct">Observe</div><div class="d">Quan sát lock-acquire pattern, batch size, và độ khớp dữ liệu DB.</div></div>
+          </div>
+        </section>
+
+      </main>
+
+      <nav class="toc">
+        <div class="t-head">In this doc</div>
+        <a href="#why">1) Bối cảnh</a>
+        <a href="#timeline">2) Timeline debug</a>
+        <a href="#investigation">3) Tra cứu kỹ thuật</a>
+        <a href="#changes">4) Thay đổi code</a>
+        <a href="#changes" class="sub">like.worker.ts</a>
+        <a href="#changes" class="sub">like.producer.ts</a>
+        <a href="#changes" class="sub">server.ts / repositories</a>
+        <a href="#routeflow">5) Module route flow</a>
+        <a href="#logging">6) Logging strategy</a>
+        <a href="#issue">7) Issue template</a>
+        <a href="#tests">8) Test plan</a>
+        <a href="#rollout">9) Rollout</a>
+      </nav>
+    </div>
+
+  </div>
+
+  <script>
+    const ROUTE_DETAIL = {
+      req: {
+        title: "POST /api/v1/posts/:id/like",
+        meta: "HTTP entrypoint",
+        body: "Điểm bắt đầu của luồng. Payload gồm <code>publicId</code>, user context từ auth middleware, và <code>isLiked</code> từ request body.",
+        code: "POST /api/v1/posts/:publicId/like\\nbody: { isLiked: boolean }"
+      },
+      route: {
+        title: "post.routes.ts",
+        meta: "routing layer",
+        body: "Route map chịu trách nhiệm gắn middleware đúng thứ tự: auth, validate DTO, response shape.",
+        code: "router.post('/:publicId/like', auth, validateLikeDto, controller.like)"
+      },
+      validate: {
+        title: "validate + auth middleware",
+        meta: "guard + contract",
+        body: "Đảm bảo request hợp lệ trước khi vào service: user đã xác thực, body đúng schema, params hợp lệ.",
+        code: "auth -> validate(likeDto) -> controller"
+      },
+      controller: {
+        title: "PostController.like()",
+        meta: "adapter layer",
+        body: "Controller chỉ map request thành input service, không chứa business logic nặng.",
+        code: "postService.like(publicId, userId, isLiked)"
+      },
+      service: {
+        title: "Service decision",
+        meta: "branch by isLiked",
+        body: "Service rẽ nhánh theo trạng thái like/unlike để cập nhật Redis set/list tương ứng.",
+        code: "if (isLiked) -> add\\nelse -> remove"
+      },
+      "like-branch": {
+        title: "Like branch",
+        meta: "sync path on request",
+        body: "SADD user vào set trạng thái like, tăng count tạm, rồi LPUSH payload vào list <code>likes_add</code> cho worker đồng bộ DB.",
+        code: "SADD post:{id}:likes userId\\nLPUSH likes_add JSON(payload)"
+      },
+      "unlike-branch": {
+        title: "Unlike branch",
+        meta: "sync path on request",
+        body: "SREM user khỏi set, giảm count tạm, LPUSH payload vào list <code>likes_remove</code> để worker xử lý batch.",
+        code: "SREM post:{id}:likes userId\\nLPUSH likes_remove JSON(payload)"
+      },
+      response: {
+        title: "HTTP response",
+        meta: "fast return",
+        body: "API trả kết quả nhanh từ Redis path, không chờ ghi DB. Đây là điểm giữ latency ổn định khi traffic cao.",
+        code: "return { likeCount }"
+      },
+      scheduler: {
+        title: "INIT_SYNC_JOB scheduler",
+        meta: "repeat every 5s",
+        body: "Producer tạo repeat job định kỳ. Trước khi tạo, cleanup job cũ cùng name để tránh scheduler bị chồng.",
+        code: "getRepeatableJobs -> removeRepeatableByKey\\nadd(INIT_SYNC_JOB, { repeat: { every: 5000 } })"
+      },
+      lock: {
+        title: "LikeWorker lock",
+        meta: "NX/EX token",
+        body: "Worker dùng lock token để đảm bảo chỉ một nhịp sync được quyền chạy tại cùng thời điểm.",
+        code: "SET like:sync:init:lock token NX EX 30"
+      },
+      "batch-pop": {
+        title: "Pop Redis batch",
+        meta: "compatibility-first",
+        body: "Sau khi xác minh mismatch API Redis client/runtime, flow được chốt bằng vòng lặp <code>rPop</code> để tương thích chắc chắn.",
+        code: "for (i < count) { item = rPop(key); if (!item) break; }"
+      },
+      "db-sync": {
+        title: "Repository writes",
+        meta: "final persistence",
+        body: "Batch được group theo postPublicId rồi ghi DB: create/delete likes và cộng/trừ likes_count trực tiếp trên bảng posts.",
+        code: "likeRepository.createMany/deleteMany\\npostRepository.incrementLikedCount/decrementLikedCount"
+      },
+      done: {
+        title: "Sync done",
+        meta: "end state",
+        body: "Sau khi hoàn tất, lock được release theo token ownership để tránh unlock nhầm phiên chạy khác.",
+        code: "if currentToken === token -> DEL lockKey"
+      }
+    };
+
+    const routeNodes = document.querySelectorAll(".route-node");
+    const routeTitle = document.getElementById("route-title");
+    const routeMeta = document.getElementById("route-meta");
+    const routeBody = document.getElementById("route-body");
+    const routeCode = document.getElementById("route-code");
+
+    routeNodes.forEach((node) => {
+      node.addEventListener("click", () => {
+        routeNodes.forEach((n) => n.classList.remove("active"));
+        node.classList.add("active");
+        const detail = ROUTE_DETAIL[node.dataset.r];
+        if (!detail) return;
+        routeTitle.textContent = detail.title;
+        routeMeta.textContent = detail.meta;
+        routeBody.innerHTML = detail.body;
+        routeCode.textContent = detail.code;
+      });
+    });
+
+    const firstRouteNode = document.querySelector('.route-node[data-r="req"]');
+    if (firstRouteNode) {
+      firstRouteNode.classList.add("active");
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,1619 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Notification grouping job - flow and bug analysis</title>
+<style>
+  :root {
+    --ivory:   #FAF9F5;
+    --slate:   #141413;
+    --clay:    #D97757;
+    --oat:     #E3DACC;
+    --olive:   #788C5D;
+    --rust:    #B04A3F;
+    --gold:    #C9A227;
+    --blue:    #4E7896;
+    --gray-100:#F8F6EF;
+    --gray-150:#F0EEE6;
+    --gray-250:#DFDCD1;
+    --gray-300:#D1CFC5;
+    --gray-500:#87867F;
+    --gray-700:#3D3D3A;
+    --serif: ui-serif, Georgia, "Times New Roman", serif;
+    --sans:  system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --mono:  ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--ivory);
+    color: var(--gray-700);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    padding: 52px 24px 96px;
+  }
+
+  .page {
+    max-width: 1180px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 230px minmax(0, 1fr);
+    gap: 42px;
+  }
+
+  @media (max-width: 980px) {
+    body { padding: 34px 18px 72px; }
+    .page { grid-template-columns: 1fr; }
+    nav { display: none; }
+  }
+
+  nav {
+    position: sticky;
+    top: 28px;
+    align-self: start;
+    font-size: 13px;
+  }
+
+  nav .label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gray-500);
+    margin-bottom: 12px;
+  }
+
+  nav a {
+    display: block;
+    padding: 5px 0 5px 12px;
+    border-left: 2px solid var(--gray-300);
+    color: var(--gray-700);
+    text-decoration: none;
+  }
+
+  nav a:hover { color: var(--slate); border-color: var(--clay); }
+  nav a.l2 { padding-left: 24px; font-size: 12.5px; color: var(--gray-500); }
+
+  nav .files {
+    margin-top: 28px;
+    border-top: 1px solid var(--gray-300);
+    padding-top: 16px;
+  }
+
+  nav .files code {
+    display: block;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--gray-500);
+    padding: 3px 0;
+  }
+
+  main { min-width: 0; }
+
+  header { margin-bottom: 20px; }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--gray-500);
+    margin-bottom: 10px;
+  }
+
+  h1 {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: clamp(30px, 4vw, 44px);
+    line-height: 1.08;
+    color: var(--slate);
+    letter-spacing: 0;
+    margin-bottom: 14px;
+  }
+
+  .lead {
+    font-size: 15.5px;
+    color: var(--gray-700);
+    max-width: 760px;
+  }
+
+  code, pre {
+    font-family: var(--mono);
+  }
+
+  code {
+    font-size: 13px;
+    color: var(--slate);
+  }
+
+  h2 {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 24px;
+    color: var(--slate);
+    margin: 42px 0 14px;
+    scroll-margin-top: 24px;
+  }
+
+  h3 {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 18px;
+    color: var(--slate);
+    margin-bottom: 8px;
+  }
+
+  p { margin-bottom: 12px; max-width: 780px; }
+
+  .tldr {
+    border: 1.5px solid var(--gray-300);
+    border-left: 4px solid var(--clay);
+    border-radius: 10px;
+    background: #fff;
+    padding: 18px 20px;
+    margin: 20px 0 18px;
+  }
+
+  .tldr b { color: var(--slate); }
+
+  .facts {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin: 18px 0 30px;
+  }
+
+  @media (max-width: 900px) { .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 560px) { .facts { grid-template-columns: 1fr; } }
+
+  .fact {
+    border: 1.5px solid var(--gray-300);
+    border-radius: 10px;
+    background: #fff;
+    padding: 14px 15px;
+    min-height: 96px;
+  }
+
+  .fact .k {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--gray-500);
+    margin-bottom: 5px;
+  }
+
+  .fact .v {
+    font-size: 14px;
+    color: var(--slate);
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 318px;
+    gap: 24px;
+    align-items: start;
+  }
+
+  @media (max-width: 980px) { .layout { grid-template-columns: 1fr; } }
+
+  .canvas,
+  .panel,
+  .card,
+  .table-wrap,
+  details,
+  .tabs,
+  .logbox,
+  .timeline,
+  .sequence {
+    border: 1.5px solid var(--gray-300);
+    border-radius: 10px;
+    background: #fff;
+  }
+
+  .canvas {
+    padding: 22px;
+    overflow-x: auto;
+  }
+
+  svg.flow {
+    display: block;
+    width: 100%;
+    min-width: 760px;
+    height: auto;
+  }
+
+  .flow text {
+    font-family: var(--mono);
+    font-size: 12px;
+    fill: var(--slate);
+    pointer-events: none;
+  }
+
+  .flow .sub { font-size: 10.5px; fill: var(--gray-500); }
+  .flow .tiny { font-size: 9.5px; fill: var(--gray-500); }
+  .flow .lane { font-size: 11px; fill: var(--gray-500); letter-spacing: 0.04em; }
+
+  .node rect {
+    fill: #fff;
+    stroke: var(--gray-300);
+    stroke-width: 1.5;
+    rx: 8;
+  }
+
+  .node.term rect { fill: var(--gray-150); rx: 22; }
+  .node.redis rect { fill: rgba(78,120,150,0.11); stroke: var(--blue); }
+  .node.queue rect { fill: rgba(201,162,39,0.12); stroke: var(--gold); }
+  .node.db rect { fill: rgba(120,140,93,0.13); stroke: var(--olive); }
+  .node.bad rect { fill: rgba(176,74,63,0.10); stroke: var(--rust); }
+  .node.warn rect { fill: rgba(217,119,87,0.12); stroke: var(--clay); }
+
+  .node {
+    cursor: pointer;
+    transition: transform 120ms ease;
+  }
+
+  .node:hover { transform: translateY(-1px); }
+
+  .node.active rect {
+    stroke: var(--clay);
+    stroke-width: 2.5;
+  }
+
+  .edge {
+    stroke: var(--gray-500);
+    stroke-width: 1.5;
+    fill: none;
+    marker-end: url(#arrow);
+  }
+
+  .edge.redis { stroke: var(--blue); marker-end: url(#arrow-blue); }
+  .edge.queue { stroke: var(--gold); marker-end: url(#arrow-gold); }
+  .edge.db { stroke: var(--olive); marker-end: url(#arrow-olive); }
+  .edge.bad { stroke: var(--rust); stroke-dasharray: 4 4; marker-end: url(#arrow-rust); }
+
+  .panel {
+    position: sticky;
+    top: 24px;
+    padding: 18px 18px 20px;
+  }
+
+  @media (max-width: 980px) { .panel { position: static; } }
+
+  .panel .hint {
+    font-size: 12px;
+    color: var(--gray-500);
+    margin-bottom: 12px;
+  }
+
+  .panel h3 { font-size: 19px; }
+
+  .panel .meta {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--gray-500);
+    margin-bottom: 12px;
+    overflow-wrap: anywhere;
+  }
+
+  .panel p {
+    font-size: 13.5px;
+    margin-bottom: 12px;
+  }
+
+  .panel pre,
+  .codeblock {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    line-height: 1.55;
+    color: var(--slate);
+    background: var(--gray-150);
+    border: 1px solid var(--gray-300);
+    border-radius: 8px;
+    padding: 10px 12px;
+    overflow-x: auto;
+    white-space: pre-wrap;
+  }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 14px;
+    font-size: 12px;
+    color: var(--gray-700);
+  }
+
+  .legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .chip {
+    width: 22px;
+    height: 14px;
+    border: 1.5px solid var(--gray-300);
+    border-radius: 4px;
+    background: #fff;
+  }
+
+  .chip.redis { background: rgba(78,120,150,0.11); border-color: var(--blue); }
+  .chip.queue { background: rgba(201,162,39,0.12); border-color: var(--gold); }
+  .chip.db { background: rgba(120,140,93,0.13); border-color: var(--olive); }
+  .chip.bad { background: rgba(176,74,63,0.10); border-color: var(--rust); }
+  .chip.warn { background: rgba(217,119,87,0.12); border-color: var(--clay); }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  @media (max-width: 860px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  .grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  @media (max-width: 920px) { .grid-3 { grid-template-columns: 1fr; } }
+
+  .card {
+    padding: 16px 18px;
+  }
+
+  .card p {
+    font-size: 14px;
+    margin-bottom: 10px;
+  }
+
+  .card ul {
+    margin-left: 18px;
+    font-size: 14px;
+  }
+
+  .card li { margin: 6px 0; }
+
+  .tagrow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-top: 12px;
+  }
+
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--gray-300);
+    border-radius: 999px;
+    background: var(--gray-150);
+    color: var(--gray-700);
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+
+  .table-wrap { overflow: hidden; margin: 14px 0; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+  }
+
+  th {
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--gray-500);
+    background: var(--gray-150);
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--gray-300);
+  }
+
+  td {
+    vertical-align: top;
+    padding: 11px 12px;
+    border-bottom: 1px solid var(--gray-250);
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  .sev {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 58px;
+    border-radius: 999px;
+    border: 1px solid var(--gray-300);
+    font-family: var(--mono);
+    font-size: 10.5px;
+    padding: 2px 7px;
+  }
+
+  .sev.high { color: var(--rust); border-color: var(--rust); background: rgba(176,74,63,0.08); }
+  .sev.med { color: #966D12; border-color: var(--gold); background: rgba(201,162,39,0.10); }
+  .sev.low { color: var(--olive); border-color: var(--olive); background: rgba(120,140,93,0.10); }
+  .sev.info { color: var(--blue); border-color: var(--blue); background: rgba(78,120,150,0.09); }
+
+  details {
+    margin: 14px 0;
+    overflow: hidden;
+  }
+
+  summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 14px 16px;
+    font-family: var(--serif);
+    font-size: 16px;
+    color: var(--slate);
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  summary::-webkit-details-marker { display: none; }
+
+  summary::before {
+    content: ">";
+    color: var(--clay);
+    font-family: var(--mono);
+    font-size: 12px;
+    transition: transform 120ms;
+  }
+
+  details[open] summary::before { transform: rotate(90deg); }
+
+  summary .where {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--gray-500);
+    margin-left: auto;
+  }
+
+  details .body { padding: 0 16px 16px; }
+  details .body p { font-size: 14px; }
+
+  .logbox {
+    padding: 16px 18px;
+    margin: 14px 0;
+    border-left: 4px solid var(--rust);
+  }
+
+  .logbox pre {
+    font-size: 12px;
+    line-height: 1.55;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    color: var(--slate);
+  }
+
+  .timeline {
+    padding: 10px 0;
+    margin: 14px 0;
+  }
+
+  .step {
+    display: grid;
+    grid-template-columns: 56px minmax(0, 1fr);
+    gap: 12px;
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--gray-250);
+  }
+
+  .step:last-child { border-bottom: none; }
+
+  .step .num {
+    width: 36px;
+    height: 36px;
+    border-radius: 999px;
+    border: 1.5px solid var(--gray-300);
+    background: var(--gray-150);
+    color: var(--slate);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+
+  .step .title {
+    color: var(--slate);
+    font-weight: 650;
+    margin-bottom: 3px;
+  }
+
+  .step .desc {
+    font-size: 14px;
+    color: var(--gray-700);
+  }
+
+  .tabs {
+    margin: 16px 0;
+    overflow: hidden;
+  }
+
+  .tabbar {
+    display: flex;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--gray-300);
+    background: var(--gray-150);
+  }
+
+  .tabbar button {
+    appearance: none;
+    border: none;
+    border-right: 1px solid var(--gray-300);
+    background: none;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--gray-500);
+    padding: 10px 14px;
+    cursor: pointer;
+  }
+
+  .tabbar button.on {
+    background: #fff;
+    color: var(--slate);
+    border-bottom: 2px solid var(--clay);
+    margin-bottom: -1px;
+  }
+
+  .tabs pre {
+    display: none;
+    margin: 0;
+    padding: 16px 18px;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--slate);
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  .tabs pre.on { display: block; }
+
+  .callout {
+    display: flex;
+    gap: 12px;
+    border: 1.5px solid var(--oat);
+    background: rgba(227,218,204,0.36);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin: 18px 0;
+    font-size: 14px;
+  }
+
+  .callout .ico {
+    color: var(--clay);
+    font-weight: 700;
+    font-family: var(--mono);
+  }
+
+  .sequence {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0;
+    overflow: hidden;
+    margin: 16px 0;
+  }
+
+  @media (max-width: 900px) { .sequence { grid-template-columns: 1fr; } }
+
+  .seq {
+    padding: 16px;
+    border-right: 1px solid var(--gray-300);
+  }
+
+  .seq:last-child { border-right: none; }
+  @media (max-width: 900px) {
+    .seq { border-right: none; border-bottom: 1px solid var(--gray-300); }
+    .seq:last-child { border-bottom: none; }
+  }
+
+  .seq .n {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--gray-500);
+    margin-bottom: 6px;
+  }
+
+  .seq .t {
+    color: var(--slate);
+    font-weight: 650;
+    margin-bottom: 6px;
+  }
+
+  .seq p {
+    font-size: 13.5px;
+    margin-bottom: 0;
+  }
+
+  .footer {
+    margin-top: 52px;
+    padding-top: 18px;
+    border-top: 1px solid var(--gray-300);
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--gray-500);
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <nav>
+    <div class="label">On this page</div>
+    <a href="#tldr">TL;DR</a>
+    <a href="#flow">Sơ đồ luồng</a>
+    <a href="#flow" class="l2">Route -> Worker -> DB</a>
+    <a href="#redis">Redis contract</a>
+    <a href="#worker">Worker batch</a>
+    <a href="#log">Đọc log lỗi</a>
+    <a href="#bugs">Root cause</a>
+    <a href="#fix">Hướng sửa</a>
+    <a href="#tests">Test checklist</a>
+    <div class="files">
+      <div class="label">Files read</div>
+      <code>workers/notification.worker.ts</code>
+      <code>notification.service.ts</code>
+      <code>notification.repository.ts</code>
+      <code>notification.producer.ts</code>
+      <code>post.service.ts</code>
+      <code>server.ts</code>
+      <code>app.ts</code>
+      <code>prisma/schema.prisma</code>
+    </div>
+  </nav>
+
+  <main>
+    <header>
+      <div class="eyebrow">Threads API v2 · Notification Grouping Analysis · 2026-05-16</div>
+      <h1>Notification grouping job: luồng kỹ thuật và lỗi count không xuống DB</h1>
+      <p class="lead">
+        Report này đi từ route <code>POST /api/v1/posts/:publicId/reply</code>, qua
+        <code>postService.reply()</code>, Redis pending group, BullMQ repeat job, worker
+        <code>initSyncNotificationBatch</code>, rồi tới bảng <code>notification_groups</code>.
+        Mục tiêu là chỉ rõ vì sao Redis <code>count</code> tăng nhưng DB không update, và nên sửa theo mức nào.
+      </p>
+    </header>
+
+    <section id="tldr" class="tldr">
+      <p><b>Kết luận nhanh:</b> log của bạn cho thấy Redis hash của pending notification chỉ còn
+        <code>{ count: "8" }</code>, thiếu <code>authorId</code>, <code>postPublicId</code>,
+        <code>notificationType</code>, <code>targetType</code>, <code>lastActorId</code>. Worker có guard
+        <code>if (!data?.authorId)</code> nên bỏ qua key đó, batch thành <code>[]</code>, sau đó
+        <code>createMany([])</code> không ghi gì xuống DB.</p>
+      <p><b>Lỗi làm count cứ tăng tiếp:</b> khi gặp key thiếu metadata, worker hiện chỉ xóa
+        <code>${key}:queued</code>, nhưng không xóa hash <code>key</code> và set
+        <code>${key}:actors</code>. Nếu actor cũ reply tiếp, <code>sAdd</code> trả <code>0</code>, code lại
+        không <code>hSet</code> metadata vì metadata chỉ được set khi actor là actor mới. Kết quả là một
+        pending key bị "kẹt độc": count cứ tăng, worker cứ pop, rồi lại bỏ qua.</p>
+      <p><b>Lỗi thiết kế thứ hai:</b> DB path hiện là <code>notificationGroup.createMany(..., skipDuplicates: true)</code>.
+        Trong schema chỉ có index <code>@@index([recipientId, type, targetType, targetId])</code>, không có unique
+        composite, nên <code>skipDuplicates</code> không biến insert thành update. Nếu metadata đầy đủ thì hệ thống
+        vẫn chỉ insert row mới, không upsert/increment group cũ.</p>
+    </section>
+
+    <div class="facts">
+      <div class="fact">
+        <div class="k">Entry point</div>
+        <div class="v"><code>POST /api/v1/posts/:publicId/reply</code></div>
+      </div>
+      <div class="fact">
+        <div class="k">Redis group key</div>
+        <div class="v"><code>notification:pending:post:{authorId}:{postPublicId}:{type}</code></div>
+      </div>
+      <div class="fact">
+        <div class="k">Scheduler</div>
+        <div class="v"><code>notificationProducer</code> adds repeat job every <code>40_000ms</code></div>
+      </div>
+      <div class="fact">
+        <div class="k">Current DB write</div>
+        <div class="v"><code>createMany()</code>, no group update, no count increment against existing row</div>
+      </div>
+    </div>
+
+    <h2 id="flow">Sơ đồ luồng kỹ thuật</h2>
+    <p>
+      Sơ đồ này vẽ đúng luồng hiện tại cho case post replies. Click từng node để xem file, hàm, dữ liệu vào ra,
+      và điểm có thể hỏng.
+    </p>
+
+    <div class="layout">
+      <div>
+        <div class="canvas">
+          <svg class="flow" viewBox="0 0 900 720" role="img" aria-label="Notification grouping flow from reply route to worker and DB">
+            <defs>
+              <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M0,0 L10,5 L0,10 z" fill="#87867F"/>
+              </marker>
+              <marker id="arrow-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M0,0 L10,5 L0,10 z" fill="#4E7896"/>
+              </marker>
+              <marker id="arrow-gold" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M0,0 L10,5 L0,10 z" fill="#C9A227"/>
+              </marker>
+              <marker id="arrow-olive" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M0,0 L10,5 L0,10 z" fill="#788C5D"/>
+              </marker>
+              <marker id="arrow-rust" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M0,0 L10,5 L0,10 z" fill="#B04A3F"/>
+              </marker>
+            </defs>
+
+            <text class="lane" x="40" y="30">HTTP request path</text>
+            <text class="lane" x="40" y="322">Redis pending state</text>
+            <text class="lane" x="470" y="322">Async worker path</text>
+            <text class="lane" x="470" y="566">Read / realtime path</text>
+
+            <path class="edge" d="M145,88 L145,128"/>
+            <path class="edge" d="M145,188 L145,228"/>
+            <path class="edge" d="M145,288 L145,360"/>
+            <path class="edge redis" d="M250,390 L392,390"/>
+            <path class="edge queue" d="M540,390 L650,390"/>
+            <path class="edge queue" d="M705,425 L705,460"/>
+            <path class="edge redis" d="M650,500 L540,500"/>
+            <path class="edge bad" d="M520,528 C435,610 296,548 205,440"/>
+            <path class="edge db" d="M705,540 L705,586"/>
+            <path class="edge db" d="M655,630 C548,664 442,650 330,620"/>
+            <path class="edge" d="M760,610 L820,610"/>
+
+            <text class="tiny" x="158" y="116">Express route</text>
+            <text class="tiny" x="158" y="216">create reply</text>
+            <text class="tiny" x="158" y="340">after transaction</text>
+            <text class="tiny" x="284" y="378">hIncrBy / sAdd / hSet</text>
+            <text class="tiny" x="565" y="378">lPush key</text>
+            <text class="tiny" x="716" y="452">every 40s</text>
+            <text class="tiny" x="560" y="490">rPopCount + hGetAll</text>
+            <text class="tiny" x="360" y="574" fill="#B04A3F">missing authorId -> skipped</text>
+            <text class="tiny" x="718" y="572">createMany</text>
+            <text class="tiny" x="780" y="598">public trigger</text>
+
+            <g class="node term" data-k="client">
+              <rect x="45" y="48" width="200" height="40"/>
+              <text x="145" y="73" text-anchor="middle">Client reply post</text>
+            </g>
+
+            <g class="node" data-k="route">
+              <rect x="45" y="128" width="200" height="60"/>
+              <text x="145" y="151" text-anchor="middle">postRouter</text>
+              <text class="sub" x="145" y="169" text-anchor="middle">/:publicId/reply</text>
+            </g>
+
+            <g class="node" data-k="controller">
+              <rect x="45" y="228" width="200" height="60"/>
+              <text x="145" y="251" text-anchor="middle">postController.replyPost</text>
+              <text class="sub" x="145" y="269" text-anchor="middle">req.user.sub -> service</text>
+            </g>
+
+            <g class="node warn" data-k="postservice">
+              <rect x="45" y="360" width="205" height="72"/>
+              <text x="147" y="384" text-anchor="middle">postService.reply()</text>
+              <text class="sub" x="147" y="402" text-anchor="middle">create reply in DB</text>
+              <text class="sub" x="147" y="418" text-anchor="middle">then notify Redis</text>
+            </g>
+
+            <g class="node redis" data-k="redis">
+              <rect x="392" y="348" width="148" height="84"/>
+              <text x="466" y="374" text-anchor="middle">Redis hash + set</text>
+              <text class="sub" x="466" y="393" text-anchor="middle">count, metadata</text>
+              <text class="sub" x="466" y="411" text-anchor="middle">actors, queued</text>
+            </g>
+
+            <g class="node queue" data-k="pendinglist">
+              <rect x="650" y="348" width="110" height="84"/>
+              <text x="705" y="374" text-anchor="middle">Pending list</text>
+              <text class="sub" x="705" y="393" text-anchor="middle">notification:</text>
+              <text class="sub" x="705" y="411" text-anchor="middle">pending:keys</text>
+            </g>
+
+            <g class="node queue" data-k="scheduler">
+              <rect x="620" y="460" width="170" height="40"/>
+              <text x="705" y="485" text-anchor="middle">BullMQ repeat job</text>
+            </g>
+
+            <g class="node bad" data-k="worker">
+              <rect x="520" y="500" width="250" height="40"/>
+              <text x="645" y="525" text-anchor="middle">notificationWorker.runBatchNotification()</text>
+            </g>
+
+            <g class="node db" data-k="database">
+              <rect x="600" y="586" width="210" height="64"/>
+              <text x="705" y="611" text-anchor="middle">notification_groups</text>
+              <text class="sub" x="705" y="629" text-anchor="middle">createMany, no upsert</text>
+            </g>
+
+            <g class="node" data-k="api">
+              <rect x="120" y="590" width="210" height="64"/>
+              <text x="225" y="615" text-anchor="middle">GET /notification</text>
+              <text class="sub" x="225" y="633" text-anchor="middle">findByRecipientId</text>
+            </g>
+
+            <g class="node warn" data-k="pusher">
+              <rect x="820" y="586" width="62" height="64"/>
+              <text x="851" y="611" text-anchor="middle">Pusher</text>
+              <text class="sub" x="851" y="629" text-anchor="middle">global</text>
+            </g>
+          </svg>
+        </div>
+
+        <div class="legend">
+          <span><i class="chip"></i>HTTP/service</span>
+          <span><i class="chip redis"></i>Redis state</span>
+          <span><i class="chip queue"></i>BullMQ/list</span>
+          <span><i class="chip db"></i>DB read/write</span>
+          <span><i class="chip warn"></i>Needs attention</span>
+          <span><i class="chip bad"></i>Confirmed bug path</span>
+        </div>
+      </div>
+
+      <aside class="panel">
+        <div class="hint">Click một node trong sơ đồ để xem chi tiết.</div>
+        <h3 id="panel-title">Client reply post</h3>
+        <div class="meta" id="panel-meta">POST /api/v1/posts/:publicId/reply</div>
+        <p id="panel-body">
+          User gửi reply cho một post. Đây là entry point của luồng notification group hiện tại.
+        </p>
+        <pre id="panel-code">Body: CreatePostDto
+Auth: req.user.sub
+Output: reply publicId</pre>
+      </aside>
+    </div>
+
+    <h2 id="redis">Redis contract hiện tại</h2>
+    <p>
+      <code>notificationService.addPostNotificationGroup()</code> đang dùng ba loại key để gom event trước khi worker flush.
+      Contract này chưa được đóng gói atomic, nên khi một key bị thiếu metadata, nó có thể tự hồi phục hoặc kẹt tùy actor.
+      Với code hiện tại, trường hợp kẹt là trường hợp log của bạn đang gặp.
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Redis key</th>
+            <th>Type</th>
+            <th>Data mong đợi</th>
+            <th>Vai trò</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>notification:pending:post:{authorId}:{postPublicId}:{type}</code></td>
+            <td>Hash</td>
+            <td><code>count</code>, <code>authorId</code>, <code>postPublicId</code>, <code>notificationType</code>, <code>targetType</code>, <code>lastActorId</code>, <code>updatedAt</code></td>
+            <td>Bucket chính cho một notification group pending.</td>
+          </tr>
+          <tr>
+            <td><code>{key}:actors</code></td>
+            <td>Set</td>
+            <td>Các <code>userId</code> đã tạo event trong batch.</td>
+            <td>Lưu unique actors để UI có thể hiển thị "A, B và N người khác".</td>
+          </tr>
+          <tr>
+            <td><code>{key}:queued</code></td>
+            <td>String TTL 60s</td>
+            <td><code>"1"</code></td>
+            <td>Chống push cùng một pending key vào list quá nhiều lần trong 60 giây.</td>
+          </tr>
+          <tr>
+            <td><code>notification:pending:keys</code></td>
+            <td>List</td>
+            <td>Danh sách các pending hash key.</td>
+            <td>Worker <code>rPopCount(..., 10)</code> để lấy tối đa 10 key mỗi job.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="sequence">
+      <div class="seq">
+        <div class="n">01 · count</div>
+        <div class="t"><code>hIncrBy(key, "count", 1)</code></div>
+        <p>Luôn tăng count. Nếu hash chưa tồn tại, Redis tự tạo hash chỉ có field <code>count</code>.</p>
+      </div>
+      <div class="seq">
+        <div class="n">02 · actors</div>
+        <div class="t"><code>sAdd(actorsKey, userId)</code></div>
+        <p>Trả <code>1</code> nếu actor mới, <code>0</code> nếu actor đã có trong set.</p>
+      </div>
+      <div class="seq">
+        <div class="n">03 · metadata</div>
+        <div class="t"><code>if (added === 1) hSet(...)</code></div>
+        <p>Đây là điểm yếu. Metadata chỉ được set khi actor mới. Actor cũ không thể repair hash thiếu field.</p>
+      </div>
+      <div class="seq">
+        <div class="n">04 · enqueue</div>
+        <div class="t"><code>set queued NX EX 60</code></div>
+        <p>Nếu marker chưa tồn tại thì <code>lPush</code> pending list để worker xử lý sau.</p>
+      </div>
+    </div>
+
+    <details open>
+      <summary>Đoạn code producer gây kẹt metadata <span class="where">notification.service.ts:76-88</span></summary>
+      <div class="body">
+        <pre class="codeblock">await redisService.hIncrBy(key, "count", 1);
+const added = await redisService.sAdd(actorsKey, userId);
+if (added === 1) {
+  await redisService.hSet(key, {
+    authorId,
+    postPublicId,
+    notificationType,
+    targetType,
+    lastActorId: userId,
+    userId: userId,
+    updatedAt: Date.now().toString(),
+  });
+}</pre>
+        <p>
+          Nếu hash đang ở trạng thái <code>{ count: "8" }</code> và <code>{key}:actors</code> đã có user đó,
+          <code>sAdd</code> trả <code>0</code>, nên <code>hSet</code> không chạy. Count tăng, metadata vẫn thiếu.
+        </p>
+      </div>
+    </details>
+
+    <h2 id="worker">Worker batch hiện tại</h2>
+    <p>
+      Worker lấy key từ list, đọc hash và actors set, rồi build batch cho repository. Nếu hash thiếu
+      <code>authorId</code>, worker chỉ xóa queued marker và bỏ qua. Vì không xóa hash và actors set, key bị lỗi
+      có thể quay lại lần sau.
+    </p>
+
+    <div class="timeline">
+      <div class="step">
+        <div class="num">01</div>
+        <div>
+          <div class="title">Pop pending key</div>
+          <div class="desc"><code>rPopCount("notification:pending:keys", 10)</code>. Log <code>BEFORE POP</code> hiện đang in sau khi pop, nên tên log gây hiểu nhầm.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="num">02</div>
+        <div>
+          <div class="title">Read payload</div>
+          <div class="desc"><code>hGetAll(key)</code> và <code>sMembers(`${key}:actors`)</code>.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="num">03</div>
+        <div>
+          <div class="title">Guard metadata</div>
+          <div class="desc">Nếu <code>!data.authorId</code>, worker <code>continue</code>. Đây là branch đã làm batch rỗng trong log.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="num">04</div>
+        <div>
+          <div class="title">Push batch row</div>
+          <div class="desc">Khi metadata đủ, batch có <code>authorId</code>, <code>postPublicId</code>, <code>notificationType</code>, <code>targetType</code>, <code>lastActorId</code>, <code>actorIds</code>, <code>count</code>.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="num">05</div>
+        <div>
+          <div class="title">Delete successful Redis state</div>
+          <div class="desc">Chỉ khi push batch thành công mới xóa <code>key</code>, <code>{key}:queued</code>, <code>{key}:actors</code>.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="num">06</div>
+        <div>
+          <div class="title">Persist and trigger</div>
+          <div class="desc"><code>addNotificationPostAllBatch(batch)</code> gọi <code>createMany</code>, sau đó trigger Pusher channel <code>notifications</code>.</div>
+        </div>
+      </div>
+    </div>
+
+    <details open>
+      <summary>Branch worker bỏ qua key thiếu metadata <span class="where">notification.worker.ts:49-51</span></summary>
+      <div class="body">
+        <pre class="codeblock">if (!data?.authorId) {
+  await redisService.del(`${key}:queued`);
+  continue;
+}</pre>
+        <p>
+          Branch này nên được coi là poison payload. Nếu đã quyết định không xử lý được, cần xóa toàn bộ state
+          liên quan hoặc đưa vào dead-letter/debug key. Chỉ xóa queued marker làm key có cơ hội được enqueue lại
+          nhưng không có cơ chế tự sửa metadata.
+        </p>
+      </div>
+    </details>
+
+    <h2 id="log">Đọc log lỗi của bạn</h2>
+    <p>
+      Đây là diễn giải sát log hiện tại. Phần quan trọng nhất là <code>data</code> chỉ có <code>count</code>.
+      Điều đó khớp hoàn toàn với branch skip trong worker.
+    </p>
+
+    <div class="logbox">
+      <pre>BEFORE POP: { listLength: 0, listType: 'none' }
+[
+  'notification:pending:post:cmp6mx9xl000bm4tk006umolu:cmp6myjs4064jkotkllxyleuj:POST'
+]
+PROCESS: {
+  key: 'notification:pending:post:cmp6mx9xl000bm4tk006umolu:cmp6myjs4064jkotkllxyleuj:POST',
+  data: { count: '8' },
+  actorIds: [
+    'cmp6mxa5b001wm4tkngyv80vq',
+    'cmp6mxa5o001zm4tkmhcmoqbe'
+  ]
+}
+INFO: Adding post notification group batch to Redis []
+INFO: Processed initSyncNotificationBatch: []</pre>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>Vì sao <code>listLength: 0</code>?</h3>
+        <p>
+          Trong worker, code pop list trước rồi mới log <code>lLen</code>. Vì vậy label <code>BEFORE POP</code>
+          đang sai thời điểm. Log này thực ra là "sau pop". List có thể vừa được pop hết nên length bằng 0,
+          không có nghĩa là worker không lấy được key.
+        </p>
+        <div class="tagrow">
+          <span class="tag">observability</span>
+          <span class="tag">misleading log</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Vì sao DB không update?</h3>
+        <p>
+          Worker thấy <code>!data.authorId</code>, bỏ qua key, nên <code>notificationBatch</code> vẫn là
+          <code>[]</code>. Service gọi <code>createMany([])</code>, Prisma commit một transaction rỗng, DB không có
+          row mới và cũng không update row cũ.
+        </p>
+        <div class="tagrow">
+          <span class="tag">confirmed</span>
+          <span class="tag">batch empty</span>
+        </div>
+      </div>
+    </div>
+
+    <h2 id="bugs">Root cause và potential risks</h2>
+    <p>
+      Mình tách lỗi thành lỗi confirmed từ log và rủi ro thiết kế. Hai lỗi đầu là nguyên nhân trực tiếp cho
+      "Redis count tăng nhưng DB không update". Lỗi DB upsert là nguyên nhân cho việc notification grouping chưa
+      thật sự là grouping bền vững.
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Vấn đề</th>
+            <th>Mức</th>
+            <th>Bằng chứng</th>
+            <th>Tác động</th>
+            <th>Hướng xử lý</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Redis hash thiếu metadata</td>
+            <td><span class="sev high">HIGH</span></td>
+            <td>Log <code>data: { count: '8' }</code>, không có <code>authorId</code>.</td>
+            <td>Worker không build batch row, DB không ghi.</td>
+            <td>Producer phải <code>hSet</code> metadata mỗi event, không phụ thuộc <code>sAdd</code>.</td>
+          </tr>
+          <tr>
+            <td>Worker cleanup thiếu khi payload invalid</td>
+            <td><span class="sev high">HIGH</span></td>
+            <td>Branch <code>!data.authorId</code> chỉ xóa <code>{key}:queued</code>.</td>
+            <td>Hash và actors set stale, actor cũ reply tiếp vẫn không repair được metadata.</td>
+            <td>Xóa <code>key</code>, <code>{key}:actors</code>, <code>{key}:queued</code>; log dead-letter trước khi xóa nếu cần debug.</td>
+          </tr>
+          <tr>
+            <td>DB dùng insert batch, không upsert group</td>
+            <td><span class="sev high">HIGH</span></td>
+            <td><code>createMany(... skipDuplicates: true)</code> nhưng schema chỉ có index, không có unique composite.</td>
+            <td>Không update count của group cũ; có thể tạo nhiều row cho cùng target.</td>
+            <td>Thêm unique hoặc dùng repository upsert/update theo <code>recipientId + type + targetType + targetId</code>.</td>
+          </tr>
+          <tr>
+            <td>Redis write không atomic</td>
+            <td><span class="sev med">MED</span></td>
+            <td><code>hIncrBy</code>, <code>sAdd</code>, <code>hSet</code>, <code>set NX</code>, <code>lPush</code> là nhiều round-trip.</td>
+            <td>Crash giữa chừng có thể tạo hash chỉ có count hoặc queued state lệch.</td>
+            <td>Dùng Lua script hoặc <code>MULTI</code> cho phần count/metadata/actors; giữ enqueue có kiểm soát.</td>
+          </tr>
+          <tr>
+            <td>Pusher trigger global channel</td>
+            <td><span class="sev med">MED</span></td>
+            <td>Worker trigger <code>pusher.trigger("notifications", ...)</code>.</td>
+            <td>Mọi client subscribe public channel đều nhận tín hiệu chung, count là tổng batch, không theo user.</td>
+            <td>Trigger theo <code>private-user-{recipientId}</code> hoặc channel helper riêng cho từng recipient.</td>
+          </tr>
+          <tr>
+            <td>Notification worker phụ thuộc Redis connect gián tiếp</td>
+            <td><span class="sev med">MED</span></td>
+            <td><code>notification.worker.ts</code> không connect <code>redisService</code>; hiện có thể sống nhờ <code>like.worker.ts</code> connect lúc import.</td>
+            <td>Nếu chạy notification worker riêng, có thể gặp client closed hoặc lỗi timing.</td>
+            <td>Thêm <code>redisReady</code> ngay trong notification worker hoặc tạo helper connect chung.</td>
+          </tr>
+          <tr>
+            <td>Log bị lẫn với like sync job</td>
+            <td><span class="sev low">LOW</span></td>
+            <td>Log <code>Starting like sync job...</code> xuất hiện cạnh notification output.</td>
+            <td>Dễ tưởng notification job chạy mỗi 5s. Thực tế like repeat là 5s, notification repeat là 40s.</td>
+            <td>Thêm prefix <code>[like-worker]</code>, <code>[notification-worker]</code> cho mọi log.</td>
+          </tr>
+          <tr>
+            <td>Notification type chưa rõ nghĩa</td>
+            <td><span class="sev info">INFO</span></td>
+            <td>Reply đang gọi <code>notificationType: POST</code>, <code>targetType: REPLY</code>.</td>
+            <td>FE có thể khó map text nếu type là hành động nhưng đang là domain rộng.</td>
+            <td>Quyết định convention: type là action (<code>REPLY</code>) hay target (<code>POST</code>), rồi dùng nhất quán.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 id="fix">Hướng sửa đề xuất</h2>
+    <p>
+      Có hai lớp sửa. Lớp đầu là vá nhanh để hết mất batch và hết trạng thái kẹt Redis. Lớp hai là sửa đúng
+      semantics grouping ở DB để count thật sự update cùng một notification group.
+    </p>
+
+    <h3>1. Vá nhanh để hết mất batch</h3>
+    <div class="grid-2">
+      <div class="card">
+        <h3>Producer: luôn ghi metadata</h3>
+        <p>
+          Không đặt <code>hSet</code> trong <code>if (added === 1)</code>. Count và metadata là hai loại dữ liệu
+          khác nhau: <code>actorIds</code> có thể unique, nhưng metadata phải luôn có và nên luôn được refresh.
+        </p>
+      </div>
+      <div class="card">
+        <h3>Worker: invalid payload phải cleanup hết</h3>
+        <p>
+          Khi payload thiếu <code>authorId</code>, xóa cả hash, queued marker, actors set. Nếu cần forensic, lưu
+          một record nhỏ vào key debug có TTL trước khi xóa.
+        </p>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <div class="tabbar">
+        <button class="on" data-tab="producer-fix">Producer minimal patch</button>
+        <button data-tab="worker-fix">Worker cleanup patch</button>
+        <button data-tab="empty-batch">Skip empty DB/Pusher</button>
+      </div>
+      <pre class="on" data-pane="producer-fix">await redisService.hSet(key, {
+  authorId,
+  postPublicId,
+  notificationType,
+  targetType,
+  lastActorId: userId,
+  userId,
+  updatedAt: Date.now().toString(),
+});
+
+await redisService.hIncrBy(key, "count", 1);
+await redisService.sAdd(actorsKey, userId);</pre>
+      <pre data-pane="worker-fix">if (!data?.authorId) {
+  baseLogger.warn(`[notification-worker] Invalid pending notification payload: ${key} ${JSON.stringify(data)}`);
+  await redisService.del(key);
+  await redisService.del(`${key}:queued`);
+  await redisService.del(`${key}:actors`);
+  continue;
+}</pre>
+      <pre data-pane="empty-batch">if (notificationBatch.length === 0) {
+  baseLogger.info("[notification-worker] No valid pending notifications after filtering");
+  return;
+}
+
+await notificationService.addNotificationPostAllBatch(notificationBatch);
+await pusher.trigger(/* only after there is a valid batch */);</pre>
+    </div>
+
+    <div class="callout">
+      <div class="ico">NOTE</div>
+      <div>
+        Minimal patch này sẽ giải quyết đúng lỗi bạn đang thấy trong log. Nhưng nó chưa giải quyết triệt để câu
+        "group count trong DB phải update row cũ". Muốn đúng grouping lâu dài, cần đổi repository từ insert-only
+        sang upsert/update.
+      </div>
+    </div>
+
+    <h3>2. Sửa đúng grouping ở DB</h3>
+    <p>
+      Group identity nên là <code>recipientId + type + targetType + targetId</code>. Với reply vào post,
+      <code>recipientId</code> là chủ post gốc, <code>targetId</code> là <code>postPublicId</code> gốc,
+      <code>targetType</code> là <code>REPLY</code> hoặc <code>POST</code> tùy convention UX, và
+      <code>type</code> nên là action mà FE dùng để render text.
+    </p>
+
+    <details open>
+      <summary>Schema option: unique composite cho một group đang active <span class="where">prisma/schema.prisma</span></summary>
+      <div class="body">
+        <pre class="codeblock">model NotificationGroup {
+  id          Int              @id @default(autoincrement())
+  publicId    String           @unique @default(cuid()) @map("public_id")
+  recipientId String           @map("recipient_id")
+  type        NotificationType
+  targetType  String           @map("target_type")
+  targetId    String           @map("target_id")
+  actorIds    Json             @map("actor_ids")
+  count       Int              @default(1)
+  isRead      Boolean          @default(false) @map("is_read")
+  lastActorId String           @map("last_actor_id")
+  lastEventAt DateTime         @map("last_event_at")
+
+  @@unique([recipientId, type, targetType, targetId], map: "uq_notification_group_target")
+  @@index([recipientId, isRead, lastEventAt])
+  @@map("notification_groups")
+}</pre>
+        <p>
+          Nếu muốn gom theo time window, unique key cần thêm field window bucket, ví dụ <code>groupWindowKey</code>.
+          Với MVP hiện tại, một target một group là cách đơn giản nhất.
+        </p>
+      </div>
+    </details>
+
+    <details open>
+      <summary>Repository option: upsert/update thay vì createMany insert-only <span class="where">notification.repository.ts</span></summary>
+      <div class="body">
+        <pre class="codeblock">async upsertPostNotificationGroup(item: NotificationBatchItem, tx = prisma) {
+  const existing = await tx.notificationGroup.findFirst({
+    where: {
+      recipientId: item.authorId,
+      type: item.notificationType,
+      targetType: item.targetType,
+      targetId: item.postPublicId,
+    },
+    select: { id: true, actorIds: true, count: true },
+  });
+
+  const mergedActorIds = mergeUniqueJsonArray(existing?.actorIds, item.actorIds);
+
+  if (!existing) {
+    return tx.notificationGroup.create({ data: {
+      recipientId: item.authorId,
+      type: item.notificationType,
+      targetType: item.targetType,
+      targetId: item.postPublicId,
+      actorIds: mergedActorIds,
+      count: item.count,
+      lastActorId: item.lastActorId,
+      lastEventAt: new Date(),
+      isRead: false,
+    }});
+  }
+
+  return tx.notificationGroup.update({
+    where: { id: existing.id },
+    data: {
+      actorIds: mergedActorIds,
+      count: { increment: item.count },
+      lastActorId: item.lastActorId,
+      lastEventAt: new Date(),
+      isRead: false,
+    },
+  });
+}</pre>
+        <p>
+          Nếu thêm unique composite, có thể dùng <code>upsert</code> theo unique key. Nếu chưa thêm unique, dùng
+          <code>findFirst + update/create</code> trong transaction, nhưng cần chú ý race condition khi nhiều worker
+          cùng xử lý một group.
+        </p>
+      </div>
+    </details>
+
+    <h3>3. Nên dùng transaction hoặc Lua cho Redis write</h3>
+    <p>
+      Minimal patch đã đủ để repair metadata khi actor cũ bắn lại event. Nhưng để giảm trạng thái nửa vời khi process
+      crash giữa các Redis command, nên gom phần write chính thành Lua script hoặc <code>MULTI</code>. Lua tiện hơn
+      nếu muốn <code>SET queued NX EX</code> rồi chỉ <code>LPUSH</code> khi set thành công.
+    </p>
+
+    <div class="tabs">
+      <div class="tabbar">
+        <button class="on" data-tab="lua-flow">Lua flow</button>
+        <button data-tab="tx-flow">Transaction-like flow</button>
+      </div>
+      <pre class="on" data-pane="lua-flow">-- KEYS[1] = hash key
+-- KEYS[2] = actors key
+-- KEYS[3] = queued key
+-- KEYS[4] = pending list
+-- ARGV = metadata + userId
+
+redis.call("HSET", KEYS[1],
+  "authorId", ARGV[1],
+  "postPublicId", ARGV[2],
+  "notificationType", ARGV[3],
+  "targetType", ARGV[4],
+  "lastActorId", ARGV[5],
+  "userId", ARGV[5],
+  "updatedAt", ARGV[6]
+)
+redis.call("HINCRBY", KEYS[1], "count", 1)
+redis.call("SADD", KEYS[2], ARGV[5])
+
+if redis.call("SET", KEYS[3], "1", "NX", "EX", 60) then
+  redis.call("LPUSH", KEYS[4], KEYS[1])
+end</pre>
+      <pre data-pane="tx-flow">const tx = redisService.multi();
+tx.hSet(key, metadata);
+tx.hIncrBy(key, "count", 1);
+tx.sAdd(actorsKey, userId);
+const result = await tx.exec();
+
+const queued = await redisService.set(queuedKey, "1", { EX: 60, NX: true });
+if (queued === "OK") {
+  await redisService.lPush(pendingListKey, key);
+}</pre>
+    </div>
+
+    <h3>4. Pusher nên fan-out theo recipient</h3>
+    <p>
+      Worker hiện trigger <code>notifications</code> public/global channel. Với notification cá nhân, nên gom batch
+      theo <code>authorId</code>/<code>recipientId</code> rồi trigger <code>private-user-{recipientId}</code>. Repo đã có
+      <code>pusherChannel.privateUser(userId)</code> và auth endpoint chỉ cho đúng user subscribe channel đó.
+    </p>
+
+    <pre class="codeblock">const byRecipient = groupBy(notificationBatch, (item) =&gt; item.authorId);
+
+await Promise.all([...byRecipient.entries()].map(([recipientId, items]) =&gt;
+  pusher.trigger(pusherChannel.privateUser(recipientId), "notification:new", {
+    count: items.reduce((sum, item) =&gt; sum + item.count, 0),
+    targetIds: items.map((item) =&gt; item.postPublicId),
+  })
+));</pre>
+
+    <h2 id="tests">Test checklist</h2>
+    <p>
+      Sau khi sửa, đây là các case nên chạy thủ công hoặc viết integration test để bắt đúng lỗi hiện tại.
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Case</th>
+            <th>Setup</th>
+            <th>Kỳ vọng Redis</th>
+            <th>Kỳ vọng DB/API</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1 actor reply 1 lần</td>
+            <td>User B reply post của User A.</td>
+            <td>Hash đủ metadata, count 1, actors có B, pending list có key.</td>
+            <td>Worker tạo hoặc update group count +1 cho A.</td>
+          </tr>
+          <tr>
+            <td>1 actor reply nhiều lần trong cùng window</td>
+            <td>User B reply 3 lần cùng post của A.</td>
+            <td>Count 3, actors vẫn chỉ có B.</td>
+            <td>DB count tăng 3 nếu count là số event; actorIds unique chỉ có B.</td>
+          </tr>
+          <tr>
+            <td>2 actors reply cùng post</td>
+            <td>User B và C reply post của A.</td>
+            <td>Count bằng số reply, actors có B và C.</td>
+            <td>Một notification group cho A, count đúng, actorIds merge đủ.</td>
+          </tr>
+          <tr>
+            <td>Self reply</td>
+            <td>User A reply post của chính A.</td>
+            <td>Không tạo pending key vì <code>userId === authorId</code>.</td>
+            <td>Không có notification.</td>
+          </tr>
+          <tr>
+            <td>Poison key thiếu metadata</td>
+            <td>Manual set hash chỉ có <code>count</code> và actors set.</td>
+            <td>Worker xóa hash, queued, actors hoặc đưa vào dead-letter TTL.</td>
+            <td>Không loop count tăng mãi; log warn rõ key bị invalid.</td>
+          </tr>
+          <tr>
+            <td>Existing DB group</td>
+            <td>Đã có group cho A + post X, rồi có reply mới.</td>
+            <td>Batch flush một item count N.</td>
+            <td>Update row cũ, không tạo duplicate row.</td>
+          </tr>
+          <tr>
+            <td>Worker notification chạy độc lập</td>
+            <td>Chạy chỉ notification worker, không import like worker.</td>
+            <td>Redis client đã connect trước khi gọi <code>rPopCount</code>.</td>
+            <td>Không lỗi client closed.</td>
+          </tr>
+          <tr>
+            <td>Realtime per user</td>
+            <td>A và D online, chỉ A là recipient.</td>
+            <td>Batch recipient A.</td>
+            <td>Chỉ <code>private-user-A</code> nhận event, D không nhận.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 id="open">Open questions cần bạn chốt</h2>
+    <p>
+      Phần này không chặn việc vá bug. Nó giúp quyết định semantics lâu dài để DB và FE không hiểu khác nhau.
+    </p>
+
+    <div class="grid-3">
+      <div class="card">
+        <h3>Count là event hay unique actor?</h3>
+        <p>
+          Hiện Redis <code>count</code> tăng theo số lần reply, còn <code>actorIds</code> là unique actors.
+          Nếu UI muốn "8 replies", giữ như hiện tại. Nếu muốn "2 people replied", count nên là actor count hoặc có thêm field riêng.
+        </p>
+      </div>
+      <div class="card">
+        <h3>Type nên là <code>POST</code> hay <code>REPLY</code>?</h3>
+        <p>
+          Reply hiện đang dùng <code>notificationType: POST</code> và <code>targetType: REPLY</code>. Nếu type là action,
+          nên đổi sang <code>REPLY</code>. Nếu type là namespace domain, giữ <code>POST</code> nhưng FE phải đọc thêm targetType.
+        </p>
+      </div>
+      <div class="card">
+        <h3>Gom vĩnh viễn hay theo window?</h3>
+        <p>
+          Unique theo target sẽ gom vĩnh viễn một post thành một group. Nếu muốn "5 phút một group", schema cần thêm
+          window bucket hoặc close/open group state.
+        </p>
+      </div>
+    </div>
+
+    <h2 id="order">Thứ tự sửa khuyến nghị</h2>
+    <div class="timeline">
+      <div class="step">
+        <div class="num">A</div>
+        <div>
+          <div class="title">Dọn Redis state bị kẹt</div>
+          <div class="desc">Xóa các key dạng <code>notification:pending:post:*:actors</code>, hash thiếu metadata, queued marker liên quan trong môi trường dev/local để không bị log cũ gây nhiễu.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="num">B</div>
+        <div>
+          <div class="title">Patch producer và worker cleanup</div>
+          <div class="desc">Luôn <code>hSet</code> metadata; worker cleanup full khi payload invalid; skip DB/Pusher nếu batch rỗng.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="num">C</div>
+        <div>
+          <div class="title">Thêm Redis connect rõ ràng trong notification worker</div>
+          <div class="desc">Không phụ thuộc vào import order của <code>like.worker.ts</code>.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="num">D</div>
+        <div>
+          <div class="title">Đổi DB persistence sang upsert/update</div>
+          <div class="desc">Chốt unique key hoặc find/update strategy, migrate/dedupe existing notification groups nếu đã có dữ liệu trùng.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="num">E</div>
+        <div>
+          <div class="title">Pusher theo private user channel</div>
+          <div class="desc">Sau khi DB ổn, realtime nên gửi đúng recipient để count không leak và không gây refresh thừa ở client khác.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      docs/18-notification-grouping-plan.html · Based on .docs-html/13-flowchart-diagram.html and .docs-html/14-research-feature-explainer.html · Updated 2026-05-16
+    </div>
+  </main>
+</div>
+
+<script>
+  const nodeInfo = {
+    client: {
+      title: "Client reply post",
+      meta: "POST /api/v1/posts/:publicId/reply",
+      body: "User gửi reply. Request đi qua app.ts -> /api/v1 router -> /posts router. Từ đây notification chưa được tạo ngay, mà chỉ được enqueue sau khi reply post đã được ghi DB thành công.",
+      code: "Body: CreatePostDto\\nAuth: req.user.sub\\nOutput: reply publicId"
+    },
+    route: {
+      title: "postRouter",
+      meta: "src/modules/post/post.routes.ts",
+      body: "Route có authorization trước nhóm POST routes, validate publicId params và createPost schema, rồi gọi postController.replyPost.",
+      code: "postRouter.post(\\n  '/:publicId/reply',\\n  validate(publicIdParamsSchema, 'params'),\\n  validate(createPostSchema),\\n  postController.replyPost\\n)"
+    },
+    controller: {
+      title: "postController.replyPost",
+      meta: "src/modules/post/controller/post.controller.ts:218",
+      body: "Controller lấy userId từ req.user.sub. Nếu thiếu auth thì 401. Sau đó gọi postService.reply(publicId, {...body, userId}).",
+      code: "const userId = req.user?.sub\\nconst reply = await postService.reply(req.params.publicId, {\\n  ...req.body,\\n  userId,\\n})"
+    },
+    postservice: {
+      title: "postService.reply()",
+      meta: "src/modules/post/service/post.service.ts:302",
+      body: "Service resolve user, validate mentions, kiểm tra origin post, tạo reply trong transaction, rồi gọi notificationService.addPostNotificationGroup. Notification được phát sau khi post transaction xong.",
+      code: "await notificationService.addPostNotificationGroup({\\n  postPublicId: publicId,\\n  notificationType: NotificationType.POST,\\n  targetType: PostType.REPLY,\\n  userId: payload.userId,\\n  authorId: existPost.userId,\\n})"
+    },
+    redis: {
+      title: "Redis pending hash",
+      meta: "notification.service.ts:69-97",
+      body: "Key chính gom theo authorId + postPublicId + notificationType. Code hiện tăng count, thêm actor, rồi chỉ hSet metadata nếu actor là actor mới. Đây là nơi tạo lỗi khi actors set stale nhưng hash thiếu metadata.",
+      code: "key = notification:pending:post:{authorId}:{postPublicId}:{type}\\nhIncrBy(key, 'count', 1)\\nsAdd(key + ':actors', userId)\\nif (added === 1) hSet(key, metadata)"
+    },
+    pendinglist: {
+      title: "Pending list",
+      meta: "notification:pending:keys",
+      body: "List chứa tên hash key cần worker flush. queued marker có TTL 60 giây để tránh lPush cùng key liên tục.",
+      code: "queued = set(key + ':queued', '1', { EX: 60, NX: true })\\nif (queued === 'OK') lPush('notification:pending:keys', key)"
+    },
+    scheduler: {
+      title: "BullMQ repeat job",
+      meta: "notification.producer.ts",
+      body: "Server bootstrap gọi notificationProducer.initSyncNotificationBatchJob(). Producer remove repeat job cũ cùng name rồi add repeat job initSyncNotificationBatch mỗi 40 giây.",
+      code: "notificationQueue.add(\\n  INIT_SYNC_NOTIFICATION_BATCH,\\n  payload,\\n  { jobId, repeat: { every: 40_000 }, attempts: 1 }\\n)"
+    },
+    worker: {
+      title: "notificationWorker.runBatchNotification()",
+      meta: "workers/notification.worker.ts:20",
+      body: "Worker pop tối đa 10 pending keys, đọc hash và actors set. Nếu hash thiếu authorId thì bỏ qua. Log hiện tại chứng minh branch này đang chạy, vì data chỉ có count.",
+      code: "const data = await redisService.hGetAll(key)\\nconst actorIds = await redisService.sMembers(`${key}:actors`)\\nif (!data?.authorId) {\\n  await redisService.del(`${key}:queued`)\\n  continue\\n}"
+    },
+    database: {
+      title: "notification_groups DB",
+      meta: "notification.repository.ts:143",
+      body: "Service gọi createMany. Schema chỉ có index cho recipient/type/target/targetId, không có unique composite, nên skipDuplicates không giúp update group cũ.",
+      code: "tx.notificationGroup.createMany({\\n  data: mappedBatch,\\n  skipDuplicates: true,\\n})\\n\\n@@index([recipientId, type, targetType, targetId])"
+    },
+    api: {
+      title: "GET /notification",
+      meta: "notification.route.ts + notification.controller.ts",
+      body: "Client load notification list qua recipientId là user hiện tại. API chỉ đọc DB, nên nếu worker không ghi DB hoặc chỉ tạo duplicate rows, response sẽ phản ánh đúng lỗi persistence.",
+      code: "notificationService.findAll({\\n  recipientId: req.user.sub,\\n  after,\\n  take,\\n})"
+    },
+    pusher: {
+      title: "Pusher realtime",
+      meta: "workers/notification.worker.ts:80",
+      body: "Worker hiện trigger channel public/global 'notifications'. Notification cá nhân nên trigger private-user-{recipientId} để tránh client khác nhận event không liên quan.",
+      code: "pusher.trigger('notifications', 'new-notifications', {\\n  message: 'You have new notifications',\\n  count: batchTotal,\\n})"
+    }
+  };
+
+  const panelTitle = document.getElementById("panel-title");
+  const panelMeta = document.getElementById("panel-meta");
+  const panelBody = document.getElementById("panel-body");
+  const panelCode = document.getElementById("panel-code");
+
+  document.querySelectorAll(".node").forEach((node) => {
+    node.addEventListener("click", () => {
+      document.querySelectorAll(".node").forEach((n) => n.classList.remove("active"));
+      node.classList.add("active");
+      const info = nodeInfo[node.dataset.k];
+      if (!info) return;
+      panelTitle.textContent = info.title;
+      panelMeta.textContent = info.meta;
+      panelBody.textContent = info.body;
+      panelCode.textContent = info.code;
+    });
+  });
+
+  document.querySelectorAll(".tabs").forEach((tabs) => {
+    const buttons = tabs.querySelectorAll("button[data-tab]");
+    const panes = tabs.querySelectorAll("pre[data-pane]");
+    buttons.forEach((button) => {
+      button.addEventListener("click", () => {
+        buttons.forEach((b) => b.classList.remove("on"));
+        panes.forEach((pane) => pane.classList.remove("on"));
+        button.classList.add("on");
+        const pane = tabs.querySelector(`pre[data-pane="${button.dataset.tab}"]`);
+        if (pane) pane.classList.add("on");
+      });
+    });
+  });
+</script>
+</body>
+</html>

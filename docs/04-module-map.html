@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Circle Module — Architecture Map</title>
+<style>
+  :root {
+    --ivory: #FAF9F5;
+    --slate: #141413;
+    --clay: #D97757;
+    --oat: #E3DACC;
+    --olive: #788C5D;
+    --rust: #B04A3F;
+    --gray-150: #F0EEE6;
+    --gray-300: #D1CFC5;
+    --gray-500: #87867F;
+    --gray-700: #3D3D3A;
+    --serif: ui-serif, Georgia, 'Times New Roman', serif;
+    --sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --mono: ui-monospace, 'SF Mono', Menlo, Monaco, monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--ivory);
+    color: var(--gray-700);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.65;
+    padding: 48px 24px 80px;
+  }
+
+  .page {
+    max-width: 1180px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 280px;
+    gap: 48px;
+  }
+
+  @media (max-width: 960px) {
+    .page { grid-template-columns: 1fr; }
+  }
+
+  main { min-width: 0; }
+
+  header {
+    grid-column: 1 / -1;
+    margin-bottom: 8px;
+  }
+
+  .repo-line {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--gray-500);
+    margin-bottom: 10px;
+  }
+
+  h1 {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 32px;
+    line-height: 1.25;
+    color: var(--slate);
+    margin-bottom: 16px;
+  }
+
+  .summary {
+    max-width: 760px;
+    font-size: 15.5px;
+  }
+  .summary code { font-family: var(--mono); font-size: 13px; }
+
+  h2 {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 22px;
+    color: var(--slate);
+    margin: 36px 0 16px;
+  }
+
+  .diagram-panel {
+    border: 1.5px solid var(--gray-300);
+    border-radius: 12px;
+    background: #fff;
+    padding: 20px;
+    overflow-x: auto;
+  }
+
+  svg.flow { display: block; max-width: 100%; }
+  .flow text {
+    font-family: var(--mono);
+    font-size: 12px;
+    fill: var(--slate);
+  }
+  .flow .sub { font-size: 10px; fill: var(--gray-500); }
+  .flow .box { fill: #fff; stroke: var(--gray-300); stroke-width: 1.5; }
+  .flow .box.hot { fill: rgba(217,119,87,0.10); stroke: var(--clay); }
+  .flow .box.green { fill: rgba(120,140,93,0.12); stroke: var(--olive); }
+  .flow .arrow { stroke: var(--gray-500); stroke-width: 1.5; fill: none; }
+
+  .step {
+    display: grid;
+    grid-template-columns: 44px 1fr;
+    gap: 18px;
+    padding: 20px 0;
+    border-bottom: 1.5px solid var(--gray-150);
+  }
+  .step:last-of-type { border-bottom: none; }
+
+  .badge {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--oat);
+    border: 1.5px solid var(--gray-300);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-weight: 600;
+    color: var(--slate);
+    font-size: 14px;
+  }
+  .step.hot .badge {
+    background: rgba(217,119,87,0.14);
+    border-color: var(--clay);
+    color: var(--clay);
+  }
+
+  .step-loc {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--slate);
+    margin-bottom: 6px;
+  }
+  .step-loc .range { color: var(--gray-500); }
+
+  .step-body p { margin-bottom: 10px; }
+
+  details.snippet { margin-top: 6px; }
+  details.snippet summary {
+    list-style: none;
+    cursor: pointer;
+    font-size: 12.5px;
+    color: var(--gray-500);
+    font-family: var(--mono);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 0;
+    user-select: none;
+  }
+  details.snippet summary::-webkit-details-marker { display: none; }
+  details.snippet summary::before {
+    content: "▸";
+    font-size: 10px;
+    transition: transform 0.15s ease;
+  }
+  details.snippet[open] summary::before { transform: rotate(90deg); }
+
+  pre.code {
+    background: var(--slate);
+    color: #E8E6DC;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.7;
+    border-radius: 8px;
+    padding: 14px 16px;
+    overflow-x: auto;
+    margin-top: 10px;
+  }
+  pre.code .dim { color: var(--gray-500); }
+  pre.code .kw  { color: #C9B98A; }
+  pre.code .str { color: #A8BC8C; }
+
+  aside {
+    position: sticky;
+    top: 24px;
+    align-self: start;
+  }
+
+  .panel {
+    border: 1.5px solid var(--gray-300);
+    border-radius: 12px;
+    background: #fff;
+    padding: 18px 20px;
+    margin-bottom: 20px;
+  }
+
+  .panel h3 {
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--gray-500);
+    margin-bottom: 12px;
+  }
+
+  .key-files { list-style: none; padding: 0; }
+  .key-files li { margin-bottom: 12px; }
+  .key-files li:last-child { margin-bottom: 0; }
+  .key-files .path {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--slate);
+    display: block;
+    margin-bottom: 2px;
+    word-break: break-all;
+  }
+  .key-files .desc {
+    font-size: 12.5px;
+    color: var(--gray-500);
+    line-height: 1.45;
+  }
+
+  .gotchas {
+    border: 1.5px solid var(--clay);
+    border-radius: 12px;
+    background: rgba(217,119,87,0.06);
+    padding: 18px 20px;
+  }
+  .gotchas h3 {
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--clay);
+    margin-bottom: 10px;
+  }
+  .gotchas ul { list-style: none; padding: 0; }
+  .gotchas li {
+    position: relative;
+    padding-left: 16px;
+    font-size: 13px;
+    margin-bottom: 8px;
+  }
+  .gotchas li::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 8px;
+    width: 5px; height: 5px;
+    background: var(--clay);
+    border-radius: 2px;
+  }
+  .gotchas code { font-family: var(--mono); font-size: 11.5px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <div class="repo-line">threads-api-v2 · architecture note</div>
+    <h1>How the Circle module is structured</h1>
+    <p class="summary">
+      The Circle module follows Clean Architecture: requests enter via <code>circle.routes.ts</code>, pass through <code>CircleController</code> for input/output mapping, delegate to <code>CircleService</code> for business logic (permission checks, transaction orchestration), and finally reach three repositories — <code>circleRepository</code>, <code>circleMemberRepository</code>, and <code>circleInvitationRepository</code> — each responsible for its own Prisma model.
+    </p>
+  </header>
+
+  <main>
+    <h2 style="margin-top:0">Request path</h2>
+    <div class="diagram-panel">
+      <svg class="flow" viewBox="0 0 820 340" width="820" height="340" role="img" aria-label="Circle module architecture diagram">
+        <defs>
+          <marker id="arrowHead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#87867F"></path>
+          </marker>
+        </defs>
+
+        <!-- Row 1: Route → Controller → Service -->
+        <g>
+          <rect class="box" x="20" y="40" width="160" height="64" rx="10"></rect>
+          <text x="100" y="68" text-anchor="middle">circle.routes.ts</text>
+          <text class="sub" x="100" y="84" text-anchor="middle">5 endpoints · Express</text>
+        </g>
+        <g>
+          <rect class="box" x="240" y="40" width="180" height="64" rx="10"></rect>
+          <text x="330" y="68" text-anchor="middle">CircleController</text>
+          <text class="sub" x="330" y="84" text-anchor="middle">input/output mapping</text>
+        </g>
+        <g>
+          <rect class="box hot" x="480" y="40" width="180" height="64" rx="10"></rect>
+          <text x="570" y="68" text-anchor="middle">CircleService</text>
+          <text class="sub" x="570" y="84" text-anchor="middle">business logic · TX</text>
+        </g>
+
+        <!-- Row 2: Three Repositories -->
+        <g>
+          <rect class="box" x="340" y="180" width="180" height="64" rx="10"></rect>
+          <text x="430" y="208" text-anchor="middle">circleRepository</text>
+          <text class="sub" x="430" y="224" text-anchor="middle">Circle CRUD · findCircles</text>
+        </g>
+        <g>
+          <rect class="box green" x="560" y="180" width="220" height="64" rx="10"></rect>
+          <text x="670" y="208" text-anchor="middle">circleInvitationRepo</text>
+          <text class="sub" x="670" y="224" text-anchor="middle">upsert · accept · reject</text>
+        </g>
+        <g>
+          <rect class="box" x="100" y="180" width="200" height="64" rx="10"></rect>
+          <text x="200" y="208" text-anchor="middle">circleMemberRepository</text>
+          <text class="sub" x="200" y="224" text-anchor="middle">create · findRole</text>
+        </g>
+
+        <!-- Row 3: Prisma / DB -->
+        <g>
+          <rect class="box" x="300" y="300" width="220" height="44" rx="10"></rect>
+          <text x="410" y="326" text-anchor="middle">MySQL · Prisma Client</text>
+        </g>
+
+        <!-- Arrows Row 1 -->
+        <line class="arrow" x1="180" y1="72" x2="240" y2="72" marker-end="url(#arrowHead)"></line>
+        <line class="arrow" x1="420" y1="72" x2="480" y2="72" marker-end="url(#arrowHead)"></line>
+
+        <!-- Service → Repositories -->
+        <line class="arrow" x1="520" y1="104" x2="430" y2="180" marker-end="url(#arrowHead)"></line>
+        <line class="arrow" x1="570" y1="104" x2="670" y2="180" marker-end="url(#arrowHead)"></line>
+        <line class="arrow" x1="530" y1="104" x2="200" y2="180" marker-end="url(#arrowHead)"></line>
+
+        <!-- Repos → DB -->
+        <line class="arrow" x1="200" y1="244" x2="360" y2="300" marker-end="url(#arrowHead)"></line>
+        <line class="arrow" x1="430" y1="244" x2="410" y2="300" marker-end="url(#arrowHead)"></line>
+        <line class="arrow" x1="670" y1="244" x2="460" y2="300" marker-end="url(#arrowHead)"></line>
+
+        <!-- Labels -->
+        <text class="sub" x="210" y="62" text-anchor="middle">validate</text>
+        <text class="sub" x="450" y="62" text-anchor="middle">delegate</text>
+        <text class="sub" x="600" y="140" text-anchor="start">TX scope</text>
+      </svg>
+    </div>
+
+    <h2>Callstack walkthrough</h2>
+
+    <!-- Step 1 -->
+    <div class="step">
+      <div class="badge">1</div>
+      <div class="step-body">
+        <div class="step-loc">src/modules/circle/circle.routes.ts</div>
+        <p>Defines 5 routes: <code>GET /</code> (list circles), <code>POST /</code> (create), <code>GET /request-invitation</code> (user's invitations), <code>POST /send-invitation</code>, <code>POST /response-invitation</code>. Protected routes use <code>authorization</code> middleware and <code>validate(schema)</code> for Zod validation.</p>
+        <details class="snippet">
+          <summary>show source</summary>
+<pre class="code"><span class="dim">// src/modules/circle/circle.routes.ts</span>
+circleRouter.get(<span class="str">'/'</span>, circleController.getCircle);
+circleRouter.get(<span class="str">'/request-invitation'</span>, authorization, circleController.getRequestInvitation);
+circleRouter.post(<span class="str">'/'</span>, authorization, validate(createCircleSchema), circleController.createCircle);
+circleRouter.post(<span class="str">'/send-invitation'</span>, authorization, validate(sendInvitationSchema), circleController.sendInvitation);
+circleRouter.post(<span class="str">'/response-invitation'</span>, authorization, validate(responseInvitationSchema), circleController.acceptInvitation);</pre>
+        </details>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step">
+      <div class="badge">2</div>
+      <div class="step-body">
+        <div class="step-loc">src/modules/circle/controller/circle.controller.ts</div>
+        <p>Controller is thin: extracts <code>req.user?.sub</code> for auth, <code>req.body</code> for data, delegates to <code>CircleService</code>, and uses response helpers (<code>res.paginate()</code>, <code>res.success()</code>, <code>res.error()</code>). No business logic lives here.</p>
+        <details class="snippet">
+          <summary>show source</summary>
+<pre class="code"><span class="dim">// controller/circle.controller.ts — sendInvitation</span>
+<span class="kw">async</span> sendInvitation(req, res) {
+  <span class="kw">const</span> userId = req.user?.sub;
+  <span class="kw">if</span> (!userId) <span class="kw">return</span> res.error(401, <span class="str">"Unauthorized"</span>);
+  <span class="kw">const</span> { circleId, userId: targetUserId } = req.body;
+  <span class="kw">await</span> circleService.sendInvitation({ circleId, userId: targetUserId, inviterId: userId });
+  <span class="kw">return</span> res.success(200, <span class="str">`Invitation sent...`</span>);
+}</pre>
+        </details>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step hot">
+      <div class="badge">3</div>
+      <div class="step-body">
+        <div class="step-loc">src/modules/circle/service/circle.service.ts</div>
+        <p>The brain of the module. <code>sendInvitation</code> checks: (1) user not already a member, (2) inviter has ADMIN/OWNER role, (3) resend limit ≤ 5, then wraps <code>upsert</code> in a transaction. <code>acceptInvitation</code> branches on <code>status</code>: REJECTED → only update status; ACCEPTED → update status + create CircleMember, both inside <code>transactionService.doInTransaction</code>.</p>
+        <details class="snippet" open>
+          <summary>show source</summary>
+<pre class="code"><span class="dim">// service/circle.service.ts — acceptInvitation (hot path)</span>
+<span class="kw">if</span> (data.status === CircleInvitationStatus.REJECTED) {
+  <span class="kw">return await</span> transactionService.doInTransaction(<span class="kw">async</span> (tx) =&gt; {
+    <span class="kw">await</span> circleInvitationRepository.rejectInvitation(data.circleId, data.userId, tx);
+  });
+}
+<span class="kw">return await</span> transactionService.doInTransaction(<span class="kw">async</span> (tx) =&gt; {
+  <span class="kw">await</span> circleInvitationRepository.acceptInvitation(data.circleId, data.userId, tx);
+  <span class="kw">return await</span> circleMemberRepository.create({ circleId: data.circleId, userId: data.userId }, tx);
+});</pre>
+        </details>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="step">
+      <div class="badge">4</div>
+      <div class="step-body">
+        <div class="step-loc">src/modules/circle/repository/circle-invation.repository.ts</div>
+        <p><code>circleInvitationRepository</code> handles all invitation DB operations: <code>upsert</code> (create or re-invite rejected users with resentCount++), <code>findInvitationById</code> (PENDING only), <code>acceptInvitation</code> (status → ACCEPTED, reset resentCount), <code>rejectInvitation</code> (status → REJECTED). All mutation methods accept a <code>tx: Prisma.TransactionClient</code> parameter.</p>
+        <details class="snippet">
+          <summary>show source</summary>
+<pre class="code"><span class="dim">// repository/circle-invation.repository.ts — upsert</span>
+<span class="kw">async</span> upsert(data, tx = prisma) {
+  <span class="kw">return</span> tx.circleInvitation.upsert({
+    <span class="kw">where</span>: { circleId_userId: { circleId: data.circleId, userId: data.userId }, status: <span class="str">"REJECTED"</span> },
+    <span class="kw">update</span>: { resentCount: { increment: 1 }, inviterId: data.inviterId, status: <span class="str">"PENDING"</span> },
+    <span class="kw">create</span>: { circleId: data.circleId, userId: data.userId, inviterId: data.inviterId, status: <span class="str">"PENDING"</span> },
+  });
+}</pre>
+        </details>
+      </div>
+    </div>
+
+    <!-- Step 5 -->
+    <div class="step">
+      <div class="badge">5</div>
+      <div class="step-body">
+        <div class="step-loc">prisma/schema.prisma<span class="range"> — Circle, CircleMember, CircleInvitation</span></div>
+        <p>Three models back the module. <code>Circle</code> has a <code>publicId</code> (cuid) for cursor pagination and a <code>Visibility</code> enum. <code>CircleMember</code> uses a composite unique <code>@@unique([circleId, userId])</code> and a <code>RoleMembership</code> enum (OWNER/ADMIN/MEMBER). <code>CircleInvitation</code> adds <code>resentCount</code> and <code>CircleInvitationStatus</code> (PENDING/ACCEPTED/REJECTED).</p>
+        <details class="snippet">
+          <summary>show source</summary>
+<pre class="code"><span class="dim">// prisma/schema.prisma</span>
+<span class="kw">model</span> CircleInvitation {
+  id          Int                    @id @default(autoincrement())
+  circleId    Int                    @map(<span class="str">"circle_id"</span>)
+  userId      String                 @map(<span class="str">"user_id"</span>)
+  inviterId   String                 @map(<span class="str">"inviter_id"</span>)
+  resentCount Int                    @default(0) @map(<span class="str">"resent_count"</span>)
+  status      CircleInvitationStatus @default(PENDING)
+  <span class="dim">// ... relations, indexes</span>
+  @@unique([circleId, userId])
+}</pre>
+        </details>
+      </div>
+    </div>
+  </main>
+
+  <aside>
+    <div class="panel">
+      <h3>Key files</h3>
+      <ul class="key-files">
+        <li>
+          <span class="path">circle.routes.ts</span>
+          <span class="desc">5 endpoints, Zod validation, auth middleware.</span>
+        </li>
+        <li>
+          <span class="path">controller/circle.controller.ts</span>
+          <span class="desc">Thin I/O layer, delegates to service.</span>
+        </li>
+        <li>
+          <span class="path">service/circle.service.ts</span>
+          <span class="desc">Permission checks, TX orchestration, business rules.</span>
+        </li>
+        <li>
+          <span class="path">repository/circle.repository.ts</span>
+          <span class="desc">Circle CRUD, cursor pagination via findAll.</span>
+        </li>
+        <li>
+          <span class="path">repository/circle-invation.repository.ts</span>
+          <span class="desc">Invitation upsert, accept, reject with TX support.</span>
+        </li>
+        <li>
+          <span class="path">repository/circle-member.repository.ts</span>
+          <span class="desc">Member creation, role lookup by circleId.</span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="gotchas">
+      <h3>Gotchas</h3>
+      <ul>
+        <li>The <code>upsert</code> in invitation repo has <code>where: { status: REJECTED }</code> — it only re-invites rejected users, not pending ones. A pending user gets an error, not a duplicate row.</li>
+        <li><code>createCircle</code> auto-creates a <code>CircleMember</code> with role ADMIN for the creator via nested Prisma <code>create</code>. Don't create the member separately.</li>
+        <li><code>findInvitationById</code> filters by <code>status: PENDING</code> — accepted/rejected invitations won't be found, which prevents double-accept bugs.</li>
+        <li>The <code>resentCount</code> limit (5) is hardcoded in the service, not configurable.</li>
+      </ul>
+    </div>
+  </aside>
+
+</div>
+
+<script>
+  var snippets = document.querySelectorAll('details.snippet');
+  snippets.forEach(function (d) {
+    d.addEventListener('toggle', function () {
+      if (!d.open) return;
+      snippets.forEach(function (other) {
+        if (other !== d) other.open = false;
+      });
+    });
+  });
+</script>
+</body>
+</html>

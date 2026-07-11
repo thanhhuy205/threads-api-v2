@@ -1,0 +1,115 @@
+import { CreatePostDto, createPostSchema } from '@/modules/post/dto/post.dto';
+import { VisibilityPost } from '@prisma/client';
+import { z } from 'zod';
+
+
+const createCircle = z.object({
+    content: z
+        .string()
+        .min(1, "Content must be at least 1 character")
+        .max(5000, "Content must be at most 5000 characters"),
+    contentJson: z.unknown().optional(),
+    mediaUrls: z.array(z.string().url('Each media URL must be a valid URL')).max(5, 'You can upload up to 5 media files').optional(),
+});
+
+const createCirclePostSchema = createCircle
+
+export const circlePublicIdParamsSchema = z.object({
+    publicId: z.string().min(1, 'Circle public ID is required'),
+});
+
+export type CirclePublicIdParamsDto = z.infer<typeof circlePublicIdParamsSchema>;
+
+export const circleReplyParamsSchema = z.object({
+    publicId: z.string().min(1, 'Circle public ID is required'),
+    postPublicId: z.string().min(1, 'Post public ID is required'),
+});
+
+export type CircleReplyParamsDto = z.infer<typeof circleReplyParamsSchema>;
+
+export const cursorLimitQuerySchema = z.object({
+    take: z.coerce.number().int('take must be an integer').positive('take must be a positive number').max(100, 'take must be at most 100').optional(),
+    after: z.string().trim().min(1, 'Cursor must not be empty').optional(),
+});
+
+export const offsetLimitQuerySchema = z.object({
+    page: z.coerce.number().int('Page must be an integer').positive('Page must be a positive number').optional(),
+    limit: z.coerce.number().int('Limit must be an integer').positive('Limit must be a positive number').max(100, 'Limit must be at most 100').optional(),
+});
+
+export const manageMembersQuerySchema = offsetLimitQuerySchema.extend({
+    type: z.enum(['manage', 'default']).default('default'),
+});
+
+export const expLogQuerySchema = offsetLimitQuerySchema;
+export type ExpLogQueryDto = z.infer<typeof expLogQuerySchema>;
+export type OffsetLimitQueryDto = z.infer<typeof offsetLimitQuerySchema>;
+export type ManageMembersQueryDto = z.infer<typeof manageMembersQuerySchema>;
+
+export const circleStatsQuerySchema = z.object({
+    type: z.enum(['7days', '30days', '90days']).optional(),
+});
+
+export type CircleStatsQueryDto = z.infer<typeof circleStatsQuerySchema>;
+
+export const circlePostsQuerySchema = cursorLimitQuerySchema.extend({
+    sort: z.enum(['latest', 'quality']).optional(),
+    take: z.coerce.number().int('Take must be an integer').positive('Take must be a positive number').max(100, 'Take must be at most 100').optional(),
+});
+
+export type CirclePostsQueryDto = z.infer<typeof circlePostsQuerySchema>;
+export type CircleRepliesQueryDto = z.infer<typeof cursorLimitQuerySchema>;
+
+
+export const createCirclePostRuntimeSchema = z.preprocess(
+    (value) => {
+        if (!value || typeof value !== 'object') {
+            return value;
+        }
+
+        const payload = value as Record<string, unknown>;
+        if (payload.visibility !== undefined) {
+            return payload;
+        }
+
+        return {
+            ...payload,
+            visibility: VisibilityPost.CIRCLE,
+        };
+    },
+    createCirclePostSchema,
+);
+
+export const createCircleReplyRuntimeSchema = z.preprocess(
+    (value) => {
+        if (!value || typeof value !== 'object') {
+            return value;
+        }
+
+        const payload = value as Record<string, unknown>;
+        if (payload.visibility !== undefined) {
+            return payload;
+        }
+
+        return {
+            ...payload,
+            visibility: VisibilityPost.CIRCLE,
+        };
+    },
+    createPostSchema,
+);
+
+export type CirclePostBodyDto = z.infer<typeof createCirclePostRuntimeSchema>;
+export type CircleReplyBodyDto = CreatePostDto;
+
+export const cprBodySchema = z.object({
+    targetComments: z.coerce.number().int('Target comments must be an integer').positive('Target comments must be a positive number'),
+});
+
+export type CprBodyDto = z.infer<typeof cprBodySchema>;
+
+export const sacrificeBodySchema = z.object({
+    karmaAmount: z.coerce.number().int('Karma amount must be an integer').positive('Karma amount must be a positive number'),
+});
+
+export type SacrificeBodyDto = z.infer<typeof sacrificeBodySchema>;

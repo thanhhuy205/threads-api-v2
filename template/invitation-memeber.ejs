@@ -1,0 +1,336 @@
+<%
+const brandName = typeof appName !== "undefined" ? appName : "Threads";
+const currentYear = typeof year !== "undefined" ? year : new Date().getFullYear();
+
+const group = typeof groupName !== "undefined" ? groupName : "Nhóm của bạn";
+const inviteUrlValue = typeof inviteUrl !== "undefined" ? inviteUrl : "#";
+
+const sender = typeof senderName !== "undefined" ? senderName : "Một thành viên";
+const receiverEmailValue = typeof receiverEmail !== "undefined" ? receiverEmail : "";
+const inviteRoleValue = typeof inviteRole !== "undefined" ? inviteRole : "thành viên";
+const descriptionValue =
+  typeof description !== "undefined" && description
+    ? description
+    : "";
+%>
+
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lời mời tham gia nhóm</title>
+  </head>
+
+  <body
+    style="
+      margin: 0;
+      padding: 0;
+      background: #eef3f8;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #111827;
+    "
+  >
+    <div style="display: none; max-height: 0; overflow: hidden; opacity: 0">
+      <%= sender %> đã gửi cho bạn lời mời tham gia nhóm <%= group %>.
+    </div>
+
+    <table
+      width="100%"
+      cellpadding="0"
+      cellspacing="0"
+      role="presentation"
+      style="background: #eef3f8; padding: 32px 12px"
+    >
+      <tr>
+        <td align="center">
+          <div
+            style="
+              margin: 0 0 22px;
+              font-size: 18px;
+              font-weight: 800;
+              letter-spacing: -0.02em;
+              color: #111827;
+            "
+          >
+            <%= brandName %>
+          </div>
+
+          <table
+            width="100%"
+            cellpadding="0"
+            cellspacing="0"
+            role="presentation"
+            style="
+              max-width: 640px;
+              background: #ffffff;
+              border-radius: 24px;
+              overflow: hidden;
+              box-shadow: 0 20px 50px rgba(15, 23, 42, 0.1);
+            "
+          >
+            <tr>
+              <td
+                style="
+                  background: linear-gradient(135deg, #111827 0%, #374151 100%);
+                  padding: 34px 36px;
+                  color: #ffffff;
+                "
+              >
+                <div
+                  style="
+                    display: inline-block;
+                    margin: 0 0 14px;
+                    padding: 7px 12px;
+                    border-radius: 999px;
+                    background: rgba(255, 255, 255, 0.12);
+                    font-size: 12px;
+                    font-weight: 700;
+                  "
+                >
+                  Lời mời tham gia nhóm
+                </div>
+
+                <h1
+                  style="
+                    margin: 0;
+                    font-size: 28px;
+                    line-height: 1.25;
+                    letter-spacing: -0.04em;
+                  "
+                >
+                  Bạn được mời vào<br />
+                  <span style="color: #d1d5db"><%= group %></span>
+                </h1>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding: 34px 36px">
+                <p
+                  style="
+                    margin: 0 0 22px;
+                    font-size: 15px;
+                    line-height: 1.8;
+                    color: #4b5563;
+                  "
+                >
+                  <strong style="color: #111827"><%= sender %></strong>
+                  đã gửi cho bạn lời mời tham gia nhóm
+                  <strong style="color: #111827"><%= group %></strong>
+                  với chức danh là
+                  <strong style="color: #111827"><%= inviteRoleValue %></strong>.
+                </p>
+
+                <table
+                  width="100%"
+                  cellpadding="0"
+                  cellspacing="0"
+                  role="presentation"
+                  style="
+                    margin: 0 0 26px;
+                    border: 1px solid #e5e7eb;
+                    border-radius: 18px;
+                    overflow: hidden;
+                  "
+                >
+                  <tr>
+                    <td style="padding: 16px 18px; background: #f9fafb">
+                      <p
+                        style="
+                          margin: 0 0 6px;
+                          font-size: 12px;
+                          font-weight: 700;
+                          color: #6b7280;
+                          text-transform: uppercase;
+                          letter-spacing: 0.08em;
+                        "
+                      >
+                        Nhóm
+                      </p>
+                      <p
+                        style="
+                          margin: 0;
+                          font-size: 16px;
+                          font-weight: 800;
+                          color: #111827;
+                        "
+                      >
+                        <%= group %>
+                      </p>
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td style="padding: 16px 18px; border-top: 1px solid #e5e7eb">
+                      <p
+                        style="
+                          margin: 0 0 6px;
+                          font-size: 12px;
+                          font-weight: 700;
+                          color: #6b7280;
+                          text-transform: uppercase;
+                          letter-spacing: 0.08em;
+                        "
+                      >
+                        Người gửi
+                      </p>
+                      <p style="margin: 0; font-size: 14px; color: #374151">
+                        <%= sender %>
+                      </p>
+                    </td>
+                  </tr>
+
+                  <% if (receiverEmailValue) { %>
+                  <tr>
+                    <td style="padding: 16px 18px; border-top: 1px solid #e5e7eb">
+                      <p
+                        style="
+                          margin: 0 0 6px;
+                          font-size: 12px;
+                          font-weight: 700;
+                          color: #6b7280;
+                          text-transform: uppercase;
+                          letter-spacing: 0.08em;
+                        "
+                      >
+                        Email nhận lời mời
+                      </p>
+                      <p
+                        style="
+                          margin: 0;
+                          font-size: 14px;
+                          color: #374151;
+                          word-break: break-all;
+                        "
+                      >
+                        <%= receiverEmailValue %>
+                      </p>
+                    </td>
+                  </tr>
+                  <% } %>
+
+                  <tr>
+                    <td style="padding: 16px 18px; border-top: 1px solid #e5e7eb">
+                      <p
+                        style="
+                          margin: 0 0 6px;
+                          font-size: 12px;
+                          font-weight: 700;
+                          color: #6b7280;
+                          text-transform: uppercase;
+                          letter-spacing: 0.08em;
+                        "
+                      >
+                        Chức danh
+                      </p>
+                      <p style="margin: 0; font-size: 14px; color: #374151">
+                        <%= inviteRoleValue %>
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+
+                <% if (descriptionValue) { %>
+                <div
+                  style="
+                    margin: 0 0 28px;
+                    padding: 18px 20px;
+                    border-radius: 18px;
+                    background: #f3f4f6;
+                    border: 1px solid #e5e7eb;
+                  "
+                >
+                  <p
+                    style="
+                      margin: 0 0 8px;
+                      font-size: 13px;
+                      font-weight: 800;
+                      color: #111827;
+                    "
+                  >
+                    Lời nhắn từ <%= sender %>
+                  </p>
+                  <p
+                    style="
+                      margin: 0;
+                      font-size: 14px;
+                      line-height: 1.8;
+                      color: #4b5563;
+                    "
+                  >
+                    <%= descriptionValue %>
+                  </p>
+                </div>
+                <% } %>
+
+                <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+                  <tr>
+                    <td align="center" style="padding: 0 0 28px">
+                      <a
+                        href="<%= inviteUrlValue %>"
+                        style="
+                          display: inline-block;
+                          background: #111827;
+                          color: #ffffff;
+                          text-decoration: none;
+                          font-size: 14px;
+                          font-weight: 800;
+                          padding: 14px 24px;
+                          border-radius: 999px;
+                        "
+                      >
+                        Chấp nhận lời mời
+                      </a>
+                    </td>
+                  </tr>
+                </table>
+
+                <p
+                  style="
+                    margin: 0 0 22px;
+                    font-size: 13px;
+                    line-height: 1.7;
+                    color: #6b7280;
+                    text-align: center;
+                  "
+                >
+                  Nếu bạn không muốn tham gia nhóm này, bạn có thể bỏ qua email.
+                </p>
+
+                <div style="height: 1px; background: #e5e7eb; margin: 0 0 22px"></div>
+
+                <p
+                  style="
+                    margin: 0 0 10px;
+                    font-size: 13px;
+                    line-height: 1.7;
+                    color: #6b7280;
+                  "
+                >
+                  Nếu nút không hoạt động, hãy copy đường dẫn dưới đây và mở trong trình duyệt:
+                </p>
+
+                <a
+                  href="<%= inviteUrlValue %>"
+                  style="
+                    font-size: 13px;
+                    line-height: 1.6;
+                    color: #2563eb;
+                    word-break: break-all;
+                  "
+                >
+                  <%= inviteUrlValue %>
+                </a>
+              </td>
+            </tr>
+          </table>
+
+          <p style="margin: 26px 0 0; font-size: 11px; color: #9ca3af">
+            © <%= currentYear %> <%= brandName %>. All rights reserved.
+          </p>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
