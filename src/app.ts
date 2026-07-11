@@ -7,6 +7,7 @@ import router from '@/routes/index';
 import compression from 'compression';
 import cors from 'cors';
 import express from 'express';
+import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import { responseHandler } from './middlewares/response-handler';
@@ -37,7 +38,10 @@ app.use(logger);
 app.use(responseHandler);
 
 
-app.use('/api/v1', router);
+app.use('/api/v1', rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+}), router);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
