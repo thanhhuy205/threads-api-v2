@@ -494,6 +494,15 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
       },
     });
   }
+
+  async findExisting(publicId: string) {
+    return prisma.post.findFirst({
+      where: { publicId },
+      select: {
+        likesCount: true,
+      }
+    })
+  }
   async findById(id: number) {
     return prisma.post.findFirst({
       where: { id, isDeleted: false },
@@ -684,15 +693,6 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
     })
   }
 
-  // GIẢM count + lấy chủ post (tương tự)
-  async decrementLikedCount(publicId: string, count: number): Promise<void> {
-    await prisma.$executeRaw`
-      UPDATE posts
-      SET likes_count = GREATEST(likes_count - ${count}, 0)
-      WHERE public_id = ${publicId}
-    `
-  }
-
 
   async searchByContent({
     q,
@@ -843,12 +843,22 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
     });
   }
 
-  async updateLike(count: number): Promise<void> {
+  async increaseLikeCount(publicId: string, count: number): Promise<void> {
     await prisma.$executeRaw`
       UPDATE posts
       SET likes_count = GREATEST(likes_count + ${count}, 0)
+      WHERE public_id = ${publicId}
     `;
   }
+
+  async decreaseLikeCount(publicId: string, count: number): Promise<void> {
+    await prisma.$executeRaw`
+      UPDATE posts
+      SET likes_count = GREATEST(likes_count - ${count}, 0)
+      WHERE public_id = ${publicId}
+    `;
+  }
+
 }
 
 export const postRepository = new PostRepository();

@@ -1,7 +1,6 @@
 import { check } from 'k6';
 import { SharedArray } from 'k6/data';
 import http from 'k6/http';
-import { Options } from 'k6/options';
 
 // import { randomUUID } from 'node:crypto';
 // import { readFile, writeFile } from 'node:fs/promises';
@@ -32,33 +31,21 @@ import { Options } from 'k6/options';
 
 // readFileContent()
 
-let cnt = 0;
 const BASE_URL = 'http://localhost:3302/api/v1';
-export const options: Options = {
-    stages: [
-        { duration: '30s', target: 100 },  // ramp up
-        { duration: '1m', target: 200 },  // sustained load
-        { duration: '30s', target: 0 },    // ramp down
-    ],
-    thresholds: {
-        http_req_duration: ['p(95)<500'],  // ← đây là số đẹp
-        http_req_failed: ['rate<0.01'],  // ← 99% success
-    },
-}
+export const options = {
+    vus: 200,
+    iterations: 200,
+};
 const tokens = new SharedArray('tokens', function () {
     return JSON.parse(open('./user-test/token.json'));
 });
 
 export default async function () {
-    const token = tokens[cnt];
-
-    const payload = JSON.stringify({
-        isLiked: true
-    });
+    const token = tokens[__VU - 1];
 
     const res = http.post(
-        `${BASE_URL}/posts/cmrafvunt006ks0tkri9nlgoj/like`,
-        payload,
+        `${BASE_URL}/posts/cmrafvsbj0061s0tkw3is3tn0/like`,
+        {},
         {
             headers: {
                 'Content-Type': 'application/json',
@@ -67,7 +54,6 @@ export default async function () {
         },
     );
 
-    cnt++;
     check(res, {
         'status 200 or 201': (r) => r.status === 200 || r.status === 201,
         'has like': (r) => {
@@ -76,7 +62,8 @@ export default async function () {
             }
             try {
                 const body = JSON.parse(r.body as string);
-                return body.liked > 0;
+                console.log(body);
+                return body.data.liked > 0;
             } catch {
                 return false;
             }

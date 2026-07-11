@@ -6,11 +6,12 @@ class RedisVersion {
     }
 
     private async getCurrentVersion(namespace: string) {
-        const versionKey = await redisService.get(this.getCacheName(namespace));
+        const cacheName = this.getCacheName(namespace);
 
-        const version = await redisService.get(versionKey!);
+        const version = await redisService.get(cacheName);
         if (!version) {
-            await redisService.set(versionKey!, "1");
+            await redisService.set(cacheName, "1");
+            return "1";
         }
 
         return version;
@@ -40,8 +41,8 @@ class RedisVersion {
     }
 
     public async bumpPostListCacheVersion(namespace: string) {
-        const cacheName = await redisService.get(this.getCacheName(namespace));
-        await redisService.incr(cacheName!);
+        const cacheName = this.getCacheName(namespace);
+        await redisService.incr(cacheName);
     }
 
 

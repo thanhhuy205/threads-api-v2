@@ -150,12 +150,11 @@ class PostActionService {
     await redisVersion.bumpPostListCacheVersion(redisKey.post.listNamespace());
   }
 
-  // Kỉ thuật lạ l cập nhập like theo pop
   async like(
     publicId: string,
     userId: string,
   ): Promise<number> {
-    const post = await postRepository.findByPublicId(publicId);
+    const post = await postRepository.findExisting(publicId);
     if (!post) {
       throw new NotFoundException("Post not found");
     }
@@ -180,7 +179,7 @@ class PostActionService {
         keys: [
           likeKey,
           countKey,
-          QUEUE_NAME.POST_LIKE_EVENT_QUEUE,
+          String(QUEUE_NAME.POST_LIKE_EVENT_QUEUE),
         ],
         arguments: [
           userId,
@@ -199,11 +198,9 @@ class PostActionService {
         ],
       },
     );
-    console.log(changed);
-    const likeCount = await redisService.sCard(likeKey);
-
+    const likeCount = await redisService.get(countKey);
     await redisVersion.bumpPostListCacheVersion(redisKey.post.listNamespace());
-    return likeCount + (post.likesCount ?? 0);
+    return Number(likeCount) ?? 0 + (post.likesCount ?? 0);
   }
 
   async delete(publicId: string, userId: string): Promise<void> {

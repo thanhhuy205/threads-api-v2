@@ -505,6 +505,7 @@ model Post {
   @@index([originPostId])
   @@index([rootPostId])
   @@index([createdAt])
+  @@index([publicId], map: "idx_posts_public_id")
   @@fulltext([content], map: "idx_posts_content_fulltext")
   @@map("posts")
 }

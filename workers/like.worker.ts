@@ -20,6 +20,8 @@ class LikeWorker {
       default:
         throw new Error(`Unknown job name: ${job.name}`);
     }
+  }, {
+    concurrency: 1,
   });
 
   async initSyncJob() {
@@ -35,32 +37,50 @@ class LikeWorker {
       500,
     );
     if (events.length === 0) {
-      console.log(events);
       return;
     }
-    const likes = events.filter((event) => event.isLiked).map((event) => ({
-      userId: event.userId,
-      postId: event.postPublicId,
-      isLike: true,
-    }));
-    const unlikes = events.filter((event) => !event.isLiked).map((event) => ({
-      userId: event.userId,
-      postId: event.postPublicId,
-      isLike: false,
-    }));
-    console.log(unlikes);
-    const count = likes.length - unlikes.length;
-    try {
-      await Promise.all([
-        postService.updateLike(count),
-        likeService.createMany(likes),
-        likeService.deleteMany(unlikes),
-      ]);
-    } catch (error) {
-      await postService.updateLike(-count);
-      baseLogger.error({ error }, "Failed to process like events");
-      await this.restoreEvents(events);
-      return;
+
+    const map = new Map<string, LikeEvent[]>();
+    for (const event of events) {
+      const postEvents = map.get(event.postPublicId);
+      if (postEvents) {
+        postEvents.push(event);
+      } else {
+        map.set(event.postPublicId, [event]);
+      }
+    }
+
+    for (const [postPublicId, postEvents] of map.entries()) {
+      const likes = postEvents.filter((event) => event.isLiked).map((event) => ({
+        userId: event.userId,
+        postId: event.postPublicId,
+        isLike: true,
+      }));
+
+      const unlikes = postEvents.filter((event) => !event.isLiked).map((event) => ({
+        userId: event.userId,
+        postId: event.postPublicId,
+        isLike: false,
+      }));
+
+      const uniqueLikeCount = new Map(likes.map((event) => [event.userId, event]));
+      const uniqueUnLikeCount = new Map(unlikes.map((event) => [event.userId, event]));
+
+      const newLike = [...uniqueLikeCount.values()];
+      const newUnlike = [...uniqueUnLikeCount.values()];
+      const count = uniqueLikeCount.size - uniqueUnLikeCount.size;
+      try {
+        await Promise.all([
+          postService.increaseLikeCount(postPublicId, count),
+          likeService.createMany(newLike),
+          likeService.deleteMany(newUnlike),
+        ]);
+      } catch (error) {
+        await postService.decreaseLikeCount(postPublicId, count);
+        baseLogger.error({ error }, "Failed to process like events");
+        await this.restoreEvents(events);
+        return;
+      }
     }
   }
 

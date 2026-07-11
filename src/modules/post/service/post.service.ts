@@ -288,8 +288,12 @@ class PostService {
     } as PostRecord;
   }
 
-  updateLike(count: number) {
-    return postRepository.updateLike(count);
+  increaseLikeCount(publicId: string, count: number) {
+    return postRepository.increaseLikeCount(publicId, count);
+  }
+
+  decreaseLikeCount(publicId: string, count: number) {
+    return postRepository.decreaseLikeCount(publicId, count);
   }
 
 }
