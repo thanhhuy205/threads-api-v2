@@ -5,7 +5,6 @@ import {
   POST_SCORING_SYSTEM_PROMPT,
   REPORT_EVALUATION_SYSTEM_PROMPT
 } from "@/modules/ai/promt/system.promt";
-import { webhookPreviewImageRepository } from "@/modules/ai/repository/webhook-preview-image.repository";
 import { limitActionService } from "@/modules/limit-action/service/limit-action.service";
 import { userActionLogService } from "@/modules/user-action-log/service/user-action-log.service";
 import { groq } from "@/providers/groq.provider";
@@ -100,12 +99,6 @@ class AiService {
         inputLength: content.length,
       },
     });
-    await webhookPreviewImageRepository.savePreviewImage({
-      generationId: sdGenerationJob.generationId,
-      content: normalizedPrompt,
-      userId,
-    });
-
     return sdGenerationJob;
   }
 

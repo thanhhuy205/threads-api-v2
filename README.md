@@ -4,7 +4,6 @@ Backend API cho nền tảng mạng xã hội theo kiến trúc modular, tập t
 
 - Thiết kế module rõ ràng, dễ mở rộng
 - Luồng xử lý bất đồng bộ bằng BullMQ + Redis workers
-- Semantic search cho bài viết bằng Mixedbread embeddings + Pinecone vector DB
 - Upload ảnh qua Cloudflare R2 (S3-compatible)
 - Tối ưu kiểm tra trùng username/email bằng Redis Bloom Filter
 
@@ -14,7 +13,7 @@ Dự án này thể hiện năng lực backend ở các điểm mà nhà tuyển
 
 - Thiết kế service thực tế có API sync + async pipeline
 - Tách tầng rõ ràng `route -> controller -> service -> repository`
-- Kết hợp nhiều hệ thống ngoài: Redis, BullMQ, Pinecone, Mixedbread, Cloudflare R2, Nodemailer
+- Kết hợp nhiều hệ thống ngoài: Redis, BullMQ, Cloudflare R2, Nodemailer
 - Có Swagger docs để kiểm thử và review nhanh
 
 ## Docs Hub (Nghiệp vụ)
@@ -37,14 +36,13 @@ Gợi ý: mở link online hoặc file `docs/index.html` trước, sau đó đi 
 | Database | MySQL + Prisma ORM |
 | Queue | BullMQ |
 | Cache / Data structure | Redis + Redis Bloom |
-| Semantic Search | Mixedbread AI (embedding) + Pinecone |
 | File Storage | Cloudflare R2 (S3 API) |
 | Auth | JWT access token + refresh token |
 | API Docs | Swagger UI |
 
 ## Kiến Trúc Modular (Tóm Tắt)
 
-Mỗi domain được tổ chức thành module độc lập (Auth, Post, Upload, Circle, Notification...), bám pattern nhất quán:
+Mỗi domain được tổ chức thành module độc lập (Auth, Post, Upload, Notification...), bám pattern nhất quán:
 
 - `controller`: nhận request/response
 - `dto`: validate schema (Zod) + type
@@ -102,25 +100,14 @@ Service -> Producer -> BullMQ Queue (Redis) -> Worker -> External Service/DB
 - Like state ghi tạm vào Redis, dùng job `like_queue` để sync DB
 - Có cơ chế dedupe job bằng key Redis (`NX + EX`) để tránh enqueue dồn
 
-### 4) Semantic Search (Mixedbread + Pinecone)
-
-- Khi tạo post:
-  - Producer đẩy job vào `pinecone_queue`
-  - Worker tạo embedding từ `content + topic` qua Mixedbread
-  - Upsert vector + metadata vào Pinecone namespace `posts`
-- Khi search (`GET /posts/search`):
-  - Sinh embedding query
-  - Query topK vectors tương đồng trong Pinecone
-  - Trả về bài viết gần nghĩa theo semantic score
-
-### 5) Upload ảnh với Cloudflare R2
+### 4) Upload ảnh với Cloudflare R2
 
 - Upload avatar/media qua API upload
 - Dùng `multer` memory storage + filter mime ảnh
 - Resize ảnh bằng `sharp` trước khi put object
 - Lưu object lên Cloudflare R2 bằng S3-compatible SDK
 
-### 6) Swagger Documentation
+### 5) Swagger Documentation
 
 - Tài liệu API sẵn tại `/api/v1/docs`
 - Dễ demo cho QA, frontend, và reviewer kỹ thuật
@@ -131,21 +118,9 @@ Service -> Producer -> BullMQ Queue (Redis) -> Worker -> External Service/DB
 |---|---|---|---|
 | `email_queue` | `emailProducer` | `emailWorker` | Gửi verify/forgot password email |
 | `bloom_queue` | `bloomProducer` | `bloomWorker` | Cập nhật Redis Bloom username/email |
-| `pinecone_queue` | `pineProducer` | `pineWorker` | Embed post và upsert vector Pinecone |
 | `like_queue` | `likeProducer` | `likeWorker` | Đồng bộ trạng thái like từ Redis về DB |
 
 ## Sequence tham khảo
-
-Semantic indexing flow:
-
-```text
-POST /posts
--> PostService.create
--> pineProducer.addToPineconeQueue
--> pineWorker.process
--> mixedBreadService.generateEmbedding
--> pineconeService.savePostEmbeddingToPinecone
-```
 
 Bloom validation flow:
 
@@ -167,7 +142,6 @@ Base path: `http://localhost:<PORT>/api/v1`
 - `/posts`
 - `/upload`
 - `/users`, `/user`, `/me`
-- `/circle`
 - `/notification`
 - `/health`
 
@@ -178,7 +152,7 @@ Yêu cầu:
 - Node.js 20+
 - MySQL
 - Redis
-- Tài khoản/dịch vụ cho: Mixedbread, Pinecone, Cloudflare R2, SMTP
+- Tài khoản/dịch vụ cho: Cloudflare R2, SMTP
 
 Cài đặt:
 
@@ -194,7 +168,7 @@ Chạy workers (terminal riêng):
 npm run worker
 ```
 
-Chạy queue event listeners (optional, hiện đang lắng nghe `email_queue`, `bloom_queue`, `pinecone_queue`):
+Chạy queue event listeners (optional, hiện đang lắng nghe `email_queue`, `bloom_queue`):
 
 ```bash
 npm run queue
@@ -243,11 +217,6 @@ Cloudflare R2:
 - `R2_ENDPOINT`, `R2_BUCKET_NAME`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`
 - `R2_ACCOUNT_ID`, `R2_TOKEN_VALUE`, `S3_ENDPOINT`
 
-Semantic Search:
-
-- `MIXEDBREAD_API_KEY`, `MIXEDBREAD_MODEL_NAME`
-- `PINECONE_API_KEY`, `PINECONE_INDEX_NAME`
-
 Email:
 
 - `NODEMAILER_HOST`, `NODEMAILER_PORT`, `NODEMAILER_SECURE`, `NODEMAILER_USER`, `NODEMAILER_PASS`
@@ -262,7 +231,6 @@ Realtime:
 - API xử lý nhanh ở lớp sync, tác vụ nặng đẩy qua async workers
 - Chuẩn hóa response/error qua middleware riêng
 - Tận dụng Redis cho cả cache state, token blacklist, Bloom filter, và queue transport
-- Semantic search pipeline được tách khỏi request lifecycle để giảm độ trễ khi create post
 
 ## Swagger
 

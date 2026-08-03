@@ -317,69 +317,6 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
     };
   }
 
-  async createCircle(
-    payload: {
-      contentJson?: unknown;
-      content: string;
-      type?: PostType;
-      replyPermission?: ReplyPermission;
-      visibility?: VisibilityPost;
-    },
-    userSnapshot: UserSnapshot,
-    tx: Prisma.TransactionClient = prisma,
-  ) {
-    const post = await tx.post.create({
-      data: {
-        userId: userSnapshot.id,
-        content: payload.content,
-        contentJson: this.resolveContentJson(payload.contentJson),
-        userSnapshot,
-        replyPermission: payload.replyPermission ?? ReplyPermission.EVERYONE,
-        visibility: payload.visibility ?? VisibilityPost.PUBLIC,
-        type: PostType.CIRCLE,
-      },
-      select: postSelectRepository
-    });
-    return {
-      id: post.id,
-      publicId: post.publicId,
-      content: post.content!,
-      contentJson: post.contentJson,
-      userId: post.userId,
-      visibility: post.visibility,
-      isDisinformation: post.isDisinformation,
-      createdAt: post.createdAt.toISOString(),
-    };
-  }
-
-  async createCircleReply(
-    payload: RepositoryCreatePostPayload,
-    parent: { id: number; publicId: string },
-    userSnapshot: UserSnapshot,
-    tx: Prisma.TransactionClient = prisma,
-  ) {
-    const post = await tx.post.create({
-      data: {
-        ...this.baseData(payload, userSnapshot),
-        parentId: parent.id,
-        parentPublicId: parent.publicId,
-        type: PostType.CIRCLE_REPLY,
-      },
-      select: postSelectRepository,
-    });
-
-    return {
-      id: post.id,
-      publicId: post.publicId,
-      content: post.content!,
-      contentJson: post.contentJson,
-      userId: post.userId,
-      visibility: post.visibility,
-      isDisinformation: post.isDisinformation,
-      createdAt: post.createdAt.toISOString(),
-    };
-  }
-
   async createRepost(
     payload: CreateRepostPayload,
     originPublicId: string,
@@ -573,19 +510,6 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
         userId: true,
         type: true,
       },
-    });
-  }
-
-  async createCirclePostMedia(postId: number, mediaUrls: string[]) {
-    const mediaData = mediaUrls.map((url) => ({
-      key: uuidv4(),
-      url,
-      postId,
-      type: PostMediaType.IMAGE,
-      status: PostMediaStatus.UPLOADED,
-    }));
-    await prisma.postMedia.createMany({
-      data: mediaData
     });
   }
 

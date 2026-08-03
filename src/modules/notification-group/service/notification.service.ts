@@ -1,6 +1,5 @@
-import { NOTIFICATION_JOB_KEY } from "@/constants/queue";
 import { baseLogger } from "@/middlewares/logger";
-import { CreateNotificationMessageGroupEvent, MentionNotification, MessageNotification, ReplyNotification } from "@/modules/notification-group/events/notification.events";
+import { MentionNotification, ReplyNotification } from "@/modules/notification-group/events/notification.events";
 import type {
   CreateNotificationGroupInput,
   EnqueuePendingNotificationInput,
@@ -186,42 +185,6 @@ class NotificationService {
     });
   }
 
-  async sendMessageNotification(messageNotification: MessageNotification) {
-    const { senderId, recipientId, content, avatar, name, groupPublicId } = messageNotification;
-    const notificationData: CreateNotificationMessageGroupEvent = {
-      groupPublicId,
-      name,
-      recipientId,
-      senderId,
-      content,
-      avatar: avatar ?? "",
-      type: "MESSAGE",
-      targetType: "MESSAGE_GROUP",
-    };
-    baseLogger.info(`Enqueuing message notification for recipient ${recipientId} in group ${groupPublicId}`);
-
-    const messageKey = `message:${senderId}:${recipientId}:${groupPublicId}`;
-
-    const pipeline = redisService.multi();
-    pipeline.hSet(messageKey, notificationData);
-
-    pipeline.hIncrBy(messageKey, "count", 1);
-
-    pipeline.expire(messageKey, 30);
-
-    // gom lại trong 3s để tránh gửi quá nhiều notification khi
-    // có nhiều tin nhắn được gửi trong cùng một cuộc trò chuyện
-    redisService.zAdd(NOTIFICATION_JOB_KEY.REALTIME_CHAT_NOTIFICATION, {
-      score: Date.now() + 3000,
-      value: messageKey,
-    }, {
-      NX: true, // không spam, chỉ đúng 3s thì lưu count
-    });
-    await pipeline.exec();
-
-
-  }
-
   async sendLikeCountUpdateNotification(postPublicId: string, recipientId: string, likeCount: number, itemLike: {
     postPublicId: string,
     createdAt: Date,
@@ -268,3 +231,4 @@ class NotificationService {
   }
 }
 export const notificationService = new NotificationService();
+import { NOTIFICATION_JOB_KEY } from "@/constants/queue";

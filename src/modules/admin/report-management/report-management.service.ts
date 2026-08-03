@@ -15,7 +15,6 @@ import {
 const reportTargetTypeMap = {
   post: ReportTargetType.POST,
   user: ReportTargetType.USER,
-  circle: ReportTargetType.CIRCLE,
 } as const;
 
 class ReportManagementService {

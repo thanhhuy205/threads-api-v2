@@ -16,10 +16,6 @@ notificationRouter.post(
     notificationController.markAsRead,
 );
 notificationRouter.get(
-    "/message",
-    notificationController.getUnreadMessageGroups,
-);
-notificationRouter.get(
     "/friend-request",
     notificationController.getFriendRequestCount,
 );

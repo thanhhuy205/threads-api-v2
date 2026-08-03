@@ -1,7 +1,7 @@
 import { ReportStatus } from "@prisma/client";
 import { z } from "zod";
 
-export const reportListTypes = ["post", "user", "circle"] as const;
+export const reportListTypes = ["post", "user"] as const;
 
 export const listReportsQuerySchema = z.object({
   page: z.union([z.string(), z.number()]).optional(),

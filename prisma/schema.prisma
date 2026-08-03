@@ -17,8 +17,6 @@ enum PostType {
   REPLY
   REPOST
   QUOTE
-  CIRCLE
-  CIRCLE_REPLY
 }
 
 enum FollowStatus {
@@ -64,7 +62,6 @@ enum UserStatus {
 enum ReportTargetType {
   POST
   USER
-  CIRCLE
 }
 
 enum ReportStatus {
@@ -73,16 +70,10 @@ enum ReportStatus {
   DISMISSED
 }
 
-enum Visibility {
-  PUBLIC
-  PRIVATE
-}
-
 enum VisibilityPost {
   PUBLIC
   FRIEND
   PRIVATE
-  CIRCLE
 }
 
 enum ActionType {
@@ -95,10 +86,6 @@ enum ActionType {
   QUOTE_DELETED
   SHARE_CREATED
   SHARE_DELETED
-  INVITE_SENT
-  INVITE_ACCEPTED
-  JOIN_CIRCLE
-  LEAVE_CIRCLE
   GENERATE_POST_BEAUTIFUL
   GENERATE_CAPTION_MD
   GENERATE_IMAGE
@@ -107,26 +94,6 @@ enum ActionType {
 enum InteractionType {
   HIDE
   SAVE
-}
-
-enum RoleMembership {
-  OWNER
-  ADMIN
-  MEMBER
-}
-
-enum CircleInvitationStatus {
-  PENDING
-  ACCEPTED
-  REJECTED
-  CANCELLED
-}
-
-enum RequestStatus {
-  PENDING
-  ACCEPTED
-  REJECTED
-  CANCELLED
 }
 
 enum PostMediaType {
@@ -155,59 +122,8 @@ enum FriendRequestStatus {
 
 enum UserRestrictionType {
   POSTING
-  POST_AND_USE_KARMA
   AI_GENERATION_CAPTION
   AI_GENERATION_IMAGE
-}
-
-enum GroupType {
-  PRIVATE
-  CROWD
-}
-
-enum BadgeType {
-  HERO // huy hiệu anh hùng, dành cho những thành viên có đóng góp tích cực cho nhóm, giúp đỡ các thành viên khác, tạo ra nội dung chất lượng cao, hoặc có ảnh hưởng tích cực đến cộng đồng nhóm.
-  LEGEND // thành viên kì cựu
-  KARMA_SACRIFICE // đốt karma cứu nhóm
-  CPR_HERO // comment trong CPR thành công
-  FOUNDER // người tạo nhóm 
-}
-
-enum KarmaReason {
-  QUEST_REWARD // hoàn thành nhiệm vụ
-  BURN_FOR_CIRCLE // đốt cứu nhóm
-  ADMIN_GRANT // admin cấp
-}
-
-enum PostScoreLabel {
-  MASTERPIECE
-  DEEP_TALK
-  SOLID
-  NEUTRAL
-  NOISE
-  TOXIC
-  PENDING
-}
-
-enum ExpReason {
-  POST_MASTERPIECE
-  POST_DEEP_TALK
-  POST_SOLID
-  POST_NEUTRAL
-  POST_NOISE
-  POST_TOXIC
-  CPR_SUCCESS
-  MEMBER_JOIN
-  CPR_SURVIVED
-  CPR_FAIL
-}
-
-enum StatusMessage {
-  PENDING
-  SENT
-  DELIVERED
-  READ
-  FAILED
 }
 
 model Role {
@@ -294,31 +210,14 @@ model User {
   verificationCodes    VerificationCode[]
   follows              Follow[]              @relation("FollowUser")
   followers            Follow[]              @relation("FollowFollowing")
-  circles              Circle[]              @relation("CircleCreated")
-  circleMembers        CircleMember[]
-  circleInvitations    CircleInvitation[]    @relation("CircleInvitationUser")
-  circleInvited        CircleInvitation[]    @relation("CircleInvitationInviter")
   likes                Like[]
-  messageGroups        MessageGroup[]        @relation("MessageGroupCreator")
-  memberMessageGroups  MemberMessageGroup[]
   friendRequests       FriendRequest[]       @relation("FriendRequestSender")
   receivedRequests     FriendRequest[]       @relation("FriendRequestReceiver")
   userRoles            UserRole[]
-  userKarma            UserKarma?
   userRestrictions     UserRestriction[]
-  messages             Message[]
-  circleExpLogs        CircleExpLog[]
-  heroBadges           HeroBadge[]
-  karmaTransactions    KarmaTransaction[]
-  userQuestLogs        UserQuestLog[]
   reports              Report[]              @relation("UserReports")
   postMentions         PostMention[]
-  circleJoinRequests   CircleJoinRequest[]
-  circleMemberBans     CircleMemberBan[]     @relation("CircleMemberBanUser")
-  circleMemberBansBy   CircleMemberBan[]     @relation("CircleMemberBanBy")
-  dailyQuests          DailyQuest[]
   userActionLogs       UserActionLog[]
-  webHookPreviewImages WebHookPreviewImage[]
   limitActionAIs       LimitActionAI[]
   votes                Vote[]
   postInteractions     PostInteraction[]
@@ -388,57 +287,6 @@ model VerificationCode {
   @@map("verification_codes")
 }
 
-model MessageGroup {
-  id        Int       @id @default(autoincrement())
-  publicId  String    @unique @default(cuid()) @map("public_id")
-  name      String    @default("") @db.VarChar(255)
-  groupType GroupType @default(PRIVATE)
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
-
-  createdBy     User                 @relation("MessageGroupCreator", fields: [createdById], references: [id])
-  createdById   String               @map("created_by_id")
-  members       MemberMessageGroup[]
-  messages      Message[]            @relation("MessageGroupMessages")
-  lastMessageAt DateTime             @map("last_message_at")
-
-  @@map("message_groups")
-}
-
-model MemberMessageGroup {
-  id          String   @id @default(cuid())
-  userId      String   @map("user_id")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-  unreadCount Int      @default(0)
-
-  messageGroup   MessageGroup? @relation(fields: [messageGroupId], references: [id])
-  messageGroupId Int?
-  user           User          @relation(fields: [userId], references: [id])
-
-  @@unique([messageGroupId, userId], map: "uq_member_message_groups_group_user")
-  @@index([userId], map: "idx_messages_sender_id")
-  @@map("member_message_groups")
-}
-
-model Message {
-  id             Int           @id @default(autoincrement())
-  publicId       String        @unique @default(cuid()) @map("public_id")
-  messageGroupId Int           @map("message_group_id")
-  senderId       String        @map("sender_id")
-  content        String        @db.Text
-  createdAt      DateTime      @default(now()) @map("created_at")
-  updatedAt      DateTime      @updatedAt @map("updated_at")
-  statusMessage  StatusMessage @default(PENDING) @map("status_message_enum")
-  lastSeenAt     DateTime?     @map("last_seen_at")
-
-  sender       User         @relation(fields: [senderId], references: [id])
-  messageGroup MessageGroup @relation("MessageGroupMessages", fields: [messageGroupId], references: [id])
-
-  @@index([senderId], map: "idx_messages_sender_id")
-  @@map("messages")
-}
-
 model Post {
   id       Int    @id @default(autoincrement())
   publicId String @unique @default(cuid()) @map("public_id")
@@ -495,8 +343,6 @@ model Post {
   mentions              PostMention[]
   topicsPosts           TopicsPost[]
   likes                 Like[]
-  circlePostQualityLogs CirclePostQualityLog[]
-  circleExpLogs         CircleExpLog[]
   poll                  Poll?
   postInteractions      PostInteraction[]
 
@@ -707,104 +553,6 @@ model RefreshToken {
   @@map("refresh_tokens")
 }
 
-model Circle {
-  id          Int        @id @default(autoincrement())
-  publicId    String     @unique @default(cuid()) @db.VarChar(255)
-  name        String     @db.VarChar(255)
-  description String     @db.Text
-  avatarEmoji String?    @map("avatar_emoji") @db.VarChar(64)
-  createdAt   DateTime   @default(now()) @map("created_at")
-  updatedAt   DateTime   @updatedAt @map("updated_at")
-  visibility  Visibility @default(PRIVATE)
-  statusPeak  Boolean    @default(false) @map("status_peak") // statusPeak có ánh lửa hiện lên cho ngầu 
-
-  createdBy             User                   @relation("CircleCreated", fields: [createById], references: [id])
-  createById            String                 @map("create_by_id")
-  circleMembers         CircleMember[]
-  circleInvitations     CircleInvitation[]
-  circleEnergies        CircleEnergy[]
-  circlePostQualityLogs CirclePostQualityLog[]
-  circleExpLogs         CircleExpLog[]
-  heroBadges            HeroBadge[]
-  circleJoinRequests    CircleJoinRequest[]
-  circleMemberBans      CircleMemberBan[]
-
-  @@index([createById], map: "idx_circles_created_by")
-  @@map("circles")
-}
-
-model CircleMember {
-  id                 Int                    @id @default(autoincrement())
-  circleId           Int                    @map("circle_id")
-  userId             String                 @map("user_id")
-  createdAt          DateTime               @default(now()) @map("created_at")
-  role               RoleMembership         @default(MEMBER)
-  circlePostQuantity CirclePostQualityLog[]
-
-  circle Circle @relation(fields: [circleId], references: [id])
-  user   User   @relation(fields: [userId], references: [id])
-
-  @@unique([circleId, userId], map: "uq_circle_members_circle_user")
-  @@index([circleId], map: "idx_circle_members_circle_id")
-  @@index([userId], map: "idx_circle_members_user_id")
-  @@map("circle_members")
-}
-
-model CircleMemberBan {
-  id         Int       @id @default(autoincrement())
-  circleId   Int       @map("circle_id")
-  userId     String    @map("user_id")
-  bannedById String    @map("banned_by_id")
-  reason     String?   @db.VarChar(255)
-  expiresAt  DateTime? @map("expires_at")
-  createdAt  DateTime  @default(now()) @map("created_at")
-
-  circle   Circle @relation(fields: [circleId], references: [id])
-  user     User   @relation("CircleMemberBanUser", fields: [userId], references: [id])
-  bannedBy User   @relation("CircleMemberBanBy", fields: [bannedById], references: [id])
-
-  @@unique([circleId, userId], map: "uq_circle_member_bans_circle_user")
-  @@index([circleId], map: "idx_circle_member_bans_circle_id")
-  @@index([userId], map: "idx_circle_member_bans_user_id")
-  @@index([bannedById], map: "idx_circle_member_bans_banned_by_id")
-  @@index([expiresAt], map: "idx_circle_member_bans_expires_at")
-  @@map("circle_member_bans")
-}
-
-model DailyQuest {
-  id          Int        @id @default(autoincrement())
-  code        String     @unique @default(cuid()) @db.VarChar(255)
-  description String     @db.VarChar(255)
-  karmaReward Int // thường là 1, nhiệm vụ khó hơn là 2
-  requirement Int // số lần cần hoàn thành
-  isActive    Boolean    @default(true)
-  action      ActionType @map("action_enum")
-  createById  String     @map("create_by_id")
-  createdAt   DateTime   @default(now()) @map("created_at")
-
-  user          User           @relation(fields: [createById], references: [id])
-  userQuestLogs UserQuestLog[]
-
-  @@map("daily_quests")
-}
-
-model UserQuestLog {
-  id        Int       @id @default(autoincrement())
-  userId    String    @map("user_id")
-  questId   Int       @map("quest_id")
-  progress  Int       @default(0)
-  completed Boolean   @default(false)
-  claimedAt DateTime? @map("claimed_at")
-  date      DateTime  @db.Date // reset mỗi ngày
-
-  user  User       @relation(fields: [userId], references: [id])
-  quest DailyQuest @relation(fields: [questId], references: [id]) // cơ chế nhiệm vụ hàng ngày, 
-  // mỗi ngày sẽ có 1-3 nhiệm vụ khác nhau, người dùng hoàn thành sẽ nhận được karma, có thể tích lũy để đốt cứu nhóm hoặc nhận huy hiệu anh hùng tùy theo số karma đã tích lũy. Nhiệm vụ có thể là: tạo bài viết, bình luận, react, tham gia nhóm, mời bạn bè vào nhóm, v.v.
-
-  @@unique([userId, questId, date])
-  @@map("user_quest_logs")
-}
-
 model UserActionLog {
   id        Int        @id @default(autoincrement())
   userId    String     @map("user_id")
@@ -820,123 +568,6 @@ model UserActionLog {
   @@index([type], map: "idx_user_action_logs_type")
   @@index([createdAt], map: "idx_user_action_logs_created_at")
   @@map("user_action_logs")
-}
-
-model CircleEnergy {
-  id        Int      @id @default(autoincrement())
-  circleId  Int      @map("circle_id")
-  level     Int      @default(1)
-  exp       Int      @default(0)
-  current   Int      @default(500)
-  max       Int      @default(500)
-  peak      Int      @default(500)
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  circle Circle @relation(fields: [circleId], references: [id])
-
-  @@index([circleId], map: "idx_circle_energy_circle_id")
-  @@map("circle_energy")
-}
-
-model HeroBadge {
-  id        Int       @id @default(autoincrement())
-  userId    String    @map("user_id")
-  circleId  Int       @map("circle_id")
-  type      BadgeType
-  expireAt  DateTime? @map("expire_at")
-  createdAt DateTime  @default(now()) @map("created_at")
-
-  user   User   @relation(fields: [userId], references: [id])
-  circle Circle @relation(fields: [circleId], references: [id])
-
-  @@unique([userId, circleId], map: "uq_hero_badges_user_circle")
-  @@map("hero_badges")
-}
-
-model KarmaTransaction {
-  id        Int         @id @default(autoincrement())
-  userId    String      @map("user_id")
-  delta     Int // +1 quest, -5 đốt karma
-  reason    KarmaReason
-  circleId  Int         @map("circle_id") // null nếu không liên quan nhóm
-  createdAt DateTime    @default(now()) @map("created_at")
-
-  user User @relation(fields: [userId], references: [id])
-
-  @@index([userId])
-  @@map("karma_transactions")
-}
-
-model CirclePostQualityLog {
-  id             Int @id @default(autoincrement())
-  circleId       Int @map("circle_id")
-  circleMemberId Int @map("circle_member_id")
-  postId         Int @map("post_id")
-
-  score Int            @default(0) // 0 - 10
-  label PostScoreLabel @default(PENDING) // Masterpiece | Deep Talk | Solid | Neutral | Noise | Toxic
-
-  hpDelta  Int @default(0) @map("hp_delta") // +5, +3, +1, 0, -1, -3
-  expDelta Int @default(0) @map("exp_delta") // +10, +6, +2, 0
-
-  reason     String?  @db.Text
-  confidence Decimal? @db.Decimal(3, 2) // 0.00 - 1.00
-
-  isToxic Boolean @default(false) @map("is_toxic")
-  isSpam  Boolean @default(false) @map("is_spam")
-
-  createdAt DateTime @default(now()) @map("created_at")
-
-  circle       Circle       @relation(fields: [circleId], references: [id])
-  post         Post         @relation(fields: [postId], references: [id])
-  circleMember CircleMember @relation(fields: [circleMemberId], references: [id])
-
-  @@index([circleId], map: "idx_circle_post_quality_log_circle_id")
-  @@index([postId], map: "idx_circle_post_quality_log_post_id")
-  @@index([score], map: "idx_circle_post_quality_log_score")
-  @@index([label], map: "idx_circle_post_quality_log_label")
-  @@index([isToxic], map: "idx_circle_post_quality_log_is_toxic")
-  @@index([isSpam], map: "idx_circle_post_quality_log_is_spam")
-  @@map("circle_post_quality_logs")
-}
-
-model CircleExpLog {
-  id        Int       @id @default(autoincrement())
-  publicId  String    @unique @default(cuid()) @map("public_id")
-  userId    String    @map("user_id")
-  circleId  Int       @map("circle_id")
-  postId    Int?      @map("post_id")
-  expReason ExpReason @map("exp_reason_enum")
-  expDelta  Int       @default(0) @map("exp_delta") // +5, 0, -1
-  isDelta   Boolean   @default(false) @map("is_delta")
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
-
-  circle Circle @relation(fields: [circleId], references: [id])
-  user   User   @relation(fields: [userId], references: [id])
-  post   Post?  @relation(fields: [postId], references: [id])
-
-  @@unique([circleId, postId, expReason], map: "uq_circle_exp_logs_circle_post_reason")
-  @@index([circleId], map: "idx_circle_exp_log_circle_id")
-  @@index([userId], map: "idx_circle_exp_log_user_id")
-  @@index([postId], map: "idx_circle_exp_log_post_id")
-  @@index([expReason], map: "idx_circle_exp_log_exp_reason")
-  @@index([isDelta], map: "idx_circle_exp_log_is_delta")
-  @@index([createdAt], map: "idx_circle_exp_log_created_at")
-  @@map("circle_exp_logs")
-}
-
-model UserKarma {
-  id        Int      @id @default(autoincrement())
-  userId    String   @unique(map: "uq_user_karma_user_id") @map("user_id")
-  karma     Int      @default(1) @map("karma") // default 1 , 1 karma = 5hp cho bất kì nhóm nào 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  user User @relation(fields: [userId], references: [id])
-
-  @@map("user_karma")
 }
 
 model LimitActionAI {
@@ -970,56 +601,3 @@ model UserRestriction {
   @@map("user_restrictions")
 }
 
-model CircleInvitation {
-  id          Int                    @id @default(autoincrement())
-  circleId    Int                    @map("circle_id")
-  userId      String?                @map("user_id")
-  email       String?                @map("email") @db.VarChar(255)
-  role        RoleMembership?        @default(MEMBER)
-  isUser      Boolean                @default(true) @map("is_user") // true nếu invitation dành cho user đã có tài khoản, false nếu chỉ dựa trên email
-  tokenHash   String?                @unique @db.VarChar(100)
-  inviterId   String                 @map("inviter_id")
-  resentCount Int                    @default(0) @map("resent_count") // tối đa 5 lần
-  status      CircleInvitationStatus @default(PENDING)
-  createdAt   DateTime               @default(now()) @map("created_at")
-  updatedAt   DateTime               @updatedAt @map("updated_at")
-
-  circle  Circle @relation(fields: [circleId], references: [id])
-  user    User?  @relation("CircleInvitationUser", fields: [userId], references: [id])
-  inviter User   @relation("CircleInvitationInviter", fields: [inviterId], references: [id])
-
-  @@unique([circleId, userId], map: "uq_circle_invitations_circle_user")
-  @@index([circleId], map: "idx_circle_invitations_circle_id")
-  @@index([userId], map: "idx_circle_invitations_user_id")
-  @@index([inviterId], map: "idx_circle_invitations_inviter_id")
-  @@map("circle_invitations")
-}
-
-model CircleJoinRequest {
-  id        Int           @id @default(autoincrement())
-  userId    String        @map("user_id")
-  circleId  Int
-  status    RequestStatus @default(PENDING)
-  reason    String?       @db.VarChar(255)
-  createdAt DateTime      @default(now())
-
-  circle Circle @relation(fields: [circleId], references: [id])
-  user   User   @relation(fields: [userId], references: [id])
-
-  @@map("circle_join_requests")
-}
-
-model WebHookPreviewImage {
-  id           Int      @id @default(autoincrement())
-  userId       String   @map("user_id")
-  generationId String   @unique @map("generation_id")
-  content      String   @db.VarChar(2048)
-  metadata     Json?    @map("metadata") // width, height, size, format, url, v.v.
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
-
-  user User @relation(fields: [userId], references: [id])
-
-  @@index([generationId], map: "idx_webhook_preview_images_draft_id")
-  @@map("webhook_preview_images")
-}

@@ -15,7 +15,6 @@ const LIKE_SYNC_INIT_LOCK = "like:sync:init:lock";
 const USER_POST_INTERACTION_PREFIX = "user:";
 const USER_POST_INTERACTION_POST_SEGMENT = ":post:";
 const TOPIC_LIST_CACHE_KEY = "topic:list:names";
-const CIRCLE_LIST_CACHE_VERSION_KEY = "circle:list:version";
 
 export type RedisPostInteractionType = Lowercase<Exclude<PostType, "POST">>;
 export type RedisInteractionType = "like" | RedisPostInteractionType;
@@ -75,11 +74,6 @@ export const redisKey = {
   },
   topic: {
     listNames: () => TOPIC_LIST_CACHE_KEY,
-  },
-  circle: {
-    listVersion: () => CIRCLE_LIST_CACHE_VERSION_KEY,
-    list: (version: number, after: string, take: number, userId: string) =>
-      `circle:list:v${version}:after:${after}:take:${take}:user:${userId}`,
   },
   poll: {
     voteLock: (userId: string, pollOptionId: number) =>

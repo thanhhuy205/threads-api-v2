@@ -1,5 +1,3 @@
-import { mixedBreadService } from "@/modules/mixed-bread/service/mixed-bread.service";
-import { pineconeService } from "@/modules/pinecone/service/pinecone.service";
 import { PostMapper } from "@/modules/post/mapper/post.mapper";
 import { followerService } from "@/modules/user/service/follower.service";
 import { postRepository } from "../repository/post.repository";
@@ -11,17 +9,10 @@ class PostSearchService {
     limit: string;
     page: string;
   }): Promise<any[]> {
-    const { q, topics, limit } = query;
-    const embedding = await mixedBreadService.generateEmbedding(
-      q,
-      topics.split(","),
-    );
-    const results = await pineconeService.querySimilarPosts(
-      embedding,
-      Number(limit) || 10,
-    );
-
-    return results;
+    return this.searchByContent({
+      query: query.q,
+      take: Number(query.limit) || 10,
+    });
   }
 
   async count(userId: string) {

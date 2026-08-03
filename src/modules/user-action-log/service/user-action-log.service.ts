@@ -78,21 +78,6 @@ class UserActionLogService {
     return this.logAction({ ...input, type: ActionType.SHARE_DELETED });
   }
 
-  logInviteSent(input: LogActionInput) {
-    return this.logAction({ ...input, type: ActionType.INVITE_SENT });
-  }
-
-  logInviteAccepted(input: LogActionInput) {
-    return this.logAction({ ...input, type: ActionType.INVITE_ACCEPTED });
-  }
-
-  logJoinCircle(input: LogActionInput) {
-    return this.logAction({ ...input, type: ActionType.JOIN_CIRCLE });
-  }
-
-  logLeaveCircle(input: LogActionInput) {
-    return this.logAction({ ...input, type: ActionType.LEAVE_CIRCLE });
-  }
 }
 
 export const userActionLogService = new UserActionLogService();

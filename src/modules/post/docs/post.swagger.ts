@@ -211,7 +211,7 @@ export const postSwaggerSchemas = {
             },
             type: {
                 type: 'string',
-                enum: ['post', 'user', 'circle'],
+                enum: ['post', 'user'],
                 example: 'post',
             },
         },
@@ -226,7 +226,7 @@ export const postSwaggerSchemas = {
             },
             targetType: {
                 type: 'string',
-                enum: ['POST', 'USER', 'CIRCLE'],
+                enum: ['POST', 'USER'],
                 example: 'POST',
             },
             targetId: {
@@ -431,7 +431,7 @@ const reportTargetIdParameter = {
         type: 'string',
         example: 'post_abc123xyz789',
     },
-    description: 'Target identifier. type=post/circle => post publicId, type=user => user id.',
+    description: 'Target identifier. type=post => post publicId, type=user => user id.',
 };
 
 const usernameParameters = [
@@ -968,7 +968,7 @@ export const postSwaggerPaths = {
     '/posts/{publicId}/report': {
         post: {
             tags: ['Post'],
-            summary: 'Report a target (post/user/circle post)',
+            summary: 'Report a target (post/user)',
             security: bearerAuthSecurity,
             parameters: [reportTargetIdParameter],
             requestBody: {

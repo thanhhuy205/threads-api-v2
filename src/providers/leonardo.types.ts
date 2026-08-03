@@ -115,28 +115,6 @@ export interface LeonardoGenerationObject {
   [key: string]: unknown;
 }
 
-export interface LeonardoWebhookPayload {
-  type: LeonardoEventType;
-  object: "generation" | "video" | "upscale";
-  timestamp: number;
-  api_version: "v1" | string;
-  data: {
-    object: LeonardoGenerationObject;
-  };
-}
-
 export interface LeonardoGenerationResponse {
   sdGenerationJob: LeonardoGenerationJob;
-}
-
-export function isImageGenerationComplete(
-  payload: LeonardoWebhookPayload,
-): payload is LeonardoWebhookPayload & { type: "image_generation.complete" } {
-  return payload.type === "image_generation.complete";
-}
-
-export function isImageGenerationFailed(
-  payload: LeonardoWebhookPayload,
-): payload is LeonardoWebhookPayload & { type: "image_generation.failed" } {
-  return payload.type === "image_generation.failed";
 }

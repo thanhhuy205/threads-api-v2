@@ -26,24 +26,3 @@ export type MentionNotification = {
   postOwnerId: string;
 };
 
-
-export type MessageNotification = {
-  groupPublicId: string;
-  name: string,
-  recipientId: string;
-  senderId: string;
-  content: string;
-  avatar?: string;
-};
-
-
-export type CreateNotificationMessageGroupEvent = {
-  groupPublicId: string;
-  name: string;
-  avatar: string;
-  content: string;
-  senderId: string;
-  recipientId: string;
-  type: 'MESSAGE';
-  targetType: 'MESSAGE_GROUP';
-}

@@ -1,15 +1,12 @@
 import { cloudflareConfig } from '@/config/cloudflare';
 import { databaseConfig } from '@/config/database';
 import { groQConfig } from '@/config/groq';
-import { hookSecretKeyConfig } from '@/config/hook-secret.config';
 import { jwtConfig } from '@/config/jwt';
 import { leonardoConfig } from '@/config/leonardo';
-import { mixedbreadAIConfig } from '@/config/mixedbread-ai';
 import { mongodbConfig } from '@/config/mongodb';
 import { nodemailerConfig } from '@/config/nodemailer';
 import { notionConfig } from '@/config/notion';
 import { openRouterConfig } from '@/config/openrouter';
-import { pineconeConfig } from '@/config/pinecone';
 import { pusherConfig } from '@/config/pusher';
 import { rateLimitConfig } from '@/config/ratelimit';
 import { redisConfig } from '@/config/redis';
@@ -28,8 +25,6 @@ const envSchema = z.object({
     ...rateLimitConfig.shape,
     ...redisConfig.shape,
     ...jwtConfig.shape,
-    ...mixedbreadAIConfig.shape,
-    ...pineconeConfig.shape,
     ...nodemailerConfig.shape,
     ...cloudflareConfig.shape,
     ...pusherConfig.shape,
@@ -37,7 +32,6 @@ const envSchema = z.object({
     ...leonardoConfig.shape,
     ...notionConfig.shape,
     ...groQConfig.shape,
-    ...hookSecretKeyConfig.shape,
     ...mongodbConfig.shape,
 });
 

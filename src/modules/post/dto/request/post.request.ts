@@ -37,10 +37,9 @@ export type UsernameParamsDto = z.infer<typeof usernameParamsSchema>;
 
 export const reportSchema = z.object({
     reason: z.string().trim().min(1, 'Report reason is required').max(1000, 'Report reason must be at most 1000 characters'),
-    type: z.enum(['post', 'user', 'circle']).transform((value) => {
+    type: z.enum(['post', 'user']).transform((value) => {
         if (value === 'post') return ReportTargetType.POST;
-        if (value === 'user') return ReportTargetType.USER;
-        return ReportTargetType.CIRCLE;
+        return ReportTargetType.USER;
     }),
 });
 

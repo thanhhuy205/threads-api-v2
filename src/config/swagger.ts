@@ -24,25 +24,12 @@ import {
 } from '../modules/upload/docs/upload.swagger';
 
 import {
-    adminSwaggerPaths,
-    adminSwaggerSchemas,
-} from '../modules/admin/docs/admin.swagger';
-import {
     aiSwaggerPaths,
     aiSwaggerSchemas,
 } from '../modules/ai/docs/ai.swagger';
 import {
-    circleSwaggerPaths,
-    circleSwaggerSchemas,
-} from '../modules/circle/docs/circle.swagger';
-
-import {
     jwtSwaggerSchemas,
 } from '../modules/jwt/docs/jwt.swagger';
-import {
-    messageGroupSwaggerPaths,
-    messageGroupSwaggerSchemas,
-} from '../modules/message-group/docs/message-group.swagger';
 import {
     notificationSwaggerPaths,
     notificationSwaggerSchemas,
@@ -56,10 +43,6 @@ import {
     pollSwaggerSchemas,
 } from '../modules/poll/docs/poll.swagger';
 import {
-    questSwaggerPaths,
-    questSwaggerSchemas,
-} from '../modules/quest/docs/quest.swagger';
-import {
     searchSwaggerPaths,
     searchSwaggerSchemas,
 } from '../modules/search/docs/search.swagger';
@@ -67,10 +50,6 @@ import {
     topicSwaggerPaths,
     topicSwaggerSchemas,
 } from '../modules/topic/docs/topic.swagger';
-import {
-    webhooksSwaggerPaths,
-    webhooksSwaggerSchemas,
-} from '../modules/webhooks/docs/webhooks.swagger';
 
 export const swaggerDocument = {
     openapi: '3.0.0',
@@ -114,10 +93,6 @@ export const swaggerDocument = {
             description: 'Upload APIs',
         },
         {
-            name: 'Circle',
-            description: 'Circle / community APIs',
-        },
-        {
             name: 'Notification',
             description: 'Notification APIs',
         },
@@ -130,16 +105,8 @@ export const swaggerDocument = {
             description: 'AI generation APIs',
         },
         {
-            name: 'MessageGroup',
-            description: 'Message group and message APIs',
-        },
-        {
             name: 'Topic',
             description: 'Topic APIs',
-        },
-        {
-            name: 'Quest',
-            description: 'Quest and reward APIs',
         },
         {
             name: 'Search',
@@ -153,10 +120,6 @@ export const swaggerDocument = {
             name: 'Poll',
             description: 'Poll voting APIs',
         },
-        {
-            name: 'Webhooks',
-            description: 'Webhook receiver APIs',
-        },
     ],
 
     paths: {
@@ -165,17 +128,12 @@ export const swaggerDocument = {
         ...postSwaggerPaths,
         ...userSwaggerPaths,
         ...uploadSwaggerPaths,
-        ...circleSwaggerPaths,
         ...notificationSwaggerPaths,
-        ...adminSwaggerPaths,
         ...aiSwaggerPaths,
-        ...messageGroupSwaggerPaths,
         ...topicSwaggerPaths,
-        ...questSwaggerPaths,
         ...searchSwaggerPaths,
         ...pusherSwaggerPaths,
         ...pollSwaggerPaths,
-        ...webhooksSwaggerPaths,
     },
 
     components: {
@@ -185,18 +143,13 @@ export const swaggerDocument = {
             ...postSwaggerSchemas,
             ...userSwaggerSchemas,
             ...uploadSwaggerSchemas,
-            ...circleSwaggerSchemas,
             ...notificationSwaggerSchemas,
             ...jwtSwaggerSchemas,
-            ...adminSwaggerSchemas,
             ...aiSwaggerSchemas,
-            ...messageGroupSwaggerSchemas,
             ...topicSwaggerSchemas,
-            ...questSwaggerSchemas,
             ...searchSwaggerSchemas,
             ...pusherSwaggerSchemas,
             ...pollSwaggerSchemas,
-            ...webhooksSwaggerSchemas,
         },
 
         securitySchemes: {
@@ -204,12 +157,6 @@ export const swaggerDocument = {
                 type: 'http',
                 scheme: 'bearer',
                 bearerFormat: 'JWT',
-            },
-            leonardoWebhookAuth: {
-                type: 'http',
-                scheme: 'bearer',
-                bearerFormat: 'Leonardo webhook callback API key',
-                description: 'Leonardo webhook callback authorization header',
             },
         },
     },

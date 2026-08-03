@@ -34,11 +34,6 @@ export type ReportSubmissionResult = {
 };
 
 class PostActionService {
-  private readonly circlePostTypes = new Set<PostType>([
-    PostType.CIRCLE,
-    PostType.CIRCLE_REPLY,
-  ]);
-
   private resolveDeleteActionType(postType: PostType): ActionType {
     if (postType === PostType.QUOTE) {
       return ActionType.QUOTE_DELETED;
@@ -59,9 +54,6 @@ class PostActionService {
     const post = await postRepository.findByPublicId(publicId);
     if (!post) {
       throw new NotFoundException("Post not found");
-    }
-    if (post.visibility === VisibilityPost.CIRCLE) {
-      throw new BadRequestException("Circle posts cannot be hidden");
     }
     if (post.userId === userId) {
       throw new ForbiddenException("Users cannot hide their own posts");
@@ -108,9 +100,6 @@ class PostActionService {
     const post = await postRepository.findByPublicId(publicId);
     if (!post) {
       throw new Error("Post not found");
-    }
-    if (post.visibility === VisibilityPost.CIRCLE) {
-      throw new Error("Circle posts cannot be hidden");
     }
 
     await postRepository.updateStatusByPublicId(publicId, {
@@ -292,18 +281,6 @@ class PostActionService {
       throw new ForbiddenException("Users cannot report their own posts");
     }
 
-    const isCirclePost = this.circlePostTypes.has(targetPost.type);
-    if (payload.type === ReportTargetType.POST && isCirclePost) {
-      throw new BadRequestException(
-        "type post only supports non-circle posts",
-      );
-    }
-
-    if (payload.type === ReportTargetType.CIRCLE && !isCirclePost) {
-      throw new BadRequestException(
-        "type circle only supports circle posts",
-      );
-    }
     const existingReport = await reportService.findExistingReport({
       reporterId: payload.reporterId,
       targetType: payload.type,

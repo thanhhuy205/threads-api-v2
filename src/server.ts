@@ -1,6 +1,5 @@
 import app from '@/app';
 import { autoRemoveBanProducer } from '@/modules/job/auto-remove-ban/producer/auto-remove-ban.producer';
-import { deltaProducer } from '@/modules/job/delta-hp-cron/producer/delta-producer';
 import { likeProducer } from '@/modules/job/like-job/producer/like.producer';
 import { notificationProducer } from '@/modules/job/notification-job/producer/notification.producer';
 import { surveySyncProducer } from '@/modules/job/survey-sync/producer/survey-sync.producer';
@@ -58,19 +57,6 @@ const bootstrap = async () => {
         await notificationProducer.initSyncNotificationBatchJob();
     } catch (error) {
         console.error('Failed to initialize notification batch repeat job:', error);
-    }
-
-    try {
-        await notificationProducer.initMessageNotificationJob();
-    } catch (error) {
-        console.error('Failed to initialize message notification repeat job:', error);
-    }
-
-    try {
-        await deltaProducer.initSyncBatchJob();
-    }
-    catch (error) {
-        console.error('Failed to initialize delta hp repeat job:', error);
     }
 
     try {

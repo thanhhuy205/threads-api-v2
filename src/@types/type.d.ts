@@ -47,7 +47,6 @@ declare global {
       DATABASE_URL?: string;
       JWT_SECRET?: string;
       LEONARDO_API_KEY?: string;
-      LEONARDO_WEBHOOK_API_KEY?: string;
       ACCESS_EXPIRES?: string;
       REDIS_URL?: string;
     }

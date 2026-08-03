@@ -15,7 +15,6 @@
         "db:push": "prisma db push",
         "db:pull": "prisma db pull",
         "db:studio": "prisma studio",
-        "db:seed": "tsx prisma/seed.ts",
         "db:format": "prisma format",
         "worker": "tsx workers/index.ts",
         "queue": "tsx queues/index.ts",
@@ -24,19 +23,14 @@
         "all:workers:queues": "npm run worker && npm run queue",
         "docs:routes": "node scripts/generate-docs-routes.mjs"
     },
-    "prisma": {
-        "seed": "tsx prisma/seed.ts"
-    },
     "dependencies": {
         "@aws-sdk/client-s3": "^3.1041.0",
         "@aws-sdk/lib-storage": "^3.1041.0",
         "@aws-sdk/s3-request-presigner": "^3.1068.0",
         "@google/genai": "^2.7.0",
-        "@mixedbread-ai/sdk": "^2.2.11",
         "@notionhq/client": "^5.22.0",
         "@openrouter/ai-sdk-provider": "^2.9.0",
         "@openrouter/sdk": "^0.12.35",
-        "@pinecone-database/pinecone": "^7.2.0",
         "@prisma/adapter-mariadb": "7.8.0",
         "@prisma/client": "7.8.0",
         "@redis/bloom": "^5.12.1",
@@ -61,7 +55,6 @@
         "ioredis": "^5.10.1",
         "jsonwebtoken": "^9.0.3",
         "mariadb": "^3.4.5",
-        "mixedbread-ai-provider": "^4.0.0",
         "mongodb": "^7.5.0",
         "morgan": "^1.10.0",
         "ms": "^2.1.3",

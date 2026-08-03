@@ -203,26 +203,6 @@ class UserController {
     return res.success(200, "Usernames retrieved successfully", result);
   }
 
-  async getMyKarma(req: Request, res: Response) {
-    const userId = req.user?.sub;
-    if (!userId) {
-      return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
-    }
-
-    const karma = await userService.getMyKarma(userId);
-    return res.success(200, "User karma retrieved successfully", karma);
-  }
-
-  async getMyBadges(req: Request, res: Response) {
-    const userId = req.user?.sub;
-    if (!userId) {
-      return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
-    }
-
-    const badges = await userService.getMyBadges(userId);
-    return res.success(200, "User badges retrieved successfully", badges);
-  }
-
   async getMyStatusProfile(req: Request, res: Response) {
     const userId = req.user?.sub;
     if (!userId) {

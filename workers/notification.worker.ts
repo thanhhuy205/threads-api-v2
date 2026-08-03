@@ -79,14 +79,6 @@ class NotificationWorker {
     const firstName = username;
     const isMentionNotification =
       meta.type === "MENTION" || meta.key === "mention";
-    const isMessageNotification =
-      meta.type === "MESSAGE" || meta.key === "message";
-
-    if (isMessageNotification) {
-      if (actorCount === 1) return `${firstName} đã gửi một tin nhắn mới trong cuộc trò chuyện của bạn`;
-      return `${firstName} đã gửi  ${actorCount - 1} tin nhắn mới tới bạn`;
-    }
-
     if (isMentionNotification) {
       if (actorCount === 1) return `${firstName} đã nhắc đến bạn trong một bài viết`;
       return `${firstName} và ${actorCount - 1} người khác đã nhắc đến bạn`;

@@ -15,8 +15,6 @@ usersRouter.use(authorization);
 
 
 
-usersRouter.get('/me/karma', authorization, userController.getMyKarma);
-usersRouter.get('/me/badges', authorization, userController.getMyBadges);
 usersRouter.get('/me/status-profile', authorization, userController.getMyStatusProfile);
 
 

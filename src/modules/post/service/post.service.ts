@@ -1,12 +1,8 @@
 import { NotFoundException } from "@/errors/error";
 import { baseLogger } from "@/middlewares/logger";
 import { notificationService } from "@/modules/notification-group/service/notification.service";
-import type {
-  CreateCirclePostPayload,
-  CreatePostPayload
-} from "@/modules/post/interfaces/create-post-payload";
+import type { CreatePostPayload } from "@/modules/post/interfaces/create-post-payload";
 import { userActionLogService } from "@/modules/user-action-log/service/user-action-log.service";
-import { ReplyPermission, VisibilityPost } from "@prisma/client";
 import { PostBuilder } from "../builder/post.builder";
 import { CreatePostDto } from "../dto/post.dto";
 import { PostRecord, postRepository } from "../repository/post.repository";
@@ -45,37 +41,6 @@ class PostService {
         postOwnerId: payload.userId,
         content: payload.content,
       },
-    });
-    return post;
-  }
-
-  async createCircle(payload: CreateCirclePostPayload) {
-    const { snapshot, options } = await PostBuilder.user(payload.userId)
-      .replyPermission(ReplyPermission.EVERYONE)
-      .visibility(VisibilityPost.CIRCLE)
-      .build();
-
-    baseLogger.info(`Resolved post options: ${JSON.stringify(payload)}`);
-
-    const post = await postRepository.createCircle(
-      { ...payload, ...options }, snapshot,
-    )
-
-    if (payload.mediaUrls?.length) {
-      await postRepository.createCirclePostMedia(
-        post.id!,
-        payload.mediaUrls,
-      )
-    }
-    await postMetaService.finalizePostCreation({
-      actionLog: userActionLogService.logPostCreated({
-        userId: payload.userId,
-        targetId: post.publicId,
-        metadata: {
-          postId: post.id ?? null,
-          source: "CIRCLE_POST",
-        },
-      }),
     });
     return post;
   }
@@ -136,46 +101,6 @@ class PostService {
         },
       }),
     ]);
-    return {
-      publicId: post.publicId,
-      content: post.content!,
-      userId: post.userId,
-      visibility: post.visibility,
-      isDisinformation: post.isDisinformation,
-      createdAt: post.createdAt,
-    } as PostRecord;
-  }
-
-  async createCircleReply(
-    publicId: string,
-    payload: CreatePostDto & { userId: string },
-  ) {
-    const builder = PostBuilder.user(payload.userId)
-      .replyPermission(payload.replyPermission ?? ReplyPermission.EVERYONE)
-      .visibility(payload.visibility ?? VisibilityPost.CIRCLE)
-      .mentions(payload.mentions)
-      .existPost(publicId);
-    const { snapshot, options, mentionIds, existPost } = await builder.build();
-    if (!existPost) {
-      throw new NotFoundException("Origin post not found");
-    }
-
-    const post = await builder.createPost(
-      () =>
-        postRepository.createCircleReply(
-          { ...payload, ...options },
-          {
-            id: existPost.id,
-            publicId: existPost.publicId,
-          },
-          snapshot,
-        ),
-      { topic: payload.topic, mentionIds },
-    );
-
-    baseLogger.info("Created circle reply post, adding notification group");
-
-    await postMetaService.finalizePostCreation({});
     return {
       publicId: post.publicId,
       content: post.content!,

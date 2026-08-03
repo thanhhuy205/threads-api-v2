@@ -2,9 +2,6 @@ import { validate } from "@/middlewares/validate";
 import { UserRoleType } from "@prisma/client";
 import { Router } from "express";
 import { checkRole } from "../access-control/middleware";
-import { dailyQuestController } from "./daily-quest/daily-quest.controller";
-import { createDailyQuestRequestSchema } from "./daily-quest/dto/request/create-daily-quest.request.dto";
-import { disableDailyQuestParamsSchema } from "./daily-quest/dto/request/disable-daily-quest.params.dto";
 import { trendingHashtagQuerySchema } from "./hashtag-trending/dto/request/trending-hashtag.query.dto";
 import { hashtagTrendingController } from "./hashtag-trending/hashtag-trending.controller";
 import { listReportsQuerySchema } from "./report-management/dto/request/list-reports.query.dto";
@@ -75,32 +72,6 @@ adminRouter.get(
   checkRole(UserRoleType.ADMIN),
   validate(adminStatsQuerySchema, "query"),
   statisticsController.getOverview,
-);
-
-adminRouter.post(
-  "/daily-quests",
-  checkRole(UserRoleType.ADMIN),
-  validate(createDailyQuestRequestSchema),
-  dailyQuestController.createDailyQuest,
-);
-
-adminRouter.get(
-  "/daily-quests/actions",
-  checkRole(UserRoleType.ADMIN),
-  dailyQuestController.listDailyQuestActions,
-);
-
-adminRouter.get(
-  "/daily-quests",
-  checkRole(UserRoleType.ADMIN),
-  dailyQuestController.listDailyQuests,
-);
-
-adminRouter.patch(
-  "/daily-quests/:code/disable",
-  checkRole(UserRoleType.ADMIN),
-  validate(disableDailyQuestParamsSchema, "params"),
-  dailyQuestController.disableDailyQuest,
 );
 
 export default adminRouter;

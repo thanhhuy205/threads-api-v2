@@ -47,42 +47,6 @@ class UserService {
     };
   }
 
-  async getMyKarma(userId: string) {
-    return {
-      userId,
-      balance: 320,
-      transactions: [
-        {
-          delta: 20,
-          reason: "QUEST_REWARD",
-          circleId: null,
-          createdAt: new Date().toISOString(),
-        },
-        {
-          delta: -10,
-          reason: "SACRIFICE",
-          circleId: 1,
-          createdAt: new Date(Date.now() - 60_000).toISOString(),
-        },
-      ],
-      restriction: null,
-    };
-  }
-
-  async getMyBadges(userId: string) {
-    return {
-      userId,
-      badges: [
-        {
-          type: "SACRIFICE_HERO",
-          circleId: 1,
-          circleName: "Skeleton Circle",
-          createdAt: new Date().toISOString(),
-        },
-      ],
-    };
-  }
-
   async getMyStatusProfile(userId: string) {
     const [user, followingCount, postCount] = await Promise.all([
       userRepository.findStatusProfileById(userId),

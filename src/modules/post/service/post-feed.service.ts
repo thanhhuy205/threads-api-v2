@@ -102,28 +102,6 @@ class PostFeedService {
     );
   }
 
-  async getCircleReplies({ after, take, publicId }: GetPostWithPublicId) {
-    const namespace = buildPostListNamespace({
-      scope: "reply-circle-post",
-      after,
-      take,
-      extra: publicId,
-    });
-    return redisVersion.wrapperCacheVersion(
-      namespace,
-      postListCacheTtlSeconds,
-      () =>
-        paginatePosts({
-          after,
-          take,
-          where: {
-            parentPublicId: publicId,
-            type: PostType.CIRCLE_REPLY,
-          },
-        }),
-    );
-  }
-
   async getQuote({ after, take, userId, myUserId }: GetPostWithUser) {
     const namespace = buildPostListNamespace({
       scope: "quote-user",
