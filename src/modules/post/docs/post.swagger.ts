@@ -12,6 +12,11 @@ export const postSwaggerSchemas = {
                 type: 'string',
                 example: 'Hello Threads',
             },
+            type: {
+                type: 'string',
+                enum: ['POST', 'REPLY', 'REPOST', 'QUOTE', 'ANNOUNCEMENT', 'DISCUSSION', 'KNOWLEDGE', 'QUESTION', 'INCIDENT', 'FEEDBACK'],
+                example: 'ANNOUNCEMENT',
+            },
             userId: {
                 type: 'string',
                 example: 'ckv8p4u1q0000x3jz8d2b6g7h',
@@ -28,7 +33,7 @@ export const postSwaggerSchemas = {
                 example: '2026-05-01T00:00:00.000Z',
             },
         },
-        required: ['publicId', 'content', 'userId', 'visibility', 'createdAt'],
+        required: ['publicId', 'content', 'type', 'userId', 'visibility', 'createdAt'],
     },
     PostPagination: {
         type: 'object',
@@ -73,6 +78,12 @@ export const postSwaggerSchemas = {
             content: {
                 type: 'string',
                 example: 'Hello Threads',
+            },
+            type: {
+                type: 'string',
+                enum: ['ANNOUNCEMENT', 'DISCUSSION', 'KNOWLEDGE', 'QUESTION', 'INCIDENT', 'FEEDBACK'],
+                example: 'ANNOUNCEMENT',
+                description: 'Optional. Case-insensitive. Defaults to POST when omitted.',
             },
             replyPermission: {
                 type: 'string',

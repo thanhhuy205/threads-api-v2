@@ -10,7 +10,7 @@ type BuildUserPostsWhereOptions = {
     after?: string | null;
     cursorInfo?: PostCursorInfo | null;
     userId: string;
-    postType?: PostType;
+    postTypes?: readonly PostType[];
     excludeReplies?: boolean;
 }
 
@@ -44,21 +44,8 @@ export const buildNewFeedWhere = ({
         visibility: {
             notIn: [VisibilityPost.FRIEND, VisibilityPost.PRIVATE]
         },
-        ...(userId ? {
-            userId: {
-                not: userId,
-            }
-        } : {})
     };
 
-    if (feedType === NewFeedType.FOR_YOU && userId) {
-        return ({
-            ...where,
-            userId: {
-                not: userId,
-            },
-        });
-    }
     if (feedType === NewFeedType.FOLLOWING && userId) {
         return ({
             ...where,
@@ -113,17 +100,17 @@ export const buildRepliesWhere = ({
 };
 export const buildUserPostsWhere = ({
     userId,
-    postType,
+    postTypes,
     excludeReplies = false
 }: BuildUserPostsWhereOptions): Prisma.PostWhereInput => {
     const where: Prisma.PostWhereInput = {
         userId
     };
 
-    if (postType) {
+    if (postTypes) {
         return ({
             ...where,
-            type: postType,
+            type: { in: [...postTypes] },
         });
     }
 

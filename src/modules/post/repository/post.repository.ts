@@ -9,17 +9,15 @@ import {
 } from "@/modules/post/selector/post.selector";
 import {
   InteractionType,
-  PostMediaStatus,
-  PostMediaType,
   PostType,
   Prisma,
   ReplyPermission,
-  VisibilityPost,
+  VisibilityPost
 } from "@prisma/client";
 import { UpdatePostDto } from "../dto/post.dto";
+import { primaryPostTypes } from "../constants/post-type";
 import { UserSnapshot } from "../mapper/post.mapper";
 
-import { v4 as uuidv4 } from "uuid";
 
 export type PostRecord = {
   id?: number;
@@ -27,6 +25,7 @@ export type PostRecord = {
   content: string;
   contentJson?: Prisma.JsonValue;
   userId: string;
+  type: PostType;
   visibility: VisibilityPost;
   createdAt: string;
 };
@@ -185,7 +184,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
       where: {
         deletedAt: null,
         userId,
-        type: PostType.POST,
+        type: { in: [...primaryPostTypes] },
       },
     });
   }
@@ -281,6 +280,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
       content: post.content,
       contentJson: post.contentJson,
       userId: post.userId,
+      type: post.type,
       visibility: post.visibility,
       createdAt: post.createdAt.toISOString(),
     };
@@ -308,6 +308,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
       content: post.content!,
       contentJson: post.contentJson,
       userId: post.userId,
+      type: post.type,
       visibility: post.visibility,
       createdAt: post.createdAt.toISOString(),
     };
@@ -325,9 +326,11 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
         ...this.baseData(
           {
             ...payload,
+            title: "",
             content: payload.content ?? "",
             visibility: payload.visibility ?? VisibilityPost.PUBLIC,
             replyPermission: payload.replyPermission ?? ReplyPermission.EVERYONE,
+            contentJson: "",
           },
           userSnapshot,
         ),
@@ -345,6 +348,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
       content: post.content,
       contentJson: post.contentJson,
       userId: post.userId,
+      type: post.type,
       visibility: post.visibility,
       createdAt: post.createdAt.toISOString(),
     };
@@ -374,6 +378,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
       content: post.content!,
       contentJson: post.contentJson,
       userId: post.userId,
+      type: post.type,
       visibility: post.visibility,
       createdAt: post.createdAt.toISOString(),
     };
@@ -387,6 +392,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
         publicId: true,
         content: true,
         userId: true,
+        type: true,
         visibility: true,
         createdAt: true,
       },
@@ -396,6 +402,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
       publicId: post.publicId,
       content: post.content,
       userId: post.userId,
+      type: post.type,
       visibility: post.visibility,
       createdAt: post.createdAt.toISOString(),
     }));
@@ -519,6 +526,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
         publicId: true,
         content: true,
         userId: true,
+        type: true,
         visibility: true,
         createdAt: true,
       },
@@ -528,6 +536,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
       publicId: post.publicId,
       content: post.content,
       userId: post.userId,
+      type: post.type,
       visibility: post.visibility,
       createdAt: post.createdAt.toISOString(),
     };
@@ -578,7 +587,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
       FROM posts p
       LEFT JOIN posts cursor_post ON cursor_post.public_id = ${cursor}
       WHERE MATCH(p.content) AGAINST (${q} IN BOOLEAN MODE)
-        AND p.type = ${PostType.POST}
+        AND p.type IN (${Prisma.join(primaryPostTypes)})
         AND p.deleted_at IS NULL
         AND p.visibility = ${VisibilityPost.PUBLIC}
         AND (
@@ -600,7 +609,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
         publicId: {
           in: publicIds,
         },
-        type: PostType.POST,
+        type: { in: [...primaryPostTypes] },
         deletedAt: null,
         visibility: VisibilityPost.PUBLIC,
         ...(userId

@@ -1,5 +1,6 @@
-import { ReplyPermission, VisibilityPost } from "@prisma/client";
+import { PostType, ReplyPermission, VisibilityPost } from "@prisma/client";
 import { z } from "zod";
+import { creatablePostTypes } from "../constants/post-type";
 
 const mentionSchema = z.object({
   userId: z.string().trim().min(1, "Mention userId is required"),
@@ -30,7 +31,25 @@ const visibilityPostSchema = z.preprocess(
   }),
 );
 
+const creatablePostTypeSchema = z.preprocess(
+  (value) => (typeof value === "string" ? value.trim().toUpperCase() : value),
+  z.enum(creatablePostTypes, {
+    errorMap: () => ({
+      message: `type must be one of: ${creatablePostTypes.join(", ")}`,
+    }),
+  }),
+);
+
 const createPostSchema = z.object({
+  title: z
+    .string()
+    .trim()
+    .min(1, "Title must be at least 1 character")
+    .max(255, "Title must be at most 255 characters"),
+  contentJson: z
+    .string()
+    .max(5000, "Content JSON must be at most 5000 characters")
+    .optional(),
   content: z
     .string()
     .min(1, "Content must be at least 1 character")
@@ -53,6 +72,7 @@ const createPostSchema = z.object({
     .optional(),
   isSurvey: z.boolean().default(false),
   polls: z.array(pollOptionSchema).max(4, "Polls must be at most 4 options").optional(),
+  type: creatablePostTypeSchema.optional(),
   replyPermission: replyPermissionSchema.default(ReplyPermission.EVERYONE),
   visibility: visibilityPostSchema.default(VisibilityPost.PUBLIC),
 }).superRefine((payload, ctx) => {

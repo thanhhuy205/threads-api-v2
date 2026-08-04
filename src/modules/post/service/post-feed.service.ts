@@ -14,7 +14,7 @@ import type { GetPostWithUser } from "@/modules/post/interfaces/get-post-with-us
 import type { NewsFeedPayload } from "@/modules/post/interfaces/news-feed-payload";
 import { PostMapper } from "@/modules/post/mapper/post.mapper";
 import { redisVersion } from "@/shared/redis-version";
-import { PostType } from "@prisma/client";
+import { primaryPostTypes } from "../constants/post-type";
 import { postRepository } from "../repository/post.repository";
 
 class PostFeedService {
@@ -72,7 +72,7 @@ class PostFeedService {
           where: buildUserPostsWhere({
             after,
             userId,
-            postType: PostType.POST,
+            postTypes: primaryPostTypes,
           }),
         }),
     );

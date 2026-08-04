@@ -7,6 +7,7 @@ import {
 import type { GetPostWithUser } from "@/modules/post/interfaces/get-post-with-user";
 import { redisVersion } from "@/shared/redis-version";
 import { PostType } from "@prisma/client";
+import { primaryPostTypes } from "../constants/post-type";
 
 class PostUserService {
   async getPostsByUser({ after, take, userId, myUserId }: GetPostWithUser) {
@@ -28,7 +29,7 @@ class PostUserService {
           where: buildUserPostsWhere({
             after,
             userId,
-            postType: PostType.POST,
+            postTypes: primaryPostTypes,
           }),
         }),
     );
@@ -53,7 +54,7 @@ class PostUserService {
           where: buildUserPostsWhere({
             after,
             userId,
-            postType: PostType.REPLY,
+            postTypes: [PostType.REPLY],
           }),
         }),
     );

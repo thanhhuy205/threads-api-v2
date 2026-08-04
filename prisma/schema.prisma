@@ -17,6 +17,12 @@ enum PostType {
   REPLY
   REPOST
   QUOTE
+  ANNOUNCEMENT
+  DISCUSSION
+  KNOWLEDGE
+  QUESTION
+  INCIDENT
+  FEEDBACK
 }
 
 enum FollowStatus {

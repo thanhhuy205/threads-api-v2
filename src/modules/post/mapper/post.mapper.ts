@@ -90,6 +90,7 @@ export class PostMapper {
       publicId: post.publicId,
       content: post.content!,
       userId: post.userId ?? userId,
+      type: post.type,
       visibility: post.visibility,
       createdAt: post.createdAt.toISOString() ?? new Date().toISOString(),
     };
@@ -120,6 +121,7 @@ export class PostMapper {
       createdAt: post.createdAt,
       publicId: post.publicId,
       content: post.content,
+      type: post.type,
       visibility: post.visibility,
       parentId: post.parentId,
       originPostId: post.originPostId,

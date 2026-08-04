@@ -96,6 +96,7 @@ class PostService {
       publicId: post.publicId,
       content: post.content!,
       userId: post.userId,
+      type: post.type,
       visibility: post.visibility,
       createdAt: post.createdAt,
     } as PostRecord;
@@ -125,6 +126,7 @@ class PostService {
       publicId: post.publicId,
       content: post.content,
       userId: post.userId,
+      type: post.type,
       visibility: post.visibility,
       createdAt: post.createdAt,
     } as PostRecord;
@@ -180,6 +182,7 @@ class PostService {
       publicId: post.publicId,
       content: post.content,
       userId: payload.userId,
+      type: post.type,
       visibility: post.visibility,
       createdAt: new Date().toISOString(),
     } as PostRecord;
