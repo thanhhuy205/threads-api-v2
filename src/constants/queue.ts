@@ -40,7 +40,6 @@ export const LIKE_JOB_NAME = {
 };
 
 export const AUTO_REMOVE_BAN_JOB_NAME = {
-  RUN_AUTO_REMOVE_BAN: "run-auto-remove-ban",
 };
 
 export const NOTIFICATION_JOB_NAME = {

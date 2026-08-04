@@ -5,8 +5,7 @@ export const userCompactSelect = Prisma.validator<Prisma.UserSelect>()({
     username: true,
     name: true,
     avatar: true,
-    verifiedAt: true,
-    isPrivate: true
+    verifiedAt: true
 });
 
 export const userFollowSelect = Prisma.validator<Prisma.UserSelect>()({

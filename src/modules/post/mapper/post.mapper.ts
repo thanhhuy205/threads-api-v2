@@ -49,7 +49,6 @@ export type PostFeedResponse = Omit<
     userId: string;
     username: string;
   }[];
-  isDisinformation: boolean;
   isSurvey: boolean;
   isVoted: boolean;
   poll: {
@@ -92,7 +91,6 @@ export class PostMapper {
       content: post.content!,
       userId: post.userId ?? userId,
       visibility: post.visibility,
-      isDisinformation: post.isDisinformation,
       createdAt: post.createdAt.toISOString() ?? new Date().toISOString(),
     };
   }
@@ -132,9 +130,7 @@ export class PostMapper {
       repliesCount,
       repostsCountAndQuoteCount,
       topics: topics,
-      isGhost: post.isGhost,
       isSurvey: post.isSurvey,
-      isDisinformation: post.isDisinformation,
       poll: poll ?? null,
       isVoted,
       origin: post.origin,

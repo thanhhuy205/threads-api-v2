@@ -22,17 +22,13 @@ export const postSwaggerSchemas = {
                 example: 'PUBLIC',
                 description: 'FRIEND means mutual follow. Visibility read filtering is documented but not enforced yet.',
             },
-            isDisinformation: {
-                type: 'boolean',
-                example: false,
-            },
             createdAt: {
                 type: 'string',
                 format: 'date-time',
                 example: '2026-05-01T00:00:00.000Z',
             },
         },
-        required: ['publicId', 'content', 'userId', 'visibility', 'isDisinformation', 'createdAt'],
+        required: ['publicId', 'content', 'userId', 'visibility', 'createdAt'],
     },
     PostPagination: {
         type: 'object',

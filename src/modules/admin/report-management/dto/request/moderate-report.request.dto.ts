@@ -6,9 +6,7 @@ import { z } from "zod";
  */
 export const reportModerationActions = [
   "approve",
-  "hide_post",
   "delete_post",
-  "mark_disinformation",
 ] as const;
 
 /**

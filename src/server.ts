@@ -1,5 +1,4 @@
 import app from '@/app';
-import { autoRemoveBanProducer } from '@/modules/job/auto-remove-ban/producer/auto-remove-ban.producer';
 import { likeProducer } from '@/modules/job/like-job/producer/like.producer';
 import { notificationProducer } from '@/modules/job/notification-job/producer/notification.producer';
 import { surveySyncProducer } from '@/modules/job/survey-sync/producer/survey-sync.producer';
@@ -45,12 +44,6 @@ const bootstrap = async () => {
         await likeProducer.initSyncJob();
     } catch (error) {
         console.error('Failed to initialize like sync repeat job:', error);
-    }
-
-    try {
-        await autoRemoveBanProducer.initAutoRemoveBanJob();
-    } catch (error) {
-        console.error('Failed to initialize auto-remove-ban repeat job:', error);
     }
 
     try {

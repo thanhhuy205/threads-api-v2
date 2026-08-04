@@ -48,7 +48,6 @@ export const adminSwaggerSchemas = {
             email: { type: 'string', example: 'john@example.com' },
             username: { type: 'string', example: 'johndoe' },
             status: { type: 'string', example: 'ACTIVE' },
-            bannedUntil: { type: ['string', 'null'], format: 'date-time' },
             verifiedAt: { type: ['string', 'null'], format: 'date-time' },
             createdAt: { type: 'string', format: 'date-time' },
             roles: { type: 'array', items: { type: 'string', example: 'USER' } },
@@ -98,32 +97,18 @@ export const adminSwaggerSchemas = {
                         },
                     },
                     status: { type: 'string', enum: ['ACTIVE', 'BANNED'], example: 'BANNED' },
-                    banType: { type: ['string', 'null'], enum: ['LIMITED', 'UNLIMITED', null], example: 'LIMITED' },
-                    durationHours: { type: ['integer', 'null'], example: 24 },
-                    bannedUntil: { type: ['string', 'null'], format: 'date-time' },
+                    banType: { type: ['string', 'null'], enum: ['UNLIMITED', null], example: 'UNLIMITED' },
                 },
             },
         },
-    },
-    AdminBanUserRequest: {
-        type: 'object',
-        properties: {
-            durationHours: {
-                type: 'integer',
-                minimum: 1,
-                example: 24,
-                description: 'Number of hours the user remains banned',
-            },
-        },
-        required: ['durationHours'],
     },
     AdminModerateReportRequest: {
         type: 'object',
         properties: {
             action: {
                 type: 'string',
-                enum: ['approve', 'hide_post', 'delete_post', 'mark_disinformation'],
-                example: 'hide_post',
+                enum: ['approve', 'delete_post'],
+                example: 'delete_post',
             },
             adminNote: {
                 type: 'string',
@@ -168,8 +153,8 @@ export const adminSwaggerSchemas = {
                         properties: {
                             action: {
                                 type: 'string',
-                                enum: ['approve', 'hide_post', 'delete_post', 'mark_disinformation'],
-                                example: 'hide_post',
+                                enum: ['approve', 'delete_post'],
+                                example: 'delete_post',
                             },
                             adminId: { type: ['string', 'null'], example: 'admin_123' },
                         },
@@ -190,8 +175,6 @@ export const adminSwaggerSchemas = {
             content: { type: 'string', example: 'Reported post content' },
             type: { type: 'string', example: 'POST' },
             visibility: { type: 'string', example: 'PUBLIC' },
-            isDeleted: { type: 'boolean', example: false },
-            isHidden: { type: 'boolean', example: false },
             createdAt: { type: 'string', format: 'date-time' },
         },
     },
@@ -443,32 +426,6 @@ export const adminSwaggerPaths = {
                 200: {
                     description: 'Users retrieved successfully',
                     content: { 'application/json': { schema: { $ref: '#/components/schemas/AdminUserListResponse' } } },
-                },
-                401: { description: COMMON_MESSAGE.UNAUTHORIZED },
-                403: { description: COMMON_MESSAGE.FORBIDDEN },
-            },
-        },
-    },
-    '/admin/users/{userId}/ban': {
-        patch: {
-            tags: ['Admin'],
-            summary: 'Ban a user',
-            security: bearerAuthSecurity,
-            parameters: [
-                { name: 'userId', in: 'path', required: true, schema: { type: 'string' } },
-            ],
-            requestBody: {
-                required: true,
-                content: {
-                    'application/json': {
-                        schema: { $ref: '#/components/schemas/AdminBanUserRequest' },
-                    },
-                },
-            },
-            responses: {
-                200: {
-                    description: 'User banned successfully',
-                    content: { 'application/json': { schema: { $ref: '#/components/schemas/AdminBanUserResponse' } } },
                 },
                 401: { description: COMMON_MESSAGE.UNAUTHORIZED },
                 403: { description: COMMON_MESSAGE.FORBIDDEN },

@@ -14,9 +14,7 @@ export const postFeedSelect = Prisma.validator<Prisma.PostSelect>()({
   replyPermission: true,
   likesCount: true,
   viewsCount: true,
-  isGhost: true,
   isSurvey: true,
-  isDisinformation: true,
   createdAt: true,
   poll: {
     select: {
@@ -76,5 +74,4 @@ export const postSelectRepository = {
   visibility: true,
   createdAt: true,
   userSnapshot: true,
-  isDisinformation: true,
 } satisfies Prisma.PostSelect;

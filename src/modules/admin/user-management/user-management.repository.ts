@@ -2,7 +2,6 @@ import prisma from "@/config/prisma";
 import { buildPagination } from "@/shared/pagination/pagination";
 import { Prisma, UserStatus } from "@prisma/client";
 import type { GetAdminUsersInput } from "./interfaces/get-admin-users.input";
-import type { UpdateExpiredBannedUsersInput } from "./interfaces/update-expired-banned-users.input";
 
 const adminUserSelect = {
   id: true,
@@ -10,7 +9,6 @@ const adminUserSelect = {
   email: true,
   username: true,
   status: true,
-  bannedUntil: true,
   verifiedAt: true,
   createdAt: true,
   userRoles: {
@@ -30,7 +28,6 @@ const moderatedUserSelect = {
   email: true,
   username: true,
   status: true,
-  bannedUntil: true,
 } satisfies Prisma.UserSelect;
 
 type AdminUserRow = Prisma.UserGetPayload<{
@@ -72,10 +69,6 @@ class UserManagementRepository
     return prisma.user.count({ where });
   }
 
-  /**
-   * DB read for admin user listing.
-   * Includes bannedUntil so admin screens can show temporary-ban expiry.
-   */
   async findAllUsers(input: GetAdminUsersInput) {
     return this.findAll({
       page: input.page,
@@ -102,15 +95,10 @@ class UserManagementRepository
     });
   }
 
-  /**
-   * DB write for ban-related columns only.
-   * No business decision lives here; service decides status and bannedUntil.
-   */
   async updateUserBanFields(
     input: {
       userId: string;
       status: UserStatus;
-      bannedUntil?: Date | null;
     },
     tx: Prisma.TransactionClient = prisma,
   ) {
@@ -118,30 +106,11 @@ class UserManagementRepository
       where: { id: input.userId },
       data: {
         status: input.status,
-        bannedUntil: input.bannedUntil,
       },
       select: moderatedUserSelect,
     });
   }
 
-  /**
-   * DB bulk update for users whose temporary ban expired before input.now.
-   * Worker/service supplies the target status and clear value.
-   */
-  async updateExpiredBannedUsers(input: UpdateExpiredBannedUsersInput) {
-    return prisma.user.updateMany({
-      where: {
-        status: UserStatus.BANNED,
-        bannedUntil: {
-          lt: input.now,
-        },
-      },
-      data: {
-        status: input.status,
-        bannedUntil: input.bannedUntil,
-      },
-    });
-  }
 }
 
 export const userManagementRepository = new UserManagementRepository();

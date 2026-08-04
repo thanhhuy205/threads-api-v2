@@ -58,6 +58,7 @@ postRouter.get(
   validate(cursorPaginationQuerySchema, "query"),
   postController.getQuote,
 );
+
 postRouter.use(authorization);
 
 postRouter.get(

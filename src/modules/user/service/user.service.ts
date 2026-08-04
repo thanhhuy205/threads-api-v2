@@ -31,10 +31,6 @@ class UserService {
       data.website = payload.website;
     }
 
-    if (payload.isPrivate !== undefined) {
-      data.isPrivate = payload.isPrivate;
-    }
-
     const user = await userRepository.updateProfile(userId, data);
     await redisService.del(redisKey.auth.me(userId));
 
@@ -43,7 +39,6 @@ class UserService {
       bio: user.bio,
       labelWebsite: user.labelWebsite,
       website: user.website,
-      isPrivate: user.isPrivate,
     };
   }
 

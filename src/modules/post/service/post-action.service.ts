@@ -77,19 +77,13 @@ class PostActionService {
     await redisVersion.bumpPostListCacheVersion(redisKey.post.listNamespace());
   }
 
-  async actionAdmin(publicId: string, action: {
-    isHidden?: boolean;
-    isDeleted?: boolean;
-    isDisinformation?: boolean;
-  }): Promise<void> {
+  async actionAdmin(publicId: string): Promise<void> {
     const post = await postRepository.findByPublicId(publicId);
     if (!post) {
       throw new Error("Post not found");
     }
 
-    await postRepository.updateStatusByPublicId(publicId, {
-      ...action
-    });
+    await postRepository.softDeleteByPublicId(publicId);
     await redisVersion.bumpPostListCacheVersion(redisKey.post.listNamespace());
   }
 

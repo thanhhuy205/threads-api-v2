@@ -1,6 +1,5 @@
 import { getPagination } from "@/shared/pagination/pagination";
 import { Request, Response } from "express";
-import type { BanUserRequestDto } from "./dto/request/ban-user.request.dto";
 import type { ListUsersQueryDto } from "./dto/request/list-users.query.dto";
 import { userManagementService } from "./user-management.service";
 
@@ -17,18 +16,6 @@ class UserManagementController {
     return res.success(200, "Users retrieved successfully", result.rows, {
       pagination: result.pagination,
     });
-  };
-
-  banUser = async (
-    req: Request<{ userId: string }, {}, BanUserRequestDto>,
-    res: Response,
-  ) => {
-    const result = await userManagementService.banUser({
-      userId: req.params.userId,
-      adminId: req.user?.sub,
-      durationHours: req.body.durationHours,
-    });
-    return res.success(200, "User banned successfully", result);
   };
 
   unbanUser = async (req: Request<{ userId: string }, {}, {}>, res: Response) => {

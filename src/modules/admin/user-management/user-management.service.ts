@@ -1,7 +1,6 @@
 import type { BanUserUnlimitedInput } from "@/modules/admin/user-management/interfaces/ban-unlimited.input";
 import { buildPaginationResponse } from "@/shared/pagination/pagination";
 import { UserStatus } from "@prisma/client";
-import type { BanUserInput } from "./interfaces/ban-user.input";
 import type { GetAdminUsersInput } from "./interfaces/get-admin-users.input";
 import { userManagementRepository } from "./user-management.repository";
 
@@ -24,39 +23,16 @@ class UserManagementService {
     };
   }
 
-  async banUser(input: BanUserInput) {
-    const bannedUntil = new Date(
-      Date.now() + input.durationHours * 60 * 60 * 1000,
-    );
-
-    const user = await userManagementRepository.updateUserBanFields({
-      userId: input.userId,
-      status: UserStatus.BANNED,
-      bannedUntil,
-    });
-
-    return {
-      user: this.mapModeratedUser(user),
-      status: user.status,
-      banType: "LIMITED" as const,
-      durationHours: input.durationHours,
-      bannedUntil: user.bannedUntil,
-    };
-  }
-
   async unbanUser(input: BanUserUnlimitedInput) {
     const user = await userManagementRepository.updateUserBanFields({
       userId: input.userId,
       status: UserStatus.ACTIVE,
-      bannedUntil: null,
     });
 
     return {
       user: this.mapModeratedUser(user),
       status: user.status,
       banType: null,
-      durationHours: null,
-      bannedUntil: user.bannedUntil,
     };
   }
 
@@ -64,15 +40,12 @@ class UserManagementService {
     const user = await userManagementRepository.updateUserBanFields({
       userId: input.userId,
       status: UserStatus.BANNED,
-      bannedUntil: null,
     });
 
     return {
       user: this.mapModeratedUser(user),
       status: user.status,
       banType: "UNLIMITED" as const,
-      durationHours: null,
-      bannedUntil: user.bannedUntil,
     };
   }
 

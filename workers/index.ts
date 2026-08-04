@@ -5,7 +5,6 @@ const redisReady = redisService.isOpen
     : redisService.connect();
 
 
-export { autoRemoveBanWorker } from './auto-remove-ban.worker';
 export { bloomWorker } from './bloom.worker';
 export { emailWorker } from './email.worker';
 export { evaluateWorker } from './evaluate.worker';

@@ -64,23 +64,9 @@ class ReportManagementService {
       case "approve":
         status = ReportStatus.DISMISSED;
         break;
-      case "hide_post":
-        status = ReportStatus.RESOLVED;
-        await postActionService.actionAdmin(report.targetId, {
-          isHidden: true,
-        });
-        break;
       case "delete_post":
         status = ReportStatus.RESOLVED;
-        await postActionService.actionAdmin(report.targetId, {
-          isDeleted: true,
-        });
-        break;
-      case "mark_disinformation":
-        status = ReportStatus.RESOLVED;
-        await postActionService.actionAdmin(report.targetId, {
-          isDisinformation: true,
-        });
+        await postActionService.actionAdmin(report.targetId);
         break;
     }
 
@@ -156,8 +142,6 @@ class ReportManagementService {
       content: post.content,
       type: post.type,
       visibility: post.visibility,
-      isDeleted: post.isDeleted,
-      isHidden: post.isHidden,
       createdAt: post.createdAt,
     };
   }

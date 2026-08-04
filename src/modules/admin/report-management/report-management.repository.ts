@@ -28,8 +28,6 @@ const adminReportTargetPostSelect = {
   content: true,
   type: true,
   visibility: true,
-  isDeleted: true,
-  isHidden: true,
   createdAt: true,
 } satisfies Prisma.PostSelect;
 

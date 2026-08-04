@@ -17,7 +17,6 @@ export const updateProfileSchema = z
       .max(255, "Website must be at most 255 characters")
       .nullable()
       .optional(),
-    isPrivate: z.boolean().optional(),
   })
   .strict()
   .refine((data) => Object.keys(data).length > 0, {

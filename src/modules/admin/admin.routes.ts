@@ -9,7 +9,6 @@ import { moderateReportRequestSchema } from "./report-management/dto/request/mod
 import { reportManagementController } from "./report-management/report-management.controller";
 import { adminStatsQuerySchema } from "./statistics/dto/request/admin-stats.query.dto";
 import { statisticsController } from "./statistics/statistics.controller";
-import { banUserRequestSchema } from "./user-management/dto/request/ban-user.request.dto";
 import { userManagementController } from "./user-management/user-management.controller";
 
 const adminRouter = Router();
@@ -19,13 +18,6 @@ adminRouter.get(
   checkRole(UserRoleType.ADMIN),
   userManagementController.listUsers,
 );
-adminRouter.patch(
-  "/users/:userId/ban",
-  checkRole(UserRoleType.ADMIN),
-  validate(banUserRequestSchema),
-  userManagementController.banUser,
-);
-
 adminRouter.patch(
   "/users/:userId/unban",
   checkRole(UserRoleType.ADMIN),

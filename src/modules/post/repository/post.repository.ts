@@ -28,7 +28,6 @@ export type PostRecord = {
   contentJson?: Prisma.JsonValue;
   userId: string;
   visibility: VisibilityPost;
-  isDisinformation: boolean;
   createdAt: string;
 };
 
@@ -45,7 +44,7 @@ type CreateRepostPayload = {
 };
 
 class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
-  private buildFeedSelect(userId?: string | null): Prisma.PostSelect {
+  private buildFeedSelect(userId?: string | null): typeof postFeedSelect {
     const select: Prisma.PostSelect = {
       ...postFeedSelect,
       poll: {
@@ -81,7 +80,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
       },
     };
 
-    return select;
+    return select as typeof postFeedSelect;
   }
 
   findAll({
@@ -104,8 +103,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
     return prisma.post.findMany({
       where: {
         AND: [
-          { isDeleted: false },
-          { isHidden: false },
+          { deletedAt: null },
           userId
             ? {
               postInteractions: {
@@ -177,7 +175,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
   count({ where = {} }: { where?: Prisma.PostWhereInput } = {}) {
     return prisma.post.count({
       where: {
-        AND: [{ isDeleted: false }, where],
+        AND: [{ deletedAt: null }, where],
       },
     });
   }
@@ -185,7 +183,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
   countPostBydUserId(userId: string) {
     return prisma.post.count({
       where: {
-        isDeleted: false,
+        deletedAt: null,
         userId,
         type: PostType.POST,
       },
@@ -201,7 +199,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
   }) {
     return prisma.post.findFirst({
       where: {
-        AND: [{ isDeleted: false }, where ?? {}, { publicId }],
+        AND: [{ deletedAt: null }, where ?? {}, { publicId }],
       },
       select: {
         id: true,
@@ -284,7 +282,6 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
       contentJson: post.contentJson,
       userId: post.userId,
       visibility: post.visibility,
-      isDisinformation: post.isDisinformation,
       createdAt: post.createdAt.toISOString(),
     };
   }
@@ -312,7 +309,6 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
       contentJson: post.contentJson,
       userId: post.userId,
       visibility: post.visibility,
-      isDisinformation: post.isDisinformation,
       createdAt: post.createdAt.toISOString(),
     };
   }
@@ -350,7 +346,6 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
       contentJson: post.contentJson,
       userId: post.userId,
       visibility: post.visibility,
-      isDisinformation: post.isDisinformation,
       createdAt: post.createdAt.toISOString(),
     };
   }
@@ -380,21 +375,19 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
       contentJson: post.contentJson,
       userId: post.userId,
       visibility: post.visibility,
-      isDisinformation: post.isDisinformation,
       createdAt: post.createdAt.toISOString(),
     };
   }
 
   async list(): Promise<PostRecord[]> {
     const posts = await prisma.post.findMany({
-      where: { isDeleted: false },
+      where: { deletedAt: null },
       orderBy: { createdAt: "desc" },
       select: {
         publicId: true,
         content: true,
         userId: true,
         visibility: true,
-        isDisinformation: true,
         createdAt: true,
       },
     });
@@ -404,13 +397,12 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
       content: post.content,
       userId: post.userId,
       visibility: post.visibility,
-      isDisinformation: post.isDisinformation,
       createdAt: post.createdAt.toISOString(),
     }));
   }
   async findByPublicId(publicId: string, userId?: string | null) {
     return prisma.post.findFirst({
-      where: { publicId, isDeleted: false },
+      where: { publicId, deletedAt: null },
       select: {
         id: true,
         ...this.buildFeedSelect(userId),
@@ -442,7 +434,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
   }
   async findById(id: number) {
     return prisma.post.findFirst({
-      where: { id, isDeleted: false },
+      where: { id, deletedAt: null },
       select: {
         publicId: true,
       }
@@ -456,8 +448,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
     return prisma.post.findMany({
       where: {
         id: { in: ids },
-        isDeleted: false,
-        isHidden: false,
+        deletedAt: null,
       },
       select: {
         id: true,
@@ -471,7 +462,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
 
   async findOriginReferenceByPublicId(publicId: string) {
     return prisma.post.findFirst({
-      where: { publicId, isDeleted: false },
+      where: { publicId, deletedAt: null },
       select: {
         id: true,
         publicId: true,
@@ -488,7 +479,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
     return prisma.post.findFirst({
       where: {
         publicId,
-        isDeleted: false,
+        deletedAt: null,
       },
       select: {
         publicId: true,
@@ -503,7 +494,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
     return prisma.post.findFirst({
       where: {
         publicId,
-        isDeleted: false,
+        deletedAt: null,
       },
       select: {
         publicId: true,
@@ -529,7 +520,6 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
         content: true,
         userId: true,
         visibility: true,
-        isDisinformation: true,
         createdAt: true,
       },
     });
@@ -539,39 +529,6 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
       content: post.content,
       userId: post.userId,
       visibility: post.visibility,
-      isDisinformation: post.isDisinformation,
-      createdAt: post.createdAt.toISOString(),
-    };
-  }
-
-
-  async updateStatusByPublicId(
-    publicId: string,
-    status: { isDeleted?: boolean; isHidden?: boolean; isDisinformation?: boolean },
-  ): Promise<PostRecord> {
-    const post = await prisma.post.update({
-      where: { publicId },
-      data: {
-        isDeleted: status.isDeleted,
-        isHidden: status.isHidden,
-        isDisinformation: status.isDisinformation,
-      },
-      select: {
-        publicId: true,
-        content: true,
-        userId: true,
-        visibility: true,
-        isDisinformation: true,
-        createdAt: true,
-      },
-    });
-
-    return {
-      publicId: post.publicId,
-      content: post.content,
-      userId: post.userId,
-      visibility: post.visibility,
-      isDisinformation: post.isDisinformation,
       createdAt: post.createdAt.toISOString(),
     };
   }
@@ -581,25 +538,11 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
     await prisma.post.update({
       where: { publicId },
       data: {
-        isDeleted: true,
         deletedAt: new Date(),
       },
     });
   }
 
-  async updateIsGhost(publicId: string, isGhost: boolean): Promise<void> {
-    await prisma.post.update({
-      where: { publicId },
-      data: { isGhost },
-    });
-  }
-
-  async updateIsHidden(publicId: string, isHidden: boolean): Promise<void> {
-    await prisma.post.update({
-      where: { publicId },
-      data: { isHidden },
-    });
-  }
   // TĂNG count + lấy chủ post
   async incrementLikedCount(publicId: string, count: number): Promise<{ likesCount: number; ownerId: string }> {
     return prisma.$transaction(async (tx) => {
@@ -636,8 +579,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
       LEFT JOIN posts cursor_post ON cursor_post.public_id = ${cursor}
       WHERE MATCH(p.content) AGAINST (${q} IN BOOLEAN MODE)
         AND p.type = ${PostType.POST}
-        AND p.is_deleted = false
-        AND p.is_hidden = false
+        AND p.deleted_at IS NULL
         AND p.visibility = ${VisibilityPost.PUBLIC}
         AND (
           ${cursor} IS NULL
@@ -659,8 +601,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
           in: publicIds,
         },
         type: PostType.POST,
-        isDeleted: false,
-        isHidden: false,
+        deletedAt: null,
         visibility: VisibilityPost.PUBLIC,
         ...(userId
           ? {
@@ -758,13 +699,6 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
       likesCount: post.likesCount,
       ownerId: post.userId,
     };
-  }
-
-  async updateIsDisinformation(publicId: string, isDisinformation: boolean): Promise<void> {
-    await prisma.post.update({
-      where: { publicId },
-      data: { isDisinformation },
-    });
   }
 
   async increaseLikeCount(publicId: string, count: number): Promise<void> {

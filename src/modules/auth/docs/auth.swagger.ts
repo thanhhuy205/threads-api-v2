@@ -362,10 +362,6 @@ export const authSwaggerSchemas = {
                 type: 'integer',
                 example: 0,
             },
-            isPrivate: {
-                type: 'boolean',
-                example: false,
-            },
             location: {
                 type: 'string',
                 nullable: true,
@@ -395,7 +391,6 @@ export const authSwaggerSchemas = {
             'followersCount',
             'followingCount',
             'postsCount',
-            'isPrivate',
             'location',
             'website',
             'createdAt',
