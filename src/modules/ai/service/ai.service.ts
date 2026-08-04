@@ -5,14 +5,11 @@ import {
   POST_SCORING_SYSTEM_PROMPT,
   REPORT_EVALUATION_SYSTEM_PROMPT
 } from "@/modules/ai/promt/system.promt";
-import { limitActionService } from "@/modules/limit-action/service/limit-action.service";
-import { userActionLogService } from "@/modules/user-action-log/service/user-action-log.service";
 import { groq } from "@/providers/groq.provider";
 import { generateJob } from "@/providers/leonardo.provider";
 import type { LeonardoGenerationJob } from "@/providers/leonardo.types";
 import { openrouter } from "@/providers/openrouter.provider";
-import { ActionType, ReportTargetType } from "@prisma/client";
-import { randomUUID } from "node:crypto";
+import { ReportTargetType } from "@prisma/client";
 
 type GenerateImageCaptionInput = {
   content: string;
@@ -21,17 +18,6 @@ type GenerateImageCaptionInput = {
 
 class AiService {
   async generateCaptionMd(userId: string, content: string) {
-    const countGeneration = await userActionLogService.countActionLog(userId, ActionType.GENERATE_CAPTION_MD);
-
-    if (countGeneration >= 3) {
-      await limitActionService.createLimitAction({
-        userId,
-        type: ActionType.GENERATE_CAPTION_MD,
-        resetAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), // reset sau 5 ngày
-      });
-      throw new BadRequestException("Generation free for account limit 5 times, please contact support to increase the limit");
-    }
-
     if (!content?.trim()) {
       throw new BadRequestException("Input text is empty");
     }
@@ -49,31 +35,11 @@ class AiService {
       throw new Error("AI markdown response is empty");
     }
 
-
-    await userActionLogService.logAction({
-      userId,
-      type: ActionType.GENERATE_CAPTION_MD,
-      targetId: randomUUID(),
-      metadata: {
-        inputLength: content.length,
-        outputLength: markdown.length,
-      },
-    });
     return markdown;
   }
 
   async generateImageCaption(input: GenerateImageCaptionInput): Promise<LeonardoGenerationJob> {
     const { content, userId } = input;
-
-    const countGeneration = await userActionLogService.countActionLog(userId, ActionType.GENERATE_IMAGE);
-    if (countGeneration >= 5) {
-      await limitActionService.createLimitAction({
-        userId,
-        type: ActionType.GENERATE_IMAGE,
-        resetAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), // reset sau 5 ngày
-      });
-      throw new BadRequestException("Generation free for account limit 5 times, please contact support to increase the limit");
-    }
 
     if (!content?.trim()) {
       throw new BadRequestException("Input content is empty");
@@ -91,14 +57,6 @@ class AiService {
 
     const prompt = normalizedPrompt.slice(0, MAX_PROMPT);
     const sdGenerationJob = await generateJob(prompt);
-    await userActionLogService.logAction({
-      userId,
-      type: ActionType.GENERATE_IMAGE,
-      targetId: sdGenerationJob.generationId,
-      metadata: {
-        inputLength: content.length,
-      },
-    });
     return sdGenerationJob;
   }
 

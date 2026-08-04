@@ -40,11 +40,9 @@ class PostMetaService {
   }
 
   async finalizePostCreation(params: {
-    actionLog?: Promise<unknown>;
     mentionNotification?: Parameters<typeof postMentionService.dispatchMentionNotifications>[0];
   }): Promise<void> {
     await Promise.all([
-      params.actionLog,
       params.mentionNotification
         ? postMentionService.dispatchMentionNotifications(params.mentionNotification)
         : undefined,

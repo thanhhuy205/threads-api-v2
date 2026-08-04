@@ -76,6 +76,22 @@ enum VisibilityPost {
   PRIVATE
 }
 
+enum Position {
+  SOFTWARE_ENGINEER
+  DATA_SCIENTIST
+  PRODUCT_MANAGER
+  DESIGNER
+  MARKETING_SPECIALIST
+  SALES_REPRESENTATIVE
+  CUSTOMER_SUPPORT
+  CONTENT_CREATOR
+  BUSINESS_ANALYST
+  CTO
+  CEO
+  FOUNDER
+  OTHER
+}
+
 enum ActionType {
   POST_CREATED
   POST_DELETED
@@ -120,14 +136,8 @@ enum FriendRequestStatus {
   CANCELLED
 }
 
-enum UserRestrictionType {
-  POSTING
-  AI_GENERATION_CAPTION
-  AI_GENERATION_IMAGE
-}
-
 model Role {
-  id              String           @id @default(cuid())
+  id              String           @id @default(nanoid())
   name            String           @unique @db.VarChar(20)
   createdAt       DateTime         @default(now()) @map("created_at")
   updatedAt       DateTime         @updatedAt @map("updated_at")
@@ -139,7 +149,7 @@ model Role {
 }
 
 model UserRole {
-  id        String   @id @default(cuid())
+  id        String   @id @default(nanoid())
   roleId    String   @map("role_id")
   role      Role     @relation(fields: [roleId], references: [id])
   userId    String   @map("user_id")
@@ -153,7 +163,7 @@ model UserRole {
 }
 
 model Permission {
-  id              String           @id @default(cuid())
+  id              String           @id @default(nanoid())
   name            String           @unique @db.VarChar(50)
   code            String           @unique @db.VarChar(50)
   createdAt       DateTime         @default(now()) @map("created_at")
@@ -165,7 +175,7 @@ model Permission {
 }
 
 model RolePermission {
-  id           String     @id @default(cuid())
+  id           String     @id @default(nanoid())
   role         Role       @relation(fields: [roleId], references: [id])
   roleId       String     @map("role_id")
   permission   Permission @relation(fields: [permissionId], references: [id])
@@ -179,55 +189,49 @@ model RolePermission {
 }
 
 model User {
-  id       String @id @default(cuid())
+  id       String @id @default(nanoid())
   email    String @unique @db.VarChar(255)
   username String @unique @db.VarChar(100)
   password String @db.VarChar(255)
 
   name String? @map("name") @db.VarChar(100)
 
-  bio         String?    @db.Text
-  avatar      String?    @db.VarChar(255)
-  verifiedAt  DateTime?  @map("verified_at")
-  status      UserStatus @default(ACTIVE)
-  bannedUntil DateTime?  @map("banned_until")
+  bio        String?    @db.Text
+  avatar     String?    @db.VarChar(255)
+  verifiedAt DateTime?  @map("verified_at")
+  status     UserStatus @default(ACTIVE)
 
   followersCount Int @default(0) @map("followers_count")
   followingCount Int @default(0) @map("following_count")
   postsCount     Int @default(0) @map("posts_count")
 
-  isPrivate    Boolean @default(false) @map("is_private")
-  location     String? @db.VarChar(255)
-  website      String? @db.VarChar(255)
-  labelWebsite String? @map("label_website") @db.VarChar(255)
+  position     Position? @default(OTHER)
+  location     String?   @db.VarChar(255)
+  website      String?   @db.VarChar(255)
+  labelWebsite String?   @map("label_website") @db.VarChar(255)
 
   deletedAt DateTime? @map("deleted_at")
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
 
-  posts                Post[]
-  refreshTokens        RefreshToken[]
-  verificationCodes    VerificationCode[]
-  follows              Follow[]              @relation("FollowUser")
-  followers            Follow[]              @relation("FollowFollowing")
-  likes                Like[]
-  friendRequests       FriendRequest[]       @relation("FriendRequestSender")
-  receivedRequests     FriendRequest[]       @relation("FriendRequestReceiver")
-  userRoles            UserRole[]
-  userRestrictions     UserRestriction[]
-  reports              Report[]              @relation("UserReports")
-  postMentions         PostMention[]
-  userActionLogs       UserActionLog[]
-  limitActionAIs       LimitActionAI[]
-  votes                Vote[]
-  postInteractions     PostInteraction[]
+  posts             Post[]
+  refreshTokens     RefreshToken[]
+  verificationCodes VerificationCode[]
+  follows           Follow[]           @relation("FollowUser")
+  followers         Follow[]           @relation("FollowFollowing")
+  likes             Like[]
+  friendRequests    FriendRequest[]    @relation("FriendRequestSender")
+  receivedRequests  FriendRequest[]    @relation("FriendRequestReceiver")
+  userRoles         UserRole[]
+  reports           Report[]           @relation("UserReports")
+  postMentions      PostMention[]
+  votes             Vote[]
+  postInteractions  PostInteraction[]
 
   @@index([email], map: "idx_users_email")
   @@index([name], map: "idx_users_name")
   @@index([username], map: "idx_users_username")
   @@index([deletedAt], map: "idx_users_deleted_at")
-  @@index([bannedUntil], map: "idx_users_banned_until")
-  @@index([status, bannedUntil], map: "idx_users_status_banned_until")
   @@fulltext([username, name], map: "idx_users_username_name_fulltext")
   @@map("users")
 }
@@ -249,7 +253,7 @@ model PostInteraction {
 }
 
 model Report {
-  id               String           @id @default(cuid())
+  id               String           @id @default(nanoid())
   reporterId       String           @map("reporter_id")
   targetType       ReportTargetType @map("target_type")
   targetId         String           @map("target_id") @db.VarChar(255)
@@ -289,7 +293,7 @@ model VerificationCode {
 
 model Post {
   id       Int    @id @default(autoincrement())
-  publicId String @unique @default(cuid()) @map("public_id")
+  publicId String @unique @default(nanoid()) @map("public_id")
 
   userId      String @map("user_id")
   content     String @db.Text
@@ -315,11 +319,10 @@ model Post {
   viewsCount                Int @default(0) @map("views_count")
 
   isQuote  Boolean @default(false) @map("is_quote")
-  isPinned Boolean @default(false) @map("is_pinned")
-  isGhost  Boolean @default(false) @map("is_ghost")
   isSurvey Boolean @default(false) @map("is_survey")
 
-  isDeleted Boolean   @default(false) @map("is_deleted")
+  deadlineAt DateTime? @map("deadline_at") // thời hạn kết thúc khảo sát, chỉ có ý nghĩa khi isSurvey = true
+
   deletedAt DateTime? @map("deleted_at")
 
   createdAt DateTime @default(now()) @map("created_at")
@@ -336,15 +339,12 @@ model Post {
   root   Post?  @relation("PostRoot", fields: [rootPostId], references: [id])
   thread Post[] @relation("PostRoot")
 
-  isHidden         Boolean @default(false) @map("is_hidden") // bot ẩn bài viết khỏi feed, chỉ hiển thị khi truy cập trực tiếp, dùng cho trường hợp bài viết bị report nhiều lần hoặc vi phạm chính sách nhưng chưa đến mức xóa hoàn toàn
-  isDisinformation Boolean @default(false) @map("is_disinformation") // bot đánh dấu bài viết có nội dung sai
-
-  media                 PostMedia[]
-  mentions              PostMention[]
-  topicsPosts           TopicsPost[]
-  likes                 Like[]
-  poll                  Poll?
-  postInteractions      PostInteraction[]
+  media            PostMedia[]
+  mentions         PostMention[]
+  topicsPosts      TopicsPost[]
+  likes            Like[]
+  poll             Poll?
+  postInteractions PostInteraction[]
 
   @@index([userId, createdAt])
   @@index([parentId])
@@ -552,52 +552,3 @@ model RefreshToken {
   @@index([sessionId], map: "idx_refresh_tokens_session_id")
   @@map("refresh_tokens")
 }
-
-model UserActionLog {
-  id        Int        @id @default(autoincrement())
-  userId    String     @map("user_id")
-  type      ActionType @map("type_enum")
-  targetId  String
-  metadata  Json?
-  createdAt DateTime   @default(now()) @map("created_at")
-
-  user User @relation(fields: [userId], references: [id])
-
-  @@unique([userId, type, targetId], map: "uq_user_action_logs_user_type_target")
-  @@index([userId], map: "idx_user_action_logs_user_id")
-  @@index([type], map: "idx_user_action_logs_type")
-  @@index([createdAt], map: "idx_user_action_logs_created_at")
-  @@map("user_action_logs")
-}
-
-model LimitActionAI {
-  id      Int        @id @default(autoincrement())
-  userId  String     @map("user_id")
-  type    ActionType @map("type_enum")
-  count   Int        @default(5) // mặc định 5 lượt tạo imag,md
-  resetAt DateTime   @map("reset_at")
-
-  user User @relation(fields: [userId], references: [id])
-
-  @@index([userId], map: "idx_limit_actions_user_id")
-  @@index([type], map: "idx_limit_actions_type")
-  @@index([resetAt], map: "idx_limit_actions_reset_at")
-  @@map("limit_actions")
-}
-
-model UserRestriction {
-  id        Int                 @id @default(autoincrement())
-  userId    String              @map("user_id")
-  type      UserRestrictionType @map("type_enum")
-  reason    String?             @db.VarChar(255)
-  expiresAt DateTime            @map("expires_at")
-  createdAt DateTime            @default(now()) @map("created_at")
-
-  user User @relation(fields: [userId], references: [id])
-
-  @@index([userId], map: "idx_user_restrictions_user_id")
-  @@index([type], map: "idx_user_restrictions_type")
-  @@index([expiresAt], map: "idx_user_restrictions_expires_at")
-  @@map("user_restrictions")
-}
-

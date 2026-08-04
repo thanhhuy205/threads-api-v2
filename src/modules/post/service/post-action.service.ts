@@ -7,14 +7,11 @@ import {
 } from "@/errors/error";
 import { evaluationProducer } from "@/modules/job/evaluation-post/producer/evaluation.producer";
 import { reportService } from "@/modules/report/service/report.service";
-import { userActionLogService } from "@/modules/user-action-log/service/user-action-log.service";
 import { userService } from "@/modules/user/service/user.service";
 import { redisService } from "@/providers/redis.provider";
 import { redisVersion } from "@/shared/redis-version";
 import {
-  ActionType,
   InteractionType,
-  PostType,
   ReportStatus,
   ReportTargetType,
   VisibilityPost,
@@ -34,18 +31,6 @@ export type ReportSubmissionResult = {
 };
 
 class PostActionService {
-  private resolveDeleteActionType(postType: PostType): ActionType {
-    if (postType === PostType.QUOTE) {
-      return ActionType.QUOTE_DELETED;
-    }
-
-    if (postType === PostType.REPOST) {
-      return ActionType.SHARE_DELETED;
-    }
-
-    return ActionType.POST_DELETED;
-  }
-
   async hide(
     publicId: string,
     userId: string,
@@ -204,14 +189,6 @@ class PostActionService {
     }
 
     await postRepository.softDeleteByPublicId(publicId);
-    await userActionLogService.logAction({
-      userId,
-      type: this.resolveDeleteActionType(post.type),
-      targetId: publicId,
-      metadata: {
-        postType: post.type,
-      },
-    });
     await redisVersion.bumpPostListCacheVersion(redisKey.post.listNamespace());
   }
 

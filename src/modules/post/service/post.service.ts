@@ -2,7 +2,6 @@ import { NotFoundException } from "@/errors/error";
 import { baseLogger } from "@/middlewares/logger";
 import { notificationService } from "@/modules/notification-group/service/notification.service";
 import type { CreatePostPayload } from "@/modules/post/interfaces/create-post-payload";
-import { userActionLogService } from "@/modules/user-action-log/service/user-action-log.service";
 import { PostBuilder } from "../builder/post.builder";
 import { CreatePostDto } from "../dto/post.dto";
 import { PostRecord, postRepository } from "../repository/post.repository";
@@ -23,14 +22,6 @@ class PostService {
     );
 
     await postMetaService.finalizePostCreation({
-      actionLog: userActionLogService.logPostCreated({
-        userId: payload.userId,
-        targetId: post.publicId,
-        metadata: {
-          postId: post.id ?? null,
-          source: "POST",
-        },
-      }),
       mentionNotification: {
         mentionIds,
         actorId: payload.userId,
@@ -130,14 +121,6 @@ class PostService {
     );
 
     await postMetaService.finalizePostCreation({
-      actionLog: userActionLogService.logShareCreated({
-        userId,
-        targetId: post.publicId,
-        metadata: {
-          originPublicId: resolvedOriginPublicId,
-          originPostId: resolvedOriginPostId,
-        },
-      }),
     });
     return {
       publicId: post.publicId,
@@ -184,14 +167,6 @@ class PostService {
     );
 
     await postMetaService.finalizePostCreation({
-      actionLog: userActionLogService.logQuoteCreated({
-        userId: payload.userId,
-        targetId: post.publicId,
-        metadata: {
-          originPublicId: resolvedOriginPublicId,
-          originPostId: resolvedOriginPostId,
-        },
-      }),
       mentionNotification: {
         mentionIds,
         actorId: payload.userId,
