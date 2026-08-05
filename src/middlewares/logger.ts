@@ -1,8 +1,9 @@
 import pino from "pino";
 import { pinoHttp } from "pino-http";
+import configService from '@/config/config';
 
 export const baseLogger = pino({
-    transport: process.env.NODE_ENV !== "production"
+    transport: configService.NODE_ENV !== "production"
         ? { target: "pino-pretty", options: { colorize: true, translateTime: "SYS:standard" } }
         : undefined
 });

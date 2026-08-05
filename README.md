@@ -157,28 +157,28 @@ Yêu cầu:
 Cài đặt:
 
 ```bash
-npm install
-npm run db:generate
-npm run dev
+pnpm install
+pnpm run db:generate
+pnpm run dev
 ```
 
 Chạy workers (terminal riêng):
 
 ```bash
-npm run worker
+pnpm run worker
 ```
 
 Chạy queue event listeners (optional, hiện đang lắng nghe `email_queue`, `bloom_queue`):
 
 ```bash
-npm run queue
+pnpm run queue
 ```
 
 Build production:
 
 ```bash
-npm run build
-npm run start
+pnpm run build
+pnpm run start
 ```
 
 ## Docker services (hạ tầng local)

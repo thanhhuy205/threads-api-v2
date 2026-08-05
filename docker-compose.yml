@@ -16,7 +16,7 @@ services:
     image: ${IMAGE_URL}
     container_name: threads-worker
     restart: unless-stopped
-    command: npm run start:worker
+    command: node dist/workers/index.js
     env_file:
       - .env
     depends_on:

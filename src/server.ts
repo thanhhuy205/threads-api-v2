@@ -22,7 +22,7 @@ const bootstrap = async () => {
         process.exit(1);
     }
 
-    const server = app.listen(configService.PORT, () => { });
+    const server = app.listen(configService.APP_CONFIG.PORT, () => { });
 
     const shutdown = (signal: string) => {
         server.close((error) => {

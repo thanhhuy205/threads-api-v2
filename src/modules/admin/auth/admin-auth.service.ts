@@ -43,7 +43,7 @@ class AdminAuthService {
       token: hasherToken(tokenPair.refreshToken),
       sessionId: tokenPair.sessionId,
       expireAt: new Date(
-        Date.now() + ms(configService.REFRESH_TOKEN_EXPIRES_IN as StringValue),
+        Date.now() + ms(configService.JWT_CONFIG.REFRESH_TOKEN_EXPIRES_IN as StringValue),
       ),
       ip: metadata.ip,
       userAgent: metadata.userAgent,

@@ -5,6 +5,7 @@ import { jwtService } from "@/modules/jwt/service/jwt.service";
 import { userRepository } from "@/modules/user/repository/user.repository";
 import { redisService } from "@/providers/redis.provider";
 import { UserStatus } from "@prisma/client";
+import configService from '@/config/config';
 import { NextFunction, Request, Response } from "express";
 
 export const authorization = async (
@@ -49,7 +50,7 @@ export const authorization = async (
     req.accessToken = token;
     return next();
   } catch (error) {
-    if (process.env.NODE_ENV === "development") {    }
+    if (configService.IS_DEV) {    }
 
     if (
       error instanceof UnauthorizedException ||

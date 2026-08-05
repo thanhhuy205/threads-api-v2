@@ -7,8 +7,8 @@ import jwt, { JwtPayload } from 'jsonwebtoken';
 import ms from 'ms';
 import { v4 as uuidv4 } from 'uuid';
 class JwtService {
-    private readonly JWT_SECRET: string = configService.JWT_SECRET;
-    private readonly ACCESS_EXPIRES: string = configService.ACCESS_EXPIRES;
+    private readonly JWT_SECRET: string = configService.JWT_CONFIG.JWT_SECRET;
+    private readonly ACCESS_EXPIRES: string = configService.JWT_CONFIG.ACCESS_EXPIRES;
     async signAccessToken({ userId, status, sessionId, roles }: PayloadSignTokenDto) {
         return this.signToken({
             payload: { sub: userId, status, sid: sessionId, roles },

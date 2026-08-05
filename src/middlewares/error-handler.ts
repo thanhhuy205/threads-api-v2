@@ -29,7 +29,7 @@ export const errorHandler = (error: unknown, _req: Request, res: Response, _next
         }
     }
 
-    if (env.NODE_ENV === 'development' && error instanceof Error && error.stack) {
+    if (env.IS_DEV && error instanceof Error && error.stack) {
         return res.error(500, COMMON_MESSAGE.INTERNAL_SERVER_ERROR, undefined, { stack: error.stack });
     } else {
         return res.error(500, COMMON_MESSAGE.INTERNAL_SERVER_ERROR);

@@ -1,7 +1,7 @@
 import configService from '@/config/config';
 import { MongoClient } from 'mongodb';
 
-const client = new MongoClient(configService.MONGODB_URI);
+const client = new MongoClient(configService.MONGODB_CONFIG.MONGODB_URI);
 
 export async function connectMongoDB() {
     await client.connect();
@@ -13,5 +13,5 @@ export async function closeMongoDB() {
 }
 
 export const collections = (collectionName: string) => {
-    return client.db(configService.MONGODB_NAME as string).collection(collectionName);
+    return client.db(configService.MONGODB_CONFIG.MONGODB_NAME).collection(collectionName);
 }

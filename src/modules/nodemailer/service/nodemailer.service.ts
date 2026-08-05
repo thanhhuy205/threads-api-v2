@@ -1,4 +1,5 @@
 import { transporter } from "@/providers/nodemailer.provider";
+import configService from '@/config/config';
 import { TransportOptions } from "nodemailer";
 
 class NodemailerService {
@@ -7,7 +8,7 @@ class NodemailerService {
     async sendMail(to: string, subject: string, html: string, options: TransportOptions) {
         try {
             const info = await this.transporter.sendMail({
-                from: `"Threads API" <${process.env.NODEMAILER_USER}>`,
+                from: `"Threads API" <${configService.NODEMAILER_CONFIG.NODEMAILER_USER}>`,
                 to,
                 subject,
                 html,

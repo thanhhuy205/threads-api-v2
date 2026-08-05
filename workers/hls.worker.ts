@@ -5,6 +5,7 @@ import type { HlsQueueDto } from "../src/modules/job/video/dto/hls-queue.dto";
 import { createWorker } from "../src/providers/bullmq.provider";
 import { postMediaRepository } from "../src/modules/upload/repository/post-media.repository";
 import { PostMediaStatus } from "@prisma/client";
+import configService from '../src/config/config';
 
 class HlsWorker {
     private readonly worker = createWorker(QUEUE_NAME.VIDEO_QUEUE, async (job) => {
@@ -28,7 +29,7 @@ class HlsWorker {
         await postMediaRepository.updateMediaStatus({
             key: title,
             status: PostMediaStatus.UPLOADED,
-            url: `${process.env.R2_ENDPOINT}/${process.env.R2_BUCKET_NAME}/${outputCloudDir}/index.m3u8`,
+            url: `${configService.R2_CONFIG.R2_ENDPOINT}/${configService.R2_CONFIG.R2_BUCKET_NAME}/${outputCloudDir}/index.m3u8`,
         });
     }
 }

@@ -1,0 +1,13 @@
+allowBuilds:
+  '@google/genai': true
+  '@openrouter/sdk': true
+  '@prisma/engines': true
+  '@scarf/scarf': true
+  bcrypt: true
+  esbuild: true
+  ffmpeg-ffprobe-static: true
+  ffmpeg-static: true
+  msgpackr-extract: true
+  prisma: true
+  protobufjs: true
+  sharp: true

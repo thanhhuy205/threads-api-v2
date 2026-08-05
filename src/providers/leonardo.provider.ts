@@ -8,7 +8,7 @@ const API = "https://cloud.leonardo.ai/api/rest/v1";
 
 const headers = {
     Accept: "application/json",
-    Authorization: `Bearer ${configService.LEONARDO_API_KEY}`,
+    Authorization: `Bearer ${configService.LEONARDO_CONFIG.LEONARDO_API_KEY}`,
     "Content-Type": "application/json",
 };
 

@@ -18,7 +18,7 @@ class VerificationRepository {
                 userId: payload.userId,
                 type: payload.type,
                 tokenHash: payload.tokenHash,
-                expiresAt: new Date(Date.now() + ms(configService.ACCESS_EXPIRES as StringValue)),
+                expiresAt: new Date(Date.now() + ms(configService.JWT_CONFIG.ACCESS_EXPIRES as StringValue)),
             },
         });
 

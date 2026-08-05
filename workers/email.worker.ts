@@ -29,7 +29,7 @@ class EmailWorker {
             {
                 appName: 'Threads',
                 verifyUrl: verifyLink,
-                expiresInMinutes: configService.RESEND_VERIFY_EMAIL_TOKEN_EXPIRES_IN_TEXT,
+                expiresInMinutes: configService.JWT_CONFIG.RESEND_VERIFY_EMAIL_TOKEN_EXPIRES_IN_TEXT,
                 currentYear: new Date().getFullYear(),
             }
         );
@@ -39,13 +39,13 @@ class EmailWorker {
 
 
     async sendForgotPasswordEmail(data: ForgotPasswordProducer) {
-        const resetLink = `${configService.FRONTEND_URL}/reset-password?token=${data.token}`;
+        const resetLink = `${configService.APP_CONFIG.FRONTEND_URL}/reset-password?token=${data.token}`;
         const html = await ejs.renderFile(
             path.join(process.cwd(), './template/forgot-password.ejs'),
             {
                 appName: 'Threads',
                 resetUrl: resetLink,
-                expiresInMinutes: configService.RESET_PASSWORD_TOKEN_EXPIRES_IN_TEXT,
+                expiresInMinutes: configService.JWT_CONFIG.RESET_PASSWORD_TOKEN_EXPIRES_IN_TEXT,
                 currentYear: new Date().getFullYear(),
             }
         );
@@ -54,7 +54,7 @@ class EmailWorker {
     }
 
     async sendInvitationEmail(data: { email: string; token: string, username: string }) {
-        const invitationLink = `${configService.FRONTEND_URL}/join-group?token=${data.token}`;
+        const invitationLink = `${configService.APP_CONFIG.FRONTEND_URL}/join-group?token=${data.token}`;
         const html = await ejs.renderFile(
             path.join(process.cwd(), './template/invitation-email.ejs'),
             {

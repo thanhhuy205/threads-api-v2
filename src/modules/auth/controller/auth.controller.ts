@@ -64,7 +64,7 @@ class AuthController {
     if (!req.user?.sub) {
       return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
     }
-    const originUrl = req.headers['x-origin-url'] ?? configService.FRONTEND_URL;
+    const originUrl = req.headers['x-origin-url'] ?? configService.APP_CONFIG.FRONTEND_URL;
     await authService.resendVerifyEmail(originUrl.toString(), req.user?.sub);
     return res.success(200, AUTH_MESSAGE.RESEND_VERIFY_EMAIL_SUCCESS);
   }

@@ -2,6 +2,7 @@
     "name": "threads-api-v2",
     "version": "1.0.0",
     "private": true,
+    "packageManager": "pnpm@11.11.0",
     "description": "Express API with TypeScript, Prisma, and MySQL",
     "main": "dist/src/server.js",
     "scripts": {
@@ -20,7 +21,7 @@
         "queue": "tsx queues/index.ts",
         "start:prod": "node dist/src/server.js",
         "start:worker": "node dist/workers/index.js",
-        "all:workers:queues": "npm run worker && npm run queue",
+        "all:workers:queues": "pnpm run worker && pnpm run queue",
         "docs:routes": "node scripts/generate-docs-routes.mjs"
     },
     "dependencies": {
@@ -29,9 +30,9 @@
         "@aws-sdk/s3-request-presigner": "^3.1068.0",
         "@google/genai": "^2.7.0",
         "@nestjs/common": "^11.1.28",
+        "@nestjs/config": "^4.0.2",
         "@nestjs/core": "^11.1.28",
         "@nestjs/platform-express": "^11.1.28",
-        "@notionhq/client": "^5.22.0",
         "@openrouter/ai-sdk-provider": "^2.9.0",
         "@openrouter/sdk": "^0.12.35",
         "@prisma/adapter-mariadb": "7.8.0",
@@ -44,6 +45,8 @@
         "bcrypt": "^6.0.0",
         "bullmq": "^5.76.4",
         "compression": "^1.8.1",
+        "class-transformer": "^0.5.1",
+        "class-validator": "^0.14.2",
         "cors": "^2.8.5",
         "dotenv": "^16.5.0",
         "ejs": "^5.0.2",

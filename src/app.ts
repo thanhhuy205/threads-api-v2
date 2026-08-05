@@ -29,7 +29,7 @@ app.use(
 app.use(cors({ origin: corsOrigin }));
 app.use(compression());
 app.set('trust proxy', 1)
-app.use(morgan(configService.NODE_ENV === 'development' ? 'dev' : 'combined'));
+app.use(morgan(configService.IS_DEV ? 'dev' : 'combined'));
 
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
@@ -38,7 +38,7 @@ app.use(logger);
 app.use(responseHandler);
 
 
-app.use('/api/v1', rateLimit({
+app.use(`/${configService.GLOBAL_PREFIX}`, rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100,
 }), router);
