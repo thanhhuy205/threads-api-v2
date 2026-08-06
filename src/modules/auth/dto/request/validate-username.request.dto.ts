@@ -1,15 +1,14 @@
-import { z } from 'zod';
+import { Transform } from 'class-transformer';
+import { IsString, Matches, MaxLength, MinLength } from 'class-validator';
 import { AuthErrorMessage } from './auth-error-message';
 
 const usernameRegex = /^[a-zA-Z0-9._-]{3,32}$/;
 
-export const validateUsernameSchema = z.object({
-    username: z
-        .string()
-        .trim()
-        .min(3, { message: AuthErrorMessage.USERNAME_INVALID })
-        .max(32, { message: AuthErrorMessage.USERNAME_INVALID })
-        .regex(usernameRegex, { message: AuthErrorMessage.USERNAME_RULE }),
-});
-
-export type ValidateUsernameDto = z.infer<typeof validateUsernameSchema>;
+export class ValidateUsernameDto {
+  @Transform(({ value }) => typeof value === 'string' ? value.trim() : value)
+  @IsString()
+  @MinLength(3, { message: AuthErrorMessage.USERNAME_INVALID })
+  @MaxLength(32, { message: AuthErrorMessage.USERNAME_INVALID })
+  @Matches(usernameRegex, { message: AuthErrorMessage.USERNAME_RULE })
+  username!: string;
+}

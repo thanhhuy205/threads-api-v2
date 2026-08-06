@@ -1,7 +1,7 @@
-import { z } from 'zod';
+import { IsString, MinLength } from 'class-validator';
 
-export const validateTokenSchema = z.object({
-    token: z.string().min(1, 'Token is required'),
-});
-
-export type ValidateTokenDto = z.infer<typeof validateTokenSchema>;
+export class ValidateTokenDto {
+  @IsString()
+  @MinLength(1, { message: 'Token is required' })
+  token!: string;
+}

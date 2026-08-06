@@ -1,13 +1,33 @@
-import { z } from 'zod';
+import { Transform } from 'class-transformer';
+import { IsOptional, IsString, MaxLength } from 'class-validator';
 
-export const updateProfileSchema = z
-    .object({
-        name: z.string().trim().max(100, 'Name must be at most 100 characters').optional(),
-        bio: z.string().trim().max(500, 'Bio must be at most 500 characters').optional(),
-        location: z.string().trim().max(255, 'Location must be at most 255 characters').optional(),
-        website: z.string().trim().max(255, 'Website must be at most 255 characters').optional(),
-        avatar: z.any().optional(),
-    })
-    .passthrough();
+const trim = ({ value }: { value: unknown }) => typeof value === 'string' ? value.trim() : value;
 
-export type UpdateProfileDto = z.infer<typeof updateProfileSchema>;
+export class UpdateProfileDto {
+  @IsOptional()
+  @Transform(trim)
+  @IsString()
+  @MaxLength(100, { message: 'Name must be at most 100 characters' })
+  name?: string;
+
+  @IsOptional()
+  @Transform(trim)
+  @IsString()
+  @MaxLength(500, { message: 'Bio must be at most 500 characters' })
+  bio?: string;
+
+  @IsOptional()
+  @Transform(trim)
+  @IsString()
+  @MaxLength(255, { message: 'Location must be at most 255 characters' })
+  location?: string;
+
+  @IsOptional()
+  @Transform(trim)
+  @IsString()
+  @MaxLength(255, { message: 'Website must be at most 255 characters' })
+  website?: string;
+
+  @IsOptional()
+  avatar?: unknown;
+}

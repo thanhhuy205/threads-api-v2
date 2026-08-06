@@ -20,6 +20,7 @@ import { redisService } from "@/providers/redis.provider";
 import { UserRoleType, VerificationCodeType } from "@prisma/client";
 import crypto from "crypto";
 import ms, { StringValue } from "ms";
+import { Injectable } from '@nestjs/common';
 import type { ForgotPasswordDto } from "../dto/request/forgot-password.request.dto";
 import type { LoginDto } from "../dto/request/login.request.dto";
 import type { LogoutDto } from "../dto/request/logout.request.dto";
@@ -41,7 +42,8 @@ import type { ValidateTokenResponseDto } from "../dto/response/validate-token.re
 import type { ValidateUserResponseDto } from "../dto/response/validate-user.response.dto";
 import { authRepository } from "../repository/auth.repository";
 
-class AuthService {
+@Injectable()
+export class AuthService {
   async register(
     payload: RegisterDto,
     metadata: SessionMetadata,

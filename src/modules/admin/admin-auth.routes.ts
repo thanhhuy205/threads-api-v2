@@ -1,10 +1,10 @@
-import { validate } from "@/middlewares/validate";
 import { Router } from "express";
-import { loginSchema } from "@/modules/auth/dto/request/login.request.dto";
+import { validateDto } from "@/middlewares/validate-dto";
+import { LoginDto } from "@/modules/auth/dto/request/login.request.dto";
 import { adminAuthController } from "./auth/admin-auth.controller";
 
 const adminAuthRouter = Router();
 
-adminAuthRouter.post("/login", validate(loginSchema), adminAuthController.login);
+adminAuthRouter.post("/login", validateDto(LoginDto), adminAuthController.login);
 
 export default adminAuthRouter;

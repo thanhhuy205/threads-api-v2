@@ -1,7 +1,7 @@
-import { z } from "zod";
+import { IsString, MinLength } from 'class-validator';
 
-export const logoutSchema = z.object({
-  refreshToken: z.string().min(1, 'Refresh token is required'),
-});
-
-export type LogoutDto = z.infer<typeof logoutSchema>;
+export class LogoutDto {
+  @IsString()
+  @MinLength(1, { message: 'Refresh token is required' })
+  refreshToken!: string;
+}

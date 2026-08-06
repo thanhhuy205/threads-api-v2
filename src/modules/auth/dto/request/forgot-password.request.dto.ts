@@ -1,8 +1,10 @@
-import { z } from 'zod';
+import { Transform } from 'class-transformer';
+import { IsEmail, MaxLength } from 'class-validator';
 import { AuthErrorMessage } from './auth-error-message';
 
-export const forgotPasswordSchema = z.object({
-    email: z.string().trim().email({ message: AuthErrorMessage.EMAIL_INVALID }).max(255),
-});
-
-export type ForgotPasswordDto = z.infer<typeof forgotPasswordSchema>;
+export class ForgotPasswordDto {
+  @Transform(({ value }) => typeof value === 'string' ? value.trim() : value)
+  @IsEmail({}, { message: AuthErrorMessage.EMAIL_INVALID })
+  @MaxLength(255)
+  email!: string;
+}

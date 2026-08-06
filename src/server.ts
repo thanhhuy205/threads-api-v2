@@ -1,4 +1,10 @@
 import app from '@/app';
+import { HttpExceptionFilter } from '@/common/filters/http-exception.filter';
+import { TransformInterceptor } from '@/common/interceptors/transform.interceptor';
+import { AppModule } from '@/app.module';
+import { BadRequestException, ValidationPipe, type ValidationError } from '@nestjs/common';
+import { NestFactory, Reflector } from '@nestjs/core';
+import { ExpressAdapter } from '@nestjs/platform-express';
 import { likeProducer } from '@/modules/job/like-job/producer/like.producer';
 import { notificationProducer } from '@/modules/job/notification-job/producer/notification.producer';
 import { surveySyncProducer } from '@/modules/job/survey-sync/producer/survey-sync.producer';
@@ -6,8 +12,56 @@ import { closeMongoDB, connectMongoDB } from '@/providers/mongodb.provider';
 import configService from './config/config';
 import prisma from './config/prisma';
 import { redisService } from './providers/redis.provider';
+import { errorHandler } from './middlewares/error-handler';
+import { notFoundHandler } from './middlewares/not-found';
+import router from './routes/index';
+import rateLimit from 'express-rate-limit';
+
+const flattenValidationErrors = (
+    errors: ValidationError[],
+    parentPath = '',
+): Array<{ path: string; message: string }> =>
+    errors.flatMap((error) => {
+        const path = parentPath ? `${parentPath}.${error.property}` : error.property;
+        const current = Object.values(error.constraints ?? {}).map((message) => ({ path, message }));
+        return [...current, ...flattenValidationErrors(error.children ?? [], path)];
+    });
+
+const createHttpApplication = async () => {
+    const nestApp = await NestFactory.create(
+        AppModule,
+        new ExpressAdapter(app),
+        { bodyParser: false },
+    );
+
+    app.use(`/${configService.GLOBAL_PREFIX}`, rateLimit({
+        windowMs: 15 * 60 * 1000,
+        max: 100,
+    }));
+
+    nestApp.setGlobalPrefix(configService.GLOBAL_PREFIX);
+    nestApp.useGlobalPipes(new ValidationPipe({
+        transform: true,
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        exceptionFactory: (errors) => new BadRequestException({
+            message: 'Validation failed',
+            errors: flattenValidationErrors(errors),
+        }),
+    }));
+    nestApp.useGlobalInterceptors(new TransformInterceptor(nestApp.get(Reflector)));
+    nestApp.useGlobalFilters(new HttpExceptionFilter());
+    await nestApp.init();
+
+    app.use(`/${configService.GLOBAL_PREFIX}`, router);
+    app.use(notFoundHandler);
+    app.use(errorHandler);
+
+    return nestApp;
+};
 
 const bootstrap = async () => {
+    await createHttpApplication();
     try {
         await redisService.connect();
     } catch (error) {
