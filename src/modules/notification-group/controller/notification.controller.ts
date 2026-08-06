@@ -1,63 +1,70 @@
-import { UnauthorizedException } from "@/errors/error";
-import { notificationService } from "@/modules/notification-group/service/notification.service";
-import { friendService } from "@/modules/user/service/friend.service";
-import { getPagination } from "@/shared/pagination/cursor-pagination";
-import type { Request, Response } from "express";
+import { Message } from '@/common/decorators/message.decorator';
+import { Pagination } from '@/common/decorators/pagination.decorator';
+import { AccessTokenGuard } from '@/common/guards/access-token.guard';
+import { AUTH_MESSAGE } from '@/constants/message';
+import { UnauthorizedException } from '@/errors/error';
+import { buildPagination } from '@/shared/pagination/cursor-pagination';
+import { Controller, Get, HttpCode, HttpStatus, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import type { Request } from 'express';
+import { NotificationQueryDto } from '../dto/request/notification.query.dto';
+import { NotificationService } from '../service/notification.service';
 
-class NotificationController {
-  async getNotifications(req: Request, res: Response) {
-    const userId = req.user?.sub;
+@ApiTags('Notification')
+@ApiBearerAuth('bearer')
+@UseGuards(AccessTokenGuard)
+@Controller('notification')
+export class NotificationController {
+  constructor(private readonly notificationService: NotificationService) {}
 
-    if (!userId) {
-      throw new UnauthorizedException();
-    }
-
-    const { after, take } = getPagination(req);
-    const notifications = await notificationService.findAll({
-      recipientId: userId,
-      after: after ?? undefined,
-      take,
+  @Get()
+  @Pagination()
+  @Message('Notifications retrieved')
+  @ApiOperation({ summary: 'Get notifications for the current user' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Notifications retrieved' })
+  async getNotifications(@Query() query: NotificationQueryDto, @Req() request: Request) {
+    const { currentAfter, currentLimit } = buildPagination(query);
+    const notifications = await this.notificationService.findAll({
+      recipientId: this.userId(request),
+      after: currentAfter ?? undefined,
+      take: currentLimit,
     });
-
-    return res.paginate(notifications);
+    return { data: notifications.rows, pagination: notifications.pagination };
   }
 
-  async getUnreadStatus(req: Request, res: Response) {
-    const userId = req.user?.sub;
-
-    if (!userId) {
-      throw new UnauthorizedException();
-    }
-
-    const hasUnread = await notificationService.hasUnread(userId);
-    return res.success(200, "Notification unread status retrieved", {
-      isNotification: hasUnread,
-    });
+  @Get('unread')
+  @Message('Notification unread status retrieved')
+  @ApiOperation({ summary: 'Get unread notification status' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Notification unread status retrieved' })
+  async getUnreadStatus(@Req() request: Request) {
+    const hasUnread = await this.notificationService.hasUnread(this.userId(request));
+    return { isNotification: hasUnread };
   }
 
-  async getFriendRequestCount(req: Request, res: Response) {
-    const userId = req.user?.sub;
-
-    if (!userId) {
-      throw new UnauthorizedException();
-    }
-
-    const friendRequestCount =
-      await friendService.countReceivedFriendRequests(userId);
-    return res.success(200, "Friend request count retrieved", {
-      friendRequestCount,
-    });
+  @Get('friend-request')
+  @Message('Friend request count retrieved')
+  @ApiOperation({ summary: 'Get received friend request count' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Friend request count retrieved' })
+  async getFriendRequestCount(@Req() request: Request) {
+    const friendRequestCount = await this.notificationService.countReceivedFriendRequests(this.userId(request));
+    return { friendRequestCount };
   }
 
-  async markAsRead(req: Request, res: Response) {
-    const userId = req.user?.sub;
-    if (!userId) {
-      throw new UnauthorizedException();
-    }
+  @Post('read')
+  @HttpCode(HttpStatus.OK)
+  @Message('Notifications marked as read')
+  @ApiOperation({ summary: 'Mark all notifications as read' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Notifications marked as read' })
+  async markAsRead(@Req() request: Request) {
+    await this.notificationService.markGroupAsRead(this.userId(request));
+    return { isRead: true };
+  }
 
-    await notificationService.markGroupAsRead(userId);
-    return res.success(200, "Notifications marked as read", { isRead: true });
+  private userId(request: Request): string {
+    const userId = request.user?.sub;
+    if (!userId) {
+      throw new UnauthorizedException(AUTH_MESSAGE.TOKEN_INVALID);
+    }
+    return userId;
   }
 }
-
-export const notificationController = new NotificationController();

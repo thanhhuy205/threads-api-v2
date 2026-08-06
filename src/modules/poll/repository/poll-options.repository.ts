@@ -1,4 +1,5 @@
-import prisma from "@/config/prisma";
+import { PrismaService } from '@/shared/database/prisma.service';
+import { Injectable } from '@nestjs/common';
 import { Prisma } from "@prisma/client";
 
 export type CreatePollOptionPayload = {
@@ -6,18 +7,21 @@ export type CreatePollOptionPayload = {
   optionText: string;
 };
 
-class PollOptionsRepository {
+@Injectable()
+export class PollOptionsRepository {
+  constructor(private readonly prisma: PrismaService) {}
+
   createMany(
     payload: CreatePollOptionPayload[],
-    tx: Prisma.TransactionClient = prisma,
+    tx?: Prisma.TransactionClient,
   ) {
-    return tx.pollOption.createMany({
+    return (tx ?? this.prisma).pollOption.createMany({
       data: payload,
     });
   }
 
-  findByPollId(pollId: number, tx: Prisma.TransactionClient = prisma) {
-    return tx.pollOption.findMany({
+  findByPollId(pollId: number, tx?: Prisma.TransactionClient) {
+    return (tx ?? this.prisma).pollOption.findMany({
       where: {
         pollId,
       },
@@ -30,9 +34,9 @@ class PollOptionsRepository {
   findByIdAndPollId(
     id: number,
     pollId: number,
-    tx: Prisma.TransactionClient = prisma,
+    tx?: Prisma.TransactionClient,
   ) {
-    return tx.pollOption.findFirst({
+    return (tx ?? this.prisma).pollOption.findFirst({
       where: {
         id,
         pollId,
@@ -43,9 +47,9 @@ class PollOptionsRepository {
   incrementVotesCount(
     id: number,
     pollId: number,
-    tx: Prisma.TransactionClient = prisma,
+    tx?: Prisma.TransactionClient,
   ) {
-    return tx.pollOption.update({
+    return (tx ?? this.prisma).pollOption.update({
       where: {
         id_pollId: {
           id,
@@ -61,4 +65,3 @@ class PollOptionsRepository {
   }
 }
 
-export const pollOptionsRepository = new PollOptionsRepository();

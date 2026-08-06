@@ -1,20 +1,32 @@
-import { z } from "zod";
+import { Type } from 'class-transformer';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsInt, IsOptional, IsString, Max, MaxLength, Min, MinLength } from 'class-validator';
 
-export const topicNameParamsSchema = z.object({
-  name: z.string().trim().min(1, "Topic name is required").max(255, "Topic name must be at most 255 characters"),
-});
+export class CreateTopicDto {
+  @ApiProperty({ minLength: 1, maxLength: 255, example: 'NestJS' })
+  @IsString()
+  @MinLength(1)
+  @MaxLength(255)
+  name!: string;
+}
 
-export type TopicNameParamsDto = z.infer<typeof topicNameParamsSchema>;
+export class SearchTopicQueryDto {
+  @ApiProperty({ minLength: 1, example: 'nestjs' })
+  @IsString()
+  @MinLength(1)
+  q!: string;
 
-export const createTopicSchema = z.object({
-  name: z.string().trim().min(1, "Topic name is required").max(255, "Topic name must be at most 255 characters"),
-});
+  @ApiPropertyOptional({ description: 'Accepted for backward compatibility' })
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  after?: string;
 
-export const searchTopicQuerySchema = z.object({
-  q: z.string().trim().min(1, "Query is required"),
-  after: z.string().trim().min(1, "Cursor must not be empty").optional(),
-  take: z.coerce.number().int("Take must be an integer").positive("Take must be a positive number").max(100, "Take must be at most 100").optional(),
-});
-
-export type SearchTopicQueryDto = z.infer<typeof searchTopicQuerySchema>;
-export type CreateTopicDto = z.infer<typeof createTopicSchema>;
+  @ApiPropertyOptional({ minimum: 1, maximum: 100 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  take?: number;
+}

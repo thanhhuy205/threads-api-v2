@@ -1,4 +1,5 @@
-import prisma from "@/config/prisma";
+import { PrismaService } from '@/shared/database/prisma.service';
+import { Injectable } from '@nestjs/common';
 import { Prisma } from "@prisma/client";
 
 export type CreateVotePayload = {
@@ -7,18 +8,21 @@ export type CreateVotePayload = {
   pollOptionId: number;
 };
 
-class VoteRepository {
+@Injectable()
+export class VoteRepository {
+  constructor(private readonly prisma: PrismaService) {}
+
   create(
     payload: CreateVotePayload,
-    tx: Prisma.TransactionClient = prisma,
+    tx?: Prisma.TransactionClient,
   ) {
-    return tx.vote.create({
+    return (tx ?? this.prisma).vote.create({
       data: payload,
     });
   }
 
-  countByPollId(pollId: number, tx: Prisma.TransactionClient = prisma) {
-    return tx.vote.count({
+  countByPollId(pollId: number, tx?: Prisma.TransactionClient) {
+    return (tx ?? this.prisma).vote.count({
       where: {
         pollId,
       },
@@ -26,4 +30,3 @@ class VoteRepository {
   }
 }
 
-export const voteRepository = new VoteRepository();

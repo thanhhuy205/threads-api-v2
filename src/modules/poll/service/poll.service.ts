@@ -1,12 +1,13 @@
 import { BadRequestException, NotFoundException } from "@/errors/error";
+import { Injectable } from '@nestjs/common';
 import type { Prisma } from "@prisma/client";
 import {
-  pollRepository,
+  PollRepository,
   type PollVoteCountUpdate,
 } from "../repository/poll.repository";
-import { voteRepository } from "../repository/vote.repository";
+import { VoteRepository } from "../repository/vote.repository";
 import {
-  pollOptionsService,
+  PollOptionsService,
   type PollOptionInput,
 } from "./poll-options.services";
 
@@ -19,7 +20,13 @@ export type CreatePostPollPayload = {
   expiresAt?: Date;
 };
 
-class PollService {
+@Injectable()
+export class PollService {
+  constructor(
+    private readonly pollRepository: PollRepository,
+    private readonly voteRepository: VoteRepository,
+    private readonly pollOptionsService: PollOptionsService,
+  ) {}
   async createForPost(
     payload: CreatePostPollPayload,
     tx: Prisma.TransactionClient,
@@ -30,7 +37,7 @@ class PollService {
       throw new BadRequestException("Poll must include at least one option");
     }
 
-    const poll = await pollRepository.create(
+    const poll = await this.pollRepository.create(
       {
         postId: payload.postId,
         expiresAt: payload.expiresAt ?? this.getDefaultExpiresAt(),
@@ -38,13 +45,13 @@ class PollService {
       tx,
     );
 
-    await pollOptionsService.createMany(poll.id, options, tx);
+    await this.pollOptionsService.createMany(poll.id, options, tx);
 
     return poll;
   }
 
   findByPostId(postId: number, tx?: Prisma.TransactionClient) {
-    return pollRepository.findByPostId(postId, tx);
+    return this.pollRepository.findByPostId(postId, tx);
   }
 
   async assertPollOptionBelongsToPoll(
@@ -52,7 +59,7 @@ class PollService {
     pollId: number,
     tx?: Prisma.TransactionClient,
   ) {
-    const pollOption = await pollOptionsService.findByIdAndPollId(
+    const pollOption = await this.pollOptionsService.findByIdAndPollId(
       pollOptionId,
       pollId,
       tx,
@@ -70,11 +77,11 @@ class PollService {
     pollId: number,
     tx?: Prisma.TransactionClient,
   ) {
-    return pollOptionsService.incrementVotesCount(pollOptionId, pollId, tx);
+    return this.pollOptionsService.incrementVotesCount(pollOptionId, pollId, tx);
   }
 
   async getCountVoted(pollId: number, tx?: Prisma.TransactionClient) {
-    const count = await voteRepository.countByPollId(pollId, tx);
+    const count = await this.voteRepository.countByPollId(pollId, tx);
 
     return { count };
   }
@@ -83,7 +90,7 @@ class PollService {
     updates: PollVoteCountUpdate[],
     tx?: Prisma.TransactionClient,
   ) {
-    return pollRepository.bulkUpdateVoteCount(updates, tx);
+    return this.pollRepository.bulkUpdateVoteCount(updates, tx);
   }
 
   private normalizeOptions(options: PollOptionInput[]) {
@@ -103,4 +110,3 @@ class PollService {
   }
 }
 
-export const pollService = new PollService();

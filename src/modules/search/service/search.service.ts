@@ -1,6 +1,7 @@
 import { postSearchService } from "@/modules/post/service/post-search.service";
-import { topicService } from "@/modules/topic/service/topic.service";
+import { TopicService } from "@/modules/topic/service/topic.service";
 import { buildCursorPagination } from "@/shared/pagination/cursor-pagination";
+import { Injectable } from '@nestjs/common';
 
 type SerpType = "default";
 
@@ -12,7 +13,10 @@ type SearchPostInput = {
   userId?: string;
 };
 
-class SearchService {
+@Injectable()
+export class SearchService {
+  constructor(private readonly topicService: TopicService) { }
+
   async searchPost({
     q,
     after,
@@ -39,8 +43,7 @@ class SearchService {
   }
 
   async searchTopic({ q }: { q: string }) {
-    return topicService.searchByName(q);
+    return this.topicService.searchByName(q);
   }
 }
 
-export const searchService = new SearchService();

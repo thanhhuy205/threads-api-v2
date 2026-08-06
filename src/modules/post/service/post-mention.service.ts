@@ -1,6 +1,6 @@
 import { BadRequestException } from "@/errors/error";
 import { baseLogger } from "@/middlewares/logger";
-import { notificationService } from "@/modules/notification-group/service/notification.service";
+import { dispatchMentionNotification } from "@/modules/notification-group/events/notification.dispatcher";
 import type { CreatePostPayload } from "@/modules/post/interfaces/create-post-payload";
 import { userService } from "@/modules/user/service/user.service";
 
@@ -60,7 +60,7 @@ class PostMentionService {
 
     const results = await Promise.allSettled(
       recipientIds.map((recipientId) =>
-        notificationService.handleMention({
+        dispatchMentionNotification({
           mentionContent: content,
           actorId,
           recipientId,

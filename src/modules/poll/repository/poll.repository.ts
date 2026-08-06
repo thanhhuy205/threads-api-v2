@@ -1,4 +1,5 @@
-import prisma from "@/config/prisma";
+import { PrismaService } from '@/shared/database/prisma.service';
+import { Injectable } from '@nestjs/common';
 import { Prisma } from "@prisma/client";
 
 export type CreatePollPayload = {
@@ -11,18 +12,21 @@ export type PollVoteCountUpdate = {
   voteCount: number;
 };
 
-class PollRepository {
+@Injectable()
+export class PollRepository {
+  constructor(private readonly prisma: PrismaService) {}
+
   create(
     payload: CreatePollPayload,
-    tx: Prisma.TransactionClient = prisma,
+    tx?: Prisma.TransactionClient,
   ) {
-    return tx.poll.create({
+    return (tx ?? this.prisma).poll.create({
       data: payload,
     });
   }
 
-  findByPostId(postId: number, tx: Prisma.TransactionClient = prisma) {
-    return tx.poll.findFirst({
+  findByPostId(postId: number, tx?: Prisma.TransactionClient) {
+    return (tx ?? this.prisma).poll.findFirst({
       where: {
         postId,
       },
@@ -38,7 +42,7 @@ class PollRepository {
 
   bulkUpdateVoteCount(
     updates: PollVoteCountUpdate[],
-    tx: Prisma.TransactionClient = prisma,
+    tx?: Prisma.TransactionClient,
   ) {
     if (updates.length === 0) {
       return Promise.resolve(0);
@@ -53,7 +57,7 @@ class PollRepository {
       " ",
     );
 
-    return tx.$executeRaw`
+    return (tx ?? this.prisma).$executeRaw`
       UPDATE polls
       SET vote_count = CASE id ${cases} END
       WHERE id IN (${Prisma.join(ids)})
@@ -61,4 +65,3 @@ class PollRepository {
   }
 }
 
-export const pollRepository = new PollRepository();

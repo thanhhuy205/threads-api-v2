@@ -1,6 +1,6 @@
 import { NotFoundException } from "@/errors/error";
 import { baseLogger } from "@/middlewares/logger";
-import { notificationService } from "@/modules/notification-group/service/notification.service";
+import { dispatchReplyNotification } from "@/modules/notification-group/events/notification.dispatcher";
 import type { CreatePostPayload } from "@/modules/post/interfaces/create-post-payload";
 import { PostBuilder } from "../builder/post.builder";
 import { CreatePostDto } from "../dto/post.dto";
@@ -62,7 +62,7 @@ class PostService {
     baseLogger.info("Created reply post, adding notification group");
     await Promise.all([
       !mentionIds.length
-        ? notificationService.handleNewComment({
+        ? dispatchReplyNotification({
           replyContent: payload.content,
           actorId: payload.userId,
           recipientId: existPost.userId,

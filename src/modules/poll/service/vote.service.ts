@@ -2,8 +2,9 @@ import { redisKey } from "@/constants/resolve-key/redis-key";
 import { ConflictException } from "@/errors/error";
 import { redisService } from "@/providers/redis.provider";
 import { transactionService } from "@/shared/transaction/transaction.service";
-import { voteRepository } from "../repository/vote.repository";
-import { pollService } from "./poll.service";
+import { Injectable } from '@nestjs/common';
+import { VoteRepository } from "../repository/vote.repository";
+import { PollService } from "./poll.service";
 
 type CreateVotePayload = {
   pollId: number;
@@ -11,8 +12,14 @@ type CreateVotePayload = {
   userId: string;
 };
 
-class VoteService {
+@Injectable()
+export class VoteService {
   private readonly voteLockTtlSeconds = 5;
+
+  constructor(
+    private readonly voteRepository: VoteRepository,
+    private readonly pollService: PollService,
+  ) {}
 
   async createVote(payload: CreateVotePayload) {
     const lockKey = redisKey.poll.voteLock(payload.userId, payload.pollOptionId);
@@ -28,13 +35,13 @@ class VoteService {
     }
 
     const result = await transactionService.doInTransaction(async (tx) => {
-      await pollService.assertPollOptionBelongsToPoll(
+      await this.pollService.assertPollOptionBelongsToPoll(
         payload.pollOptionId,
         payload.pollId,
         tx,
       );
 
-      await voteRepository.create(
+      await this.voteRepository.create(
         {
           userId: payload.userId,
           pollId: payload.pollId,
@@ -43,7 +50,7 @@ class VoteService {
         tx,
       );
 
-      const result = await pollService.incrementPollOptionVotesCount(
+      const result = await this.pollService.incrementPollOptionVotesCount(
         payload.pollOptionId,
         payload.pollId,
         tx,
@@ -54,7 +61,7 @@ class VoteService {
     let votesCount = 0;
     const exists = await redisService.exists(countVoteKey);
     if (!exists) {
-      const totalVotes = await pollService.getCountVoted(payload.pollId);
+      const totalVotes = await this.pollService.getCountVoted(payload.pollId);
       votesCount = totalVotes.count;
       await redisService.set(countVoteKey, String(votesCount), {
         EX: 24 * 60 * 60, // 24 hours
@@ -74,4 +81,3 @@ class VoteService {
   }
 }
 
-export const voteService = new VoteService();

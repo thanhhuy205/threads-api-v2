@@ -1,30 +1,41 @@
 import { AUTH_MESSAGE } from "@/constants/message";
-import { Request, Response } from "express";
-import type {
-  CreateVoteDto,
-  VoteParamsDto,
-} from "../dto/request/vote.request";
-import { voteService } from "../service/vote.service";
+import { Message } from '@/common/decorators/message.decorator';
+import { AccessTokenGuard } from '@/common/guards/access-token.guard';
+import { UnauthorizedException } from '@/errors/error';
+import { Body, Controller, HttpCode, HttpStatus, Param, Post, Req, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import type { Request } from 'express';
+import { CreateVoteDto, VoteParamsDto } from '../dto/request/vote.request';
+import { VoteService } from '../service/vote.service';
 
-class PollController {
+@ApiTags('Poll')
+@ApiBearerAuth('bearer')
+@UseGuards(AccessTokenGuard)
+@Controller('polls')
+export class PollController {
+  constructor(private readonly voteService: VoteService) {}
+
+  @Post(':pollId/vote')
+  @HttpCode(HttpStatus.OK)
+  @Message('Vote created successfully')
+  @ApiOperation({ summary: 'Vote for a poll option' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Vote created successfully' })
+  @ApiResponse({ status: HttpStatus.CONFLICT, description: 'Vote is being processed' })
   async createVote(
-    req: Request<VoteParamsDto, {}, CreateVoteDto>,
-    res: Response,
+    @Param() params: VoteParamsDto,
+    @Body() payload: CreateVoteDto,
+    @Req() request: Request,
   ) {
-    const userId = req.user?.sub;
+    const userId = request.user?.sub;
 
     if (!userId) {
-      return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
+      throw new UnauthorizedException(AUTH_MESSAGE.TOKEN_INVALID);
     }
 
-    const result = await voteService.createVote({
-      pollId: req.params.pollId,
-      pollOptionId: req.body.pollOptionId,
+    return this.voteService.createVote({
+      pollId: params.pollId,
+      pollOptionId: payload.pollOptionId,
       userId,
     });
-
-    return res.success(200, "Vote created successfully", result);
   }
 }
-
-export const pollController = new PollController();

@@ -1,10 +1,13 @@
-import prisma from "@/config/prisma";
 import type { NotificationType } from "@/modules/notification-group/model/notification.model";
 import { collections } from "@/providers/mongodb.provider";
+import { PrismaService } from '@/shared/database/prisma.service';
 import { buildPagination } from "@/shared/pagination/cursor-pagination";
+import { Injectable } from '@nestjs/common';
 import { Sort } from "mongodb";
 
-class NotificationRepository {
+@Injectable()
+export class NotificationRepository {
+    constructor(private readonly prisma: PrismaService) {}
     findAll({
         after,
         take,
@@ -75,7 +78,7 @@ class NotificationRepository {
     findPostTargetsByPublicIds(publicIds: string[]) {
         if (!publicIds.length) return Promise.resolve([]);
 
-        return prisma.post.findMany({
+        return this.prisma.post.findMany({
             where: {
                 publicId: { in: publicIds },
             },
@@ -134,4 +137,3 @@ class NotificationRepository {
     }
 }
 
-export const notificationRepository = new NotificationRepository();

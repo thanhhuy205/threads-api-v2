@@ -21,5 +21,6 @@ import { UserService } from './service/user.service';
     FollowRepository,
     AccessTokenGuard,
   ],
+  exports: [UserService, FriendService, FollowerService],
 })
 export class UserModule { }

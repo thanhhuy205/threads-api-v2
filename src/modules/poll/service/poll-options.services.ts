@@ -1,12 +1,15 @@
 import type { Prisma } from "@prisma/client";
+import { Injectable } from '@nestjs/common';
 import {
-  pollOptionsRepository,
+  PollOptionsRepository,
   type CreatePollOptionPayload,
 } from "../repository/poll-options.repository";
 
 export type PollOptionInput = string;
 
-class PollOptionsService {
+@Injectable()
+export class PollOptionsService {
+  constructor(private readonly pollOptionsRepository: PollOptionsRepository) {}
   createMany(
     pollId: number,
     options: PollOptionInput[],
@@ -17,11 +20,11 @@ class PollOptionsService {
       optionText: option.trim(),
     }));
 
-    return pollOptionsRepository.createMany(payload, tx);
+    return this.pollOptionsRepository.createMany(payload, tx);
   }
 
   findByPollId(pollId: number, tx?: Prisma.TransactionClient) {
-    return pollOptionsRepository.findByPollId(pollId, tx);
+    return this.pollOptionsRepository.findByPollId(pollId, tx);
   }
 
   findByIdAndPollId(
@@ -29,7 +32,7 @@ class PollOptionsService {
     pollId: number,
     tx?: Prisma.TransactionClient,
   ) {
-    return pollOptionsRepository.findByIdAndPollId(id, pollId, tx);
+    return this.pollOptionsRepository.findByIdAndPollId(id, pollId, tx);
   }
 
   incrementVotesCount(
@@ -37,8 +40,7 @@ class PollOptionsService {
     pollId: number,
     tx?: Prisma.TransactionClient,
   ) {
-    return pollOptionsRepository.incrementVotesCount(id, pollId, tx);
+    return this.pollOptionsRepository.incrementVotesCount(id, pollId, tx);
   }
 }
 
-export const pollOptionsService = new PollOptionsService();

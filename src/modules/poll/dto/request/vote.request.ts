@@ -1,12 +1,19 @@
-import { z } from "zod";
+import { Type } from 'class-transformer';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsInt, Min } from 'class-validator';
 
-export const voteParamsSchema = z.object({
-  pollId: z.coerce.number().int().positive(),
-});
+export class VoteParamsDto {
+  @ApiProperty({ minimum: 1, example: 7 })
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  pollId!: number;
+}
 
-export const createVoteSchema = z.object({
-  pollOptionId: z.coerce.number().int().positive(),
-});
-
-export type VoteParamsDto = z.infer<typeof voteParamsSchema>;
-export type CreateVoteDto = z.infer<typeof createVoteSchema>;
+export class CreateVoteDto {
+  @ApiProperty({ minimum: 1, example: 12 })
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  pollOptionId!: number;
+}

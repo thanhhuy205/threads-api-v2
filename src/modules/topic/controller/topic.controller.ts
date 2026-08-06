@@ -1,18 +1,28 @@
-import { Request, Response } from "express";
-import type { CreateTopicDto, SearchTopicQueryDto } from "../dto/request/topic.request";
-import { topicService } from "../service/topic.service";
+import { Message } from '@/common/decorators/message.decorator';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, Query } from '@nestjs/common';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { CreateTopicDto, SearchTopicQueryDto } from '../dto/request/topic.request';
+import { TopicService } from '../service/topic.service';
 
-class TopicController {
-  async getByName(req: Request<{}, {}, {}, SearchTopicQueryDto>, res: Response) {
-    const { q } = req.query;
-    const result = await topicService.searchByName(q);
-    return res.success(200, "Topics retrieved successfully", result);
+@ApiTags('Topic')
+@Controller('topic')
+export class TopicController {
+  constructor(private readonly topicService: TopicService) {}
+
+  @Get()
+  @Message('Topics retrieved successfully')
+  @ApiOperation({ summary: 'Search topics by query' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Topics retrieved successfully' })
+  getByName(@Query() query: SearchTopicQueryDto) {
+    return this.topicService.searchByName(query.q);
   }
 
-  async create(req: Request<{}, {}, CreateTopicDto>, res: Response) {
-    const topic = await topicService.createOrIncrement(req.body.name);
-    return res.success(201, "Topic upserted", topic);
+  @Post()
+  @HttpCode(HttpStatus.CREATED)
+  @Message('Topic upserted')
+  @ApiOperation({ summary: 'Create a topic or increment its count' })
+  @ApiResponse({ status: HttpStatus.CREATED, description: 'Topic upserted' })
+  create(@Body() payload: CreateTopicDto) {
+    return this.topicService.createOrIncrement(payload.name);
   }
 }
-
-export const topicController = new TopicController();

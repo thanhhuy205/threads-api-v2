@@ -1,27 +1,43 @@
-import { z } from "zod";
+import { Type } from 'class-transformer';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsIn, IsInt, IsOptional, IsString, Max, Min, MinLength } from 'class-validator';
 
-const baseSearchQuerySchema = z.object({
-  q: z.string().trim().min(1, "Query is required"),
-  after: z.string().trim().min(1, "Cursor must not be empty").optional(),
-  take: z.coerce
-    .number()
-    .int("Take must be an integer")
-    .positive("Take must be a positive number")
-    .max(100, "Take must be at most 100")
-    .default(20),
-});
+export class SearchPostsQueryDto {
+  @ApiProperty({ minLength: 1, example: 'prisma' })
+  @IsString()
+  @MinLength(1)
+  q!: string;
 
-export const searchPostsQuerySchema = baseSearchQuerySchema.extend({
-  serp_type: z.enum(["default"]).default("default"),
-});
+  @ApiPropertyOptional({ description: 'Cursor returned by the previous response' })
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  after?: string;
 
-export const searchUsernameQuerySchema = z.object({
-  q: z.string().trim().min(1, "Query is required"),
-});
-export const searchTopicQuerySchema = z.object({
-  q: z.string().trim().min(1, "Query is required"),
-});
+  @ApiPropertyOptional({ minimum: 1, maximum: 100, default: 20 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  take?: number;
 
-export type SearchPostsQueryDto = z.infer<typeof searchPostsQuerySchema>;
-export type SearchUsernameQueryDto = z.infer<typeof searchUsernameQuerySchema>;
-export type SearchTopicQueryDto = z.infer<typeof searchTopicQuerySchema>;
+  @ApiPropertyOptional({ enum: ['default'], default: 'default' })
+  @IsOptional()
+  @IsIn(['default'])
+  serp_type?: 'default';
+}
+
+export class SearchUsernameQueryDto {
+  @ApiProperty({ minLength: 1, example: 'john' })
+  @IsString()
+  @MinLength(1)
+  q!: string;
+}
+
+export class SearchTopicQueryDto {
+  @ApiProperty({ minLength: 1, example: 'nestjs' })
+  @IsString()
+  @MinLength(1)
+  q!: string;
+}

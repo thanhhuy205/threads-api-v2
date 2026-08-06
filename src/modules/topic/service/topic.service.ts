@@ -1,9 +1,13 @@
 import { redisKey } from "@/constants/resolve-key/redis-key";
 import { redisService } from "@/providers/redis.provider";
-import { topicRepository } from "../repository/topic.repository";
+import { Injectable } from '@nestjs/common';
+import { TopicRepository } from "../repository/topic.repository";
 
-class TopicService {
+@Injectable()
+export class TopicService {
   private readonly topicListCacheTtlSeconds = 60 * 5;
+
+  constructor(private readonly topicRepository: TopicRepository) { }
 
   private normalizeTopicName(name: string): string {
     return name.trim().replace(/\s+/g, " ").toLowerCase();
@@ -11,7 +15,7 @@ class TopicService {
 
   async searchByName(query: string) {
     const normalizedName = this.normalizeTopicName(query);
-    const results = await topicRepository.searchTopic({
+    const results = await this.topicRepository.searchTopic({
       q: normalizedName,
     });
 
@@ -19,16 +23,15 @@ class TopicService {
   }
 
   async listNames(topicNames: string[]) {
-    const topics = await topicRepository.listNames(topicNames);
+    const topics = await this.topicRepository.listNames(topicNames);
     return topics;
   }
 
   async createOrIncrement(name: string) {
     const normalizedName = this.normalizeTopicName(name);
-    const topic = await topicRepository.upsertByName(normalizedName);
+    const topic = await this.topicRepository.upsertByName(normalizedName);
     await redisService.del(redisKey.topic.listNames());
     return topic;
   }
 }
 
-export const topicService = new TopicService();

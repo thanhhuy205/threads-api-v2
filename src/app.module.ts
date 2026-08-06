@@ -6,6 +6,10 @@ import { AuthModule } from './modules/auth/auth.module';
 import { AiModule } from './modules/ai/ai.module';
 import { HealthModule } from './modules/health/health.module';
 import { UserModule } from './modules/user/user.module';
+import { PollModule } from './modules/poll/poll.module';
+import { SearchModule } from './modules/search/search.module';
+import { TopicModule } from './modules/topic/topic.module';
+import { NotificationGroupModule } from './modules/notification-group/notification-group.module';
 
 @Module({
   imports: [
@@ -19,6 +23,10 @@ import { UserModule } from './modules/user/user.module';
     HealthModule,
     AiModule,
     UserModule,
+    PollModule,
+    TopicModule,
+    SearchModule,
+    NotificationGroupModule,
   ],
 })
 export class AppModule {}

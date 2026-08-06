@@ -5,8 +5,8 @@ import type {
   PendingCommentNotificationRedisMeta,
 } from "@/modules/notification-group/interface/notification.types";
 import type { NotificationType } from "@/modules/notification-group/model/notification.model";
-import { notificationRepository } from "@/modules/notification-group/repository/notification.repository";
 import { pusherChannel } from "@/modules/pusher/channel/pusher-channel";
+import { collections } from "@/providers/mongodb.provider";
 import { pusher } from "@/providers/pusher.provider";
 import { redisService } from "@/providers/redis.provider";
 import { NOTIFICATION_JOB_KEY, NOTIFICATION_JOB_NAME, QUEUE_NAME } from "../src/constants/queue";
@@ -165,8 +165,9 @@ class NotificationWorker {
       await redisService.del([redisKey, `${redisKey}:actors`]);
       await redisService.zRem(NOTIFICATION_JOB_KEY.BATCH_SYNC_NOTIFICATION, redisKey);
     }
-    await notificationRepository.createMany(
-      notificationSave.map((item) => ({
+    if (notificationSave.length) {
+      await collections('notifications').insertMany(
+        notificationSave.map((item) => ({
         recipientId: item.recipientId,
         type: item.meta.type as NotificationType,
         targetType: item.meta.targetType,
@@ -176,8 +177,11 @@ class NotificationWorker {
         lastActorId: item.meta.lastActorId,
         lastEventAt: new Date(),
         count: Number(item.meta.count ?? 0),
-      })),
-    );  }
+        })),
+        { ordered: false },
+      );
+    }
+  }
 
   async sendPushNotification(recipientId: string, payload: PushNotificationPayload) {    await pusher.trigger(pusherChannel.privateNotification(recipientId), "new-notifications", {
       recipientId,

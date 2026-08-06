@@ -1,10 +1,11 @@
 import { QUEUE_NAME, SURVEY_SYNC_JOB_NAME } from "../src/constants/queue";
 import { redisKey } from "../src/constants/resolve-key/redis-key";
 import { baseLogger } from "../src/middlewares/logger";
+import prisma from "../src/config/prisma";
 import type { PollVoteCountUpdate } from "../src/modules/poll/repository/poll.repository";
-import { pollService } from "../src/modules/poll/service/poll.service";
 import { createWorker } from "../src/providers/bullmq.provider";
 import { redisService } from "../src/providers/redis.provider";
+import { Prisma } from '@prisma/client';
 
 class SurveySyncWorker {
   private readonly worker = createWorker(
@@ -49,7 +50,18 @@ class SurveySyncWorker {
         updates.push({ pollId: Number(pollId), voteCount });
       });
 
-      await pollService.syncVoteCounts(updates);
+      if (updates.length) {
+        const ids = updates.map((update) => update.pollId);
+        const cases = Prisma.join(
+          updates.map((update) => Prisma.sql`WHEN ${update.pollId} THEN ${update.voteCount}`),
+          ' ',
+        );
+        await prisma.$executeRaw`
+          UPDATE polls
+          SET vote_count = CASE id ${cases} END
+          WHERE id IN (${Prisma.join(ids)})
+        `;
+      }
       await redisService.sRem(dirtyKey, pollIds);
 
       baseLogger.info(

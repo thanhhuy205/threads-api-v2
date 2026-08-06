@@ -1,13 +1,17 @@
-import prisma from "@/config/prisma";
+import { PrismaService } from '@/shared/database/prisma.service';
+import { Injectable } from '@nestjs/common';
 
 export type TopicRecord = {
   name: string;
   count: number;
 };
 
-class TopicRepository implements ICursorPagination<{ q: string }, TopicRecord> {
+@Injectable()
+export class TopicRepository implements ICursorPagination<{ q: string }, TopicRecord> {
+  constructor(private readonly prisma: PrismaService) {}
+
   findAll({ after, take, where }: { after?: string; take?: number; where?: { q: string; } | undefined; }): Promise<TopicRecord[]> {
-    return prisma.topic.findMany({
+    return this.prisma.topic.findMany({
       where: {
         name: {
           contains: where?.q,
@@ -37,7 +41,7 @@ class TopicRepository implements ICursorPagination<{ q: string }, TopicRecord> {
   }
 
   async listNames(topicNames: string[]): Promise<{ name: string; }[]> {
-    return await prisma.topic.findMany({
+    return await this.prisma.topic.findMany({
       where: {
         name: {
           in: topicNames
@@ -53,7 +57,7 @@ class TopicRepository implements ICursorPagination<{ q: string }, TopicRecord> {
   }
 
   async upsertByName(name: string): Promise<TopicRecord> {
-    const topic = await prisma.topic.upsert({
+    const topic = await this.prisma.topic.upsert({
       where: {
         name,
       },
@@ -77,7 +81,7 @@ class TopicRepository implements ICursorPagination<{ q: string }, TopicRecord> {
     };
   }
   searchTopic({ q }: { q: string; }): Promise<TopicRecord[]> {
-    return prisma.$queryRaw<TopicRecord[]>`
+    return this.prisma.$queryRaw<TopicRecord[]>`
       SELECT name, count
       FROM topics
       WHERE MATCH(name) AGAINST (${q} IN BOOLEAN MODE)
@@ -87,4 +91,3 @@ class TopicRepository implements ICursorPagination<{ q: string }, TopicRecord> {
   }
 }
 
-export const topicRepository = new TopicRepository();

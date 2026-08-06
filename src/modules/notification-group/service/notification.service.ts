@@ -1,4 +1,5 @@
 import { baseLogger } from "@/middlewares/logger";
+import { registerNotificationHandlers } from '@/modules/notification-group/events/notification.dispatcher';
 import { MentionNotification, ReplyNotification } from "@/modules/notification-group/events/notification.events";
 import type {
   CreateNotificationGroupInput,
@@ -8,26 +9,41 @@ import type {
   PendingCommentNotificationRedisKey,
   PendingCommentNotificationRedisPayload,
 } from "@/modules/notification-group/interface/notification.types";
-import { notificationRepository } from "@/modules/notification-group/repository/notification.repository";
+import { NotificationRepository } from "@/modules/notification-group/repository/notification.repository";
 import { pusherService } from "@/modules/pusher/service/pusher.service";
+import { FriendService } from '@/modules/user/service/friend.service';
 import { userService } from "@/modules/user/service/user.service";
 import { redisService } from "@/providers/redis.provider";
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import {
   buildCursorPagination,
   type PaginationResponse,
 } from "@/shared/pagination/cursor-pagination";
 
 type NotificationGroupListRow = Awaited<
-  ReturnType<typeof notificationRepository.findByRecipientId>
+  ReturnType<NotificationRepository['findByRecipientId']>
 >[number];
 
 type NotificationTargetPost = Awaited<
-  ReturnType<typeof notificationRepository.findPostTargetsByPublicIds>
+  ReturnType<NotificationRepository['findPostTargetsByPublicIds']>
 >[number];
 
-class NotificationService {
+@Injectable()
+export class NotificationService implements OnModuleInit {
+  constructor(
+    private readonly notificationRepository: NotificationRepository,
+    private readonly friendService: FriendService,
+  ) {}
+
+  onModuleInit() {
+    registerNotificationHandlers({
+      handleReply: (payload) => this.handleNewComment(payload),
+      handleMention: (payload) => this.handleMention(payload),
+    });
+  }
+
   create(data: CreateNotificationGroupInput) {
-    return notificationRepository.create(
+    return this.notificationRepository.create(
       {
         recipientId: data.recipientId,
         type: data.type,
@@ -50,7 +66,7 @@ class NotificationService {
     rows: Array<NotificationGroupListRow & { targetPost: NotificationTargetPost | null }>;
     pagination: PaginationResponse<string | number | null>;
   }> {
-    const notifications = await notificationRepository.findByRecipientId({
+    const notifications = await this.notificationRepository.findByRecipientId({
       recipientId,
       after,
       take,
@@ -66,7 +82,7 @@ class NotificationService {
 
     const posts =
       postTargetIds.length > 0
-        ? await notificationRepository.findPostTargetsByPublicIds(postTargetIds)
+        ? await this.notificationRepository.findPostTargetsByPublicIds(postTargetIds)
         : [];
     const postMap = new Map(posts.map((post) => [post.publicId, post]));
 
@@ -84,10 +100,14 @@ class NotificationService {
   }
 
   async hasUnread(recipientId: string) {
-    const unread = await notificationRepository.findUnreadByRecipientId(
+    const unread = await this.notificationRepository.findUnreadByRecipientId(
       recipientId,
     );
     return Boolean(unread);
+  }
+
+  countReceivedFriendRequests(userId: string) {
+    return this.friendService.countReceivedFriendRequests(userId);
   }
 
   private resolveGroupKey({
@@ -212,7 +232,7 @@ class NotificationService {
       return;
     }
     await Promise.all([
-      notificationRepository.create({
+      this.notificationRepository.create({
         recipientId,
         type: "LIKE",
         targetType: "POST",
@@ -227,8 +247,7 @@ class NotificationService {
   }
 
   async markGroupAsRead(userId: string) {
-    await notificationRepository.markGroupAsRead(userId);
+    await this.notificationRepository.markGroupAsRead(userId);
   }
 }
-export const notificationService = new NotificationService();
 import { NOTIFICATION_JOB_KEY } from "@/constants/queue";
