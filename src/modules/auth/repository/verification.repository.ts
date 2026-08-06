@@ -1,5 +1,6 @@
 import configService from '@/config/config';
-import prisma from '@/config/prisma';
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '@/shared/database/prisma.service';
 import type { Prisma, VerificationCodeType } from '@prisma/client';
 import ms, { StringValue } from 'ms';
 
@@ -11,9 +12,12 @@ type CreateVerificationCodePayload = {
 
 export type VerificationCodeRecord = Prisma.VerificationCodeGetPayload<Record<string, never>>;
 
-class VerificationRepository {
+@Injectable()
+export class VerificationRepository {
+    constructor(private readonly prisma: PrismaService) {}
+
     async create(payload: CreateVerificationCodePayload): Promise<VerificationCodeRecord> {
-        const verificationCode = await prisma.verificationCode.create({
+        const verificationCode = await this.prisma.verificationCode.create({
             data: {
                 userId: payload.userId,
                 type: payload.type,
@@ -26,7 +30,7 @@ class VerificationRepository {
     }
 
     async findByUserId(userId: string): Promise<VerificationCodeRecord[]> {
-        return prisma.verificationCode.findMany({
+        return this.prisma.verificationCode.findMany({
             where: {
                 userId,
             },
@@ -37,13 +41,13 @@ class VerificationRepository {
     }
 
     async findByTokenHash(tokenHash: string): Promise<VerificationCodeRecord | null> {
-        return prisma.verificationCode.findUnique({
+        return this.prisma.verificationCode.findUnique({
             where: { tokenHash } as Prisma.VerificationCodeWhereUniqueInput,
         });
     }
 
     async findByTokenHashAndType(tokenHash: string, type: VerificationCodeType): Promise<VerificationCodeRecord | null> {
-        return prisma.verificationCode.findFirst({
+        return this.prisma.verificationCode.findFirst({
             where: {
                 tokenHash,
                 type,
@@ -52,7 +56,7 @@ class VerificationRepository {
     }
 
     async findLatestByUserIdAndType(userId: string, type: VerificationCodeType): Promise<VerificationCodeRecord[] | null> {
-        return prisma.verificationCode.findMany({
+        return this.prisma.verificationCode.findMany({
             where: {
                 userId,
                 type,
@@ -63,5 +67,3 @@ class VerificationRepository {
         });
     }
 }
-
-export const verificationRepository = new VerificationRepository();

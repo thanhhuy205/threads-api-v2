@@ -10,6 +10,13 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiHeader,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import type { Request } from 'express';
 import configService from '@/config/config';
 import { Message } from '@/common/decorators/message.decorator';
@@ -30,6 +37,7 @@ import { ValidateTokenDto } from '../dto/request/validate-token.request.dto';
 import { ValidateUsernameDto } from '../dto/request/validate-username.request.dto';
 import { AuthService } from '../service/auth.service';
 
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
@@ -37,6 +45,8 @@ export class AuthController {
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
   @Message(AUTH_MESSAGE.REGISTER_SUCCESS)
+  @ApiOperation({ summary: 'Register a new account' })
+  @ApiResponse({ status: HttpStatus.CREATED, description: AUTH_MESSAGE.REGISTER_SUCCESS })
   register(@Body() payload: RegisterDto, @Req() request: Request) {
     return this.authService.register(payload, this.sessionMetadata(request));
   }
@@ -44,6 +54,9 @@ export class AuthController {
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @Message(AUTH_MESSAGE.LOGIN_SUCCESS)
+  @ApiOperation({ summary: 'Log in' })
+  @ApiResponse({ status: HttpStatus.OK, description: AUTH_MESSAGE.LOGIN_SUCCESS })
+  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: AUTH_MESSAGE.INVALID_CREDENTIALS })
   async login(@Body() payload: LoginDto, @Req() request: Request) {
     const user = await this.authService.login(payload, this.sessionMetadata(request));
     if (!user) {
@@ -55,6 +68,8 @@ export class AuthController {
   @Post('forgot-password')
   @HttpCode(HttpStatus.OK)
   @Message(AUTH_MESSAGE.FORGOT_PASSWORD_SUCCESS)
+  @ApiOperation({ summary: 'Request a password reset email' })
+  @ApiResponse({ status: HttpStatus.OK, description: AUTH_MESSAGE.FORGOT_PASSWORD_SUCCESS })
   forgotPassword(@Body() payload: ForgotPasswordDto) {
     return this.authService.forgotPassword(payload);
   }
@@ -63,6 +78,9 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(AccessTokenGuard)
   @Message(AUTH_MESSAGE.UPDATE_USER_SUCCESS)
+  @ApiBearerAuth('bearer')
+  @ApiOperation({ summary: 'Update the authenticated user profile' })
+  @ApiResponse({ status: HttpStatus.OK, description: AUTH_MESSAGE.UPDATE_USER_SUCCESS })
   updateProfile(@Body() payload: UpdateProfileDto, @Req() request: Request) {
     return this.authService.updateProfile(this.userId(request), payload);
   }
@@ -71,6 +89,10 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(RefreshTokenHeaderGuard)
   @Message(AUTH_MESSAGE.REFRESH_TOKEN_SUCCESS)
+  @ApiHeader({ name: 'x-refresh-token', required: true, description: 'Valid refresh token' })
+  @ApiOperation({ summary: 'Refresh an access token' })
+  @ApiResponse({ status: HttpStatus.OK, description: AUTH_MESSAGE.REFRESH_TOKEN_SUCCESS })
+  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: AUTH_MESSAGE.TOKEN_INVALID })
   async refreshToken(
     @Headers('x-refresh-token') refreshToken: string,
     @Req() request: Request,
@@ -88,6 +110,9 @@ export class AuthController {
   @Get('me')
   @UseGuards(AccessTokenGuard)
   @Message(AUTH_MESSAGE.GET_ME_SUCCESS)
+  @ApiBearerAuth('bearer')
+  @ApiOperation({ summary: 'Get the authenticated user' })
+  @ApiResponse({ status: HttpStatus.OK, description: AUTH_MESSAGE.GET_ME_SUCCESS })
   async me(@Req() request: Request) {
     const user = await this.authService.me(this.userId(request));
     if (!user) {
@@ -100,6 +125,10 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(AccessTokenGuard, RefreshTokenHeaderGuard)
   @Message(AUTH_MESSAGE.LOGOUT_SUCCESS)
+  @ApiBearerAuth('bearer')
+  @ApiHeader({ name: 'x-refresh-token', required: true, description: 'Refresh token to revoke' })
+  @ApiOperation({ summary: 'Log out and revoke the refresh token' })
+  @ApiResponse({ status: HttpStatus.OK, description: AUTH_MESSAGE.LOGOUT_SUCCESS })
   async logout(
     @Headers('x-refresh-token') refreshToken: string,
     @Req() request: Request,
@@ -112,6 +141,10 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(AccessTokenGuard)
   @Message(AUTH_MESSAGE.RESEND_VERIFY_EMAIL_SUCCESS)
+  @ApiBearerAuth('bearer')
+  @ApiHeader({ name: 'x-origin-url', required: false, description: 'Frontend URL used in the verification email' })
+  @ApiOperation({ summary: 'Resend verification email' })
+  @ApiResponse({ status: HttpStatus.OK, description: AUTH_MESSAGE.RESEND_VERIFY_EMAIL_SUCCESS })
   async resendVerifyEmail(
     @Headers('x-origin-url') originUrl: string | undefined,
     @Req() request: Request,
@@ -126,6 +159,8 @@ export class AuthController {
   @Post('verify-email')
   @HttpCode(HttpStatus.OK)
   @Message(AUTH_MESSAGE.VERIFY_EMAIL_SUCCESS)
+  @ApiOperation({ summary: 'Verify an email address' })
+  @ApiResponse({ status: HttpStatus.OK, description: AUTH_MESSAGE.VERIFY_EMAIL_SUCCESS })
   async verifyEmail(@Body() payload: ValidateTokenDto) {
     await this.authService.verifyEmail(payload);
     return null;
@@ -134,6 +169,8 @@ export class AuthController {
   @Post('validate/email')
   @HttpCode(HttpStatus.OK)
   @Message(AUTH_MESSAGE.VALIDATE_EMAIL_SUCCESS)
+  @ApiOperation({ summary: 'Check email availability' })
+  @ApiResponse({ status: HttpStatus.OK, description: AUTH_MESSAGE.VALIDATE_EMAIL_SUCCESS })
   validateEmail(@Body() payload: ValidateEmailDto) {
     return this.authService.validateEmail(payload);
   }
@@ -141,12 +178,16 @@ export class AuthController {
   @Post('validate/username')
   @HttpCode(HttpStatus.OK)
   @Message(AUTH_MESSAGE.VALIDATE_USERNAME_SUCCESS)
+  @ApiOperation({ summary: 'Check username availability' })
+  @ApiResponse({ status: HttpStatus.OK, description: AUTH_MESSAGE.VALIDATE_USERNAME_SUCCESS })
   validateUsername(@Body() payload: ValidateUsernameDto) {
     return this.authService.validateUsername(payload);
   }
 
   @Get('reset-password/validate')
   @Message(AUTH_MESSAGE.VALIDATE_RESET_PASSWORD_TOKEN_SUCCESS)
+  @ApiOperation({ summary: 'Validate a password reset token' })
+  @ApiResponse({ status: HttpStatus.OK, description: AUTH_MESSAGE.VALIDATE_RESET_PASSWORD_TOKEN_SUCCESS })
   validateResetPasswordToken(@Query() query: ValidateTokenDto) {
     return this.authService.validateResetPasswordToken(query.token);
   }
@@ -154,6 +195,8 @@ export class AuthController {
   @Post('reset-password')
   @HttpCode(HttpStatus.OK)
   @Message(AUTH_MESSAGE.RESET_PASSWORD_SUCCESS)
+  @ApiOperation({ summary: 'Reset a password' })
+  @ApiResponse({ status: HttpStatus.OK, description: AUTH_MESSAGE.RESET_PASSWORD_SUCCESS })
   async resetPassword(@Body() payload: ResetPasswordDto) {
     await this.authService.resetPassword(payload);
     return null;

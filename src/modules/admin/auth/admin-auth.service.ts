@@ -1,8 +1,8 @@
 import configService from "@/config/config";
+import prisma from "@/config/prisma";
 import type { LoginDto } from "@/modules/auth/dto/request/login.request.dto";
 import { authResponse, type AuthSessionResponseDto } from "@/modules/auth/dto/response/auth.response";
 import type { SessionMetadata } from "@/modules/auth/interfaces/session-metadata";
-import { authRepository } from "@/modules/auth/repository/auth.repository";
 import { comparePassword } from "@/modules/auth/util/hasher-password";
 import { hasherToken } from "@/modules/auth/util/hasher-token";
 import { jwtService } from "@/modules/jwt/service/jwt.service";
@@ -38,15 +38,17 @@ class AdminAuthService {
       roles,
     });
 
-    await authRepository.createRefreshToken({
-      userId: user.id,
-      token: hasherToken(tokenPair.refreshToken),
-      sessionId: tokenPair.sessionId,
-      expireAt: new Date(
-        Date.now() + ms(configService.JWT_CONFIG.REFRESH_TOKEN_EXPIRES_IN as StringValue),
-      ),
-      ip: metadata.ip,
-      userAgent: metadata.userAgent,
+    await prisma.refreshToken.create({
+      data: {
+        userId: user.id,
+        token: hasherToken(tokenPair.refreshToken),
+        sessionId: tokenPair.sessionId,
+        expireAt: new Date(
+          Date.now() + ms(configService.JWT_CONFIG.REFRESH_TOKEN_EXPIRES_IN as StringValue),
+        ),
+        ip: metadata.ip,
+        userAgent: metadata.userAgent,
+      },
     });
 
     return authResponse.toResponse({

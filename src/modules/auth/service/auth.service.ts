@@ -5,7 +5,7 @@ import { baseLogger } from "@/middlewares/logger";
 import { roleRepository } from "@/modules/access-control/role/repository/role.repository";
 import { userRoleRepository } from "@/modules/access-control/role/repository/user-role.repository";
 import type { SessionMetadata } from "@/modules/auth/interfaces/session-metadata";
-import { verificationRepository } from "@/modules/auth/repository/verification.repository";
+import { VerificationRepository } from "@/modules/auth/repository/verification.repository";
 import {
   comparePassword,
   hashPassword,
@@ -40,16 +40,21 @@ import type { ForgotPasswordResponseDto } from "../dto/response/forgot-password.
 import type { UpdateProfileDataDto } from "../dto/response/update-profile.response.dto";
 import type { ValidateTokenResponseDto } from "../dto/response/validate-token.response.dto";
 import type { ValidateUserResponseDto } from "../dto/response/validate-user.response.dto";
-import { authRepository } from "../repository/auth.repository";
+import { AuthRepository } from "../repository/auth.repository";
 
 @Injectable()
 export class AuthService {
+  constructor(
+    private readonly authRepository: AuthRepository,
+    private readonly verificationRepository: VerificationRepository,
+  ) {}
+
   async register(
     payload: RegisterDto,
     metadata: SessionMetadata,
   ): Promise<AuthSessionResponseDto> {
     const password = hashPassword(payload.password);
-    const user = await authRepository.createUser({ ...payload, password });
+    const user = await this.authRepository.createUser({ ...payload, password });
 
     const role = await roleRepository.findByName(UserRoleType.USER);
     if (role) {
@@ -85,7 +90,7 @@ export class AuthService {
   async forgotPassword(
     payload: ForgotPasswordDto,
   ): Promise<ForgotPasswordResponseDto> {
-    const user = await authRepository.findUserByEmail(payload.email);
+    const user = await this.authRepository.findUserByEmail(payload.email);
     if (!user) {
       throw new NotFoundException("Email or username not found");
     }
@@ -100,7 +105,7 @@ export class AuthService {
         token,
       }),
 
-      verificationRepository.create({
+      this.verificationRepository.create({
         userId: user.id,
         tokenHash: hashedToken,
         type: VerificationCodeType.FORGOT_PASSWORD,
@@ -124,7 +129,7 @@ export class AuthService {
     payload: LoginDto,
     metadata: SessionMetadata,
   ): Promise<AuthSessionResponseDto | null> {
-    const user = await authRepository.findUserByLogin(payload.login);
+    const user = await this.authRepository.findUserByLogin(payload.login);
 
     const isPasswordValid =
       user && user.password
@@ -162,7 +167,7 @@ export class AuthService {
     if (!user) {
       throw new NotFoundException("User not found");
     }
-    const verificationRecord = await verificationRepository.findLatestByUserIdAndType(
+    const verificationRecord = await this.verificationRepository.findLatestByUserIdAndType(
       user.id,
       VerificationCodeType.VERIFY_ACCOUNT,
     );
@@ -187,7 +192,7 @@ export class AuthService {
         token,
         originUrl
       }),
-      verificationRepository.create({
+      this.verificationRepository.create({
         userId: user.id,
         tokenHash: hashedToken,
         type: VerificationCodeType.VERIFY_ACCOUNT,
@@ -198,7 +203,7 @@ export class AuthService {
   async verifyEmail(payload: ValidateTokenDto): Promise<void> {
     const hashedToken = hasherToken(payload.token);
     const verificationRecord =
-      await verificationRepository.findByTokenHashAndType(
+      await this.verificationRepository.findByTokenHashAndType(
         hashedToken,
         VerificationCodeType.VERIFY_ACCOUNT,
       );
@@ -210,7 +215,7 @@ export class AuthService {
       throw new NotFoundException("Mã xac thực đã hết hạn");
     }
 
-    await authRepository.updateVerifiedEmail(verificationRecord.userId);
+    await this.authRepository.updateVerifiedEmail(verificationRecord.userId);
     await redisService.del(redisKey.auth.me(verificationRecord.userId));
   }
 
@@ -256,7 +261,7 @@ export class AuthService {
   async resetPassword(payload: ResetPasswordDto): Promise<void> {
     const hashedToken = hasherToken(payload.token);
     const verificationRecord =
-      await verificationRepository.findByTokenHashAndType(
+      await this.verificationRepository.findByTokenHashAndType(
         hashedToken,
         VerificationCodeType.FORGOT_PASSWORD,
       );
@@ -268,7 +273,7 @@ export class AuthService {
       throw new NotFoundException("Token expired");
     }
 
-    const user = await authRepository.findUserByEmail(payload.email);
+    const user = await this.authRepository.findUserByEmail(payload.email);
     if (!user) {
       throw new NotFoundException("User not found");
     }
@@ -278,7 +283,7 @@ export class AuthService {
     }
 
     const newPassword = hashPassword(payload.password);
-    await authRepository.updatePassword(user.id, newPassword);
+    await this.authRepository.updatePassword(user.id, newPassword);
   }
 
   async refreshToken(
@@ -287,7 +292,7 @@ export class AuthService {
   ): Promise<TokenPairResponse | null> {
     const hashedToken = hasherToken(payload.refreshToken);
     const refreshToken =
-      await authRepository.findRefreshTokenByToken(hashedToken);
+      await this.authRepository.findRefreshTokenByToken(hashedToken);
 
     baseLogger.info(`Attempting to refresh token with provided refresh token. Found refresh token record: ${JSON.stringify(refreshToken)}`);
     if (!refreshToken || refreshToken.revokedAt) {
@@ -296,7 +301,7 @@ export class AuthService {
 
     const now = new Date();
     if (refreshToken.expireAt < now) {
-      await authRepository.revokeRefreshTokenById(refreshToken.id, now);
+      await this.authRepository.revokeRefreshTokenById(refreshToken.id, now);
       baseLogger.info(`Refresh token with id ${refreshToken.id} has expired and been revoked.`);
       return null;
     }
@@ -307,7 +312,7 @@ export class AuthService {
       return null;
     }
 
-    await authRepository.revokeRefreshTokenById(refreshToken.id, now);
+    await this.authRepository.revokeRefreshTokenById(refreshToken.id, now);
 
     const userRoles = await userRoleRepository.findByUserId(user.id);
     const roles = userRoles.map((ur) => ur.role.name as UserRoleType);
@@ -368,9 +373,9 @@ export class AuthService {
 
     const hashedToken = hasherToken(payload.refreshToken);
     const refreshToken =
-      await authRepository.findRefreshTokenByToken(hashedToken);
+      await this.authRepository.findRefreshTokenByToken(hashedToken);
     if (refreshToken) {
-      await authRepository.revokeRefreshTokenById(refreshToken.id, new Date());
+      await this.authRepository.revokeRefreshTokenById(refreshToken.id, new Date());
     }
   }
 
@@ -380,7 +385,7 @@ export class AuthService {
     sessionId: string,
     metadata: SessionMetadata,
   ) {
-    const createdRefreshToken = await authRepository.createRefreshToken({
+    const createdRefreshToken = await this.authRepository.createRefreshToken({
       userId: userId,
       token: hasherToken(refreshToken),
       sessionId: sessionId,
@@ -394,5 +399,3 @@ export class AuthService {
     return createdRefreshToken;
   }
 }
-
-export const authService = new AuthService();

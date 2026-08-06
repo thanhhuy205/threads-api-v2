@@ -1,9 +1,4 @@
 import {
-    authSwaggerPaths,
-    authSwaggerSchemas,
-} from '../modules/auth/docs/auth.swagger';
-
-import {
     healthSwaggerPaths,
     healthSwaggerSchemas,
 } from '../modules/health/docs/health.swagger';
@@ -77,10 +72,6 @@ export const swaggerDocument = {
             description: 'Health check APIs',
         },
         {
-            name: 'Auth',
-            description: 'Authentication APIs',
-        },
-        {
             name: 'Post',
             description: 'Post APIs',
         },
@@ -124,7 +115,6 @@ export const swaggerDocument = {
 
     paths: {
         ...healthSwaggerPaths,
-        ...authSwaggerPaths,
         ...postSwaggerPaths,
         ...userSwaggerPaths,
         ...uploadSwaggerPaths,
@@ -139,7 +129,6 @@ export const swaggerDocument = {
     components: {
         schemas: {
             ...healthSwaggerSchemas,
-            ...authSwaggerSchemas,
             ...postSwaggerSchemas,
             ...userSwaggerSchemas,
             ...uploadSwaggerSchemas,

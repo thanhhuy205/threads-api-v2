@@ -5,6 +5,7 @@ import { AppModule } from '@/app.module';
 import { BadRequestException, ValidationPipe, type ValidationError } from '@nestjs/common';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { ExpressAdapter } from '@nestjs/platform-express';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { likeProducer } from '@/modules/job/like-job/producer/like.producer';
 import { notificationProducer } from '@/modules/job/notification-job/producer/notification.producer';
 import { surveySyncProducer } from '@/modules/job/survey-sync/producer/survey-sync.producer';
@@ -40,6 +41,14 @@ const createHttpApplication = async () => {
     }));
 
     nestApp.setGlobalPrefix(configService.GLOBAL_PREFIX);
+    const swaggerConfig = new DocumentBuilder()
+        .setTitle('Threads API')
+        .setDescription('Authentication API documentation')
+        .setVersion('1.0.0')
+        .addBearerAuth(undefined, 'bearer')
+        .build();
+    const swaggerDocument = SwaggerModule.createDocument(nestApp, swaggerConfig);
+    SwaggerModule.setup('docs', nestApp, swaggerDocument);
     nestApp.useGlobalPipes(new ValidationPipe({
         transform: true,
         whitelist: true,

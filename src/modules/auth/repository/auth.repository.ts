@@ -1,4 +1,5 @@
-import prisma from "@/config/prisma";
+import { Injectable } from "@nestjs/common";
+import { PrismaService } from "@/shared/database/prisma.service";
 import type { Prisma } from "@prisma/client";
 import type { RegisterDto } from "../dto/request/register.request.dto";
 
@@ -42,9 +43,12 @@ type CreateRefreshTokenPayload = {
   userAgent: string;
 };
 
-class AuthRepository {
+@Injectable()
+export class AuthRepository {
+  constructor(private readonly prisma: PrismaService) {}
+
   async createUser(payload: RegisterDto): Promise<AuthSessionUser> {
-    const user = await prisma.user.create({
+    const user = await this.prisma.user.create({
       data: {
         email: payload.email.trim(),
         username: payload.username.trim(),
@@ -58,7 +62,7 @@ class AuthRepository {
   }
 
   async findUserByLogin(login: string): Promise<AuthSessionUser | null> {
-    const user = await prisma.user.findFirst({
+    const user = await this.prisma.user.findFirst({
       where: {
         OR: [{ email: login }, { username: login }],
       },
@@ -69,7 +73,7 @@ class AuthRepository {
   }
 
   async createRefreshToken(payload: CreateRefreshTokenPayload): Promise<void> {
-    await prisma.refreshToken.create({
+    await this.prisma.refreshToken.create({
       data: {
         userId: payload.userId,
         token: payload.token,
@@ -84,7 +88,7 @@ class AuthRepository {
   async findRefreshTokenByToken(
     token: string,
   ): Promise<RefreshTokenRecord | null> {
-    return prisma.refreshToken.findUnique({
+    return this.prisma.refreshToken.findUnique({
       where: {
         token,
       },
@@ -93,7 +97,7 @@ class AuthRepository {
   }
 
   async revokeRefreshTokenById(id: number, revokedAt: Date): Promise<void> {
-    await prisma.refreshToken.update({
+    await this.prisma.refreshToken.update({
       where: {
         id,
       },
@@ -103,7 +107,7 @@ class AuthRepository {
     });
   }
   async findUserByEmail(email: string): Promise<AuthSessionUser | null> {
-    const user = await prisma.user.findUnique({
+    const user = await this.prisma.user.findUnique({
       where: {
         email,
       },
@@ -114,7 +118,7 @@ class AuthRepository {
   }
 
   async updatePassword(userId: string, newPassword: string): Promise<void> {
-    await prisma.user.update({
+    await this.prisma.user.update({
       where: {
         id: userId,
       },
@@ -125,7 +129,7 @@ class AuthRepository {
   }
 
   async updateVerifiedEmail(userId: string): Promise<void> {
-    await prisma.user.update({
+    await this.prisma.user.update({
       where: {
         id: userId,
       },
@@ -135,5 +139,3 @@ class AuthRepository {
     });
   }
 }
-
-export const authRepository = new AuthRepository();
