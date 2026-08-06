@@ -1,12 +1,16 @@
-import prisma from "@/config/prisma";
 import { baseLogger } from "@/middlewares/logger";
+import { PrismaService } from '@/shared/database/prisma.service';
 import { buildPagination } from "@/shared/pagination/cursor-pagination";
+import { Injectable } from '@nestjs/common';
 import { FriendRequest, FriendRequestStatus, Prisma } from "@prisma/client";
 
-class FriendRequestRepository implements ICursorPagination<
+@Injectable()
+export class FriendRequestRepository implements ICursorPagination<
   Prisma.FriendRequestWhereInput,
   unknown
 > {
+  constructor(private readonly prisma: PrismaService = prisma as PrismaService) { }
+
   findAll({
     after,
     take,
@@ -22,7 +26,7 @@ class FriendRequestRepository implements ICursorPagination<
   }): Promise<FriendRequest[]> {
     const { currentAfter, currentLimit } = buildPagination({ after, take });
 
-    return prisma.friendRequest.findMany({
+    return this.prisma.friendRequest.findMany({
       where,
       take: currentLimit + 1,
       skip: currentAfter ? 1 : 0,
@@ -110,7 +114,7 @@ class FriendRequestRepository implements ICursorPagination<
   }
 
   countReceivedPending(receiverId: string) {
-    return prisma.friendRequest.count({
+    return this.prisma.friendRequest.count({
       where: {
         receiverId,
         status: FriendRequestStatus.PENDING,
@@ -121,9 +125,9 @@ class FriendRequestRepository implements ICursorPagination<
   async upsert(
     senderId: string,
     receiverId: string,
-    tx: Prisma.TransactionClient = prisma,
+    tx?: Prisma.TransactionClient,
   ) {
-    return tx.friendRequest.upsert({
+    return (tx ?? this.prisma).friendRequest.upsert({
       where: {
         senderId_receiverId: {
           senderId,
@@ -143,11 +147,11 @@ class FriendRequestRepository implements ICursorPagination<
 
   async findBySenderAndReceiver(
     { senderId, receiverId }: { senderId: string; receiverId: string },
-    tx: Prisma.TransactionClient = prisma,
+    tx?: Prisma.TransactionClient,
   ) {
     baseLogger.info(`UserId ${receiverId}`);
     baseLogger.info(`SenderId ${senderId}`);
-    return tx.friendRequest.findUnique({
+    return (tx ?? this.prisma).friendRequest.findUnique({
       where: {
         senderId_receiverId: {
           senderId,
@@ -157,8 +161,8 @@ class FriendRequestRepository implements ICursorPagination<
     });
   }
 
-  async findById(id: number, tx: Prisma.TransactionClient = prisma) {
-    return tx.friendRequest.findUnique({
+  async findById(id: number, tx?: Prisma.TransactionClient) {
+    return (tx ?? this.prisma).friendRequest.findUnique({
       where: { id },
     });
   }
@@ -166,9 +170,9 @@ class FriendRequestRepository implements ICursorPagination<
   async updateStatusById(
     id: number,
     status: FriendRequestStatus,
-    tx: Prisma.TransactionClient = prisma,
+    tx?: Prisma.TransactionClient,
   ) {
-    return tx.friendRequest.update({
+    return (tx ?? this.prisma).friendRequest.update({
       where: { id },
       data: { status },
     });

@@ -1,17 +1,24 @@
 import { redisKey } from "@/constants/resolve-key/redis-key";
 import { postSearchService } from "@/modules/post/service/post-search.service";
-import { userRepository } from "@/modules/user/repository/user.repository";
+import { UserRepository, userRepository as legacyUserRepository } from "@/modules/user/repository/user.repository";
 import { redisService } from "@/providers/redis.provider";
+import { Injectable } from '@nestjs/common';
 import { Prisma } from "@prisma/client";
 import type { UpdateProfileDto } from "../dto/request/update-profile.request.dto";
 import { mapUserProfileForFE } from "../mapper/user.mapper";
-import { followRepository } from "../repository/follow.repository";
+import { FollowRepository, followRepository as legacyFollowRepository } from "../repository/follow.repository";
 
 type GetNetworkUsernamesInput = {
   query: string;
 };
 
-class UserService {
+@Injectable()
+export class UserService {
+  constructor(
+    private readonly userRepository: UserRepository = legacyUserRepository,
+    private readonly followRepository: FollowRepository = legacyFollowRepository,
+  ) { }
+
   async updateProfile(userId: string, payload: UpdateProfileDto) {
     const data: Prisma.UserUpdateInput = {};
 
@@ -31,7 +38,7 @@ class UserService {
       data.website = payload.website;
     }
 
-    const user = await userRepository.updateProfile(userId, data);
+    const user = await this.userRepository.updateProfile(userId, data);
     await redisService.del(redisKey.auth.me(userId));
 
     return {
@@ -44,8 +51,8 @@ class UserService {
 
   async getMyStatusProfile(userId: string) {
     const [user, followingCount, postCount] = await Promise.all([
-      userRepository.findStatusProfileById(userId),
-      followRepository.countActiveFollowing(userId),
+      this.userRepository.findStatusProfileById(userId),
+      this.followRepository.countActiveFollowing(userId),
       postSearchService.count(userId)
     ]);
 
@@ -62,11 +69,11 @@ class UserService {
   }
 
   async findByUserId(userId: string) {
-    return userRepository.findById(userId);
+    return this.userRepository.findById(userId);
   }
 
   async findByUsernameNotRelationShip(username: string, tx: Prisma.TransactionClient) {
-    const user = await userRepository.findByUsername(username, tx);
+    const user = await this.userRepository.findByUsername(username, tx);
     if (!user) {
       return null;
     }
@@ -75,7 +82,7 @@ class UserService {
   }
 
   async findByUsername(username: string, userId?: string) {
-    const user = await userRepository.findByUsername(username);
+    const user = await this.userRepository.findByUsername(username);
     if (!user) {
       return null;
     }
@@ -90,8 +97,8 @@ class UserService {
     }
 
     const [requestUser, follower, postCount] = await Promise.all([
-      userRepository.findUserRequestFriend(userId, user.id),
-      userRepository.findUserFollowing(userId, user.id),
+      this.userRepository.findUserRequestFriend(userId, user.id),
+      this.userRepository.findUserFollowing(userId, user.id),
       postSearchService.count(user.id),
     ]);
 
@@ -105,7 +112,7 @@ class UserService {
   }
 
   async findExistingIds(userIds: string[]) {
-    return userRepository.findExistingIds(userIds);
+    return this.userRepository.findExistingIds(userIds);
   }
 
   async findUsersByUsernames(usernames: string[]) {
@@ -113,19 +120,19 @@ class UserService {
       ...new Set(usernames.map((username) => username.trim()).filter(Boolean)),
     ];
 
-    return userRepository.findByUsernames(normalizedUsernames);
+    return this.userRepository.findByUsernames(normalizedUsernames);
   }
 
   async searchUsername({ query }: GetNetworkUsernamesInput) {
-    return userRepository.searchUsername(query);
+    return this.userRepository.searchUsername(query);
   }
 
   async findUserByEmail(email: string) {
-    return userRepository.findByEmail(email);
+    return this.userRepository.findByEmail(email);
   }
 
   async searchUsernameOneQuery({ query }: { query: string }) {
-    return userRepository.searchUsernameOneQuery(query);
+    return this.userRepository.searchUsernameOneQuery(query);
   }
 }
 

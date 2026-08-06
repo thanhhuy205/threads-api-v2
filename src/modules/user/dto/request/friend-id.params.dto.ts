@@ -1,14 +1,8 @@
-import z from "zod";
+import { ApiProperty } from '@nestjs/swagger';
+import { IsBoolean } from 'class-validator';
 
-export const friendRequestIdParamsSchema = z.object({
-  id: z.coerce.number(),
-});
-
-export type FriendRequestIdParamsDto = z.infer<
-  typeof friendRequestIdParamsSchema
->;
-
-export const friendRequestSchema = z.object({
-  isAccept: z.boolean(),
-});
-export type FriendRequestDto = z.infer<typeof friendRequestSchema>;
+export class FriendRequestDto {
+  @ApiProperty({ example: true })
+  @IsBoolean()
+  isAccept!: boolean;
+}

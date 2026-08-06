@@ -1,19 +1,33 @@
-import { z } from 'zod';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
-export const usernameParamsSchema = z.object({
-    username: z.string().min(1, 'Username is required'),
-});
+export class UsernameParamsDto {
+  @ApiProperty({ example: 'john_doe' })
+  @IsString()
+  @IsNotEmpty()
+  username!: string;
+}
 
+export class UsernameQueryDto {
+  @ApiProperty({ example: 'john' })
+  @IsString()
+  @IsNotEmpty()
+  q!: string;
 
-export const usernameQuerySchema = z.object({
-    q: z.string().min(1, 'Query is required'),
-    after: z.string().trim().min(1, 'Cursor must not be empty').optional(),
-    take: z.coerce.number().int('Take must be an integer').positive('Take must be a positive number').max(100, 'Take must be at most 100').optional(),
-});
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  after?: string;
 
-export const userNameMentionQuerySchema = z.object({
-    q: z.string().min(1, 'Username include is required'),
-});
+  @ApiPropertyOptional({ minimum: 1, maximum: 100 })
+  @IsOptional()
+  @IsString()
+  take?: string;
+}
 
-export type UserNameMentionQueryDto = z.infer<typeof userNameMentionQuerySchema>;
-export type UsernameParamsDto = z.infer<typeof usernameParamsSchema>;
+export class UserNameMentionQueryDto {
+  @ApiProperty({ example: 'john' })
+  @IsString()
+  @IsNotEmpty()
+  q!: string;
+}

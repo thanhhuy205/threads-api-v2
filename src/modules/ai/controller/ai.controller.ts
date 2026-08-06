@@ -1,25 +1,42 @@
-import { AUTH_MESSAGE } from "@/constants/message";
-import type { GenerateImageRequestDto } from "@/modules/ai/schema/ai.schema";
-import { aiService } from "@/modules/ai/service/ai.service";
-import { Request, Response } from "express";
+import { Message } from '@/common/decorators/message.decorator';
+import { AccessTokenGuard } from '@/common/guards/access-token.guard';
+import { AUTH_MESSAGE } from '@/constants/message';
+import { UnauthorizedException } from '@/errors/error';
+import { Body, Controller, HttpCode, HttpStatus, Post, Req, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import type { Request } from 'express';
+import { GenerateImageRequestDto } from '../dto/request/generate-image.request.dto';
+import { AiService } from '../service/ai.service';
 
-class AiController {
-    async generateImageCaption(req: Request<{}, {}, GenerateImageRequestDto>, res: Response) {
+@ApiTags('AI')
+@Controller('ai')
+export class AiController {
+    constructor(private readonly aiService: AiService) { }
+
+    @Post('generate-image')
+    @HttpCode(HttpStatus.OK)
+    @UseGuards(AccessTokenGuard)
+    @Message('Image generation job created')
+    @ApiBearerAuth('bearer')
+    @ApiOperation({ summary: 'Submit an image generation job' })
+    @ApiResponse({ status: HttpStatus.OK, description: 'Image generation job created' })
+    async generateImageCaption(
+        @Body() payload: GenerateImageRequestDto,
+        @Req() req: Request,
+    ) {
         const userId = req.user?.sub;
 
         if (!userId) {
-            return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
+            throw new UnauthorizedException(AUTH_MESSAGE.TOKEN_INVALID);
         }
 
-        const { content } = req.body ?? {};
-        const sdGenerationJob = await aiService.generateImageCaption({
-            content,
+        const sdGenerationJob = await this.aiService.generateImageCaption({
+            content: payload.content,
             userId,
         });
         const publicSdGenerationJob = { ...sdGenerationJob } as Record<string, unknown>;
         delete publicSdGenerationJob.apiCreditCost;
-        delete publicSdGenerationJob.cost;        return res.success(200, "Image generation job created", { sdGenerationJob: publicSdGenerationJob });
+        delete publicSdGenerationJob.cost;
+        return { sdGenerationJob: publicSdGenerationJob };
     }
 }
-
-export const aiController = new AiController();

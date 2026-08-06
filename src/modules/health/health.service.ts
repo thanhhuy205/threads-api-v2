@@ -1,18 +1,25 @@
+import { PrismaService } from '@/shared/database/prisma.service';
+import { Injectable } from '@nestjs/common';
 import env from '../../config/config';
-import prisma from '../../config/prisma';
 
-export const buildHealthPayload = () => ({
-    success: true,
-    service: 'threads-api-v2',
-    status: 'ok',
-    environment: env.NODE_ENV,
-    timestamp: new Date().toISOString(),
-});
+@Injectable()
+export class HealthService {
+    constructor(private readonly prisma: PrismaService) { }
 
-export const checkDatabaseConnection = async () => {
-    await prisma.$queryRaw`SELECT 1`;
+    buildHealthPayload() {
+        return {
+            service: 'threads-api-v2',
+            status: 'ok',
+            environment: env.NODE_ENV,
+            timestamp: new Date().toISOString(),
+        };
+    }
 
-    return {
-        database: 'connected',
-    };
-};
+    async checkDatabaseConnection() {
+        await this.prisma.$queryRaw`SELECT 1`;
+
+        return {
+            database: 'connected',
+        };
+    }
+}

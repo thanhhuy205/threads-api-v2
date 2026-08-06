@@ -1,4 +1,6 @@
+import { Injectable } from '@nestjs/common';
 import prisma from "@/config/prisma";
+import { PrismaService } from '@/shared/database/prisma.service';
 import { FriendRequestStatus, Prisma } from "@prisma/client";
 
 const userProfileSelect = {
@@ -62,9 +64,12 @@ export type UserUsernameItem = {
   verifiedAt: Date | null;
 };
 
-class UserRepository {
+@Injectable()
+export class UserRepository {
+  constructor(private readonly prisma: PrismaService = prisma as PrismaService) {}
+
   async findById(id: string): Promise<UserProfile | null> {
-    return prisma.user.findUnique({
+    return this.prisma.user.findUnique({
       where: {
         id,
       },
@@ -73,7 +78,7 @@ class UserRepository {
   }
 
   async findStatusProfileById(id: string): Promise<UserStatusProfile | null> {
-    return prisma.user.findUnique({
+    return this.prisma.user.findUnique({
       where: {
         id,
       },
@@ -83,9 +88,9 @@ class UserRepository {
 
   async findByUsername(
     username: string,
-    tx: Prisma.TransactionClient = prisma,
+    tx?: Prisma.TransactionClient,
   ) {
-    return tx.user.findUnique({
+    return (tx ?? this.prisma).user.findUnique({
       where: {
         username,
       },
@@ -97,7 +102,7 @@ class UserRepository {
     id: string,
     data: Prisma.UserUpdateInput,
   ): Promise<UserProfile> {
-    return prisma.user.update({
+    return this.prisma.user.update({
       where: {
         id,
       },
@@ -108,13 +113,13 @@ class UserRepository {
 
   async findByUsernames(
     usernames: string[],
-    tx: Prisma.TransactionClient = prisma,
+    tx?: Prisma.TransactionClient,
   ): Promise<UserBasicIdentity[]> {
     if (!usernames.length) {
       return [];
     }
 
-    return tx.user.findMany({
+    return (tx ?? this.prisma).user.findMany({
       where: {
         username: {
           in: usernames,
@@ -135,7 +140,7 @@ class UserRepository {
     after?: string;
     take?: number;
   }): Promise<UserUsernameItem[]> {
-    return prisma.user.findMany({
+    return this.prisma.user.findMany({
       where: {
         id: {
           not: userId,
@@ -166,7 +171,7 @@ class UserRepository {
 
   async findUserRequestFriend(currentUserId: string, targetUserId: string) {
     const [receivedFriendRequest, sentFriendRequest, isFriend] = await Promise.all([
-      prisma.friendRequest.findFirst({
+      this.prisma.friendRequest.findFirst({
         where: {
           senderId: targetUserId,
           receiverId: currentUserId,
@@ -176,7 +181,7 @@ class UserRepository {
           id: true,
         },
       }),
-      prisma.friendRequest.findFirst({
+      this.prisma.friendRequest.findFirst({
         where: {
           senderId: currentUserId,
           receiverId: targetUserId,
@@ -186,7 +191,7 @@ class UserRepository {
           id: true,
         },
       }),
-      prisma.friendRequest.findFirst({
+      this.prisma.friendRequest.findFirst({
         where: {
           OR: [
             {
@@ -214,7 +219,7 @@ class UserRepository {
   }
 
   async findUserFollowing(currentUserId: string, targetUserId: string) {
-    const follow = await prisma.follow.findUnique({
+    const follow = await this.prisma.follow.findUnique({
       where: {
         userId_followingId: {
           userId: currentUserId,
@@ -236,7 +241,7 @@ class UserRepository {
       return [];
     }
 
-    const users = await prisma.user.findMany({
+    const users = await this.prisma.user.findMany({
       where: {
         id: {
           in: userIds,
@@ -252,9 +257,9 @@ class UserRepository {
 
   async incrementFollowersCount(
     userId: string,
-    tx: Prisma.TransactionClient = prisma,
+    tx?: Prisma.TransactionClient,
   ) {
-    return tx.user.update({
+    return (tx ?? this.prisma).user.update({
       where: {
         id: userId,
       },
@@ -272,9 +277,9 @@ class UserRepository {
 
   async decrementFollowersCount(
     userId: string,
-    tx: Prisma.TransactionClient = prisma,
+    tx?: Prisma.TransactionClient,
   ) {
-    return tx.user.updateMany({
+    return (tx ?? this.prisma).user.updateMany({
       where: {
         id: userId,
         followersCount: {
@@ -290,7 +295,7 @@ class UserRepository {
   }
 
   async searchUsernameOneQuery(query: string) {
-    return prisma.user.findMany({
+    return this.prisma.user.findMany({
       where: {
         username: {
           startsWith: query,
@@ -310,7 +315,7 @@ class UserRepository {
   }
 
   async searchUsername(query: string) {
-    const rows = await prisma.$queryRaw<UserUsernameItem[]>`
+    const rows = await this.prisma.$queryRaw<UserUsernameItem[]>`
       SELECT username, id, avatar, name, verified_at as verifiedAt
       FROM users
       WHERE MATCH(username , name) AGAINST (${query} IN BOOLEAN MODE)
@@ -322,7 +327,7 @@ class UserRepository {
     return rows;
   }
   async findByEmail(email: string) {
-    return prisma.user.findUnique({
+    return this.prisma.user.findUnique({
       where: {
         email,
       },

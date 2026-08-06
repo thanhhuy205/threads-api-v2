@@ -1,13 +1,18 @@
-import { z } from "zod";
+import { Type } from 'class-transformer';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 
-export const followersQuerySchema = z.object({
-  after: z.string().trim().min(1, "Cursor must not be empty").optional(),
-  take: z
-    .coerce.number()
-    .int("Take must be an integer")
-    .positive("Take must be a positive number")
-    .max(100, "Take must be at most 100")
-    .optional(),
-});
+export class FollowersQueryDto {
+  @ApiPropertyOptional({ description: 'Cursor from the previous response' })
+  @IsOptional()
+  @IsString()
+  after?: string;
 
-export type FollowersQueryDto = z.infer<typeof followersQuerySchema>;
+  @ApiPropertyOptional({ minimum: 1, maximum: 100, default: 10 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  take?: number;
+}

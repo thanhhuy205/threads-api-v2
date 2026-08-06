@@ -1,10 +1,11 @@
 import { NotFoundException } from "@/errors/error";
-import { followRepository } from "@/modules/user/repository/follow.repository";
-import { userRepository } from "@/modules/user/repository/user.repository";
+import { FollowRepository, followRepository as legacyFollowRepository } from "@/modules/user/repository/follow.repository";
+import { UserRepository, userRepository as legacyUserRepository } from "@/modules/user/repository/user.repository";
 import {
   buildCursorPagination,
   type PaginationResponse,
 } from "@/shared/pagination/cursor-pagination";
+import { Injectable } from '@nestjs/common';
 import type { FollowActionDataDto } from "../dto/response/follow-action.response.dto";
 import type { FollowerUserDto } from "../mapper/follower.mapper";
 
@@ -19,18 +20,24 @@ type GetUsersPaginationResult = {
   pagination: PaginationResponse<string | number | null>;
 };
 
-class FollowerService {
+@Injectable()
+export class FollowerService {
+  constructor(
+    private readonly followRepository: FollowRepository = legacyFollowRepository,
+    private readonly userRepository: UserRepository = legacyUserRepository,
+  ) { }
+
   async getFollower({
     userId,
     after,
     take,
   }: GetFollowersInput): Promise<GetUsersPaginationResult> {
-    const user = await userRepository.findById(userId);
+    const user = await this.userRepository.findById(userId);
     if (!user) {
       throw new NotFoundException("User not found");
     }
 
-    const followerRows = await followRepository.findFollowers({
+    const followerRows = await this.followRepository.findFollowers({
       after,
       take,
       where: {
@@ -55,12 +62,12 @@ class FollowerService {
 
 
   async getUserFollowingPostByAuth(userId: string, authorIds: string[]) {
-    const followingPosts = await followRepository.findUserFollowingPostByAuth(userId, authorIds);
+    const followingPosts = await this.followRepository.findUserFollowingPostByAuth(userId, authorIds);
     return followingPosts;
   }
 
   async getUserFollowersByAuth(userId: string, authorIds: string[]) {
-    const followers = await followRepository.findUserFollowersByAuth(userId, authorIds);
+    const followers = await this.followRepository.findUserFollowersByAuth(userId, authorIds);
     return followers;
   }
 
@@ -69,12 +76,12 @@ class FollowerService {
     after,
     take,
   }: GetFollowersInput): Promise<GetUsersPaginationResult> {
-    const user = await userRepository.findById(userId);
+    const user = await this.userRepository.findById(userId);
     if (!user) {
       throw new NotFoundException("User not found");
     }
 
-    const followingRows = await followRepository.findFollowing({
+    const followingRows = await this.followRepository.findFollowing({
       after,
       take,
       where: {
@@ -108,25 +115,25 @@ class FollowerService {
       };
     }
 
-    const existingFollow = await followRepository.findFollowRecord(
+    const existingFollow = await this.followRepository.findFollowRecord(
       userId,
       targetUserId,
     );
     if (existingFollow && existingFollow.isFollowing) {
-      await followRepository.updateStatusByFollowId(existingFollow.id, false);
-      await userRepository.decrementFollowersCount(targetUserId);
+      await this.followRepository.updateStatusByFollowId(existingFollow.id, false);
+      await this.userRepository.decrementFollowersCount(targetUserId);
       return {
         isFollowing: false,
       };
     } else if (existingFollow && !existingFollow.isFollowing) {
-      await followRepository.updateStatusByFollowId(existingFollow.id, true);
-      await userRepository.incrementFollowersCount(targetUserId);
+      await this.followRepository.updateStatusByFollowId(existingFollow.id, true);
+      await this.userRepository.incrementFollowersCount(targetUserId);
       return {
         isFollowing: true,
       };
     }
-    const follow = await followRepository.create(userId, targetUserId);
-    await userRepository.incrementFollowersCount(targetUserId);
+    const follow = await this.followRepository.create(userId, targetUserId);
+    await this.userRepository.incrementFollowersCount(targetUserId);
     return {
       isFollowing: follow.isFollowing,
     };

@@ -1,26 +1,29 @@
-import { z } from "zod";
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { IsOptional, IsString, IsUrl, MaxLength } from 'class-validator';
 
-export const updateProfileSchema = z
-  .object({
-    name: z.string().trim().max(100, "Name must be at most 100 characters").nullable().optional(),
-    bio: z.string().trim().max(500, "Bio must be at most 500 characters").nullable().optional(),
-    labelWebsite: z
-      .string()
-      .trim()
-      .max(100, "Label website must be at most 100 characters")
-      .nullable()
-      .optional(),
-    website: z
-      .string()
-      .trim()
-      .url("Website must be a valid URL")
-      .max(255, "Website must be at most 255 characters")
-      .nullable()
-      .optional(),
-  })
-  .strict()
-  .refine((data) => Object.keys(data).length > 0, {
-    message: "At least one profile field is required",
-  });
+export class UpdateProfileDto {
+  @ApiPropertyOptional({ nullable: true, maxLength: 100 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  name?: string | null;
 
-export type UpdateProfileDto = z.infer<typeof updateProfileSchema>;
+  @ApiPropertyOptional({ nullable: true, maxLength: 500 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  bio?: string | null;
+
+  @ApiPropertyOptional({ nullable: true, maxLength: 100 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  labelWebsite?: string | null;
+
+  @ApiPropertyOptional({ nullable: true, maxLength: 255, format: 'uri' })
+  @IsOptional()
+  @IsString()
+  @IsUrl()
+  @MaxLength(255)
+  website?: string | null;
+}

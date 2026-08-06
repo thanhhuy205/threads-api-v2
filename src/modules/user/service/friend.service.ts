@@ -1,14 +1,15 @@
 import { USER_MESSAGE } from "@/constants/message";
+import { Injectable } from '@nestjs/common';
 import { NotFoundException } from "@/errors/error";
 import { baseLogger } from "@/middlewares/logger";
-import { userRepository } from "@/modules/user/repository/user.repository";
+import { UserRepository, userRepository as legacyUserRepository } from "@/modules/user/repository/user.repository";
 import {
   buildCursorPagination,
   type PaginationResponse,
 } from "@/shared/pagination/cursor-pagination";
 import { transactionService } from "@/shared/transaction/transaction.service";
 import { FriendRequestStatus } from "@prisma/client";
-import { friendRequestRepository } from "../repository/friend-request.repository";
+import { FriendRequestRepository, friendRequestRepository as legacyFriendRequestRepository } from "../repository/friend-request.repository";
 
 type FriendRequestResponse = {
   sendFriends: boolean;
@@ -19,22 +20,28 @@ type FriendRequestPaginationResult = {
   pagination: PaginationResponse<string | number | null>;
 };
 
-class FriendService {
+@Injectable()
+export class FriendService {
+  constructor(
+    private readonly userRepository: UserRepository = legacyUserRepository,
+    private readonly friendRequestRepository: FriendRequestRepository = legacyFriendRequestRepository,
+  ) {}
+
   async sendFriendRequest(
     userId: string,
     targetUsername: string,
   ): Promise<FriendRequestResponse> {
-    const targetUser = await userRepository.findByUsername(targetUsername);
+    const targetUser = await this.userRepository.findByUsername(targetUsername);
     if (!targetUser) {
       return { sendFriends: false };
     }
 
-    const receiver = await userRepository.findById(targetUser.id);
+    const receiver = await this.userRepository.findById(targetUser.id);
     if (!receiver) {
       return { sendFriends: false };
     }
 
-    await friendRequestRepository.upsert(userId, targetUser.id);
+    await this.friendRequestRepository.upsert(userId, targetUser.id);
     return { sendFriends: true };
   }
 
@@ -43,7 +50,7 @@ class FriendService {
       `handleFriendRequest receiverUsername: ${receiverUsername}`,
     );
     return transactionService.doInTransaction(async (tx) => {
-      const receiver = await userRepository.findByUsername(
+      const receiver = await this.userRepository.findByUsername(
         receiverUsername,
         tx,
       );
@@ -53,7 +60,7 @@ class FriendService {
       }
 
       const friendRequest =
-        await friendRequestRepository.findBySenderAndReceiver({
+        await this.friendRequestRepository.findBySenderAndReceiver({
           senderId: userId,
           receiverId: receiver.id,
         });
@@ -62,7 +69,7 @@ class FriendService {
         throw new NotFoundException(USER_MESSAGE.FRIEND_REQUEST_NOT_FOUND);
       }
 
-      await friendRequestRepository.updateStatusById(
+      await this.friendRequestRepository.updateStatusById(
         friendRequest.id,
         FriendRequestStatus.CANCELLED,
         tx,
@@ -77,14 +84,14 @@ class FriendService {
   ) {
     baseLogger.info(`handleFriendRequest senderUsername: ${senderUsername}`);
     return transactionService.doInTransaction(async (tx) => {
-      const sender = await userRepository.findByUsername(senderUsername, tx);
+      const sender = await this.userRepository.findByUsername(senderUsername, tx);
       if (!sender) {
         baseLogger.info(USER_MESSAGE.USER_NOT_FOUND);
         throw new NotFoundException(USER_MESSAGE.USER_NOT_FOUND);
       }
 
       const friendRequest =
-        await friendRequestRepository.findBySenderAndReceiver({
+        await this.friendRequestRepository.findBySenderAndReceiver({
           senderId: sender.id,
           receiverId: userId,
         });
@@ -94,13 +101,13 @@ class FriendService {
       }
 
       if (isAccept) {
-        await friendRequestRepository.updateStatusById(
+        await this.friendRequestRepository.updateStatusById(
           friendRequest.id,
           FriendRequestStatus.ACCEPTED,
           tx,
         );
       } else {
-        await friendRequestRepository.updateStatusById(
+        await this.friendRequestRepository.updateStatusById(
           friendRequest.id,
           FriendRequestStatus.REJECTED,
           tx,
@@ -118,7 +125,7 @@ class FriendService {
     receiverId: string;
     take: number;
   }): Promise<FriendRequestPaginationResult> {
-    const friendRequests = await friendRequestRepository.findReceivedPending({
+    const friendRequests = await this.friendRequestRepository.findReceivedPending({
       receiverId,
       senderId: senderId ?? undefined,
       take,
@@ -140,7 +147,7 @@ class FriendService {
     receiverId?: string;
     take: number;
   }): Promise<FriendRequestPaginationResult> {
-    const friendRequests = await friendRequestRepository.findSentPending({
+    const friendRequests = await this.friendRequestRepository.findSentPending({
       senderId,
       receiverId: receiverId ?? undefined,
       take,
@@ -154,7 +161,7 @@ class FriendService {
   }
 
   countReceivedFriendRequests(receiverId: string) {
-    return friendRequestRepository.countReceivedPending(receiverId);
+    return this.friendRequestRepository.countReceivedPending(receiverId);
   }
 }
 

@@ -1,12 +1,16 @@
-import { z } from "zod";
+import { ApiProperty } from '@nestjs/swagger';
+import { IsNotEmpty, IsString } from 'class-validator';
 
-export const userIdParamsSchema = z.object({
-  id: z.string().min(1, "User ID is required"),
-});
+export class UserIdParamsDto {
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  id!: string;
+}
 
-export const friendRequestParamsSchema = z.object({
-  username: z.string().min(1, "Username is required"),
-});
-
-export type UserIdParamsDto = z.infer<typeof userIdParamsSchema>;
-export type FriendRequestParamsDto = z.infer<typeof friendRequestParamsSchema>;
+export class FriendRequestParamsDto {
+  @ApiProperty({ example: 'john_doe' })
+  @IsString()
+  @IsNotEmpty()
+  username!: string;
+}

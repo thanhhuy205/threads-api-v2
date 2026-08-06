@@ -1,221 +1,124 @@
-import { AUTH_MESSAGE, USER_MESSAGE } from "@/constants/message";
-import { NotFoundException } from "@/errors/error";
-import { baseLogger } from "@/middlewares/logger";
-import { jwtService } from "@/modules/jwt/service/jwt.service";
-import { followerService } from "@/modules/user/service/follower.service";
-import { friendService } from "@/modules/user/service/friend.service";
-import { userService } from "@/modules/user/service/user.service";
-import { getPagination } from "@/shared/pagination/cursor-pagination";
-import { Request, Response } from "express";
-import type { FollowersQueryDto } from "../dto/request/followers.query.dto";
-import {
-  FriendRequestDto
-} from "../dto/request/friend-id.params.dto";
-import type { UpdateProfileDto } from "../dto/request/update-profile.request.dto";
-import type { UserNameMentionQueryDto, UsernameParamsDto } from "../dto/request/username.params.dto";
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import type { Request } from 'express';
+import { Message } from '@/common/decorators/message.decorator';
+import { Pagination } from '@/common/decorators/pagination.decorator';
+import { AccessTokenGuard } from '@/common/guards/access-token.guard';
+import { AUTH_MESSAGE, USER_MESSAGE } from '@/constants/message';
+import { UnauthorizedException } from '@/errors/error';
+import { buildPagination } from '@/shared/pagination/cursor-pagination';
+import { FollowersQueryDto } from '../dto/request/followers.query.dto';
+import { FriendRequestDto } from '../dto/request/friend-id.params.dto';
+import { FriendRequestParamsDto } from '../dto/request/user-id.params.dto';
+import { UpdateProfileDto } from '../dto/request/update-profile.request.dto';
+import { FriendService } from '../service/friend.service';
+import { FollowerService } from '../service/follower.service';
+import { UserService } from '../service/user.service';
 
-class UserController {
-  async updateProfile(req: Request<{}, {}, UpdateProfileDto>, res: Response) {
-    const userId = req.user?.sub;
-    if (!userId) {
-      return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
-    }
+@ApiTags('User')
+@ApiBearerAuth('bearer')
+@UseGuards(AccessTokenGuard)
+@Controller('me')
+export class UserController {
+  constructor(
+    private readonly userService: UserService,
+    private readonly friendService: FriendService,
+    private readonly followerService: FollowerService,
+  ) {}
 
-    const user = await userService.updateProfile(userId, req.body);
-    return res.success(200, "Profile updated successfully", user);
+  @Patch('profile')
+  @Message('Profile updated successfully')
+  @ApiOperation({ summary: 'Update the current user profile' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Profile updated successfully' })
+  updateProfile(@Body() payload: UpdateProfileDto, @Req() request: Request) {
+    return this.userService.updateProfile(this.userId(request), payload);
   }
 
-  async getMyFollowers(
-    req: Request<{}, {}, {}, FollowersQueryDto>,
-    res: Response,
-  ) {
-    const userId = req.user?.sub;
-    if (!userId) {
-      return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
-    }
-
-    const { after, take } = getPagination(req);
-    const { users, pagination } = await followerService.getFollower({
-      userId,
-      after: after ?? undefined,
-      take,
+  @Get('followers')
+  @Pagination()
+  @Message(USER_MESSAGE.GET_FOLLOWERS_SUCCESS)
+  @ApiOperation({ summary: 'Get followers of the current user' })
+  @ApiResponse({ status: HttpStatus.OK, description: USER_MESSAGE.GET_FOLLOWERS_SUCCESS })
+  async getMyFollowers(@Query() query: FollowersQueryDto, @Req() request: Request) {
+    const { currentAfter, currentLimit } = buildPagination(query);
+    const { users, pagination } = await this.followerService.getFollower({
+      userId: this.userId(request),
+      after: currentAfter ?? undefined,
+      take: currentLimit,
     });
-    return res.paginate({ rows: users, pagination });
+    return { data: users, pagination };
   }
 
-  async getFollower(
-    req: Request<UsernameParamsDto, {}, {}, FollowersQueryDto>,
-    res: Response,
-  ) {
-    const { username } = req.params;
-    const user = await userService.findByUsername(username);
-    if (!user) {
-      throw new NotFoundException("User not found");
-    }
-
-    const { after, take } = getPagination(req);
-    const { users, pagination } = await followerService.getFollower({
-      userId: user.id,
-      after: after ?? undefined,
-      take,
-    });
-    return res.paginate({ rows: users, pagination });
+  @Post(':username/friend-requests')
+  @HttpCode(HttpStatus.OK)
+  @Message(USER_MESSAGE.FRIEND_REQUEST_SENT)
+  @ApiOperation({ summary: 'Send a friend request' })
+  @ApiResponse({ status: HttpStatus.OK, description: USER_MESSAGE.FRIEND_REQUEST_SENT })
+  sendFriendRequest(@Param() params: FriendRequestParamsDto, @Req() request: Request) {
+    return this.friendService.sendFriendRequest(this.userId(request), params.username);
   }
 
-  async getFollowing(
-    req: Request<UsernameParamsDto, {}, {}, FollowersQueryDto>,
-    res: Response,
-  ) {
-    const { username } = req.params;
-    const user = await userService.findByUsername(username);
-    if (!user) {
-      throw new NotFoundException("User not found");
-    }
-
-    const { after, take } = getPagination(req);
-    const { users, pagination } = await followerService.getFollowing({
-      userId: user.id,
-      after: after ?? undefined,
-      take,
-    });
-    return res.paginate({ rows: users, pagination });
+  @Patch('friend-requests/:username/cancel')
+  @Message(USER_MESSAGE.FRIEND_REQUEST_PROCESSED)
+  @ApiOperation({ summary: 'Cancel a friend request' })
+  @ApiResponse({ status: HttpStatus.OK, description: USER_MESSAGE.FRIEND_REQUEST_PROCESSED })
+  async handleFriendRequestCancel(@Param() params: FriendRequestParamsDto, @Req() request: Request) {
+    await this.friendService.handleFriendRequestCancel(this.userId(request), params.username);
+    return null;
   }
 
-  async follower(req: Request<UsernameParamsDto>, res: Response) {
-    const userId = req.user?.sub;
-
-    if (!userId) {
-      return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
-    }
-
-    const targetUser = await userService.findByUsername(req.params.username);
-    if (!targetUser) {
-      throw new NotFoundException("User not found");
-    }
-
-    const result = await followerService.follower(userId, targetUser.id);
-    return res.success(200, USER_MESSAGE.FOLLOW_SUCCESS, result);
-  }
-
-  async sendFriendRequest(req: Request<UsernameParamsDto>, res: Response) {
-    const userId = req.user?.sub;
-
-    if (!userId) {
-      return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
-    }
-
-    const { username } = req.params;
-    const result = await friendService.sendFriendRequest(userId, username);
-    return res.success(200, USER_MESSAGE.FRIEND_REQUEST_SENT, result);
-  }
-
-  async handleFriendRequestCancel(
-    req: Request<UsernameParamsDto, {}, FriendRequestDto>,
-    res: Response,
-  ) {
-    const userId = req.user?.sub;
-    if (!userId) {
-      return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
-    }
-    const { username: receiverUsername } = req.params;
-    const result = await friendService.handleFriendRequestCancel(
-      userId,
-      receiverUsername,
-    );
-    return res.success(200, USER_MESSAGE.FRIEND_REQUEST_PROCESSED, result);
-  }
-
+  @Patch('friend-requests/:username/accept')
+  @Message(USER_MESSAGE.FRIEND_REQUEST_PROCESSED)
+  @ApiOperation({ summary: 'Accept or reject a friend request' })
+  @ApiResponse({ status: HttpStatus.OK, description: USER_MESSAGE.FRIEND_REQUEST_PROCESSED })
   async handleFriendRequestAccept(
-    req: Request<UsernameParamsDto, {}, FriendRequestDto>,
-    res: Response,
+    @Param() params: FriendRequestParamsDto,
+    @Body() payload: FriendRequestDto,
+    @Req() request: Request,
   ) {
-    const userId = req.user?.sub;
-    if (!userId) {
-      return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
-    }
-    const { username: senderUsername } = req.params;
-    const { isAccept } = req.body;
-    const result = await friendService.handleFriendRequestAccept(
-      userId,
-      senderUsername,
-      isAccept,
+    await this.friendService.handleFriendRequestAccept(
+      this.userId(request),
+      params.username,
+      payload.isAccept,
     );
-    return res.success(200, USER_MESSAGE.FRIEND_REQUEST_PROCESSED, result);
+    return null;
   }
 
-  async getByUsername(req: Request<UsernameParamsDto>, res: Response) {
-    const userId = await jwtService.requestAuthToken(req);
-    const user = await userService.findByUsername(req.params.username, userId ?? undefined);
-    if (!user) {
-      return res.error(404, USER_MESSAGE.USER_NOT_FOUND);
-    }
-    return res.success(200, USER_MESSAGE.GET_USER_SUCCESS, user);
-  }
-
-  async getReceivedFriendRequests(
-    req: Request<{}, {}, {}, FollowersQueryDto>,
-    res: Response,
-  ) {
-    const userId = req.user?.sub;
-    if (!userId) {
-      return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
-    }
-    const { after, take } = getPagination(req);
-    const { rows, pagination } = await friendService.getReceivedFriendRequests({
-      take: take ?? undefined,
-      receiverId: userId,
-      senderId: after ?? undefined,
+  @Get('friend-requests/received')
+  @Pagination()
+  @Message(USER_MESSAGE.GET_RECEIVED_FRIEND_REQUESTS_SUCCESS)
+  @ApiOperation({ summary: 'Get received friend requests' })
+  @ApiResponse({ status: HttpStatus.OK, description: USER_MESSAGE.GET_RECEIVED_FRIEND_REQUESTS_SUCCESS })
+  async getReceivedFriendRequests(@Query() query: FollowersQueryDto, @Req() request: Request) {
+    const { currentAfter, currentLimit } = buildPagination(query);
+    const { rows, pagination } = await this.friendService.getReceivedFriendRequests({
+      take: currentLimit,
+      receiverId: this.userId(request),
+      senderId: currentAfter ?? undefined,
     });
-    return res.paginate({ rows, pagination });
+    return { data: rows, pagination };
   }
 
-  async getSentFriendRequests(
-    req: Request<{}, {}, {}, FollowersQueryDto>,
-    res: Response,
-  ) {
-    const userId = req.user?.sub;
-    if (!userId) {
-      return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
-    }
-    const { after, take } = getPagination(req);
-    const { rows, pagination } = await friendService.getSentFriendRequests({
-      take: take ?? undefined,
-      senderId: userId,
-      receiverId: after ?? undefined,
+  @Get('friend-requests/sent')
+  @Pagination()
+  @Message(USER_MESSAGE.GET_SENT_FRIEND_REQUESTS_SUCCESS)
+  @ApiOperation({ summary: 'Get sent friend requests' })
+  @ApiResponse({ status: HttpStatus.OK, description: USER_MESSAGE.GET_SENT_FRIEND_REQUESTS_SUCCESS })
+  async getSentFriendRequests(@Query() query: FollowersQueryDto, @Req() request: Request) {
+    const { currentAfter, currentLimit } = buildPagination(query);
+    const { rows, pagination } = await this.friendService.getSentFriendRequests({
+      take: currentLimit,
+      senderId: this.userId(request),
+      receiverId: currentAfter ?? undefined,
     });
-    return res.paginate({ rows, pagination });
+    return { data: rows, pagination };
   }
 
-  async getUsernames(
-    req: Request<{}, {}, {}, UserNameMentionQueryDto>,
-    res: Response,
-  ) {
-    const query = req.query_parsed.q.trim();
-    baseLogger.info(`Received request to get usernames with query "${query}"`);
-    if (query.length === 1) {
-      const result = await userService.searchUsernameOneQuery({ query });
-      return res.success(200, "Usernames retrieved successfully", result);
-    }
-    const result = await userService.searchUsername({
-      query,
-    });
-
-    return res.success(200, "Usernames retrieved successfully", result);
-  }
-
-  async getMyStatusProfile(req: Request, res: Response) {
-    const userId = req.user?.sub;
+  private userId(request: Request): string {
+    const userId = request.user?.sub;
     if (!userId) {
-      return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
+      throw new UnauthorizedException(AUTH_MESSAGE.TOKEN_INVALID);
     }
-
-    const statusProfile = await userService.getMyStatusProfile(userId);
-    if (!statusProfile) {
-      return res.error(404, USER_MESSAGE.USER_NOT_FOUND);
-    }
-
-    return res.success(200, "User status profile retrieved successfully", statusProfile);
+    return userId;
   }
 }
-
-export const userController = new UserController();

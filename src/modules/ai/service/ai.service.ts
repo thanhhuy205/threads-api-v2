@@ -9,6 +9,7 @@ import { groq } from "@/providers/groq.provider";
 import { generateJob } from "@/providers/leonardo.provider";
 import type { LeonardoGenerationJob } from "@/providers/leonardo.types";
 import { openrouter } from "@/providers/openrouter.provider";
+import { Injectable } from '@nestjs/common';
 import { ReportTargetType } from "@prisma/client";
 
 type GenerateImageCaptionInput = {
@@ -16,7 +17,8 @@ type GenerateImageCaptionInput = {
   userId: string;
 };
 
-class AiService {
+@Injectable()
+export class AiService {
   async generateCaptionMd(userId: string, content: string) {
     if (!content?.trim()) {
       throw new BadRequestException("Input text is empty");
@@ -280,4 +282,5 @@ class AiService {
 
 }
 
+// Temporary compatibility export for queue workers that are not Nest-managed yet.
 export const aiService = new AiService();

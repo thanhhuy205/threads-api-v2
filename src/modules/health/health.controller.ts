@@ -1,10 +1,19 @@
+import { Message } from '@/common/decorators/message.decorator';
 import { HEALTH_MESSAGE } from '@/constants/message';
-import { Request, Response } from 'express';
-import { buildHealthPayload } from './health.service';
+import { Controller, Get } from '@nestjs/common';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { HealthService } from './health.service';
 
-class HealthController {
-    async getHealth(req: Request, res: Response) {
-        res.success(200, HEALTH_MESSAGE.SERVICE_IS_HEALTHY, buildHealthPayload());
+@ApiTags('Health')
+@Controller('health')
+export class HealthController {
+    constructor(private readonly healthService: HealthService) { }
+
+    @Get()
+    @Message(HEALTH_MESSAGE.SERVICE_IS_HEALTHY)
+    @ApiOperation({ summary: 'Check service health' })
+    @ApiResponse({ status: 200, description: HEALTH_MESSAGE.SERVICE_IS_HEALTHY })
+    getHealth() {
+        return this.healthService.buildHealthPayload();
     }
 }
-export const healthController = new HealthController();

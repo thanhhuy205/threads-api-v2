@@ -1,8 +1,12 @@
-import prisma from "@/config/prisma";
 import { toFollowerUserDto, toFollowingUserDto, type FollowerUserDto } from "@/modules/user/mapper/follower.mapper";
+import { PrismaService } from '@/shared/database/prisma.service';
+import { Injectable } from '@nestjs/common';
 import type { Prisma } from "@prisma/client";
 
-class FollowRepository {
+@Injectable()
+export class FollowRepository {
+  constructor(private readonly prisma: PrismaService = prisma as PrismaService) { }
+
   async findFollowers({
     after,
     take = 10,
@@ -18,7 +22,7 @@ class FollowRepository {
   }): Promise<FollowerUserDto[]> {
     const { followingId } = props
 
-    const follows = await prisma.follow.findMany({
+    const follows = await this.prisma.follow.findMany({
       where,
       orderBy: [{ createdAt: "asc" }, { id: "asc" }],
       take: after ? take + 1 : take,
@@ -62,7 +66,7 @@ class FollowRepository {
   }): Promise<FollowerUserDto[]> {
     const { userId } = props
 
-    const follows = await prisma.follow.findMany({
+    const follows = await this.prisma.follow.findMany({
       where,
       orderBy: [{ createdAt: "asc" }, { id: "asc" }],
       take: after ? take + 1 : take,
@@ -96,7 +100,7 @@ class FollowRepository {
   }
 
   async findFollowRecord(userId: string, followingId: string) {
-    return prisma.follow.findUnique({
+    return this.prisma.follow.findUnique({
       where: {
         userId_followingId: {
           userId,
@@ -111,7 +115,7 @@ class FollowRepository {
   }
 
   async countActiveFollowing(userId: string) {
-    return prisma.follow.count({
+    return this.prisma.follow.count({
       where: {
         userId,
         isFollowing: true,
@@ -120,7 +124,7 @@ class FollowRepository {
   }
 
   async create(userId: string, followingId: string) {
-    return prisma.follow.create({
+    return this.prisma.follow.create({
       data: {
         userId,
         followingId,
@@ -134,7 +138,7 @@ class FollowRepository {
   }
 
   async updateStatusByFollowId(followId: number, isFollowing: boolean) {
-    return prisma.follow.update({
+    return this.prisma.follow.update({
       where: {
         id: followId,
       },
@@ -149,7 +153,7 @@ class FollowRepository {
   }
 
   async findUserFollowingPostByAuth(userId: string, authorIds: string[]) {
-    return prisma.follow.findMany({
+    return this.prisma.follow.findMany({
       where: {
         userId,
         followingId: {
@@ -160,7 +164,7 @@ class FollowRepository {
   }
 
   async findUserFollowersByAuth(userId: string, authorIds: string[]) {
-    return prisma.follow.findMany({
+    return this.prisma.follow.findMany({
       where: {
         followingId: userId,
         userId: {
