@@ -2,9 +2,12 @@ import { BadRequestException } from "@/errors/error";
 import { baseLogger } from "@/middlewares/logger";
 import { dispatchMentionNotification } from "@/modules/notification-group/events/notification.dispatcher";
 import type { CreatePostPayload } from "@/modules/post/interfaces/create-post-payload";
-import { userService } from "@/modules/user/service/user.service";
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { UserService } from '@/modules/user/service/user.service';
 
-class PostMentionService {
+@Injectable()
+export class PostMentionService {
+  constructor(@Inject(forwardRef(() => UserService)) private readonly userService: UserService) {}
   async validateMentions(
     mentions?: CreatePostPayload["mentions"],
   ): Promise<string[]> {
@@ -25,7 +28,7 @@ class PostMentionService {
       );
     }
 
-    const existingIds = await userService.findExistingIds(uniqueMentionIds);
+    const existingIds = await this.userService.findExistingIds(uniqueMentionIds);
 
     if (existingIds.length !== uniqueMentionIds.length) {
       throw new BadRequestException("One or more mentioned users do not exist");
@@ -84,5 +87,3 @@ class PostMentionService {
     });
   }
 }
-
-export const postMentionService = new PostMentionService();

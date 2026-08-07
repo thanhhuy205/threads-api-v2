@@ -1,6 +1,6 @@
 import { baseLogger } from "@/middlewares/logger";
 import { likeService } from "@/modules/post/service/like-service.service";
-import { postService } from "@/modules/post/service/post.service";
+import { PostRepository } from "@/modules/post/repository/post.repository";
 import { LIKE_JOB_NAME, QUEUE_NAME } from "../src/constants/queue";
 import { createWorker } from "../src/providers/bullmq.provider";
 import { redisService } from "../src/providers/redis.provider";
@@ -11,6 +11,8 @@ type LikeEvent = {
   userId: string;
   isLiked: boolean;
 };
+
+const postRepository = new PostRepository();
 
 class LikeWorker {
   private readonly worker = createWorker(QUEUE_NAME.LIKE_QUEUE, async (job) => {
@@ -71,12 +73,12 @@ class LikeWorker {
       const count = uniqueLikeCount.size - uniqueUnLikeCount.size;
       try {
         await Promise.all([
-          postService.increaseLikeCount(postPublicId, count),
+          postRepository.increaseLikeCount(postPublicId, count),
           likeService.createMany(newLike),
           likeService.deleteMany(newUnlike),
         ]);
       } catch (error) {
-        await postService.decreaseLikeCount(postPublicId, count);
+        await postRepository.decreaseLikeCount(postPublicId, count);
         baseLogger.error({ error }, "Failed to process like events");
         await this.restoreEvents(events);
         return;

@@ -1,10 +1,10 @@
 import { redisKey } from "@/constants/resolve-key/redis-key";
 import { PostMapper } from "@/modules/post/mapper/post.mapper";
-import { followerService } from "@/modules/user/service/follower.service";
+import { FollowerService } from "@/modules/user/service/follower.service";
 import { redisService } from "@/providers/redis.provider";
 import { buildCursorPagination, buildPagination } from "@/shared/pagination/cursor-pagination";
 import { Prisma } from "@prisma/client";
-import { postRepository } from "../repository/post.repository";
+import { PostRepository } from "../repository/post.repository";
 
 export const postListCacheTtlSeconds = 60;
 
@@ -33,11 +33,15 @@ export async function paginatePosts({
   take,
   where,
   userId,
+  postRepository,
+  followerService,
 }: {
   after?: string;
   take: number;
   where: Prisma.PostWhereInput;
   userId?: string | null;
+  postRepository: PostRepository;
+  followerService: FollowerService;
 }) {
   const { currentAfter, currentLimit } = buildPagination({ after, take });
 

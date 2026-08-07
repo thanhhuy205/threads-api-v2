@@ -1,24 +1,25 @@
-import prisma from "@/config/prisma";
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import {
   BadRequestException,
   NotFoundException,
 } from "@/errors/error";
 import type { CreatePostPayload } from "@/modules/post/interfaces/create-post-payload";
 import { PostMapper } from "@/modules/post/mapper/post.mapper";
-import { userService } from "@/modules/user/service/user.service";
+import { UserService } from "@/modules/user/service/user.service";
 import { ReplyPermission, VisibilityPost } from "@prisma/client";
-import { PostRecord, postRepository } from "../repository/post.repository";
-import { postMentionService } from "../service/post-mention.service";
-import { postMetaService, type CreatePostMeta } from "../service/post-meta.service";
+import { PostRecord, PostRepository } from "../repository/post.repository";
+import { PostMentionService } from "../service/post-mention.service";
+import { PostMetaService, type CreatePostMeta } from "../service/post-meta.service";
+import { PrismaService } from '@/shared/database/prisma.service';
 
 type UserSnapshot = ReturnType<typeof PostMapper.toUserSnapshot>;
 
 type ExistPost = NonNullable<
-  Awaited<ReturnType<typeof postRepository.findByPublicId>>
+  Awaited<ReturnType<PostRepository['findByPublicId']>>
 >;
 
 type ResolvedOriginPost = NonNullable<
-  Awaited<ReturnType<typeof postRepository.findOriginReferenceByPublicId>>
+  Awaited<ReturnType<PostRepository['findOriginReferenceByPublicId']>>
 >;
 
 export type PostBuildResult = {
@@ -34,7 +35,8 @@ export type PostBuildResult = {
   resolvedOriginPublicId?: string;
 };
 
-class PostBuilder {
+@Injectable()
+export class PostBuilder {
   private pending: Promise<void> = Promise.resolve();
   private snapshot?: UserSnapshot;
   private options: PostBuildResult["options"] = {
@@ -45,13 +47,27 @@ class PostBuilder {
   private existPostRef?: ExistPost;
   private originPostRef?: ResolvedOriginPost;
 
-  static user(userId: string): PostBuilder {
-    return new PostBuilder().user(userId);
+  constructor(
+    @Inject(forwardRef(() => UserService)) private readonly userService: UserService,
+    private readonly postMentionService: PostMentionService,
+    private readonly postRepository: PostRepository,
+    private readonly postMetaService: PostMetaService,
+    private readonly prisma: PrismaService,
+  ) {}
+
+  fork(): PostBuilder {
+    return new PostBuilder(
+      this.userService,
+      this.postMentionService,
+      this.postRepository,
+      this.postMetaService,
+      this.prisma,
+    );
   }
 
   user(userId: string): this {
     this.pending = this.pending.then(async () => {
-      const userSnapshot = await userService.findByUserId(userId);
+      const userSnapshot = await this.userService.findByUserId(userId);
       if (!userSnapshot) throw new NotFoundException("User not found");
       this.snapshot = PostMapper.toUserSnapshot(userSnapshot);
     });
@@ -70,14 +86,14 @@ class PostBuilder {
 
   mentions(mentions?: CreatePostPayload["mentions"]): this {
     this.pending = this.pending.then(async () => {
-      this.mentionIds = await postMentionService.validateMentions(mentions);
+      this.mentionIds = await this.postMentionService.validateMentions(mentions);
     });
     return this;
   }
 
   existPost(publicId: string): this {
     this.pending = this.pending.then(async () => {
-      const existPost = await postRepository.findByPublicId(publicId);
+      const existPost = await this.postRepository.findByPublicId(publicId);
       if (!existPost) throw new NotFoundException("Origin post not found");
       this.existPostRef = existPost;
     });
@@ -86,7 +102,7 @@ class PostBuilder {
 
   originPost(publicId: string): this {
     this.pending = this.pending.then(async () => {
-      const originPost = await postRepository.findOriginReferenceByPublicId(publicId);
+      const originPost = await this.postRepository.findOriginReferenceByPublicId(publicId);
       if (!originPost) throw new NotFoundException("Origin post not found");
       this.originPostRef = originPost;
     });
@@ -122,9 +138,7 @@ class PostBuilder {
 
     if (!post.id) throw new BadRequestException("Failed to create post");
 
-    await postMetaService.attachPostMeta(prisma, post.id, meta);
+    await this.postMetaService.attachPostMeta(this.prisma, post.id, meta);
     return post;
   }
 }
-
-export { PostBuilder };

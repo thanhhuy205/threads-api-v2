@@ -1,7 +1,9 @@
-import prisma from "@/config/prisma";
+import legacyPrisma from "@/config/prisma";
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '@/shared/database/prisma.service';
 import { InteractionType, Prisma } from "@prisma/client";
 
-type PostInteractionDbClient = Prisma.TransactionClient | typeof prisma;
+type PostInteractionDbClient = Prisma.TransactionClient | PrismaService;
 
 type PostInteractionPayload = {
   userId: string;
@@ -9,8 +11,11 @@ type PostInteractionPayload = {
   type: InteractionType;
 };
 
-class PostInteractionRepository {
-  create(payload: PostInteractionPayload, tx: PostInteractionDbClient = prisma) {
+@Injectable()
+export class PostInteractionRepository {
+  constructor(private readonly prisma: PrismaService = legacyPrisma as unknown as PrismaService) {}
+
+  create(payload: PostInteractionPayload, tx: PostInteractionDbClient = this.prisma) {
     return tx.postInteraction.createMany({
       data: [payload],
       skipDuplicates: true,
@@ -19,7 +24,7 @@ class PostInteractionRepository {
 
   findByStatus(
     payload: PostInteractionPayload,
-    tx: PostInteractionDbClient = prisma,
+    tx: PostInteractionDbClient = this.prisma,
   ) {
     return tx.postInteraction.findFirst({
       where: payload,
@@ -31,7 +36,7 @@ class PostInteractionRepository {
 
   deleteByUserPostAndType(
     payload: PostInteractionPayload,
-    tx: PostInteractionDbClient = prisma,
+    tx: PostInteractionDbClient = this.prisma,
   ) {
     return tx.postInteraction.deleteMany({
       where: payload,
@@ -39,4 +44,3 @@ class PostInteractionRepository {
   }
 }
 
-export const postInteractionRepository = new PostInteractionRepository();

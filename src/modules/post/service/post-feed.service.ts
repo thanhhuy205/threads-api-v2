@@ -1,4 +1,6 @@
 import { baseLogger } from "@/middlewares/logger";
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { FollowerService } from '@/modules/user/service/follower.service';
 import { NewFeedType } from "@/modules/post/enum";
 import {
   buildNewFeedWhere,
@@ -15,9 +17,14 @@ import type { NewsFeedPayload } from "@/modules/post/interfaces/news-feed-payloa
 import { PostMapper } from "@/modules/post/mapper/post.mapper";
 import { redisVersion } from "@/shared/redis-version";
 import { primaryPostTypes } from "../constants/post-type";
-import { postRepository } from "../repository/post.repository";
+import { PostRepository } from "../repository/post.repository";
 
-class PostFeedService {
+@Injectable()
+export class PostFeedService {
+  constructor(
+    private readonly postRepository: PostRepository,
+    @Inject(forwardRef(() => FollowerService)) private readonly followerService: FollowerService,
+  ) {}
   async getNewsFeed({
     after,
     take,
@@ -48,6 +55,8 @@ class PostFeedService {
           after,
           take,
           where,
+          postRepository: this.postRepository,
+          followerService: this.followerService,
         }),
     );
   }
@@ -74,6 +83,8 @@ class PostFeedService {
             userId,
             postTypes: primaryPostTypes,
           }),
+          postRepository: this.postRepository,
+          followerService: this.followerService,
         }),
     );
   }
@@ -98,6 +109,8 @@ class PostFeedService {
             after,
             publicId,
           }),
+          postRepository: this.postRepository,
+          followerService: this.followerService,
         }),
     );
   }
@@ -122,12 +135,14 @@ class PostFeedService {
             after,
             userId,
           }),
+          postRepository: this.postRepository,
+          followerService: this.followerService,
         }),
     );
   }
 
   async getById(publicId: string, userId?: string | null) {
-    const post = await postRepository.findByPublicId(publicId, userId);
+    const post = await this.postRepository.findByPublicId(publicId, userId);
 
     if (!post) {
       return null;
@@ -139,5 +154,3 @@ class PostFeedService {
     };
   }
 }
-
-export const postFeedService = new PostFeedService();

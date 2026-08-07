@@ -1,136 +1,146 @@
-import { PostType, ReplyPermission, VisibilityPost } from "@prisma/client";
-import { z } from "zod";
-import { creatablePostTypes } from "../constants/post-type";
+import { Transform, Type } from 'class-transformer';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { PostType, ReplyPermission, VisibilityPost } from '@prisma/client';
+import {
+  ArrayMaxSize,
+  ArrayMinSize,
+  IsArray,
+  IsBoolean,
+  IsEnum,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Max,
+  MaxLength,
+  Min,
+  MinLength,
+  ValidateIf,
+  ValidateNested,
+} from 'class-validator';
+import { creatablePostTypes } from '../constants/post-type';
 
-const mentionSchema = z.object({
-  userId: z.string().trim().min(1, "Mention userId is required"),
-  username: z.string().trim().min(1, "Mention username is required"),
-});
+const normalizeEnum = ({ value }: { value: unknown }) =>
+  typeof value === 'string' ? value.trim().toUpperCase() : value;
 
-const pollOptionSchema = z
-  .string()
-  .trim()
-  .min(1, "Poll option text is required")
-  .max(255, "Poll option text must be at most 255 characters");
+export class PostMentionDto {
+  @ApiProperty()
+  @IsString()
+  @Transform(({ value }) => typeof value === 'string' ? value.trim() : value)
+  @IsNotEmpty({ message: 'Mention userId is required' })
+  userId!: string;
 
-const replyPermissionSchema = z.preprocess(
-  (value) => (typeof value === "string" ? value.trim().toUpperCase() : value),
-  z.nativeEnum(ReplyPermission, {
-    errorMap: () => ({
-      message: `replyPermission must be one of: ${Object.values(ReplyPermission).join(", ")}`,
-    }),
-  }),
-);
+  @ApiProperty()
+  @IsString()
+  @Transform(({ value }) => typeof value === 'string' ? value.trim() : value)
+  @IsNotEmpty({ message: 'Mention username is required' })
+  username!: string;
+}
 
-const visibilityPostSchema = z.preprocess(
-  (value) => (typeof value === "string" ? value.trim().toUpperCase() : value),
-  z.nativeEnum(VisibilityPost, {
-    errorMap: () => ({
-      message: `visibility must be one of: ${Object.values(VisibilityPost).join(", ")}`,
-    }),
-  }),
-);
+export class PostMediaDto {
+  @ApiProperty()
+  @Type(() => Number)
+  @IsInt()
+  id!: number;
 
-const creatablePostTypeSchema = z.preprocess(
-  (value) => (typeof value === "string" ? value.trim().toUpperCase() : value),
-  z.enum(creatablePostTypes, {
-    errorMap: () => ({
-      message: `type must be one of: ${creatablePostTypes.join(", ")}`,
-    }),
-  }),
-);
+  @ApiProperty()
+  @IsString()
+  key!: string;
 
-const createPostSchema = z.object({
-  title: z
-    .string()
-    .trim()
-    .min(1, "Title must be at least 1 character")
-    .max(255, "Title must be at most 255 characters"),
-  contentJson: z
-    .string()
-    .max(5000, "Content JSON must be at most 5000 characters")
-    .optional(),
-  content: z
-    .string()
-    .min(1, "Content must be at least 1 character")
-    .max(5000, "Content must be at most 5000 characters"),
-  topic: z
-    .string()
-    .trim()
-    .min(1, "Topic must be at least 1 character")
-    .max(255, "Topic must be at most 255 characters")
-    .optional(),
-  mentions: z.array(mentionSchema).max(5, "Mentions must be at most 5 users").optional(),
-  media: z
-    .array(
-      z.object({
-        id: z.number(),
-        key: z.string(),
-        url: z.string(),
-      }),
-    )
-    .optional(),
-  isSurvey: z.boolean().default(false),
-  polls: z.array(pollOptionSchema).max(4, "Polls must be at most 4 options").optional(),
-  type: creatablePostTypeSchema.optional(),
-  replyPermission: replyPermissionSchema.default(ReplyPermission.EVERYONE),
-  visibility: visibilityPostSchema.default(VisibilityPost.PUBLIC),
-}).superRefine((payload, ctx) => {
-  if (payload.mentions?.length) {
-    const mentionIds = payload.mentions.map((mention) => mention.userId);
-    const uniqueIds = new Set(mentionIds);
+  @ApiProperty()
+  @IsString()
+  url!: string;
+}
 
-    if (uniqueIds.size !== mentionIds.length) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Mentions must not contain duplicate users",
-        path: ["mentions"],
-      });
-    }
-  }
+export class CreatePostDto {
+  @ApiProperty({ example: 'Hello Threads' })
+  @IsString()
+  @Transform(({ value }) => typeof value === 'string' ? value.trim() : value)
+  @MinLength(1, { message: 'Title must be at least 1 character' })
+  @MaxLength(255, { message: 'Title must be at most 255 characters' })
+  title!: string;
 
-  if (payload.isSurvey && payload.polls && payload.polls?.length < 2) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "Polls must contain at least 2 options when isSurvey is true",
-    });
-  }
+  @ApiPropertyOptional({ maxLength: 5000 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(5000, { message: 'Content JSON must be at most 5000 characters' })
+  contentJson?: string;
 
-  if (payload.isSurvey && !payload.polls?.length) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "Polls are required when isSurvey is true",
-      path: ["polls"],
-    });
-  }
+  @ApiProperty({ example: 'Hello Threads', maxLength: 5000 })
+  @IsString()
+  @MinLength(1, { message: 'Content must be at least 1 character' })
+  @MaxLength(5000, { message: 'Content must be at most 5000 characters' })
+  content!: string;
 
-  if (payload.isSurvey && payload.polls && payload.polls.length >= 2) {
-    const hasEmpty = payload.polls.some(item => item.trim() === "");
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Transform(({ value }) => typeof value === 'string' ? value.trim() : value)
+  @MinLength(1, { message: 'Topic must be at least 1 character' })
+  @MaxLength(255, { message: 'Topic must be at most 255 characters' })
+  topic?: string;
 
-    if (hasEmpty) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Polls are required when isSurvey is true",
-        path: ["polls"],
-      });
-    }
-  }
-});
+  @ApiPropertyOptional({ type: () => [PostMentionDto] })
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(5, { message: 'Mentions must be at most 5 users' })
+  @ValidateNested({ each: true })
+  @Type(() => PostMentionDto)
+  mentions?: PostMentionDto[];
 
-export type CreatePostDto = z.infer<typeof createPostSchema>;
+  @ApiPropertyOptional({ type: () => [PostMediaDto] })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => PostMediaDto)
+  media?: PostMediaDto[];
 
-const updatePostSchema = z.object({
-  content: z
-    .string()
-    .min(1, "Content must be at least 1 character")
-    .max(5000, "Content must be at most 5000 characters")
-    .optional(),
-  visibility: visibilityPostSchema.optional(),
-}).refine((payload) => payload.content !== undefined || payload.visibility !== undefined, {
-  message: "At least one of content or visibility is required",
-});
+  @ApiPropertyOptional({ default: false })
+  @IsOptional()
+  @IsBoolean()
+  isSurvey = false;
 
-export type UpdatePostDto = z.infer<typeof updatePostSchema>;
+  @ApiPropertyOptional({ type: [String], maxItems: 4 })
+  @ValidateIf((value: CreatePostDto) => value.isSurvey || value.polls !== undefined)
+  @IsArray()
+  @ArrayMinSize(2, { message: 'Polls must contain at least 2 options when isSurvey is true' })
+  @ArrayMaxSize(4, { message: 'Polls must be at most 4 options' })
+  @IsString({ each: true })
+  @Transform(({ value }) => Array.isArray(value) ? value.map((item) => typeof item === 'string' ? item.trim() : item) : value)
+  @MinLength(1, { each: true, message: 'Poll option text is required' })
+  @MaxLength(255, { each: true, message: 'Poll option text must be at most 255 characters' })
+  polls?: string[];
 
-export { createPostSchema, updatePostSchema };
+  @ApiPropertyOptional({ enum: creatablePostTypes })
+  @IsOptional()
+  @Transform(normalizeEnum)
+  @IsEnum(creatablePostTypes)
+  type?: (typeof creatablePostTypes)[number];
 
+  @ApiPropertyOptional({ enum: ReplyPermission, default: ReplyPermission.EVERYONE })
+  @IsOptional()
+  @Transform(normalizeEnum)
+  @IsEnum(ReplyPermission)
+  replyPermission: ReplyPermission = ReplyPermission.EVERYONE;
+
+  @ApiPropertyOptional({ enum: VisibilityPost, default: VisibilityPost.PUBLIC })
+  @IsOptional()
+  @Transform(normalizeEnum)
+  @IsEnum(VisibilityPost)
+  visibility: VisibilityPost = VisibilityPost.PUBLIC;
+}
+
+export class UpdatePostDto {
+  @ApiPropertyOptional({ maxLength: 5000 })
+  @IsOptional()
+  @IsString()
+  @MinLength(1, { message: 'Content must be at least 1 character' })
+  @MaxLength(5000, { message: 'Content must be at most 5000 characters' })
+  content?: string;
+
+  @ApiPropertyOptional({ enum: VisibilityPost })
+  @IsOptional()
+  @Transform(normalizeEnum)
+  @IsEnum(VisibilityPost)
+  visibility?: VisibilityPost;
+}

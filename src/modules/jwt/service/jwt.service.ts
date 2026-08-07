@@ -1,7 +1,6 @@
 import configService from '@/config/config';
 import { Injectable } from '@nestjs/common';
 import { JwtService as NestJwtService } from '@nestjs/jwt';
-import { Request } from 'express';
 import { JwtPayload } from 'jsonwebtoken';
 import crypto from 'crypto';
 import ms from 'ms';
@@ -80,8 +79,9 @@ export class JwtService {
     return String(Math.floor(100000 + Math.random() * 900000));
   }
 
-  async requestAuthToken(req: Request<any, any, any, any>) {
-    const token = req.headers.authorization?.split(' ')[1];
+  async requestAuthToken(req: { headers: { authorization?: string | string[] | undefined } }) {
+    const authorization = req.headers.authorization;
+    const token = typeof authorization === 'string' ? authorization.split(' ')[1] : undefined;
     if (!token) {
       return null;
     }

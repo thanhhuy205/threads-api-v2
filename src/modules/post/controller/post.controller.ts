@@ -1,390 +1,310 @@
-import { AUTH_MESSAGE, POST_MESSAGE } from "@/constants/message";
-import { jwtService } from "@/modules/jwt/service/jwt.service";
-import { userService } from "@/modules/user/service/user.service";
-import { getPagination } from "@/shared/pagination/cursor-pagination";
-import { Request, Response } from "express";
-import { CreatePostDto, UpdatePostDto } from "../dto/post.dto";
-import type {
-  HidePostDto,
-  ReportDto,
-  SavePostDto,
-} from "../dto/request/post.request";
-import {
-  CursorPaginationQueryDto,
-  NewsFeedQueryDto,
-  PublicIdParamsDto,
-  UsernameParamsDto
-} from "../dto/request/post.request";
-import { postActionService } from "../service/post-action.service";
-import { postFeedService } from "../service/post-feed.service";
-import { postSearchService } from "../service/post-search.service";
-import { postUserService } from "../service/post-user.service";
-import { postService } from "../service/post.service";
+import { BadRequestException, Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Message } from '@/common/decorators/message.decorator';
+import { Pagination } from '@/common/decorators/pagination.decorator';
+import { AccessTokenGuard } from '@/common/guards/access-token.guard';
+import { AUTH_MESSAGE, POST_MESSAGE } from '@/constants/message';
+import { NotFoundException, UnauthorizedException } from '@/errors/error';
+import { JwtService } from '@/modules/jwt/service/jwt.service';
+import { UserService } from '@/modules/user/service/user.service';
+import { buildPagination } from '@/shared/pagination/cursor-pagination';
+import { CreatePostDto, UpdatePostDto } from '../dto/post.dto';
+import { CursorPaginationQueryDto, HidePostDto, NewsFeedQueryDto, PublicIdParamsDto, ReportDto, SavePostDto, SearchPostQueryDto, UsernameParamsDto } from '../dto/request/post.request';
+import { PostActionService } from '../service/post-action.service';
+import { PostFeedService } from '../service/post-feed.service';
+import { PostSearchService } from '../service/post-search.service';
+import { PostUserService } from '../service/post-user.service';
+import { PostService } from '../service/post.service';
 
-type SearchQueryDto = {
-  q?: string;
-  topics?: string;
-  limit?: string;
-  page?: string;
+type AuthenticatedRequest = {
+  headers: { authorization?: string | string[] | undefined };
+  user?: { sub?: string };
 };
 
-class PostController {
-  async getNewsFeedController(
-    req: Request<{}, {}, {}, NewsFeedQueryDto>,
-    res: Response,
-  ) {
-    const { after, take } = getPagination(req);
-    const userId = await jwtService.requestAuthToken(req);
+@ApiTags('Post')
+@Controller('posts')
+export class PostController {
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly userService: UserService,
+    private readonly postService: PostService,
+    private readonly postActionService: PostActionService,
+    private readonly postFeedService: PostFeedService,
+    private readonly postSearchService: PostSearchService,
+    private readonly postUserService: PostUserService,
+  ) {}
 
-    const { posts, pagination } = await postFeedService.getNewsFeed({
-      after: after ?? undefined,
-      take,
+  @Get('news-feed')
+  @Pagination()
+  @Message(POST_MESSAGE.RETRIEVED)
+  @ApiOperation({ summary: 'Get the news feed' })
+  @ApiResponse({ status: HttpStatus.OK, description: POST_MESSAGE.RETRIEVED })
+  async getNewsFeed(@Query() query: NewsFeedQueryDto, @Req() request: AuthenticatedRequest) {
+    const { currentAfter, currentLimit } = buildPagination(query);
+    const userId = await this.jwtService.requestAuthToken(request);
+    const { posts, pagination } = await this.postFeedService.getNewsFeed({
+      after: currentAfter ?? undefined,
+      take: currentLimit,
       userId,
-      feedType: req.query_parsed.type,
+      feedType: query.type,
     });
-
-    return res.paginate({ rows: posts, pagination });
+    return { data: posts, pagination };
   }
 
-  async getPostMe(
-    req: Request<{}, {}, {}, CursorPaginationQueryDto>,
-    res: Response,
-  ) {
-    const userId = req.user?.sub;
-
-    if (!userId) {
-      return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
-    }
-
-    const { after, take } = getPagination(req);
-    const { posts, pagination } = await postFeedService.getPostMe({
-      after: after ?? undefined,
-      take,
-      userId,
+  @Get('search')
+  @Message(POST_MESSAGE.SEARCH_SUCCESS)
+  @ApiOperation({ summary: 'Search posts' })
+  @ApiResponse({ status: HttpStatus.OK, description: POST_MESSAGE.SEARCH_SUCCESS })
+  search(@Query() query: SearchPostQueryDto) {
+    return this.postSearchService.search({
+      q: query.q ?? '',
+      topics: query.topics ?? '',
+      limit: query.limit ?? '',
+      page: query.page ?? '',
     });
-    return res.paginate({ rows: posts, pagination });
   }
 
-  async getPostsByUser(
-    req: Request<UsernameParamsDto, {}, {}, CursorPaginationQueryDto>,
-    res: Response,
-  ) {
-    const { after, take } = getPagination(req);
-    const user = await userService.findByUsername(req.params.username);
-
-    if (!user) {
-      return res.error(404, "User not found");
-    }
-
-    const myUserId = await jwtService.requestAuthToken(req);
-    const { posts, pagination } = await postUserService.getPostsByUser({
-      after: after ?? undefined,
-      take,
-      userId: user.id,
-      myUserId: myUserId ?? undefined,
+  @Get('me')
+  @UseGuards(AccessTokenGuard)
+  @ApiBearerAuth('bearer')
+  @Pagination()
+  @Message(POST_MESSAGE.RETRIEVED)
+  @ApiOperation({ summary: 'Get current user posts' })
+  @ApiResponse({ status: HttpStatus.OK, description: POST_MESSAGE.RETRIEVED })
+  async getPostMe(@Query() query: CursorPaginationQueryDto, @Req() request: AuthenticatedRequest) {
+    const { currentAfter, currentLimit } = buildPagination(query);
+    const { posts, pagination } = await this.postFeedService.getPostMe({
+      after: currentAfter ?? undefined,
+      take: currentLimit,
+      userId: this.userId(request),
     });
-
-    return res.paginate({ rows: posts, pagination });
+    return { data: posts, pagination };
   }
 
-  async getReplies(
-    req: Request<PublicIdParamsDto, {}, {}, CursorPaginationQueryDto>,
-    res: Response,
-  ) {
-    const { after, take } = getPagination(req);
-    const userId = await jwtService.requestAuthToken(req);
-    const { posts, pagination } = await postFeedService.getReplies({
-      after: after ?? undefined,
-      take,
-      publicId: req.params.publicId,
-      userId,
-    });
-
-    return res.paginate({ rows: posts, pagination });
-  }
-
-  async getRepliesMe(
-    req: Request<{}, {}, {}, CursorPaginationQueryDto>,
-    res: Response,
-  ) {
-    const userId = req.user?.sub;
-
-    if (!userId) {
-      return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
-    }
-
-    const { after, take } = getPagination(req);
-    const { posts, pagination } = await postUserService.getRepliesByUser({
-      after: after ?? undefined,
-      take,
+  @Get('me/replies')
+  @UseGuards(AccessTokenGuard)
+  @ApiBearerAuth('bearer')
+  @Pagination()
+  @Message(POST_MESSAGE.REPLIES_RETRIEVED)
+  @ApiOperation({ summary: 'Get current user replies' })
+  @ApiResponse({ status: HttpStatus.OK, description: POST_MESSAGE.REPLIES_RETRIEVED })
+  async getRepliesMe(@Query() query: CursorPaginationQueryDto, @Req() request: AuthenticatedRequest) {
+    const { currentAfter, currentLimit } = buildPagination(query);
+    const userId = this.userId(request);
+    const { posts, pagination } = await this.postUserService.getRepliesByUser({
+      after: currentAfter ?? undefined,
+      take: currentLimit,
       userId,
       myUserId: userId,
     });
-
-    return res.paginate({ rows: posts, pagination });
+    return { data: posts, pagination };
   }
 
-  async getRepliesByUser(
-    req: Request<UsernameParamsDto, {}, {}, CursorPaginationQueryDto>,
-    res: Response,
-  ) {
-    const { after, take } = getPagination(req);
-    const user = await userService.findByUsername(req.params.username);
-
-    if (!user) {
-      return res.error(404, "User not found");
-    }
-
-    const myUserId = await jwtService.requestAuthToken(req);
-    const { posts, pagination } = await postUserService.getRepliesByUser({
-      after: after ?? undefined,
-      take,
-      userId: user.id,
-      myUserId: myUserId ?? undefined,
-    });
-
-    return res.paginate({ rows: posts, pagination });
-  }
-
-  async getQuoteMe(
-    req: Request<{}, {}, {}, CursorPaginationQueryDto>,
-    res: Response,
-  ) {
-    const userId = req.user?.sub;
-
-    if (!userId) {
-      return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
-    }
-
-    const { after, take } = getPagination(req);
-    const { posts, pagination } = await postFeedService.getQuote({
-      after: after ?? undefined,
-      take,
+  @Get('me/quote')
+  @UseGuards(AccessTokenGuard)
+  @ApiBearerAuth('bearer')
+  @Pagination()
+  @Message(POST_MESSAGE.RETRIEVED)
+  @ApiOperation({ summary: 'Get current user quotes and reposts' })
+  @ApiResponse({ status: HttpStatus.OK, description: POST_MESSAGE.RETRIEVED })
+  async getQuoteMe(@Query() query: CursorPaginationQueryDto, @Req() request: AuthenticatedRequest) {
+    const { currentAfter, currentLimit } = buildPagination(query);
+    const userId = this.userId(request);
+    const { posts, pagination } = await this.postFeedService.getQuote({
+      after: currentAfter ?? undefined,
+      take: currentLimit,
       userId,
       myUserId: userId,
     });
-
-    return res.paginate({ rows: posts, pagination });
+    return { data: posts, pagination };
   }
 
-  async getQuote(
-    req: Request<UsernameParamsDto, {}, {}, CursorPaginationQueryDto>,
-    res: Response,
-  ) {
-    const { after, take } = getPagination(req);
-    const user = await userService.findByUsername(req.params.username);
-
-    if (!user) {
-      return res.error(404, "User not found");
-    }
-
-    const myUserId = await jwtService.requestAuthToken(req);
-    const { posts, pagination } = await postFeedService.getQuote({
-      after: after ?? undefined,
-      take,
-      userId: user.id,
-      myUserId: myUserId ?? undefined,
+  @Get('user/:username')
+  @Pagination()
+  @Message(POST_MESSAGE.RETRIEVED)
+  @ApiOperation({ summary: 'Get posts by username' })
+  @ApiParam({ name: 'username' })
+  @ApiResponse({ status: HttpStatus.OK, description: POST_MESSAGE.RETRIEVED })
+  async getPostsByUser(@Param() params: UsernameParamsDto, @Query() query: CursorPaginationQueryDto, @Req() request: AuthenticatedRequest) {
+    const user = await this.getUser(params.username);
+    const { currentAfter, currentLimit } = buildPagination(query);
+    const { posts, pagination } = await this.postUserService.getPostsByUser({
+      after: currentAfter ?? undefined, take: currentLimit, userId: user.id,
+      myUserId: await this.jwtService.requestAuthToken(request) ?? undefined,
     });
-
-    return res.paginate({ rows: posts, pagination });
+    return { data: posts, pagination };
   }
 
-  async createPostController(
-    req: Request<{}, {}, CreatePostDto>,
-    res: Response,
-  ) {
-    const userId = req.user?.sub;
-
-    if (!userId) {
-      return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
-    }
-
-    const post = await postService.create({
-      ...req.body,
-      userId,
+  @Get('user/:username/replies')
+  @Pagination()
+  @Message(POST_MESSAGE.REPLIES_RETRIEVED)
+  @ApiOperation({ summary: 'Get replies by username' })
+  @ApiParam({ name: 'username' })
+  @ApiResponse({ status: HttpStatus.OK, description: POST_MESSAGE.REPLIES_RETRIEVED })
+  async getRepliesByUser(@Param() params: UsernameParamsDto, @Query() query: CursorPaginationQueryDto, @Req() request: AuthenticatedRequest) {
+    const user = await this.getUser(params.username);
+    const { currentAfter, currentLimit } = buildPagination(query);
+    const { posts, pagination } = await this.postUserService.getRepliesByUser({
+      after: currentAfter ?? undefined, take: currentLimit, userId: user.id,
+      myUserId: await this.jwtService.requestAuthToken(request) ?? undefined,
     });
-
-    return res.success(201, POST_MESSAGE.CREATED, post);
+    return { data: posts, pagination };
   }
 
-  async create(req: Request<{}, {}, CreatePostDto>, res: Response) {
-    return this.createPostController(req, res);
-  }
-
-  async getThread(req: Request<PublicIdParamsDto>, res: Response) {
-    const userId = await jwtService.requestAuthToken(req);
-    const post = await postFeedService.getById(req.params.publicId, userId);
-
-    if (!post) {
-      return res.error(404, "Post not found");
-    }
-
-    return res.success(200, POST_MESSAGE.RETRIEVED, post);
-  }
-
-  async getPost(req: Request<PublicIdParamsDto>, res: Response) {
-    const userId = await jwtService.requestAuthToken(req);
-    const post = await postFeedService.getById(req.params.publicId, userId);
-
-    if (!post) {
-      return res.error(404, "Post not found");
-    }
-
-    return res.success(200, POST_MESSAGE.RETRIEVED, post);
-  }
-
-  async replyPost(
-    req: Request<PublicIdParamsDto, {}, CreatePostDto>,
-    res: Response,
-  ) {
-    const userId = req.user?.sub;
-
-    if (!userId) {
-      return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
-    }
-
-    const reply = await postService.reply(req.params.publicId, {
-      ...req.body,
-      userId,
+  @Get('user/:username/quotes')
+  @Pagination()
+  @Message(POST_MESSAGE.RETRIEVED)
+  @ApiOperation({ summary: 'Get quotes and reposts by username' })
+  @ApiParam({ name: 'username' })
+  @ApiResponse({ status: HttpStatus.OK, description: POST_MESSAGE.RETRIEVED })
+  async getQuote(@Param() params: UsernameParamsDto, @Query() query: CursorPaginationQueryDto, @Req() request: AuthenticatedRequest) {
+    const user = await this.getUser(params.username);
+    const { currentAfter, currentLimit } = buildPagination(query);
+    const { posts, pagination } = await this.postFeedService.getQuote({
+      after: currentAfter ?? undefined, take: currentLimit, userId: user.id,
+      myUserId: await this.jwtService.requestAuthToken(request) ?? undefined,
     });
-    return res.success(201, POST_MESSAGE.CREATED, reply);
+    return { data: posts, pagination };
   }
 
-  async likePost(req: Request<PublicIdParamsDto>, res: Response) {
-    const userId = req.user?.sub;
-
-    if (!userId) {
-      return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
-    }
-
-    const result = await postActionService.like(req.params.publicId, userId);
-    return res.success(200, POST_MESSAGE.RETRIEVED, {
-      liked: result,
+  @Get(':publicId/replies')
+  @Pagination()
+  @Message(POST_MESSAGE.REPLIES_RETRIEVED)
+  @ApiOperation({ summary: 'Get replies to a post' })
+  @ApiParam({ name: 'publicId' })
+  @ApiResponse({ status: HttpStatus.OK, description: POST_MESSAGE.REPLIES_RETRIEVED })
+  async getReplies(@Param() params: PublicIdParamsDto, @Query() query: CursorPaginationQueryDto, @Req() request: AuthenticatedRequest) {
+    const { currentAfter, currentLimit } = buildPagination(query);
+    const { posts, pagination } = await this.postFeedService.getReplies({
+      after: currentAfter ?? undefined, take: currentLimit, publicId: params.publicId,
+      userId: await this.jwtService.requestAuthToken(request),
     });
+    return { data: posts, pagination };
   }
 
-  async repostPost(req: Request<PublicIdParamsDto>, res: Response) {
-    const userId = req.user?.sub;
+  @Get(':publicId')
+  @Message(POST_MESSAGE.RETRIEVED)
+  @ApiOperation({ summary: 'Get a post' })
+  @ApiParam({ name: 'publicId' })
+  @ApiResponse({ status: HttpStatus.OK, description: POST_MESSAGE.RETRIEVED })
+  async getPost(@Param() params: PublicIdParamsDto, @Req() request: AuthenticatedRequest) {
+    const post = await this.postFeedService.getById(params.publicId, await this.jwtService.requestAuthToken(request));
+    if (!post) throw new NotFoundException('Post not found');
+    return post;
+  }
 
-    if (!userId) {
-      return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
+  @Post()
+  @UseGuards(AccessTokenGuard)
+  @ApiBearerAuth('bearer')
+  @Message(POST_MESSAGE.CREATED)
+  @ApiOperation({ summary: 'Create a post' })
+  @ApiResponse({ status: HttpStatus.CREATED, description: POST_MESSAGE.CREATED })
+  createPost(@Body() payload: CreatePostDto, @Req() request: AuthenticatedRequest) {
+    return this.postService.create({ ...payload, userId: this.userId(request) });
+  }
+
+  @Post(':publicId/reply')
+  @UseGuards(AccessTokenGuard)
+  @ApiBearerAuth('bearer')
+  @Message(POST_MESSAGE.CREATED)
+  @ApiOperation({ summary: 'Reply to a post' })
+  @ApiParam({ name: 'publicId' })
+  replyPost(@Param() params: PublicIdParamsDto, @Body() payload: CreatePostDto, @Req() request: AuthenticatedRequest) {
+    return this.postService.reply(params.publicId, { ...payload, userId: this.userId(request) });
+  }
+
+  @Post(':publicId/like')
+  @UseGuards(AccessTokenGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth('bearer')
+  @Message(POST_MESSAGE.RETRIEVED)
+  @ApiOperation({ summary: 'Like or unlike a post' })
+  async likePost(@Param() params: PublicIdParamsDto, @Req() request: AuthenticatedRequest) {
+    return { liked: await this.postActionService.like(params.publicId, this.userId(request)) };
+  }
+
+  @Post(':publicId/repost')
+  @UseGuards(AccessTokenGuard)
+  @ApiBearerAuth('bearer')
+  @Message(POST_MESSAGE.CREATED)
+  @ApiOperation({ summary: 'Repost a post' })
+  repostPost(@Param() params: PublicIdParamsDto, @Req() request: AuthenticatedRequest) {
+    return this.postService.repost(params.publicId, this.userId(request));
+  }
+
+  @Post(':publicId/quote')
+  @UseGuards(AccessTokenGuard)
+  @ApiBearerAuth('bearer')
+  @Message(POST_MESSAGE.CREATED)
+  @ApiOperation({ summary: 'Quote a post' })
+  quotePost(@Param() params: PublicIdParamsDto, @Body() payload: CreatePostDto, @Req() request: AuthenticatedRequest) {
+    return this.postService.quote(params.publicId, { ...payload, userId: this.userId(request) });
+  }
+
+  @Post(':publicId/save')
+  @UseGuards(AccessTokenGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth('bearer')
+  @Message(POST_MESSAGE.RETRIEVED)
+  @ApiOperation({ summary: 'Save or unsave a post' })
+  async savePost(@Param() params: PublicIdParamsDto, @Body() payload: SavePostDto, @Req() request: AuthenticatedRequest) {
+    await this.postActionService.save(params.publicId, this.userId(request), payload.isSaved);
+    return { saved: payload.isSaved };
+  }
+
+  @Post(':publicId/hide')
+  @UseGuards(AccessTokenGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth('bearer')
+  @Message(POST_MESSAGE.RETRIEVED)
+  @ApiOperation({ summary: 'Hide or unhide a post' })
+  async hidePost(@Param() params: PublicIdParamsDto, @Body() payload: HidePostDto, @Req() request: AuthenticatedRequest) {
+    await this.postActionService.hide(params.publicId, this.userId(request), payload.isHidden);
+    return { hidden: payload.isHidden };
+  }
+
+  @Post(':publicId/report')
+  @UseGuards(AccessTokenGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth('bearer')
+  @Message(POST_MESSAGE.RETRIEVED)
+  @ApiOperation({ summary: 'Report a post or user' })
+  async reportPost(@Param() params: PublicIdParamsDto, @Body() payload: ReportDto, @Req() request: AuthenticatedRequest) {
+    const report = await this.postActionService.report(params.publicId, { ...payload, reporterId: this.userId(request) });
+    return { reported: true, report };
+  }
+
+  @Patch(':publicId')
+  @UseGuards(AccessTokenGuard)
+  @ApiBearerAuth('bearer')
+  @Message(POST_MESSAGE.RETRIEVED)
+  @ApiOperation({ summary: 'Update a post' })
+  updatePost(@Param() params: PublicIdParamsDto, @Body() payload: UpdatePostDto, @Req() request: AuthenticatedRequest) {
+    if (payload.content === undefined && payload.visibility === undefined) {
+      throw new BadRequestException('At least one of content or visibility is required');
     }
-
-    const repost = await postService.repost(req.params.publicId, userId);
-
-    return res.success(201, POST_MESSAGE.CREATED, repost);
+    return this.postActionService.update(params.publicId, this.userId(request), payload);
   }
 
-  async quotePost(
-    req: Request<PublicIdParamsDto, {}, CreatePostDto>,
-    res: Response,
-  ) {
-    const userId = req.user?.sub;
-
-    if (!userId) {
-      return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
-    }
-
-    const quote = await postService.quote(req.params.publicId, {
-      ...req.body,
-      userId,
-    });
-    return res.success(201, POST_MESSAGE.CREATED, quote);
+  @Delete(':publicId')
+  @UseGuards(AccessTokenGuard)
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth('bearer')
+  @Message(POST_MESSAGE.RETRIEVED)
+  @ApiOperation({ summary: 'Delete a post' })
+  async deletePost(@Param() params: PublicIdParamsDto, @Req() request: AuthenticatedRequest) {
+    await this.postActionService.delete(params.publicId, this.userId(request));
+    return { deleted: true };
   }
 
-  async savePost(
-    req: Request<PublicIdParamsDto, {}, SavePostDto>,
-    res: Response,
-  ) {
-    const userId = req.user?.sub;
-
-    if (!userId) {
-      return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
-    }
-
-    await postActionService.save(req.params.publicId, userId, req.body.isSaved);
-    return res.success(200, POST_MESSAGE.RETRIEVED, {
-      saved: req.body.isSaved,
-    });
+  private async getUser(username: string) {
+    const user = await this.userService.findByUsername(username);
+    if (!user) throw new NotFoundException('User not found');
+    return user;
   }
 
-  async hidePost(
-    req: Request<PublicIdParamsDto, {}, HidePostDto>,
-    res: Response,
-  ) {
-    const userId = req.user?.sub;
-
-    if (!userId) {
-      return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
-    }
-
-    await postActionService.hide(req.params.publicId, userId, req.body.isHidden);
-    return res.success(200, POST_MESSAGE.RETRIEVED, {
-      hidden: req.body.isHidden,
-    });
-  }
-
-  async reportPost(
-    req: Request<PublicIdParamsDto, {}, ReportDto>,
-    res: Response,
-  ) {
-    const userId = req.user?.sub;
-
-    if (!userId) {
-      return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
-    }
-
-    const report = await postActionService.report(req.params.publicId, {
-      ...req.body,
-      reporterId: userId,
-    });
-    return res.success(200, POST_MESSAGE.RETRIEVED, {
-      reported: true,
-      report,
-    });
-  }
-
-  async deletePost(req: Request<PublicIdParamsDto>, res: Response) {
-    const userId = req.user?.sub;
-
-    if (!userId) {
-      return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
-    }
-
-    await postActionService.delete(req.params.publicId, userId);
-    return res.success(200, POST_MESSAGE.RETRIEVED, { deleted: true });
-  }
-
-  async updatePost(
-    req: Request<PublicIdParamsDto, {}, UpdatePostDto>,
-    res: Response,
-  ) {
-    const userId = req.user?.sub;
-
-    if (!userId) {
-      return res.error(401, AUTH_MESSAGE.TOKEN_INVALID);
-    }
-
-    const post = await postActionService.update(
-      req.params.publicId,
-      userId,
-      req.body,
-    );
-    return res.success(200, POST_MESSAGE.RETRIEVED, post);
-  }
-
-  async search(req: Request<{}, {}, {}, SearchQueryDto>, res: Response) {
-    const query = {
-      q: req.query.q ?? "",
-      topics: req.query.topics ?? "",
-      limit: req.query.limit ?? "",
-      page: req.query.page ?? "",
-    };
-
-    const results = await postSearchService.search(query);
-
-    return res.success(200, POST_MESSAGE.SEARCH_SUCCESS, results);
+  private userId(request: AuthenticatedRequest): string {
+    if (!request.user?.sub) throw new UnauthorizedException(AUTH_MESSAGE.TOKEN_INVALID);
+    return request.user.sub;
   }
 }
-
-export const postController = new PostController();

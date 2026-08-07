@@ -1,4 +1,6 @@
-import prisma from "@/config/prisma";
+import legacyPrisma from "@/config/prisma";
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '@/shared/database/prisma.service';
 import { Prisma } from "@prisma/client";
 
 type CreateTopicsPostInput = {
@@ -6,10 +8,13 @@ type CreateTopicsPostInput = {
   topicName: string;
 };
 
-class TopicsPostRepository {
+@Injectable()
+export class TopicsPostRepository {
+  constructor(private readonly prisma: PrismaService = legacyPrisma as unknown as PrismaService) {}
+
   async create(
     payload: CreateTopicsPostInput,
-    tx: Prisma.TransactionClient = prisma,
+    tx: Prisma.TransactionClient = this.prisma,
   ): Promise<void> {
     const topic = await tx.topic.upsert({
       where: {
@@ -37,5 +42,3 @@ class TopicsPostRepository {
     });
   }
 }
-
-export const topicsPostRepository = new TopicsPostRepository();

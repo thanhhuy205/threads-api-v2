@@ -1,15 +1,22 @@
 import { NotFoundException } from "@/errors/error";
+import { Injectable } from '@nestjs/common';
 import { baseLogger } from "@/middlewares/logger";
 import { dispatchReplyNotification } from "@/modules/notification-group/events/notification.dispatcher";
 import type { CreatePostPayload } from "@/modules/post/interfaces/create-post-payload";
 import { PostBuilder } from "../builder/post.builder";
 import { CreatePostDto } from "../dto/post.dto";
-import { PostRecord, postRepository } from "../repository/post.repository";
-import { postMetaService } from "./post-meta.service";
+import { PostRecord, PostRepository } from "../repository/post.repository";
+import { PostMetaService } from "./post-meta.service";
 
-class PostService {
+@Injectable()
+export class PostService {
+  constructor(
+    private readonly postBuilder: PostBuilder,
+    private readonly postRepository: PostRepository,
+    private readonly postMetaService: PostMetaService,
+  ) {}
   async create(payload: CreatePostPayload) {
-    const builder = PostBuilder.user(payload.userId)
+    const builder = this.postBuilder.fork().user(payload.userId)
       .replyPermission(payload.replyPermission)
       .visibility(payload.visibility)
       .mentions(payload.mentions);
@@ -17,11 +24,11 @@ class PostService {
     const { snapshot, options, mentionIds } = await builder.build();
 
     const post = await builder.createPost(
-      () => postRepository.create({ ...payload, ...options }, snapshot),
+      () => this.postRepository.create({ ...payload, ...options }, snapshot),
       { topic: payload.topic, mentionIds },
     );
 
-    await postMetaService.finalizePostCreation({
+    await this.postMetaService.finalizePostCreation({
       mentionNotification: {
         mentionIds,
         actorId: payload.userId,
@@ -37,7 +44,7 @@ class PostService {
   }
 
   async reply(publicId: string, payload: CreatePostDto & { userId: string }) {
-    const builder = PostBuilder.user(payload.userId)
+    const builder = this.postBuilder.fork().user(payload.userId)
       .replyPermission(payload.replyPermission)
       .visibility(payload.visibility)
       .mentions(payload.mentions)
@@ -49,7 +56,7 @@ class PostService {
     }
     const post = await builder.createPost(
       () =>
-        postRepository.createReply(
+        this.postRepository.createReply(
           { ...payload, ...options },
           {
             id: existPost.id,
@@ -79,7 +86,7 @@ class PostService {
           avatar: snapshot.avatar,
         })
         : undefined,
-      postMetaService.finalizePostCreation({
+      this.postMetaService.finalizePostCreation({
         mentionNotification: {
           mentionIds,
           actorId: payload.userId,
@@ -104,7 +111,7 @@ class PostService {
 
   async repost(publicId: string, userId: string) {
     const { snapshot, originPost, resolvedOriginPostId, resolvedOriginPublicId } =
-      await PostBuilder.user(userId).originPost(publicId).build();
+      await this.postBuilder.fork().user(userId).originPost(publicId).build();
     if (
       !originPost ||
       resolvedOriginPostId === undefined ||
@@ -113,14 +120,14 @@ class PostService {
       throw new NotFoundException("Origin post not found");
     }
 
-    const post = await postRepository.createRepost(
+    const post = await this.postRepository.createRepost(
       { userId },
       resolvedOriginPublicId,
       snapshot,
       resolvedOriginPostId,
     );
 
-    await postMetaService.finalizePostCreation({
+    await this.postMetaService.finalizePostCreation({
     });
     return {
       publicId: post.publicId,
@@ -133,7 +140,7 @@ class PostService {
   }
 
   async quote(publicId: string, payload: CreatePostDto & { userId: string }) {
-    const builder = PostBuilder.user(payload.userId)
+    const builder = this.postBuilder.fork().user(payload.userId)
       .replyPermission(payload.replyPermission)
       .visibility(payload.visibility)
       .mentions(payload.mentions)
@@ -157,7 +164,7 @@ class PostService {
 
     const post = await builder.createPost(
       () =>
-        postRepository.createQuote(
+        this.postRepository.createQuote(
           { ...payload, ...options },
           resolvedOriginPublicId,
           snapshot,
@@ -166,7 +173,7 @@ class PostService {
       { topic: payload.topic, mentionIds },
     );
 
-    await postMetaService.finalizePostCreation({
+    await this.postMetaService.finalizePostCreation({
       mentionNotification: {
         mentionIds,
         actorId: payload.userId,
@@ -189,13 +196,11 @@ class PostService {
   }
 
   increaseLikeCount(publicId: string, count: number) {
-    return postRepository.increaseLikeCount(publicId, count);
+    return this.postRepository.increaseLikeCount(publicId, count);
   }
 
   decreaseLikeCount(publicId: string, count: number) {
-    return postRepository.decreaseLikeCount(publicId, count);
+    return this.postRepository.decreaseLikeCount(publicId, count);
   }
 
 }
-
-export const postService = new PostService();

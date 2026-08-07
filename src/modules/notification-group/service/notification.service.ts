@@ -12,7 +12,7 @@ import type {
 import { NotificationRepository } from "@/modules/notification-group/repository/notification.repository";
 import { PusherService } from "@/modules/pusher/service/pusher.service";
 import { FriendService } from '@/modules/user/service/friend.service';
-import { userService } from "@/modules/user/service/user.service";
+import { UserService } from "@/modules/user/service/user.service";
 import { redisService } from "@/providers/redis.provider";
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import {
@@ -34,6 +34,7 @@ export class NotificationService implements OnModuleInit {
     private readonly notificationRepository: NotificationRepository,
     private readonly friendService: FriendService,
     private readonly pusherService: PusherService,
+    private readonly userService: UserService,
   ) {}
 
   onModuleInit() {
@@ -213,7 +214,7 @@ export class NotificationService implements OnModuleInit {
   }[]) {
     const lastActorId = itemLike?.[itemLike.length - 1]?.userId ?? null;
     const actorIds = itemLike.map((item) => item.userId);
-    const user = itemLike?.[0]?.userId ? await userService.findByUserId(lastActorId) : null;
+    const user = itemLike?.[0]?.userId ? await this.userService.findByUserId(lastActorId) : null;
     const notificationData = {
       groupPublicId: `like-count-update:${postPublicId}`,
       name: "Cập nhật lượt thích",

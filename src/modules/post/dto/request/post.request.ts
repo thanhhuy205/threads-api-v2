@@ -1,64 +1,91 @@
-import { NewFeedType } from '@/modules/post/enum';
+import { Transform, Type } from 'class-transformer';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ReportTargetType } from '@prisma/client';
-import { z } from 'zod';
+import { IsBoolean, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
+import { NewFeedType } from '../../enum';
 
-export const cursorPaginationQuerySchema = z.object({
-    after: z.string().trim().min(1, 'Cursor must not be empty').optional(),
-    take: z.coerce.number().int('Take must be an integer').positive('Take must be a positive number').max(100, 'Take must be at most 100').optional(),
-});
+export class CursorPaginationQueryDto {
+  @ApiPropertyOptional({ description: 'Cursor from the previous response' })
+  @IsOptional()
+  @IsString()
+  @Transform(({ value }) => typeof value === 'string' ? value.trim() : value)
+  @IsNotEmpty({ message: 'Cursor must not be empty' })
+  after?: string;
 
-export type CursorPaginationQueryDto = z.infer<typeof cursorPaginationQuerySchema>;
+  @ApiPropertyOptional({ minimum: 1, maximum: 100, default: 10 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt({ message: 'Take must be an integer' })
+  @Min(1, { message: 'Take must be a positive number' })
+  @Max(100, { message: 'Take must be at most 100' })
+  take?: number;
+}
 
-export const newsFeedQuerySchema = cursorPaginationQuerySchema.extend({
-    type: z.nativeEnum(NewFeedType, {
-        errorMap: () => ({ message: `Type must be one of: ${Object.values(NewFeedType).join(', ')}` }),
-    }).optional(),
-});
+export class NewsFeedQueryDto extends CursorPaginationQueryDto {
+  @ApiPropertyOptional({ enum: NewFeedType })
+  @IsOptional()
+  @IsEnum(NewFeedType)
+  type?: NewFeedType;
+}
 
-export type NewsFeedQueryDto = z.infer<typeof newsFeedQuerySchema>;
+export class PublicIdParamsDto {
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty({ message: 'Post public ID is required' })
+  publicId!: string;
+}
 
-export const publicIdParamsSchema = z.object({
-    publicId: z.string().min(1, 'Post public ID is required'),
-});
+export class UsernameParamsDto {
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty({ message: 'Username is required' })
+  username!: string;
+}
 
-export type PublicIdParamsDto = z.infer<typeof publicIdParamsSchema>;
+export class ReportDto {
+  @ApiProperty({ maxLength: 1000 })
+  @IsString()
+  @Transform(({ value }) => typeof value === 'string' ? value.trim() : value)
+  @IsNotEmpty({ message: 'Report reason is required' })
+  @MaxLength(1000, { message: 'Report reason must be at most 1000 characters' })
+  reason!: string;
 
-export const postIdParamsSchema = z.object({
-    postId: z.coerce.number().int('Post id must be an integer').positive('Post id must be a positive number'),
-});
+  @ApiProperty({ enum: ['post', 'user'] })
+  @Transform(({ value }) => value === 'post' ? ReportTargetType.POST : value === 'user' ? ReportTargetType.USER : value)
+  @IsEnum(ReportTargetType)
+  type!: ReportTargetType;
+}
 
-export type PostIdParamsDto = z.infer<typeof postIdParamsSchema>;
+export class SavePostDto {
+  @ApiProperty()
+  @IsBoolean({ message: 'isSaved must be a boolean value' })
+  isSaved!: boolean;
+}
 
-export const usernameParamsSchema = z.object({
-    username: z.string().min(1, 'Username is required'),
-});
+export class HidePostDto {
+  @ApiProperty()
+  @IsBoolean({ message: 'isHidden must be a boolean value' })
+  isHidden!: boolean;
+}
 
-export type UsernameParamsDto = z.infer<typeof usernameParamsSchema>;
+export class SearchPostQueryDto {
+  @ApiPropertyOptional({ default: '' })
+  @IsOptional()
+  @IsString()
+  q?: string;
 
-export const reportSchema = z.object({
-    reason: z.string().trim().min(1, 'Report reason is required').max(1000, 'Report reason must be at most 1000 characters'),
-    type: z.enum(['post', 'user']).transform((value) => {
-        if (value === 'post') return ReportTargetType.POST;
-        return ReportTargetType.USER;
-    }),
-});
+  @ApiPropertyOptional({ description: 'Comma-separated topic names' })
+  @IsOptional()
+  @IsString()
+  topics?: string;
 
-export type ReportDto = z.infer<typeof reportSchema>;
+  @ApiPropertyOptional({ default: '10' })
+  @IsOptional()
+  @IsString()
+  limit?: string;
 
-export const savePostSchema = z.object({
-    isSaved: z.boolean({
-        required_error: 'isSaved is required',
-        invalid_type_error: 'isSaved must be a boolean value',
-    }),
-});
-
-export type SavePostDto = z.infer<typeof savePostSchema>;
-
-export const hidePostSchema = z.object({
-    isHidden: z.boolean({
-        required_error: 'isHidden is required',
-        invalid_type_error: 'isHidden must be a boolean value',
-    }),
-});
-
-export type HidePostDto = z.infer<typeof hidePostSchema>;
+  @ApiPropertyOptional({ default: '1' })
+  @IsOptional()
+  @IsString()
+  page?: string;
+}

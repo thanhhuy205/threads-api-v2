@@ -1,8 +1,14 @@
 import { PostMapper } from "@/modules/post/mapper/post.mapper";
-import { followerService } from "@/modules/user/service/follower.service";
-import { postRepository } from "../repository/post.repository";
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { FollowerService } from '@/modules/user/service/follower.service';
+import { PostRepository } from "../repository/post.repository";
 
-class PostSearchService {
+@Injectable()
+export class PostSearchService {
+  constructor(
+    private readonly postRepository: PostRepository,
+    @Inject(forwardRef(() => FollowerService)) private readonly followerService: FollowerService,
+  ) {}
   async search(query: {
     q: string;
     topics: string;
@@ -16,11 +22,11 @@ class PostSearchService {
   }
 
   async count(userId: string) {
-    return postRepository.countPostBydUserId(userId);
+    return this.postRepository.countPostBydUserId(userId);
   }
 
   async findById(id: number): Promise<{ publicId: string } | null> {
-    return postRepository.findById(id);
+    return this.postRepository.findById(id);
   }
 
   async searchByContent({
@@ -34,7 +40,7 @@ class PostSearchService {
     take: number;
     userId?: string;
   }) {
-    const posts = await postRepository.searchByContent({
+    const posts = await this.postRepository.searchByContent({
       q: query,
       after,
       take,
@@ -42,11 +48,11 @@ class PostSearchService {
     });
 
     const authorIds = [...new Set(posts.map((post) => post.userId))];
-    const following = await followerService.getUserFollowingPostByAuth(
+    const following = await this.followerService.getUserFollowingPostByAuth(
       userId ?? "",
       authorIds,
     );
-    const followers = await followerService.getUserFollowersByAuth(
+    const followers = await this.followerService.getUserFollowersByAuth(
       userId ?? "",
       authorIds,
     );
@@ -65,5 +71,3 @@ class PostSearchService {
     );
   }
 }
-
-export const postSearchService = new PostSearchService();

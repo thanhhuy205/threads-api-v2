@@ -1,4 +1,6 @@
-import prisma from "@/config/prisma";
+import legacyPrisma from "@/config/prisma";
+import { Injectable } from '@nestjs/common';
+import { PrismaService } from '@/shared/database/prisma.service';
 import { baseLogger } from "@/middlewares/logger";
 import type {
   CreatePostPayload
@@ -42,7 +44,9 @@ type CreateRepostPayload = {
   visibility?: VisibilityPost;
 };
 
-class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
+@Injectable()
+export class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
+  constructor(private readonly prisma: PrismaService = legacyPrisma as unknown as PrismaService) {}
   private buildFeedSelect(userId?: string | null): typeof postFeedSelect {
     const select: Prisma.PostSelect = {
       ...postFeedSelect,
@@ -99,7 +103,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
     baseLogger.info(
       `Finding posts with where: ${where ? JSON.stringify(where) : "none"}, orderBy: ${JSON.stringify(sortOrder)}, limit: ${take}, after: ${after ? 1 : 0}`,
     );
-    return prisma.post.findMany({
+    return this.prisma.post.findMany({
       where: {
         AND: [
           { deletedAt: null },
@@ -172,7 +176,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
   }
 
   count({ where = {} }: { where?: Prisma.PostWhereInput } = {}) {
-    return prisma.post.count({
+    return this.prisma.post.count({
       where: {
         AND: [{ deletedAt: null }, where],
       },
@@ -180,7 +184,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
   }
 
   countPostBydUserId(userId: string) {
-    return prisma.post.count({
+    return this.prisma.post.count({
       where: {
         deletedAt: null,
         userId,
@@ -196,7 +200,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
     publicId: string;
     where?: Prisma.PostWhereInput;
   }) {
-    return prisma.post.findFirst({
+    return this.prisma.post.findFirst({
       where: {
         AND: [{ deletedAt: null }, where ?? {}, { publicId }],
       },
@@ -264,7 +268,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
   async create(
     payload: RepositoryCreatePostPayload,
     userSnapshot: UserSnapshot,
-    tx: Prisma.TransactionClient = prisma,
+    tx: Prisma.TransactionClient = this.prisma,
   ): Promise<PostRecord> {
     const post = await tx.post.create({
       data: {
@@ -290,7 +294,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
     payload: RepositoryCreatePostPayload,
     parent: { id: number; publicId: string },
     userSnapshot: UserSnapshot,
-    tx: Prisma.TransactionClient = prisma,
+    tx: Prisma.TransactionClient = this.prisma,
   ) {
     const post = await tx.post.create({
       data: {
@@ -319,7 +323,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
     originPublicId: string,
     userSnapshot: UserSnapshot,
     originPostId: number,
-    tx: Prisma.TransactionClient = prisma,
+    tx: Prisma.TransactionClient = this.prisma,
   ) {
     const post = await tx.post.create({
       data: {
@@ -359,7 +363,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
     originPublicId: string,
     userSnapshot: UserSnapshot,
     originPostId: number,
-    tx: Prisma.TransactionClient = prisma,
+    tx: Prisma.TransactionClient = this.prisma,
   ) {
     const post = await tx.post.create({
       data: {
@@ -385,7 +389,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
   }
 
   async list(): Promise<PostRecord[]> {
-    const posts = await prisma.post.findMany({
+    const posts = await this.prisma.post.findMany({
       where: { deletedAt: null },
       orderBy: { createdAt: "desc" },
       select: {
@@ -408,7 +412,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
     }));
   }
   async findByPublicId(publicId: string, userId?: string | null) {
-    return prisma.post.findFirst({
+    return this.prisma.post.findFirst({
       where: { publicId, deletedAt: null },
       select: {
         id: true,
@@ -432,7 +436,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
   }
 
   async findExisting(publicId: string) {
-    return prisma.post.findFirst({
+    return this.prisma.post.findFirst({
       where: { publicId },
       select: {
         likesCount: true,
@@ -440,7 +444,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
     })
   }
   async findById(id: number) {
-    return prisma.post.findFirst({
+    return this.prisma.post.findFirst({
       where: { id, deletedAt: null },
       select: {
         publicId: true,
@@ -452,7 +456,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
       return [];
     }
 
-    return prisma.post.findMany({
+    return this.prisma.post.findMany({
       where: {
         id: { in: ids },
         deletedAt: null,
@@ -468,7 +472,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
   }
 
   async findOriginReferenceByPublicId(publicId: string) {
-    return prisma.post.findFirst({
+    return this.prisma.post.findFirst({
       where: { publicId, deletedAt: null },
       select: {
         id: true,
@@ -483,7 +487,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
   }
 
   async findReportTargetByPublicId(publicId: string) {
-    return prisma.post.findFirst({
+    return this.prisma.post.findFirst({
       where: {
         publicId,
         deletedAt: null,
@@ -498,7 +502,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
   }
 
   async findDeleteTargetByPublicId(publicId: string) {
-    return prisma.post.findFirst({
+    return this.prisma.post.findFirst({
       where: {
         publicId,
         deletedAt: null,
@@ -516,7 +520,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
     publicId: string,
     payload: UpdatePostDto,
   ): Promise<PostRecord> {
-    const post = await prisma.post.update({
+    const post = await this.prisma.post.update({
       where: { publicId },
       data: {
         content: payload.content,
@@ -544,7 +548,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
 
 
   async softDeleteByPublicId(publicId: string): Promise<void> {
-    await prisma.post.update({
+    await this.prisma.post.update({
       where: { publicId },
       data: {
         deletedAt: new Date(),
@@ -554,7 +558,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
 
   // TĂNG count + lấy chủ post
   async incrementLikedCount(publicId: string, count: number): Promise<{ likesCount: number; ownerId: string }> {
-    return prisma.$transaction(async (tx) => {
+    return this.prisma.$transaction(async (tx) => {
       await tx.$executeRaw`
       UPDATE posts
       SET likes_count = GREATEST(likes_count + ${count}, 0)
@@ -582,7 +586,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
     userId?: string;
   }) {
     const cursor = after ?? null;
-    const matches = await prisma.$queryRaw<{ publicId: string }[]>`
+    const matches = await this.prisma.$queryRaw<{ publicId: string }[]>`
       SELECT p.public_id AS publicId
       FROM posts p
       LEFT JOIN posts cursor_post ON cursor_post.public_id = ${cursor}
@@ -604,7 +608,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
       return [];
     }
 
-    const posts = await prisma.post.findMany({
+    const posts = await this.prisma.post.findMany({
       where: {
         publicId: {
           in: publicIds,
@@ -711,7 +715,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
   }
 
   async increaseLikeCount(publicId: string, count: number): Promise<void> {
-    await prisma.$executeRaw`
+    await this.prisma.$executeRaw`
       UPDATE posts
       SET likes_count = GREATEST(likes_count + ${count}, 0)
       WHERE public_id = ${publicId}
@@ -719,7 +723,7 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
   }
 
   async decreaseLikeCount(publicId: string, count: number): Promise<void> {
-    await prisma.$executeRaw`
+    await this.prisma.$executeRaw`
       UPDATE posts
       SET likes_count = GREATEST(likes_count - ${count}, 0)
       WHERE public_id = ${publicId}
@@ -728,4 +732,3 @@ class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
 
 }
 
-export const postRepository = new PostRepository();

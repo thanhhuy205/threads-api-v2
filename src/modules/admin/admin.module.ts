@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AccessTokenGuard } from '@/common/guards/access-token.guard';
 import { JwtModule } from '@/modules/jwt/jwt.module';
+import { PostModule } from '@/modules/post/post.module';
 import { AdminRoleGuard } from './guards/admin-role.guard';
 import { AdminAuthController } from './auth/admin-auth.controller';
 import { AdminAuthRepository } from './auth/admin-auth.repository';
@@ -19,7 +20,7 @@ import { UserManagementRepository } from './user-management/user-management.repo
 import { UserManagementService } from './user-management/user-management.service';
 
 @Module({
-  imports: [JwtModule],
+  imports: [JwtModule, PostModule],
   controllers: [
     AdminAuthController,
     UserManagementController,

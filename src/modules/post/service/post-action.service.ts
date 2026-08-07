@@ -1,4 +1,5 @@
 import { QUEUE_NAME } from "@/constants/queue";
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { redisKey } from "@/constants/resolve-key/redis-key";
 import {
   BadRequestException,
@@ -6,8 +7,8 @@ import {
   NotFoundException,
 } from "@/errors/error";
 import { evaluationProducer } from "@/modules/job/evaluation-post/producer/evaluation.producer";
-import { reportService } from "@/modules/report/service/report.service";
-import { userService } from "@/modules/user/service/user.service";
+import { ReportService } from "@/modules/report/service/report.service";
+import { UserService } from "@/modules/user/service/user.service";
 import { redisService } from "@/providers/redis.provider";
 import { redisVersion } from "@/shared/redis-version";
 import {
@@ -17,8 +18,8 @@ import {
   VisibilityPost,
 } from "@prisma/client";
 import { UpdatePostDto } from "../dto/post.dto";
-import { postInteractionRepository } from "../repository/post-interaction.repository";
-import { PostRecord, postRepository } from "../repository/post.repository";
+import { PostInteractionRepository } from "../repository/post-interaction.repository";
+import { PostRecord, PostRepository } from "../repository/post.repository";
 
 export type ReportSubmissionResult = {
   id: string;
@@ -30,13 +31,20 @@ export type ReportSubmissionResult = {
   evaluationQueued: boolean;
 };
 
-class PostActionService {
+@Injectable()
+export class PostActionService {
+  constructor(
+    private readonly postRepository: PostRepository,
+    private readonly postInteractionRepository: PostInteractionRepository,
+    @Inject(forwardRef(() => UserService)) private readonly userService: UserService,
+    private readonly reportService: ReportService,
+  ) {}
   async hide(
     publicId: string,
     userId: string,
     isHidden: boolean,
   ): Promise<void> {
-    const post = await postRepository.findByPublicId(publicId);
+    const post = await this.postRepository.findByPublicId(publicId);
     if (!post) {
       throw new NotFoundException("Post not found");
     }
@@ -51,7 +59,7 @@ class PostActionService {
     };
 
     if (isHidden) {
-      const saved = await postInteractionRepository.findByStatus({
+      const saved = await this.postInteractionRepository.findByStatus({
         userId,
         postId: post.id,
         type: InteractionType.SAVE,
@@ -63,27 +71,27 @@ class PostActionService {
         );
       }
 
-      await postInteractionRepository.create(hiddenPayload);
+      await this.postInteractionRepository.create(hiddenPayload);
     } else {
-      const hidden = await postInteractionRepository.findByStatus(hiddenPayload);
+      const hidden = await this.postInteractionRepository.findByStatus(hiddenPayload);
 
       if (!hidden) {
         throw new BadRequestException("No hidden post found");
       }
 
-      await postInteractionRepository.deleteByUserPostAndType(hiddenPayload);
+      await this.postInteractionRepository.deleteByUserPostAndType(hiddenPayload);
     }
 
     await redisVersion.bumpPostListCacheVersion(redisKey.post.listNamespace());
   }
 
   async actionAdmin(publicId: string): Promise<void> {
-    const post = await postRepository.findByPublicId(publicId);
+    const post = await this.postRepository.findByPublicId(publicId);
     if (!post) {
       throw new Error("Post not found");
     }
 
-    await postRepository.softDeleteByPublicId(publicId);
+    await this.postRepository.softDeleteByPublicId(publicId);
     await redisVersion.bumpPostListCacheVersion(redisKey.post.listNamespace());
   }
 
@@ -92,7 +100,7 @@ class PostActionService {
     userId: string,
     isSaved: boolean,
   ): Promise<void> {
-    const post = await postRepository.findByPublicId(publicId);
+    const post = await this.postRepository.findByPublicId(publicId);
     if (!post) {
       throw new NotFoundException("Post not found");
     }
@@ -104,15 +112,15 @@ class PostActionService {
     };
 
     if (isSaved) {
-      await postInteractionRepository.create(savedPayload);
+      await this.postInteractionRepository.create(savedPayload);
     } else {
-      const saved = await postInteractionRepository.findByStatus(savedPayload);
+      const saved = await this.postInteractionRepository.findByStatus(savedPayload);
 
       if (!saved) {
         throw new BadRequestException("No saved post found");
       }
 
-      await postInteractionRepository.deleteByUserPostAndType(savedPayload);
+      await this.postInteractionRepository.deleteByUserPostAndType(savedPayload);
     }
 
     await redisVersion.bumpPostListCacheVersion(redisKey.post.listNamespace());
@@ -122,7 +130,7 @@ class PostActionService {
     publicId: string,
     userId: string,
   ): Promise<number> {
-    const post = await postRepository.findExisting(publicId);
+    const post = await this.postRepository.findExisting(publicId);
     if (!post) {
       throw new NotFoundException("Post not found");
     }
@@ -172,7 +180,7 @@ class PostActionService {
   }
 
   async delete(publicId: string, userId: string): Promise<void> {
-    const post = await postRepository.findDeleteTargetByPublicId(publicId);
+    const post = await this.postRepository.findDeleteTargetByPublicId(publicId);
 
     if (!post) {
       throw new NotFoundException("Post not found");
@@ -182,7 +190,7 @@ class PostActionService {
       throw new ForbiddenException("Users can only delete their own posts");
     }
 
-    await postRepository.softDeleteByPublicId(publicId);
+    await this.postRepository.softDeleteByPublicId(publicId);
     await redisVersion.bumpPostListCacheVersion(redisKey.post.listNamespace());
   }
 
@@ -191,7 +199,7 @@ class PostActionService {
     userId: string,
     payload: UpdatePostDto,
   ): Promise<PostRecord> {
-    const post = await postRepository.findByPublicId(publicId);
+    const post = await this.postRepository.findByPublicId(publicId);
 
     if (!post) {
       throw new NotFoundException("Post not found");
@@ -201,7 +209,7 @@ class PostActionService {
       throw new ForbiddenException("Users can only update their own posts");
     }
 
-    const updatedPost = await postRepository.updateByPublicId(publicId, payload);
+    const updatedPost = await this.postRepository.updateByPublicId(publicId, payload);
     await redisVersion.bumpPostListCacheVersion(redisKey.post.listNamespace());
     return updatedPost;
   }
@@ -215,7 +223,7 @@ class PostActionService {
     },
   ): Promise<ReportSubmissionResult> {
     if (payload.type === ReportTargetType.USER) {
-      const targetUser = await userService.findByUserId(publicId);
+      const targetUser = await this.userService.findByUserId(publicId);
       if (!targetUser) {
         throw new NotFoundException("User not found");
       }
@@ -224,7 +232,7 @@ class PostActionService {
         throw new ForbiddenException("Users cannot report themselves");
       }
 
-      const report = await reportService.create({
+      const report = await this.reportService.create({
         reporterId: payload.reporterId,
         targetType: ReportTargetType.USER,
         targetId: targetUser.id,
@@ -243,7 +251,7 @@ class PostActionService {
       };
     }
 
-    const targetPost = await postRepository.findReportTargetByPublicId(publicId);
+    const targetPost = await this.postRepository.findReportTargetByPublicId(publicId);
     if (!targetPost) {
       throw new NotFoundException("Post not found");
     }
@@ -252,7 +260,7 @@ class PostActionService {
       throw new ForbiddenException("Users cannot report their own posts");
     }
 
-    const existingReport = await reportService.findExistingReport({
+    const existingReport = await this.reportService.findExistingReport({
       reporterId: payload.reporterId,
       targetType: payload.type,
       targetId: targetPost.publicId,
@@ -261,7 +269,7 @@ class PostActionService {
     if (existingReport) {
       throw new BadRequestException("You have already reported this content");
     }
-    const report = await reportService.create({
+    const report = await this.reportService.create({
       reporterId: payload.reporterId,
       targetType: payload.type,
       targetId: targetPost.publicId,
@@ -290,5 +298,3 @@ class PostActionService {
     };
   }
 }
-
-export const postActionService = new PostActionService();

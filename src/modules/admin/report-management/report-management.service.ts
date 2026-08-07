@@ -1,5 +1,5 @@
 import { NotFoundException } from "@/errors/error";
-import { postActionService } from "@/modules/post/service/post-action.service";
+import { PostActionService } from "@/modules/post/service/post-action.service";
 import { buildPaginationResponse } from "@/shared/pagination/pagination";
 import { ReportStatus, ReportTargetType } from "@prisma/client";
 import { Injectable } from '@nestjs/common';
@@ -20,7 +20,10 @@ const reportTargetTypeMap = {
 
 @Injectable()
 export class ReportManagementService {
-  constructor(private readonly reportManagementRepository: ReportManagementRepository) {}
+  constructor(
+    private readonly reportManagementRepository: ReportManagementRepository,
+    private readonly postActionService: PostActionService,
+  ) {}
 
   async listReports(input: ListReportsInput) {
     const targetType = reportTargetTypeMap[input.type ?? "post"];
@@ -70,7 +73,7 @@ export class ReportManagementService {
         break;
       case "delete_post":
         status = ReportStatus.RESOLVED;
-        await postActionService.actionAdmin(report.targetId);
+        await this.postActionService.actionAdmin(report.targetId);
         break;
     }
 
