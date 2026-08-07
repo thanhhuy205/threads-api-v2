@@ -1,51 +1,64 @@
-import { getPagination } from "@/shared/pagination/pagination";
-import { Request, Response } from "express";
-import type { ListReportsQueryDto } from "./dto/request/list-reports.query.dto";
-import type { ModerateReportRequestDto } from "./dto/request/moderate-report.request.dto";
-import { reportManagementService } from "./report-management.service";
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Patch, Query, Req, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Message } from '@/common/decorators/message.decorator';
+import { Pagination } from '@/common/decorators/pagination.decorator';
+import { AccessTokenGuard } from '@/common/guards/access-token.guard';
+import { buildPagination } from '@/shared/pagination/pagination';
+import { AdminRoleGuard } from '../guards/admin-role.guard';
+import { ListReportsQueryDto } from "./dto/request/list-reports.query.dto";
+import { ModerateReportRequestDto } from "./dto/request/moderate-report.request.dto";
+import { ReportManagementService } from "./report-management.service";
 
-class ReportManagementController {
-  listReports = async (
-    req: Request<{}, {}, {}, {}>,
-    res: Response,
-  ) => {
-    const { currentPage, perPage } = getPagination(req);
-    const query = req.query_parsed as ListReportsQueryDto | undefined;
-    const result = await reportManagementService.listReports({
+type AuthenticatedRequest = { user?: { sub?: string } };
+
+@ApiTags('Admin')
+@ApiBearerAuth('bearer')
+@UseGuards(AccessTokenGuard, AdminRoleGuard)
+@Controller('admin/reports')
+export class ReportManagementController {
+  constructor(private readonly reportManagementService: ReportManagementService) {}
+
+  @Get()
+  @Pagination()
+  @Message('Reports retrieved successfully')
+  @ApiOperation({ summary: 'List reports' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Reports retrieved successfully' })
+  async listReports(@Query() query: ListReportsQueryDto) {
+    const { currentPage, currentLimit } = buildPagination(query);
+    const result = await this.reportManagementService.listReports({
       page: currentPage,
-      limit: perPage,
-      type: query?.type,
-      status: query?.status,
+      limit: currentLimit,
+      type: query.type,
+      status: query.status,
     });
-
-    return res.success(200, "Reports retrieved successfully", result.rows, {
-      pagination: result.pagination,
-    });
-  };
-
-  getReportDetails = async (
-    req: Request<{ reportId: string }, {}, {}>,
-    res: Response) => {
-    const reportId = req.params.reportId;
-    const result = await reportManagementService.getReportDetails(reportId);
-
-    return res.success(200, "Report details retrieved successfully", result);
+    return { data: result.rows, pagination: result.pagination };
   }
 
+  @Get(':reportId')
+  @Message('Report details retrieved successfully')
+  @ApiOperation({ summary: 'Get report details' })
+  @ApiParam({ name: 'reportId' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Report details retrieved successfully' })
+  getReportDetails(@Param('reportId') reportId: string) {
+    return this.reportManagementService.getReportDetails(reportId);
+  }
 
-  moderateReport = async (
-    req: Request<{ reportId: string }, {}, ModerateReportRequestDto>,
-    res: Response,
-  ) => {
-    const result = await reportManagementService.moderateReport({
-      reportId: req.params.reportId,
-      action: req.body.action,
-      adminNote: req.body.adminNote,
-      adminId: req.user?.sub,
+  @Patch(':reportId')
+  @HttpCode(HttpStatus.OK)
+  @Message('Report moderated successfully')
+  @ApiOperation({ summary: 'Moderate a report' })
+  @ApiParam({ name: 'reportId' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Report moderated successfully' })
+  moderateReport(
+    @Param('reportId') reportId: string,
+    @Body() payload: ModerateReportRequestDto,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    return this.reportManagementService.moderateReport({
+      reportId,
+      action: payload.action,
+      adminNote: payload.adminNote,
+      adminId: request.user?.sub,
     });
-
-    return res.success(200, "Report moderated successfully", result);
-  };
+  }
 }
-
-export const reportManagementController = new ReportManagementController();

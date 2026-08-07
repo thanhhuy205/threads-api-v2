@@ -1,6 +1,7 @@
-import prisma from "@/config/prisma";
+import { Injectable } from '@nestjs/common';
 import { buildPagination } from "@/shared/pagination/pagination";
 import { Prisma, UserStatus } from "@prisma/client";
+import { PrismaService } from '@/shared/database/prisma.service';
 import type { GetAdminUsersInput } from "./interfaces/get-admin-users.input";
 
 const adminUserSelect = {
@@ -34,8 +35,11 @@ type AdminUserRow = Prisma.UserGetPayload<{
   select: typeof adminUserSelect;
 }>;
 
-class UserManagementRepository
+@Injectable()
+export class UserManagementRepository
   implements IPagination<Prisma.UserWhereInput, AdminUserRow> {
+  constructor(private readonly prisma: PrismaService) {}
+
   findAll({
     page,
     limit,
@@ -51,7 +55,7 @@ class UserManagementRepository
   }): Promise<AdminUserRow[]> {
     const { offset, currentLimit } = buildPagination({ page, limit });
 
-    return prisma.user.findMany({
+    return this.prisma.user.findMany({
       where,
       skip: offset,
       take: currentLimit,
@@ -66,7 +70,7 @@ class UserManagementRepository
     where?: Prisma.UserWhereInput;
     props?: any;
   }): Promise<number> {
-    return prisma.user.count({ where });
+    return this.prisma.user.count({ where });
   }
 
   async findAllUsers(input: GetAdminUsersInput) {
@@ -87,9 +91,9 @@ class UserManagementRepository
   async updateUserStatus(
     userId: string,
     status: UserStatus,
-    tx: Prisma.TransactionClient = prisma,
+    tx?: Prisma.TransactionClient,
   ) {
-    return tx.user.update({
+    return (tx ?? this.prisma).user.update({
       where: { id: userId },
       data: { status },
     });
@@ -100,9 +104,9 @@ class UserManagementRepository
       userId: string;
       status: UserStatus;
     },
-    tx: Prisma.TransactionClient = prisma,
+    tx?: Prisma.TransactionClient,
   ) {
-    return tx.user.update({
+    return (tx ?? this.prisma).user.update({
       where: { id: input.userId },
       data: {
         status: input.status,
@@ -112,5 +116,3 @@ class UserManagementRepository
   }
 
 }
-
-export const userManagementRepository = new UserManagementRepository();

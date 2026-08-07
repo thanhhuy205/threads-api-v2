@@ -1,5 +1,6 @@
-import prisma from "@/config/prisma";
+import { Injectable } from '@nestjs/common';
 import { Prisma } from "@prisma/client";
+import { PrismaService } from '@/shared/database/prisma.service';
 import type { GetAdminStatsInput } from "./interfaces/get-admin-stats.input";
 
 type CountRow = {
@@ -12,7 +13,10 @@ type HotTopicRow = {
   usage_count: bigint | number;
 };
 
-class StatisticsRepository {
+@Injectable()
+export class StatisticsRepository {
+  constructor(private readonly prisma: PrismaService) {}
+
   async getOverview(input: GetAdminStatsInput) {
     const [postsPerDay, activeUsers, hotTopic] = await Promise.all([
       this.countPostsPerDay(input),
@@ -28,7 +32,7 @@ class StatisticsRepository {
   }
 
   private async countPostsPerDay(input: GetAdminStatsInput) {
-    const rows = await prisma.$queryRaw<Array<{ day: string; total: bigint | number }>>(
+    const rows = await this.prisma.$queryRaw<Array<{ day: string; total: bigint | number }>>(
       Prisma.sql`
         SELECT DATE_FORMAT(created_at, '%Y-%m-%d') AS day, COUNT(*) AS total
         FROM posts
@@ -47,7 +51,7 @@ class StatisticsRepository {
   }
 
   private async countActiveUsers(input: GetAdminStatsInput) {
-    const rows = await prisma.$queryRaw<CountRow[]>(
+    const rows = await this.prisma.$queryRaw<CountRow[]>(
       Prisma.sql`
         SELECT COUNT(DISTINCT activity.user_id) AS total
         FROM (
@@ -71,7 +75,7 @@ class StatisticsRepository {
   }
 
   private async findHotTopic(input: GetAdminStatsInput) {
-    const rows = await prisma.$queryRaw<HotTopicRow[]>(
+    const rows = await this.prisma.$queryRaw<HotTopicRow[]>(
       Prisma.sql`
         SELECT topics.id, topics.name, COUNT(*) AS usage_count
         FROM topics
@@ -98,5 +102,3 @@ class StatisticsRepository {
     };
   }
 }
-
-export const statisticsRepository = new StatisticsRepository();

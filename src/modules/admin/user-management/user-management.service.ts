@@ -2,13 +2,17 @@ import type { BanUserUnlimitedInput } from "@/modules/admin/user-management/inte
 import { buildPaginationResponse } from "@/shared/pagination/pagination";
 import { UserStatus } from "@prisma/client";
 import type { GetAdminUsersInput } from "./interfaces/get-admin-users.input";
-import { userManagementRepository } from "./user-management.repository";
+import { Injectable } from '@nestjs/common';
+import { UserManagementRepository } from "./user-management.repository";
 
-class UserManagementService {
+@Injectable()
+export class UserManagementService {
+  constructor(private readonly userManagementRepository: UserManagementRepository) {}
+
   async getAllUsers(input: GetAdminUsersInput) {
     const [users, totalUsers] = await Promise.all([
-      userManagementRepository.findAllUsers(input),
-      userManagementRepository.countAllUsers(),
+      this.userManagementRepository.findAllUsers(input),
+      this.userManagementRepository.countAllUsers(),
     ]);
 
     const rows = users.map((user) => ({
@@ -24,7 +28,7 @@ class UserManagementService {
   }
 
   async unbanUser(input: BanUserUnlimitedInput) {
-    const user = await userManagementRepository.updateUserBanFields({
+    const user = await this.userManagementRepository.updateUserBanFields({
       userId: input.userId,
       status: UserStatus.ACTIVE,
     });
@@ -37,7 +41,7 @@ class UserManagementService {
   }
 
   async banUserUnlimited(input: BanUserUnlimitedInput) {
-    const user = await userManagementRepository.updateUserBanFields({
+    const user = await this.userManagementRepository.updateUserBanFields({
       userId: input.userId,
       status: UserStatus.BANNED,
     });
@@ -63,4 +67,3 @@ class UserManagementService {
     };
   }
 }
-export const userManagementService = new UserManagementService();

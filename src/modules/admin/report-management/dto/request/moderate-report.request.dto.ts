@@ -1,4 +1,5 @@
-import { z } from "zod";
+import { IsEnum, IsOptional, IsString, MaxLength } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 /**
  * Actions that an external admin request may ask for.
@@ -12,25 +13,16 @@ export const reportModerationActions = [
 /**
  * External request body for PATCH /admin/reports/:reportId.
  */
-export const moderateReportRequestSchema = z.object({
-  /**
-   * Requested moderation action from the admin UI/API client.
-   */
-  action: z.enum(reportModerationActions),
-
-  /**
-   * Human note from admin explaining the decision.
-   * Stored in reports.admin_note.
-   */
-  adminNote: z.string().max(1000).optional(),
-});
-
-/**
- * Union type for every supported report moderation action.
- */
 export type ReportModerationAction = (typeof reportModerationActions)[number];
 
-/**
- * TypeScript shape inferred from the external request schema.
- */
-export type ModerateReportRequestDto = z.infer<typeof moderateReportRequestSchema>;
+export class ModerateReportRequestDto {
+  @ApiProperty({ enum: reportModerationActions })
+  @IsEnum(reportModerationActions)
+  action!: ReportModerationAction;
+
+  @ApiPropertyOptional({ maxLength: 1000 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(1000)
+  adminNote?: string;
+}

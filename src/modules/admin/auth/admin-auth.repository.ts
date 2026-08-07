@@ -1,5 +1,6 @@
-import prisma from "@/config/prisma";
+import { Injectable } from '@nestjs/common';
 import type { Prisma } from "@prisma/client";
+import { PrismaService } from '@/shared/database/prisma.service';
 
 const adminAuthUserSelect = {
   id: true,
@@ -27,9 +28,12 @@ export type AdminAuthUser = Prisma.UserGetPayload<{
   select: typeof adminAuthUserSelect;
 }>;
 
-class AdminAuthRepository {
+@Injectable()
+export class AdminAuthRepository {
+  constructor(private readonly prisma: PrismaService) {}
+
   async findUserByLogin(login: string): Promise<AdminAuthUser | null> {
-    return prisma.user.findFirst({
+    return this.prisma.user.findFirst({
       where: {
         OR: [{ email: login }, { username: login }],
       },
@@ -37,5 +41,3 @@ class AdminAuthRepository {
     });
   }
 }
-
-export const adminAuthRepository = new AdminAuthRepository();

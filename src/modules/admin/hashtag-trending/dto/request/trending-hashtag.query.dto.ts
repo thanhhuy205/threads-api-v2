@@ -1,11 +1,21 @@
 import { MAX_LIMIT } from "@/constants/pagination";
-import { z } from "zod";
+import { Type } from 'class-transformer';
+import { IsInt, IsOptional, Max, Min } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 
-export const trendingHashtagQuerySchema = z.object({
-  page: z.coerce.number().int().positive().default(1),
-  limit: z.coerce.number().int().positive().max(MAX_LIMIT).default(10),
-});
+export class TrendingHashtagQueryDto {
+  @ApiPropertyOptional({ default: 1, minimum: 1 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  page?: number;
 
-export type TrendingHashtagQueryDto = z.infer<
-  typeof trendingHashtagQuerySchema
->;
+  @ApiPropertyOptional({ default: 10, minimum: 1, maximum: MAX_LIMIT })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(MAX_LIMIT)
+  limit?: number;
+}

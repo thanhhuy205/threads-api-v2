@@ -1,6 +1,7 @@
-import prisma from "@/config/prisma";
+import { Injectable } from '@nestjs/common';
 import { buildPagination } from "@/shared/pagination/pagination";
 import { Prisma, ReportStatus, ReportTargetType } from "@prisma/client";
+import { PrismaService } from '@/shared/database/prisma.service';
 
 const adminReportSelect = {
   id: true,
@@ -53,13 +54,16 @@ export type AdminReportTargetUser = Prisma.UserGetPayload<{
   select: typeof adminReportTargetUserSelect;
 }>;
 
-class ReportManagementRepository {
+@Injectable()
+export class ReportManagementRepository {
+  constructor(private readonly prisma: PrismaService) {}
+
   async create(data: Prisma.ReportUncheckedCreateInput) {
-    return prisma.report.create({ data });
+    return this.prisma.report.create({ data });
   }
 
   async findById(reportId: string) {
-    return prisma.report.findUnique({
+    return this.prisma.report.findUnique({
       where: { id: reportId },
       select: {
         id: true,
@@ -88,7 +92,7 @@ class ReportManagementRepository {
     reportId: string,
     data: Prisma.ReportUncheckedUpdateInput,
   ) {
-    return prisma.report.update({
+    return this.prisma.report.update({
       where: { id: reportId },
       data,
       select: {
@@ -114,7 +118,7 @@ class ReportManagementRepository {
   }): Promise<AdminReportRow[]> {
     const { offset, currentLimit } = buildPagination({ page, limit });
 
-    return prisma.report.findMany({
+    return this.prisma.report.findMany({
       where: {
         targetType,
         status,
@@ -135,7 +139,7 @@ class ReportManagementRepository {
   }
 
   countReports({ targetType }: { targetType: ReportTargetType }) {
-    return prisma.report.count({
+    return this.prisma.report.count({
       where: {
         targetType,
       },
@@ -147,7 +151,7 @@ class ReportManagementRepository {
       return Promise.resolve([]);
     }
 
-    return prisma.post.findMany({
+    return this.prisma.post.findMany({
       where: {
         publicId: {
           in: publicIds,
@@ -162,7 +166,7 @@ class ReportManagementRepository {
       return Promise.resolve([]);
     }
 
-    return prisma.user.findMany({
+    return this.prisma.user.findMany({
       where: {
         id: {
           in: userIds,
@@ -172,5 +176,3 @@ class ReportManagementRepository {
     });
   }
 }
-
-export const reportManagementRepository = new ReportManagementRepository();

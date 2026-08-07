@@ -1,21 +1,30 @@
-import configService from "@/config/config";
-import prisma from "@/config/prisma";
 import type { LoginDto } from "@/modules/auth/dto/request/login.request.dto";
 import { authResponse, type AuthSessionResponseDto } from "@/modules/auth/dto/response/auth.response";
 import type { SessionMetadata } from "@/modules/auth/interfaces/session-metadata";
 import { comparePassword } from "@/modules/auth/util/hasher-password";
 import { hasherToken } from "@/modules/auth/util/hasher-token";
-import { jwtService } from "@/modules/jwt/service/jwt.service";
+import { JwtService } from "@/modules/jwt/service/jwt.service";
 import { UserRoleType } from "@prisma/client";
+import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import ms, { StringValue } from "ms";
-import { adminAuthRepository } from "./admin-auth.repository";
+import { PrismaService } from '@/shared/database/prisma.service';
+import { AdminAuthRepository } from "./admin-auth.repository";
 
-class AdminAuthService {
+@Injectable()
+export class AdminAuthService {
+  constructor(
+    private readonly adminAuthRepository: AdminAuthRepository,
+    private readonly jwtService: JwtService,
+    private readonly prisma: PrismaService,
+    private readonly configService: ConfigService,
+  ) {}
+
   async login(
     payload: LoginDto,
     metadata: SessionMetadata,
   ): Promise<AuthSessionResponseDto | null> {
-    const user = await adminAuthRepository.findUserByLogin(payload.login);
+    const user = await this.adminAuthRepository.findUserByLogin(payload.login);
 
     const isPasswordValid =
       user && user.password
@@ -32,19 +41,19 @@ class AdminAuthService {
       return null;
     }
 
-    const tokenPair = await jwtService.generateTokenPair({
+    const tokenPair = await this.jwtService.generateTokenPair({
       userId: user.id,
       status: user.status,
       roles,
     });
 
-    await prisma.refreshToken.create({
+    await this.prisma.refreshToken.create({
       data: {
         userId: user.id,
         token: hasherToken(tokenPair.refreshToken),
         sessionId: tokenPair.sessionId,
         expireAt: new Date(
-          Date.now() + ms(configService.JWT_CONFIG.REFRESH_TOKEN_EXPIRES_IN as StringValue),
+          Date.now() + ms(this.configService.getOrThrow<string>('JWT_CONFIG.REFRESH_TOKEN_EXPIRES_IN') as StringValue),
         ),
         ip: metadata.ip,
         userAgent: metadata.userAgent,
@@ -58,5 +67,3 @@ class AdminAuthService {
     });
   }
 }
-
-export const adminAuthService = new AdminAuthService();

@@ -2,14 +2,15 @@ import { NotFoundException } from "@/errors/error";
 import { postActionService } from "@/modules/post/service/post-action.service";
 import { buildPaginationResponse } from "@/shared/pagination/pagination";
 import { ReportStatus, ReportTargetType } from "@prisma/client";
+import { Injectable } from '@nestjs/common';
 import type { ModerateReportDataDto } from "./dto/response/moderate-report.response.dto";
 import type { ListReportsInput } from "./interfaces/list-reports.input";
 import type { ModerateReportInput } from "./interfaces/moderate-report.input";
 import {
-  reportManagementRepository,
   type AdminReportRow,
   type AdminReportTargetPost,
   type AdminReportTargetUser,
+  ReportManagementRepository,
 } from "./report-management.repository";
 
 const reportTargetTypeMap = {
@@ -17,17 +18,20 @@ const reportTargetTypeMap = {
   user: ReportTargetType.USER,
 } as const;
 
-class ReportManagementService {
+@Injectable()
+export class ReportManagementService {
+  constructor(private readonly reportManagementRepository: ReportManagementRepository) {}
+
   async listReports(input: ListReportsInput) {
     const targetType = reportTargetTypeMap[input.type ?? "post"];
     const [reports, totalReports] = await Promise.all([
-      reportManagementRepository.findAllPaginated({
+      this.reportManagementRepository.findAllPaginated({
         page: input.page,
         limit: input.limit,
         targetType,
         status: input.status,
       }),
-      reportManagementRepository.countReports({ targetType }),
+      this.reportManagementRepository.countReports({ targetType }),
     ]);
 
     const rows = await this.attachTargets(reports, targetType);
@@ -39,7 +43,7 @@ class ReportManagementService {
   }
 
   async getReportDetails(reportId: string) {
-    const report = await reportManagementRepository.findById(reportId);
+    const report = await this.reportManagementRepository.findById(reportId);
     if (!report) {
       throw new Error("Report not found");
     }
@@ -52,7 +56,7 @@ class ReportManagementService {
   async moderateReport(
     input: ModerateReportInput,
   ): Promise<ModerateReportDataDto> {
-    const report = await reportManagementRepository.findById(input.reportId);
+    const report = await this.reportManagementRepository.findById(input.reportId);
 
     if (!report) {
       throw new NotFoundException("Report not found");
@@ -70,7 +74,7 @@ class ReportManagementService {
         break;
     }
 
-    const updatedReport = await reportManagementRepository.updateById(
+    const updatedReport = await this.reportManagementRepository.updateById(
       input.reportId,
       {
         status,
@@ -94,7 +98,7 @@ class ReportManagementService {
     const targetIds = [...new Set(reports.map((report) => report.targetId))];
 
     if (targetType === ReportTargetType.USER) {
-      const targetUsers = await reportManagementRepository.findUsersByIds(targetIds);
+      const targetUsers = await this.reportManagementRepository.findUsersByIds(targetIds);
       const targetUserById = new Map(
         targetUsers.map((targetUser) => [targetUser.id, targetUser]),
       );
@@ -105,7 +109,7 @@ class ReportManagementService {
       }));
     }
 
-    const posts = await reportManagementRepository.findPostsByPublicIds(targetIds);
+    const posts = await this.reportManagementRepository.findPostsByPublicIds(targetIds);
     const postByPublicId = new Map(
       posts.map((post) => [post.publicId, post]),
     );
@@ -154,5 +158,3 @@ class ReportManagementService {
     return targetUser;
   }
 }
-
-export const reportManagementService = new ReportManagementService();

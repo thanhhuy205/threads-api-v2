@@ -1,22 +1,31 @@
-import { Request, Response } from "express";
-import type { TrendingHashtagQueryDto } from "./dto/request/trending-hashtag.query.dto";
-import { hashtagTrendingService } from "./hashtag-trending.service";
+import { Controller, Get, HttpStatus, Query, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Message } from '@/common/decorators/message.decorator';
+import { Pagination } from '@/common/decorators/pagination.decorator';
+import { AccessTokenGuard } from '@/common/guards/access-token.guard';
+import { buildPagination } from '@/shared/pagination/pagination';
+import { AdminRoleGuard } from '../guards/admin-role.guard';
+import { TrendingHashtagQueryDto } from "./dto/request/trending-hashtag.query.dto";
+import { HashtagTrendingService } from "./hashtag-trending.service";
 
-class HashtagTrendingController {
-  listTrendingHashtags = async (
-    req: Request,
-    res: Response,
-  ) => {
-    const { page, limit } = req.query_parsed as TrendingHashtagQueryDto;
-    const result = await hashtagTrendingService.listTrendingHashtags({
-      page,
-      limit,
-    });
+@ApiTags('Admin')
+@ApiBearerAuth('bearer')
+@UseGuards(AccessTokenGuard, AdminRoleGuard)
+@Controller('admin/hashtags')
+export class HashtagTrendingController {
+  constructor(private readonly hashtagTrendingService: HashtagTrendingService) {}
 
-    return res.success(200, "Trending hashtags retrieved successfully", result.rows, {
-      pagination: result.pagination,
+  @Get('trending')
+  @Pagination()
+  @Message('Trending hashtags retrieved successfully')
+  @ApiOperation({ summary: 'List trending hashtags' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Trending hashtags retrieved successfully' })
+  async listTrendingHashtags(@Query() query: TrendingHashtagQueryDto) {
+    const { currentPage, currentLimit } = buildPagination(query);
+    const result = await this.hashtagTrendingService.listTrendingHashtags({
+      page: currentPage,
+      limit: currentLimit,
     });
-  };
+    return { data: result.rows, pagination: result.pagination };
+  }
 }
-
-export const hashtagTrendingController = new HashtagTrendingController();

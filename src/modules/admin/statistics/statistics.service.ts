@@ -1,10 +1,14 @@
 import type { AdminStatsQueryDto } from "./dto/request/admin-stats.query.dto";
-import { statisticsRepository } from "./statistics.repository";
+import { Injectable } from '@nestjs/common';
+import { StatisticsRepository } from "./statistics.repository";
 
-class StatisticsService {
+@Injectable()
+export class StatisticsService {
+  constructor(private readonly statisticsRepository: StatisticsRepository) {}
+
   async getOverview(query: AdminStatsQueryDto = {}) {
     const period = this.resolvePeriod(query);
-    const overview = await statisticsRepository.getOverview(period);
+    const overview = await this.statisticsRepository.getOverview(period);
 
     return {
       period: {
@@ -36,5 +40,3 @@ class StatisticsService {
     return new Date(year, month - 1, day);
   }
 }
-
-export const statisticsService = new StatisticsService();

@@ -1,21 +1,34 @@
 import { AUTH_MESSAGE } from "@/constants/message";
-import type { Request, Response } from "express";
-import type { LoginDto } from "@/modules/auth/dto/request/login.request.dto";
-import { adminAuthService } from "./admin-auth.service";
+import { Body, Controller, HttpCode, HttpStatus, Post, Req } from '@nestjs/common';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Message } from '@/common/decorators/message.decorator';
+import { LoginDto } from "@/modules/auth/dto/request/login.request.dto";
+import { UnauthorizedException } from '@/errors/error';
+import { AdminAuthService } from "./admin-auth.service";
 
-class AdminAuthController {
-  async login(req: Request<{}, {}, LoginDto>, res: Response) {
-    const user = await adminAuthService.login(req.body, {
-      ip: req.ip ?? "unknown",
-      userAgent: req.headers["user-agent"]?.toString() ?? "unknown",
+type RequestMetadata = { ip?: string; headers: Record<string, string | string[] | undefined> };
+
+@ApiTags('Admin')
+@Controller('admin')
+export class AdminAuthController {
+  constructor(private readonly adminAuthService: AdminAuthService) {}
+
+  @Post('login')
+  @HttpCode(HttpStatus.OK)
+  @Message(AUTH_MESSAGE.LOGIN_SUCCESS)
+  @ApiOperation({ summary: 'Log in with an admin or moderator account' })
+  @ApiResponse({ status: HttpStatus.OK, description: AUTH_MESSAGE.LOGIN_SUCCESS })
+  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: AUTH_MESSAGE.INVALID_CREDENTIALS })
+  async login(@Body() payload: LoginDto, @Req() request: RequestMetadata) {
+    const user = await this.adminAuthService.login(payload, {
+      ip: request.ip ?? "unknown",
+      userAgent: request.headers["user-agent"]?.toString() ?? "unknown",
     });
 
     if (!user) {
-      return res.error(401, AUTH_MESSAGE.INVALID_CREDENTIALS);
+      throw new UnauthorizedException(AUTH_MESSAGE.INVALID_CREDENTIALS);
     }
 
-    return res.success(200, AUTH_MESSAGE.LOGIN_SUCCESS, user);
+    return user;
   }
 }
-
-export const adminAuthController = new AdminAuthController();

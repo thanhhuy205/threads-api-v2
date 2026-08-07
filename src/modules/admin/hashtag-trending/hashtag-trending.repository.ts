@@ -1,6 +1,7 @@
-import prisma from "@/config/prisma";
+import { Injectable } from '@nestjs/common';
 import { buildPagination } from "@/shared/pagination/pagination";
 import { Prisma } from "@prisma/client";
+import { PrismaService } from '@/shared/database/prisma.service';
 import type { GetTrendingHashtagsInput } from "./interfaces/get-trending-hashtags.input";
 
 const trendingHashtagSelect = {
@@ -15,9 +16,12 @@ type TrendingHashtagRow = Prisma.TopicGetPayload<{
   select: typeof trendingHashtagSelect;
 }>;
 
-class HashtagTrendingRepository
+@Injectable()
+export class HashtagTrendingRepository
   implements IPagination<Prisma.TopicWhereInput, TrendingHashtagRow>
 {
+  constructor(private readonly prisma: PrismaService) {}
+
   findAll({
     page,
     limit,
@@ -33,7 +37,7 @@ class HashtagTrendingRepository
   }): Promise<TrendingHashtagRow[]> {
     const { offset, currentLimit } = buildPagination({ page, limit });
 
-    return prisma.topic.findMany({
+    return this.prisma.topic.findMany({
       where,
       skip: offset,
       take: currentLimit,
@@ -48,7 +52,7 @@ class HashtagTrendingRepository
     where?: Prisma.TopicWhereInput;
     props?: any;
   }): Promise<number> {
-    return prisma.topic.count({ where });
+    return this.prisma.topic.count({ where });
   }
 
   async getTrendingHashtags(input: GetTrendingHashtagsInput) {
@@ -72,5 +76,3 @@ class HashtagTrendingRepository
     });
   }
 }
-
-export const hashtagTrendingRepository = new HashtagTrendingRepository();

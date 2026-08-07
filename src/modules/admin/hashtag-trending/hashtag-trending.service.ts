@@ -1,12 +1,16 @@
 import type { GetTrendingHashtagsInput } from "./interfaces/get-trending-hashtags.input";
-import { hashtagTrendingRepository } from "./hashtag-trending.repository";
 import { buildPaginationResponse } from "@/shared/pagination/pagination";
+import { Injectable } from '@nestjs/common';
+import { HashtagTrendingRepository } from "./hashtag-trending.repository";
 
-class HashtagTrendingService {
+@Injectable()
+export class HashtagTrendingService {
+  constructor(private readonly hashtagTrendingRepository: HashtagTrendingRepository) {}
+
   async listTrendingHashtags(input: GetTrendingHashtagsInput) {
     const [hashtags, totalHashtags] = await Promise.all([
-      hashtagTrendingRepository.getTrendingHashtags(input),
-      hashtagTrendingRepository.countTrendingHashtags(),
+      this.hashtagTrendingRepository.getTrendingHashtags(input),
+      this.hashtagTrendingRepository.countTrendingHashtags(),
     ]);
 
     return {
@@ -15,5 +19,3 @@ class HashtagTrendingService {
     };
   }
 }
-
-export const hashtagTrendingService = new HashtagTrendingService();

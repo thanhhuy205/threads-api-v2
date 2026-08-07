@@ -14,6 +14,7 @@ import { ReportModule } from './modules/report/report.module';
 import { JwtModule } from './modules/jwt/jwt.module';
 import { PusherModule } from './modules/pusher/pusher.module';
 import { UploadModule } from './modules/upload/upload.module';
+import { AdminModule } from './modules/admin/admin.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { UploadModule } from './modules/upload/upload.module';
     JwtModule,
     PusherModule,
     UploadModule,
+    AdminModule,
   ],
 })
 export class AppModule {}
