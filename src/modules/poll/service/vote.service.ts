@@ -1,7 +1,7 @@
 import { redisKey } from "@/constants/resolve-key/redis-key";
 import { ConflictException } from "@/errors/error";
 import { redisService } from "@/providers/redis.provider";
-import { transactionService } from "@/shared/transaction/transaction.service";
+import { TransactionService } from "@/shared/transaction/transaction.service";
 import { Injectable } from '@nestjs/common';
 import { VoteRepository } from "../repository/vote.repository";
 import { PollService } from "./poll.service";
@@ -19,6 +19,7 @@ export class VoteService {
   constructor(
     private readonly voteRepository: VoteRepository,
     private readonly pollService: PollService,
+    private readonly transactionService: TransactionService,
   ) {}
 
   async createVote(payload: CreateVotePayload) {
@@ -34,7 +35,7 @@ export class VoteService {
       throw new ConflictException("Vote is being processed");
     }
 
-    const result = await transactionService.doInTransaction(async (tx) => {
+    const result = await this.transactionService.doInTransaction(async (tx) => {
       await this.pollService.assertPollOptionBelongsToPoll(
         payload.pollOptionId,
         payload.pollId,

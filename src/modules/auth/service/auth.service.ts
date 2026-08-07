@@ -14,7 +14,7 @@ import { hasherToken } from "@/modules/auth/util/hasher-token";
 import { bloomProducer } from "@/modules/job/bloom/producer/bloom.producer";
 import { emailProducer } from "@/modules/job/email/producer/email.producer";
 import { TokenPairResponse } from "@/modules/jwt/dto/response/token-pair.response";
-import { jwtService } from "@/modules/jwt/service/jwt.service";
+import { JwtService } from "@/modules/jwt/service/jwt.service";
 import { userRepository } from "@/modules/user/repository/user.repository";
 import { redisService } from "@/providers/redis.provider";
 import { UserRoleType, VerificationCodeType } from "@prisma/client";
@@ -47,6 +47,7 @@ export class AuthService {
   constructor(
     private readonly authRepository: AuthRepository,
     private readonly verificationRepository: VerificationRepository,
+    private readonly jwtService: JwtService,
   ) {}
 
   async register(
@@ -61,7 +62,7 @@ export class AuthService {
       await userRoleRepository.assignRole(user.id, role.id);
     }
 
-    const tokenPair = await jwtService.generateTokenPair({
+    const tokenPair = await this.jwtService.generateTokenPair({
       userId: user.id,
       status: user.status,
       roles: [UserRoleType.USER],
@@ -142,7 +143,7 @@ export class AuthService {
     const userRoles = await userRoleRepository.findByUserId(user.id);
     const roles = userRoles.map((ur) => ur.role.name as UserRoleType);
 
-    const tokenPair = await jwtService.generateTokenPair({
+    const tokenPair = await this.jwtService.generateTokenPair({
       userId: user.id,
       status: user.status,
       roles: roles,
@@ -317,7 +318,7 @@ export class AuthService {
     const userRoles = await userRoleRepository.findByUserId(user.id);
     const roles = userRoles.map((ur) => ur.role.name as UserRoleType);
 
-    const tokenPair = await jwtService.generateTokenPair({
+    const tokenPair = await this.jwtService.generateTokenPair({
       userId: refreshToken.userId,
       sessionId: refreshToken.sessionId,
       status: user.status,

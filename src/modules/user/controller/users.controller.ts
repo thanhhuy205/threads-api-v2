@@ -5,14 +5,17 @@ import { Message } from '@/common/decorators/message.decorator';
 import { AccessTokenGuard } from '@/common/guards/access-token.guard';
 import { AUTH_MESSAGE, USER_MESSAGE } from '@/constants/message';
 import { NotFoundException, UnauthorizedException } from '@/errors/error';
-import { jwtService } from '@/modules/jwt/service/jwt.service';
+import { JwtService } from '@/modules/jwt/service/jwt.service';
 import { UserNameMentionQueryDto, UsernameParamsDto } from '../dto/request/username.params.dto';
 import { UserService } from '../service/user.service';
 
 @ApiTags('User')
 @Controller('users')
 export class UsersController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly jwtService: JwtService,
+  ) {}
 
   @Get('mention')
   @Message('Usernames retrieved successfully')
@@ -49,7 +52,7 @@ export class UsersController {
   @ApiResponse({ status: 200, description: USER_MESSAGE.GET_USER_SUCCESS })
   @ApiResponse({ status: 404, description: USER_MESSAGE.USER_NOT_FOUND })
   async getByUsername(@Param() params: UsernameParamsDto, @Req() request: Request) {
-    const userId = await jwtService.requestAuthToken(request);
+    const userId = await this.jwtService.requestAuthToken(request);
     const user = await this.userService.findByUsername(params.username, userId ?? undefined);
     if (!user) {
       throw new NotFoundException(USER_MESSAGE.USER_NOT_FOUND);

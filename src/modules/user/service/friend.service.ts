@@ -7,7 +7,7 @@ import {
   buildCursorPagination,
   type PaginationResponse,
 } from "@/shared/pagination/cursor-pagination";
-import { transactionService } from "@/shared/transaction/transaction.service";
+import { TransactionService } from "@/shared/transaction/transaction.service";
 import { FriendRequestStatus } from "@prisma/client";
 import { FriendRequestRepository, friendRequestRepository as legacyFriendRequestRepository } from "../repository/friend-request.repository";
 
@@ -25,6 +25,7 @@ export class FriendService {
   constructor(
     private readonly userRepository: UserRepository = legacyUserRepository,
     private readonly friendRequestRepository: FriendRequestRepository = legacyFriendRequestRepository,
+    private readonly transactionService: TransactionService,
   ) {}
 
   async sendFriendRequest(
@@ -49,7 +50,7 @@ export class FriendService {
     baseLogger.info(
       `handleFriendRequest receiverUsername: ${receiverUsername}`,
     );
-    return transactionService.doInTransaction(async (tx) => {
+    return this.transactionService.doInTransaction(async (tx) => {
       const receiver = await this.userRepository.findByUsername(
         receiverUsername,
         tx,
@@ -83,7 +84,7 @@ export class FriendService {
     isAccept: boolean,
   ) {
     baseLogger.info(`handleFriendRequest senderUsername: ${senderUsername}`);
-    return transactionService.doInTransaction(async (tx) => {
+    return this.transactionService.doInTransaction(async (tx) => {
       const sender = await this.userRepository.findByUsername(senderUsername, tx);
       if (!sender) {
         baseLogger.info(USER_MESSAGE.USER_NOT_FOUND);
@@ -164,5 +165,3 @@ export class FriendService {
     return this.friendRequestRepository.countReceivedPending(receiverId);
   }
 }
-
-export const friendService = new FriendService();

@@ -1,100 +1,101 @@
 import configService from '@/config/config';
-import { PayloadSignTokenDto, SignTokenDto, VerifyTokenDto } from '@/modules/jwt/dto';
-import { TokenPairResponse } from '@/modules/jwt/dto/response/token-pair.response';
-import crypto from 'crypto';
+import { Injectable } from '@nestjs/common';
+import { JwtService as NestJwtService } from '@nestjs/jwt';
 import { Request } from 'express';
-import jwt, { JwtPayload } from 'jsonwebtoken';
+import { JwtPayload } from 'jsonwebtoken';
+import crypto from 'crypto';
 import ms from 'ms';
 import { v4 as uuidv4 } from 'uuid';
-class JwtService {
-    private readonly JWT_SECRET: string = configService.JWT_CONFIG.JWT_SECRET;
-    private readonly ACCESS_EXPIRES: string = configService.JWT_CONFIG.ACCESS_EXPIRES;
-    async signAccessToken({ userId, status, sessionId, roles }: PayloadSignTokenDto) {
-        return this.signToken({
-            payload: { sub: userId, status, sid: sessionId, roles },
-            options: { expiresIn: ms(this.ACCESS_EXPIRES as ms.StringValue) / 1000 }
-        });
+import {
+  PayloadSignTokenDto,
+  SignTokenDto,
+  VerifyTokenDto,
+} from '@/modules/jwt/dto';
+import { TokenPairResponse } from '@/modules/jwt/dto/response/token-pair.response';
+
+@Injectable()
+export class JwtService {
+  private readonly jwtSecret = configService.JWT_CONFIG.JWT_SECRET;
+  private readonly accessExpires = configService.JWT_CONFIG.ACCESS_EXPIRES;
+
+  constructor(private readonly nestJwtService: NestJwtService) {}
+
+  async signAccessToken({ userId, status, sessionId, roles }: PayloadSignTokenDto) {
+    return this.signToken({
+      payload: { sub: userId, status, sid: sessionId, roles },
+      options: { expiresIn: ms(this.accessExpires as ms.StringValue) / 1000 },
+    });
+  }
+
+  async signRefreshToken() {
+    return crypto.randomBytes(64).toString('hex');
+  }
+
+  async generateTokenPair({
+    userId,
+    status,
+    roles,
+    sessionId = uuidv4(),
+  }: PayloadSignTokenDto): Promise<TokenPairResponse> {
+    const [accessToken, refreshToken] = await Promise.all([
+      this.signAccessToken({ userId, status, sessionId, roles }),
+      this.signRefreshToken(),
+    ]);
+
+    return { accessToken, refreshToken, sessionId };
+  }
+
+  signToken({
+    payload,
+    options = { algorithm: 'HS256' },
+    privateKey = this.jwtSecret,
+  }: SignTokenDto): Promise<string> {
+    return this.nestJwtService.signAsync(payload, {
+      ...options,
+      secret: privateKey,
+    });
+  }
+
+  verifyToken({
+    token,
+    privateKey = this.jwtSecret,
+  }: VerifyTokenDto): Promise<JwtPayload> {
+    return this.nestJwtService.verifyAsync<JwtPayload>(token, {
+      secret: privateKey,
+    });
+  }
+
+  decodeToken(token: string): JwtPayload | null {
+    const decoded = this.nestJwtService.decode(token);
+    return typeof decoded === 'object' && decoded !== null
+      ? (decoded as JwtPayload)
+      : null;
+  }
+
+  generateRandomToken() {
+    return crypto.randomBytes(32).toString('hex');
+  }
+
+  generateOTP() {
+    return String(Math.floor(100000 + Math.random() * 900000));
+  }
+
+  async requestAuthToken(req: Request<any, any, any, any>) {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) {
+      return null;
     }
 
-    async signRefreshToken() {
-        return crypto.randomBytes(64).toString('hex');
+    try {
+      const verify = await this.verifyToken({ token });
+      return verify.sub ?? null;
+    } catch {
+      return null;
     }
-
-    async generateTokenPair({ userId, status, roles, sessionId = uuidv4() }: PayloadSignTokenDto): Promise<TokenPairResponse> {
-        const [accessToken, refreshToken] = await Promise.all([
-            this.signAccessToken({ userId, status, sessionId, roles }),
-            this.signRefreshToken()
-        ]);
-
-        return { accessToken, refreshToken, sessionId };
-    }
-
-    signToken = ({
-        payload,
-        options = {
-            algorithm: 'HS256'
-        },
-        privateKey = this.JWT_SECRET as string
-    }: SignTokenDto) => {
-        return new Promise<string>((resolve, reject) => {
-            jwt.sign(payload, privateKey, options || {}, (error: Error | null, token: string | undefined) => {
-                if (error || !token) {
-                    return reject(error);
-                }
-                resolve(token);
-            });
-        });
-    };
-
-    verifyToken = ({
-        token,
-        privateKey = this.JWT_SECRET as string
-    }: VerifyTokenDto): Promise<JwtPayload> => {
-        return new Promise((resolve, reject) => {
-            jwt.verify(token, privateKey, (err: Error | null, decoded: unknown) => {
-                if (err) reject(err);
-                else resolve(decoded as JwtPayload);
-            });
-        });
-    };
-
-
-    decodeToken(token: string): JwtPayload | null {
-        try {
-            const decoded = jwt.decode(token);
-            if (typeof decoded === 'object' && decoded !== null) {
-                return decoded as JwtPayload;
-            }
-            return null;
-        }
-        catch {
-            return null;
-        }
-    }
-
-    generateRandomToken() {
-        const token = crypto.randomBytes(32).toString('hex');
-        return token;
-    }
-
-    generateOTP() {
-        return String(Math.floor(100000 + Math.random() * 900000));
-    }
-
-
-    async requestAuthToken(req: Request<any, any, any, any>) {
-        const token = req.headers.authorization?.split(' ')[1];
-        let userId = null;
-        if (token) {
-            try {
-                const verify = await jwtService.verifyToken({ token });
-                userId = verify.sub ?? null;
-            } catch {
-
-            }
-        }
-        return userId;
-    }
+  }
 }
 
-export const jwtService = new JwtService();
+// Temporary adapter for Express routes and middleware not yet managed by Nest.
+export const jwtService = new JwtService(
+  new NestJwtService({ secret: configService.JWT_CONFIG.JWT_SECRET }),
+);

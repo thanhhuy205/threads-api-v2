@@ -10,6 +10,8 @@ import { PollModule } from './modules/poll/poll.module';
 import { SearchModule } from './modules/search/search.module';
 import { TopicModule } from './modules/topic/topic.module';
 import { NotificationGroupModule } from './modules/notification-group/notification-group.module';
+import { ReportModule } from './modules/report/report.module';
+import { JwtModule } from './modules/jwt/jwt.module';
 
 @Module({
   imports: [
@@ -27,6 +29,8 @@ import { NotificationGroupModule } from './modules/notification-group/notificati
     TopicModule,
     SearchModule,
     NotificationGroupModule,
+    ReportModule,
+    JwtModule,
   ],
 })
 export class AppModule {}

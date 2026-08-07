@@ -1,5 +1,7 @@
 import { AccessTokenGuard } from '@/common/guards/access-token.guard';
 import { Module } from '@nestjs/common';
+import { TransactionModule } from '@/shared/transaction/transaction.module';
+import { JwtModule } from '../jwt/jwt.module';
 import { UserFollowController } from './controller/user-follow.controller';
 import { UserController } from './controller/user.controller';
 import { UsersController } from './controller/users.controller';
@@ -11,6 +13,7 @@ import { FriendService } from './service/friend.service';
 import { UserService } from './service/user.service';
 
 @Module({
+  imports: [TransactionModule, JwtModule],
   controllers: [UserController, UsersController, UserFollowController],
   providers: [
     UserService,

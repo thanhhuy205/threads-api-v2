@@ -1,8 +1,15 @@
 import { reportRepository } from "@/modules/report/repository/report.repository";
+import { Injectable } from '@nestjs/common';
 import type { Prisma } from "@prisma/client";
 import { ReportTargetType } from '@prisma/client';
+import { ReportRepository } from '../repository/report.repository';
 
-class ReportService {
+@Injectable()
+export class ReportService {
+  constructor(
+    private readonly reportRepository: ReportRepository = reportRepository,
+  ) {}
+
   async create(data: Prisma.ReportUncheckedCreateInput) {
     return reportRepository.create(data);
   }
