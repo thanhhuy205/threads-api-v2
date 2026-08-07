@@ -1,6 +1,8 @@
 import { pusher } from "@/providers/pusher.provider";
+import { Injectable } from '@nestjs/common';
 
-class PusherService {
+@Injectable()
+export class PusherService {
   async trigger(channel: string, event: string, data: any) {
     return pusher.trigger(channel, event, data);
   }
@@ -10,4 +12,5 @@ class PusherService {
   }
 }
 
+// Compatibility export for background workers outside Nest's DI container.
 export const pusherService = new PusherService();

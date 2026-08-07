@@ -1,8 +1,14 @@
-import { z } from "zod";
+import { ApiProperty } from '@nestjs/swagger';
+import { IsNotEmpty, IsString } from 'class-validator';
 
-export const pusherAuthSchema = z.object({
-  socket_id: z.string().trim().min(1, "socket_id is required"),
-  channel_name: z.string().trim().min(1, "channel_name is required"),
-});
+export class PusherAuthDto {
+  @ApiProperty({ example: '1234.5678' })
+  @IsString()
+  @IsNotEmpty()
+  socket_id!: string;
 
-export type PusherAuthDto = z.infer<typeof pusherAuthSchema>;
+  @ApiProperty({ example: 'private-user-user_123' })
+  @IsString()
+  @IsNotEmpty()
+  channel_name!: string;
+}

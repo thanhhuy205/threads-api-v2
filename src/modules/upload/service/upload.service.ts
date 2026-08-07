@@ -4,12 +4,17 @@ import { videoProcedure } from '@/modules/job/video';
 import { putObject } from '@/providers/cloudflare.provider';
 import { generateKeyImage } from '@/util/upload.util';
 import { PostMediaStatus } from '@prisma/client';
+import { Injectable } from '@nestjs/common';
 import { mkdir, writeFile } from 'fs/promises';
 import path from 'path';
 import { v4 as uuid } from 'uuid';
 import type { UploadMediaDataDto } from '../dto/response/upload-media.response.dto';
-import { postMediaRepository } from '../repository/post-media.repository';
-class UploadService {
+import { PostMediaRepository } from '../repository/post-media.repository';
+
+@Injectable()
+export class UploadService {
+    constructor(private readonly postMediaRepository: PostMediaRepository) {}
+
     async uploadImage(file: Express.Multer.File, folder = 'avatars') {
         const key = generateKeyImage(folder, file.originalname);
 
@@ -55,7 +60,7 @@ class UploadService {
             }),
         );
 
-        const medias = await postMediaRepository.createMedia(uploadResults);
+        const medias = await this.postMediaRepository.createMedia(uploadResults);
 
         return {
             medias,
@@ -92,4 +97,3 @@ class UploadService {
     }
 
 }
-export const uploadService = new UploadService();

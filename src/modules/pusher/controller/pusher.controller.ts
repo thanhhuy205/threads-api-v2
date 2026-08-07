@@ -1,15 +1,31 @@
 import { BadRequestException, ForbiddenException, UnauthorizedException } from "@/errors/error";
+import { AccessTokenGuard } from '@/common/guards/access-token.guard';
 import { pusherChannel } from "@/modules/pusher/channel/pusher-channel";
 import { PusherAuthDto } from "@/modules/pusher/dto/pusher-auth.dto";
-import { pusherService } from "@/modules/pusher/service/pusher.service";
-import type { Request, Response } from "express";
+import { Body, Controller, HttpCode, HttpStatus, Post, Req, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import type { Request } from 'express';
+import { PusherService } from '../service/pusher.service';
 
-class PusherController {
-  async authorizeChannel(req: Request<{}, {}, PusherAuthDto>, res: Response) {
+@ApiTags('Pusher')
+@ApiBearerAuth('bearer')
+@UseGuards(AccessTokenGuard)
+@Controller('pusher')
+export class PusherController {
+  constructor(private readonly pusherService: PusherService) {}
+
+  @Post('auth')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Authorize a private Pusher channel' })
+  @ApiResponse({ status: HttpStatus.OK, description: 'Channel authorized' })
+  @ApiResponse({ status: 400, description: 'Invalid channel request' })
+  @ApiResponse({ status: 401, description: 'Authentication required' })
+  @ApiResponse({ status: 403, description: 'Unsupported private channel' })
+  async authorizeChannel(@Req() req: Request, @Body() body: PusherAuthDto) {
     const userId = req.user?.sub;
     if (!userId) throw new UnauthorizedException();
 
-    const { channel_name: channelName, socket_id: socketId } = req.body;
+    const { channel_name: channelName, socket_id: socketId } = body;
     if (!channelName.startsWith("private-")) {
       throw new BadRequestException("Only private channels are supported");
     }
@@ -20,10 +36,8 @@ class PusherController {
       pusherChannel.privateUser(userId),
     ];
     if (supportedChannels.includes(channelName)) {
-      return res.json(pusherService.authorizeChannel(socketId, channelName));
+      return this.pusherService.authorizeChannel(socketId, channelName);
     }
     throw new ForbiddenException("Unsupported private channel");
   }
 }
-
-export const pusherController = new PusherController();

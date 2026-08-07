@@ -12,6 +12,8 @@ import { TopicModule } from './modules/topic/topic.module';
 import { NotificationGroupModule } from './modules/notification-group/notification-group.module';
 import { ReportModule } from './modules/report/report.module';
 import { JwtModule } from './modules/jwt/jwt.module';
+import { PusherModule } from './modules/pusher/pusher.module';
+import { UploadModule } from './modules/upload/upload.module';
 
 @Module({
   imports: [
@@ -31,6 +33,8 @@ import { JwtModule } from './modules/jwt/jwt.module';
     NotificationGroupModule,
     ReportModule,
     JwtModule,
+    PusherModule,
+    UploadModule,
   ],
 })
 export class AppModule {}

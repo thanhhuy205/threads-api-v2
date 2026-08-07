@@ -1,5 +1,7 @@
 import prisma from '@/config/prisma';
+import { Injectable } from '@nestjs/common';
 import { PostMediaStatus, PostMediaType } from '@prisma/client';
+import { PrismaService } from '@/shared/database/prisma.service';
 
 export type PostMediaItemData = {
     id: number;
@@ -20,11 +22,14 @@ type CreatePostMediaInput = {
     height: number | null;
 };
 
-class PostMediaRepository {
+@Injectable()
+export class PostMediaRepository {
+    constructor(private readonly prisma: PrismaService = prisma as PrismaService) {}
+
     async createMedia(mediaList: CreatePostMediaInput[]): Promise<PostMediaItemData[]> {
-        const createdMedias = await prisma.$transaction(
+        const createdMedias = await this.prisma.$transaction(
             mediaList.map((media) =>
-                prisma.postMedia.create({
+                this.prisma.postMedia.create({
                     data: media as any,
                     select: {
                         id: true,
@@ -53,7 +58,7 @@ class PostMediaRepository {
         url?: string;
     }) {
 
-        return prisma.postMedia.updateMany({
+        return this.prisma.postMedia.updateMany({
             where: {
                 key: body.key,
             },
@@ -65,4 +70,5 @@ class PostMediaRepository {
     }
 }
 
+// Compatibility export for background workers outside Nest's DI container.
 export const postMediaRepository = new PostMediaRepository();

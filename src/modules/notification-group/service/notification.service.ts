@@ -10,7 +10,7 @@ import type {
   PendingCommentNotificationRedisPayload,
 } from "@/modules/notification-group/interface/notification.types";
 import { NotificationRepository } from "@/modules/notification-group/repository/notification.repository";
-import { pusherService } from "@/modules/pusher/service/pusher.service";
+import { PusherService } from "@/modules/pusher/service/pusher.service";
 import { FriendService } from '@/modules/user/service/friend.service';
 import { userService } from "@/modules/user/service/user.service";
 import { redisService } from "@/providers/redis.provider";
@@ -33,6 +33,7 @@ export class NotificationService implements OnModuleInit {
   constructor(
     private readonly notificationRepository: NotificationRepository,
     private readonly friendService: FriendService,
+    private readonly pusherService: PusherService,
   ) {}
 
   onModuleInit() {
@@ -242,7 +243,7 @@ export class NotificationService implements OnModuleInit {
         lastActorId: actorNotIncludeOwner?.[0],
         lastEventAt: new Date(),
       }),
-      ...(actorNotIncludeOwner.length > 0 ? [pusherService.trigger(`private-user-notification-${recipientId}`, "like-count-update", notificationData)] : []),
+      ...(actorNotIncludeOwner.length > 0 ? [this.pusherService.trigger(`private-user-notification-${recipientId}`, "like-count-update", notificationData)] : []),
     ]);
   }
 

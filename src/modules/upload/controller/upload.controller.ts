@@ -1,20 +1,70 @@
 import { UPLOAD_MESSAGE } from '@/constants/message';
-import { Request, Response } from 'express';
-import type { UploadAvatarDto } from '../dto/request/upload-avatar.request.dto';
-import type { UploadMediaRequestDto } from '../dto/request/upload-media.request.dto';
-import { uploadService } from '../service/upload.service';
+import { AccessTokenGuard } from '@/common/guards/access-token.guard';
+import { Message } from '@/common/decorators/message.decorator';
+import { ResizeUploadInterceptor } from '@/common/interceptors/resize-upload.interceptor';
+import { memoryUploadOptions } from '@/middlewares/multer';
+import {
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Post,
+  UploadedFile,
+  UploadedFiles,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { UploadService } from '../service/upload.service';
 
-class UploadController {
-    async uploadAvatar(req: Request<{}, {}, UploadAvatarDto>, res: Response) {
-        const result = await uploadService.uploadImage(req.file!);
-        return res.success(201, UPLOAD_MESSAGE.UPLOAD_AVATAR_SUCCESS, result);
+@ApiTags('Upload')
+@Controller('upload')
+export class UploadController {
+    constructor(private readonly uploadService: UploadService) {}
+
+    @Post('avatar')
+    @HttpCode(HttpStatus.CREATED)
+    @Message(UPLOAD_MESSAGE.UPLOAD_AVATAR_SUCCESS)
+    @UseInterceptors(
+        FileInterceptor('file', memoryUploadOptions as any),
+        ResizeUploadInterceptor,
+    )
+    @ApiConsumes('multipart/form-data')
+    @ApiOperation({ summary: 'Upload an avatar image' })
+    @ApiBody({
+        schema: {
+            type: 'object',
+            required: ['file'],
+            properties: { file: { type: 'string', format: 'binary' } },
+        },
+    })
+    @ApiResponse({ status: HttpStatus.CREATED, description: UPLOAD_MESSAGE.UPLOAD_AVATAR_SUCCESS })
+    async uploadAvatar(@UploadedFile() file: Express.Multer.File) {
+        return this.uploadService.uploadImage(file);
     }
 
-    async uploadMedia(req: Request, res: Response) {
-        const files = (req as UploadMediaRequestDto).files ?? [];
-        const result = await uploadService.uploadMedia(files);
-        return res.success(201, UPLOAD_MESSAGE.UPLOAD_MEDIA_SUCCESS, result);
+    @Post('media')
+    @HttpCode(HttpStatus.CREATED)
+    @UseGuards(AccessTokenGuard)
+    @Message(UPLOAD_MESSAGE.UPLOAD_MEDIA_SUCCESS)
+    @UseInterceptors(
+        FilesInterceptor('medias', 5, memoryUploadOptions as any),
+        ResizeUploadInterceptor,
+    )
+    @ApiBearerAuth('bearer')
+    @ApiConsumes('multipart/form-data')
+    @ApiOperation({ summary: 'Upload post media' })
+    @ApiBody({
+        schema: {
+            type: 'object',
+            required: ['medias'],
+            properties: {
+                medias: { type: 'array', items: { type: 'string', format: 'binary' } },
+            },
+        },
+    })
+    @ApiResponse({ status: HttpStatus.CREATED, description: UPLOAD_MESSAGE.UPLOAD_MEDIA_SUCCESS })
+    async uploadMedia(@UploadedFiles() files: Express.Multer.File[] = []) {
+        return this.uploadService.uploadMedia(files);
     }
-
 }
-export const uploadController = new UploadController();
