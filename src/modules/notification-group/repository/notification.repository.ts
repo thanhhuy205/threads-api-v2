@@ -1,7 +1,7 @@
 import type { NotificationType } from "@/modules/notification-group/model/notification.model";
 import { collections } from "@/providers/mongodb.provider";
 import { PrismaService } from '@/shared/database/prisma.service';
-import { buildPagination } from "@/shared/pagination/cursor-pagination";
+import { normalizeCursorPagination } from '@/common/helpers/cursor-pagination.helper';
 import { Injectable } from '@nestjs/common';
 import { Sort } from "mongodb";
 
@@ -19,7 +19,7 @@ export class NotificationRepository {
         where?: Record<string, any>;
         orderBy?: Sort;
     }) {
-        const { currentAfter, currentLimit } = buildPagination({ after, take });
+        const { after: currentAfter, take: currentLimit } = normalizeCursorPagination({ after, take });
         const defaultOrderBy = { lastEventAt: -1, publicId: -1 } as Sort;
         return collections('notifications')
             .find(where ?? {})

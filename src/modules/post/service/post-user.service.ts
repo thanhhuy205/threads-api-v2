@@ -6,7 +6,7 @@ import {
 } from "@/modules/post/helper";
 import { Injectable } from '@nestjs/common';
 import type { GetPostWithUser } from "@/modules/post/interfaces/get-post-with-user";
-import { redisVersion } from "@/shared/redis-version";
+import { RedisVersionService } from '@/shared/redis-version';
 import { forwardRef, Inject } from '@nestjs/common';
 import { FollowerService } from '@/modules/user/service/follower.service';
 import { PostRepository } from '../repository/post.repository';
@@ -18,6 +18,7 @@ export class PostUserService {
   constructor(
     private readonly postRepository: PostRepository,
     @Inject(forwardRef(() => FollowerService)) private readonly followerService: FollowerService,
+    private readonly redisVersionService: RedisVersionService,
   ) {}
   async getPostsByUser({ after, take, userId, myUserId }: GetPostWithUser) {
     const namespace = buildPostListNamespace({
@@ -27,7 +28,7 @@ export class PostUserService {
       userId: myUserId,
       extra: userId,
     });
-    return redisVersion.wrapperCacheVersion(
+    return this.redisVersionService.wrapperCacheVersion(
       namespace,
       postListCacheTtlSeconds,
       () =>
@@ -54,7 +55,7 @@ export class PostUserService {
       userId: myUserId,
       extra: userId,
     });
-    return redisVersion.wrapperCacheVersion(
+    return this.redisVersionService.wrapperCacheVersion(
       namespace,
       postListCacheTtlSeconds,
       () =>

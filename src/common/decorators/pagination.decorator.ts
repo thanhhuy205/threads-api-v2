@@ -1,5 +1,11 @@
-import { SetMetadata } from '@nestjs/common';
+import { createParamDecorator, ExecutionContext } from '@nestjs/common';
+import type { Request } from 'express';
+import { normalizeOffsetPagination } from '../helpers/offset-pagination.helper';
 
-export const PAGINATION_METADATA_KEY = 'pagination';
-
-export const Pagination = () => SetMetadata(PAGINATION_METADATA_KEY, true);
+/** Parses and bounds `page` and `limit` query parameters for offset pagination. */
+export const Pagination = createParamDecorator(
+  (_data: unknown, context: ExecutionContext) => {
+    const request = context.switchToHttp().getRequest<Request>();
+    return normalizeOffsetPagination(request.query);
+  },
+);

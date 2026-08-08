@@ -1,9 +1,10 @@
 import { Message } from '@/common/decorators/message.decorator';
-import { Pagination } from '@/common/decorators/pagination.decorator';
+import { CursorPagination } from '@/common/decorators/cursor-pagination.decorator';
+import { ApiCursorPaginatedResponse } from '@/common/decorators/swagger-response.decorator';
+import type { CursorPagination as CursorPaginationParams } from '@/common/helpers/cursor-pagination.helper';
 import { AccessTokenGuard } from '@/common/guards/access-token.guard';
 import { AUTH_MESSAGE } from '@/constants/message';
 import { UnauthorizedException } from '@/errors/error';
-import { buildPagination } from '@/shared/pagination/cursor-pagination';
 import { Controller, Get, HttpCode, HttpStatus, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
@@ -18,16 +19,14 @@ export class NotificationController {
   constructor(private readonly notificationService: NotificationService) {}
 
   @Get()
-  @Pagination()
   @Message('Notifications retrieved')
   @ApiOperation({ summary: 'Get notifications for the current user' })
-  @ApiResponse({ status: HttpStatus.OK, description: 'Notifications retrieved' })
-  async getNotifications(@Query() query: NotificationQueryDto, @Req() request: Request) {
-    const { currentAfter, currentLimit } = buildPagination(query);
+  @ApiCursorPaginatedResponse({ description: 'Notifications retrieved' })
+  async getNotifications(@Query() _query: NotificationQueryDto, @CursorPagination() pagination: CursorPaginationParams, @Req() request: Request) {
     const notifications = await this.notificationService.findAll({
       recipientId: this.userId(request),
-      after: currentAfter ?? undefined,
-      take: currentLimit,
+      after: pagination.after ?? undefined,
+      take: pagination.take,
     });
     return { data: notifications.rows, pagination: notifications.pagination };
   }

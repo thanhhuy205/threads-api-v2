@@ -7,7 +7,7 @@ export type TopicRecord = {
 };
 
 @Injectable()
-export class TopicRepository implements ICursorPagination<{ q: string }, TopicRecord> {
+export class TopicRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   findAll({ after, take, where }: { after?: string; take?: number; where?: { q: string; } | undefined; }): Promise<TopicRecord[]> {

@@ -15,10 +15,7 @@ import { FriendService } from '@/modules/user/service/friend.service';
 import { UserService } from "@/modules/user/service/user.service";
 import { redisService } from "@/providers/redis.provider";
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import {
-  buildCursorPagination,
-  type PaginationResponse,
-} from "@/shared/pagination/cursor-pagination";
+import { buildCursorPagination, type CursorPaginationMeta } from '@/common/helpers/cursor-pagination.helper';
 
 type NotificationGroupListRow = Awaited<
   ReturnType<NotificationRepository['findByRecipientId']>
@@ -66,7 +63,7 @@ export class NotificationService implements OnModuleInit {
     take,
   }: FindAllNotificationGroupsInput): Promise<{
     rows: Array<NotificationGroupListRow & { targetPost: NotificationTargetPost | null }>;
-    pagination: PaginationResponse<string | number | null>;
+    pagination: CursorPaginationMeta;
   }> {
     const notifications = await this.notificationRepository.findByRecipientId({
       recipientId,

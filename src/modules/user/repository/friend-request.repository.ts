@@ -1,14 +1,11 @@
 import { baseLogger } from "@/middlewares/logger";
 import { PrismaService } from '@/shared/database/prisma.service';
-import { buildPagination } from "@/shared/pagination/cursor-pagination";
+import { normalizeCursorPagination } from '@/common/helpers/cursor-pagination.helper';
 import { Injectable } from '@nestjs/common';
 import { FriendRequest, FriendRequestStatus, Prisma } from "@prisma/client";
 
 @Injectable()
-export class FriendRequestRepository implements ICursorPagination<
-  Prisma.FriendRequestWhereInput,
-  unknown
-> {
+export class FriendRequestRepository {
   constructor(private readonly prisma: PrismaService = prisma as PrismaService) { }
 
   findAll({
@@ -24,7 +21,7 @@ export class FriendRequestRepository implements ICursorPagination<
     cursor?: Prisma.FriendRequestWhereUniqueInput;
     select?: Prisma.FriendRequestSelect;
   }): Promise<FriendRequest[]> {
-    const { currentAfter, currentLimit } = buildPagination({ after, take });
+    const { after: currentAfter, take: currentLimit } = normalizeCursorPagination({ after, take });
 
     return this.prisma.friendRequest.findMany({
       where,

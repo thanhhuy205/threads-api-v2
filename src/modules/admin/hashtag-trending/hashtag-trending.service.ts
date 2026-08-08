@@ -1,5 +1,5 @@
 import type { GetTrendingHashtagsInput } from "./interfaces/get-trending-hashtags.input";
-import { buildPaginationResponse } from "@/shared/pagination/pagination";
+import { buildOffsetPaginationResponse } from '@/common/helpers/offset-pagination.helper';
 import { Injectable } from '@nestjs/common';
 import { HashtagTrendingRepository } from "./hashtag-trending.repository";
 
@@ -15,7 +15,7 @@ export class HashtagTrendingService {
 
     return {
       rows: hashtags,
-      pagination: buildPaginationResponse(totalHashtags, input.page, input.limit),
+      pagination: buildOffsetPaginationResponse(totalHashtags, input.page, input.limit),
     };
   }
 }

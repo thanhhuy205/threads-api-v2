@@ -15,7 +15,7 @@ import type { GetPostWithPublicId } from "@/modules/post/interfaces/get-post-wit
 import type { GetPostWithUser } from "@/modules/post/interfaces/get-post-with-user";
 import type { NewsFeedPayload } from "@/modules/post/interfaces/news-feed-payload";
 import { PostMapper } from "@/modules/post/mapper/post.mapper";
-import { redisVersion } from "@/shared/redis-version";
+import { RedisVersionService } from '@/shared/redis-version';
 import { primaryPostTypes } from "../constants/post-type";
 import { PostRepository } from "../repository/post.repository";
 
@@ -24,6 +24,7 @@ export class PostFeedService {
   constructor(
     private readonly postRepository: PostRepository,
     @Inject(forwardRef(() => FollowerService)) private readonly followerService: FollowerService,
+    private readonly redisVersionService: RedisVersionService,
   ) {}
   async getNewsFeed({
     after,
@@ -46,7 +47,7 @@ export class PostFeedService {
       userId,
       extra: feedType,
     });
-    return redisVersion.wrapperCacheVersion(
+    return this.redisVersionService.wrapperCacheVersion(
       namespace,
       postListCacheTtlSeconds,
       () =>
@@ -70,7 +71,7 @@ export class PostFeedService {
       extra: userId,
     });
 
-    return redisVersion.wrapperCacheVersion(
+    return this.redisVersionService.wrapperCacheVersion(
       namespace,
       postListCacheTtlSeconds,
       () =>
@@ -97,7 +98,7 @@ export class PostFeedService {
       userId,
       extra: publicId,
     });
-    return redisVersion.wrapperCacheVersion(
+    return this.redisVersionService.wrapperCacheVersion(
       namespace,
       postListCacheTtlSeconds,
       () =>
@@ -123,7 +124,7 @@ export class PostFeedService {
       userId: myUserId,
       extra: userId,
     });
-    return redisVersion.wrapperCacheVersion(
+    return this.redisVersionService.wrapperCacheVersion(
       namespace,
       postListCacheTtlSeconds,
       () =>

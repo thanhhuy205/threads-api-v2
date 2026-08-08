@@ -2,8 +2,9 @@ import { Body, Controller, Get, HttpCode, HttpStatus, Param, Patch, Query, Req, 
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Message } from '@/common/decorators/message.decorator';
 import { Pagination } from '@/common/decorators/pagination.decorator';
+import { ApiOffsetPaginatedResponse } from '@/common/decorators/swagger-response.decorator';
 import { AccessTokenGuard } from '@/common/guards/access-token.guard';
-import { buildPagination } from '@/shared/pagination/pagination';
+import type { OffsetPagination } from '@/common/helpers/offset-pagination.helper';
 import { AdminRoleGuard } from '../guards/admin-role.guard';
 import { ListReportsQueryDto } from "./dto/request/list-reports.query.dto";
 import { ModerateReportRequestDto } from "./dto/request/moderate-report.request.dto";
@@ -19,15 +20,13 @@ export class ReportManagementController {
   constructor(private readonly reportManagementService: ReportManagementService) {}
 
   @Get()
-  @Pagination()
   @Message('Reports retrieved successfully')
   @ApiOperation({ summary: 'List reports' })
-  @ApiResponse({ status: HttpStatus.OK, description: 'Reports retrieved successfully' })
-  async listReports(@Query() query: ListReportsQueryDto) {
-    const { currentPage, currentLimit } = buildPagination(query);
+  @ApiOffsetPaginatedResponse({ description: 'Reports retrieved successfully' })
+  async listReports(@Query() query: ListReportsQueryDto, @Pagination() pagination: OffsetPagination) {
     const result = await this.reportManagementService.listReports({
-      page: currentPage,
-      limit: currentLimit,
+      page: pagination.page,
+      limit: pagination.limit,
       type: query.type,
       status: query.status,
     });

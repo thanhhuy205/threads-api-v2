@@ -1,10 +1,7 @@
 import { NotFoundException } from "@/errors/error";
 import { FollowRepository, followRepository as legacyFollowRepository } from "@/modules/user/repository/follow.repository";
 import { UserRepository, userRepository as legacyUserRepository } from "@/modules/user/repository/user.repository";
-import {
-  buildCursorPagination,
-  type PaginationResponse,
-} from "@/shared/pagination/cursor-pagination";
+import { buildCursorPagination, type CursorPaginationMeta } from '@/common/helpers/cursor-pagination.helper';
 import { Injectable } from '@nestjs/common';
 import type { FollowActionDataDto } from "../dto/response/follow-action.response.dto";
 import type { FollowerUserDto } from "../mapper/follower.mapper";
@@ -17,7 +14,7 @@ type GetFollowersInput = {
 
 type GetUsersPaginationResult = {
   users: FollowerUserDto[];
-  pagination: PaginationResponse<string | number | null>;
+  pagination: CursorPaginationMeta;
 };
 
 @Injectable()

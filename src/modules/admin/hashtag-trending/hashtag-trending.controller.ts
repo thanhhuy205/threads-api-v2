@@ -2,8 +2,9 @@ import { Controller, Get, HttpStatus, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Message } from '@/common/decorators/message.decorator';
 import { Pagination } from '@/common/decorators/pagination.decorator';
+import { ApiOffsetPaginatedResponse } from '@/common/decorators/swagger-response.decorator';
 import { AccessTokenGuard } from '@/common/guards/access-token.guard';
-import { buildPagination } from '@/shared/pagination/pagination';
+import type { OffsetPagination } from '@/common/helpers/offset-pagination.helper';
 import { AdminRoleGuard } from '../guards/admin-role.guard';
 import { TrendingHashtagQueryDto } from "./dto/request/trending-hashtag.query.dto";
 import { HashtagTrendingService } from "./hashtag-trending.service";
@@ -16,15 +17,13 @@ export class HashtagTrendingController {
   constructor(private readonly hashtagTrendingService: HashtagTrendingService) {}
 
   @Get('trending')
-  @Pagination()
   @Message('Trending hashtags retrieved successfully')
   @ApiOperation({ summary: 'List trending hashtags' })
-  @ApiResponse({ status: HttpStatus.OK, description: 'Trending hashtags retrieved successfully' })
-  async listTrendingHashtags(@Query() query: TrendingHashtagQueryDto) {
-    const { currentPage, currentLimit } = buildPagination(query);
+  @ApiOffsetPaginatedResponse({ description: 'Trending hashtags retrieved successfully' })
+  async listTrendingHashtags(@Query() _query: TrendingHashtagQueryDto, @Pagination() pagination: OffsetPagination) {
     const result = await this.hashtagTrendingService.listTrendingHashtags({
-      page: currentPage,
-      limit: currentLimit,
+      page: pagination.page,
+      limit: pagination.limit,
     });
     return { data: result.rows, pagination: result.pagination };
   }

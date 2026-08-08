@@ -1,6 +1,6 @@
 import { PostSearchService } from "@/modules/post/service/post-search.service";
 import { TopicService } from "@/modules/topic/service/topic.service";
-import { buildCursorPagination } from "@/shared/pagination/cursor-pagination";
+import { buildCursorPagination } from '@/common/helpers/cursor-pagination.helper';
 import { Injectable } from '@nestjs/common';
 
 type SerpType = "default";

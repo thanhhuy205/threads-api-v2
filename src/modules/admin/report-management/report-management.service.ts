@@ -1,6 +1,6 @@
 import { NotFoundException } from "@/errors/error";
 import { PostActionService } from "@/modules/post/service/post-action.service";
-import { buildPaginationResponse } from "@/shared/pagination/pagination";
+import { buildOffsetPaginationResponse } from '@/common/helpers/offset-pagination.helper';
 import { ReportStatus, ReportTargetType } from "@prisma/client";
 import { Injectable } from '@nestjs/common';
 import type { ModerateReportDataDto } from "./dto/response/moderate-report.response.dto";
@@ -41,7 +41,7 @@ export class ReportManagementService {
 
     return {
       rows,
-      pagination: buildPaginationResponse(totalReports, input.page, input.limit),
+      pagination: buildOffsetPaginationResponse(totalReports, input.page, input.limit),
     };
   }
 

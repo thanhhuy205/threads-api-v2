@@ -1,10 +1,11 @@
 import { Message } from '@/common/decorators/message.decorator';
-import { Pagination } from '@/common/decorators/pagination.decorator';
+import { CursorPagination } from '@/common/decorators/cursor-pagination.decorator';
+import { ApiCursorPaginatedResponse } from '@/common/decorators/swagger-response.decorator';
+import type { CursorPagination as CursorPaginationParams } from '@/common/helpers/cursor-pagination.helper';
 import { AccessTokenGuard } from '@/common/guards/access-token.guard';
 import { Body, Controller, Get, HttpStatus, Query, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
-import { buildPagination } from '@/shared/pagination/cursor-pagination';
 import { SearchPostsQueryDto, SearchTopicQueryDto, SearchUsernameQueryDto } from '../dto/search.dto';
 import { SearchService } from '../service/search.service';
 import { UserService } from '@/modules/user/service/user.service';
@@ -20,16 +21,14 @@ export class SearchController {
   ) {}
 
   @Get('posts')
-  @Pagination()
   @Message('Posts retrieved successfully')
   @ApiOperation({ summary: 'Search visible posts by content' })
-  @ApiResponse({ status: HttpStatus.OK, description: 'Posts retrieved successfully' })
-  async searchPost(@Query() query: SearchPostsQueryDto, @Req() request: Request) {
-    const { currentAfter, currentLimit } = buildPagination(query);
+  @ApiCursorPaginatedResponse({ description: 'Posts retrieved successfully' })
+  async searchPost(@Query() query: SearchPostsQueryDto, @CursorPagination() cursor: CursorPaginationParams, @Req() request: Request) {
     const { rows, pagination } = await this.searchService.searchPost({
       q: query.q,
-      after: currentAfter ?? undefined,
-      take: currentLimit,
+      after: cursor.after ?? undefined,
+      take: cursor.take,
       serpType: query.serp_type,
       userId: request.user?.sub,
     });

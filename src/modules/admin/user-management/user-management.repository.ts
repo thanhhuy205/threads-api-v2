@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { buildPagination } from "@/shared/pagination/pagination";
+import { normalizeOffsetPagination } from '@/common/helpers/offset-pagination.helper';
 import { Prisma, UserStatus } from "@prisma/client";
 import { PrismaService } from '@/shared/database/prisma.service';
 import type { GetAdminUsersInput } from "./interfaces/get-admin-users.input";
@@ -36,8 +36,7 @@ type AdminUserRow = Prisma.UserGetPayload<{
 }>;
 
 @Injectable()
-export class UserManagementRepository
-  implements IPagination<Prisma.UserWhereInput, AdminUserRow> {
+export class UserManagementRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   findAll({
@@ -53,7 +52,7 @@ export class UserManagementRepository
       orderBy?: Prisma.UserOrderByWithRelationInput[];
     };
   }): Promise<AdminUserRow[]> {
-    const { offset, currentLimit } = buildPagination({ page, limit });
+    const { offset, limit: currentLimit } = normalizeOffsetPagination({ page, limit });
 
     return this.prisma.user.findMany({
       where,

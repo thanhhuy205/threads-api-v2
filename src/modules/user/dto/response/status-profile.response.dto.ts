@@ -1,5 +1,3 @@
-import type { BaseResponse } from '@/shared/interface/base-response.interface';
-
 export type StatusProfileDataDto = {
   isSuccessFollow: boolean;
   isSuccessBio: boolean;
@@ -7,4 +5,3 @@ export type StatusProfileDataDto = {
   isSuccessAvatar: boolean;
 };
 
-export type StatusProfileResponseDto = BaseResponse<StatusProfileDataDto>;

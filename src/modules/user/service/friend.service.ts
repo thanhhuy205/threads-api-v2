@@ -3,10 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { NotFoundException } from "@/errors/error";
 import { baseLogger } from "@/middlewares/logger";
 import { UserRepository, userRepository as legacyUserRepository } from "@/modules/user/repository/user.repository";
-import {
-  buildCursorPagination,
-  type PaginationResponse,
-} from "@/shared/pagination/cursor-pagination";
+import { buildCursorPagination, type CursorPaginationMeta } from '@/common/helpers/cursor-pagination.helper';
 import { TransactionService } from "@/shared/transaction/transaction.service";
 import { FriendRequestStatus } from "@prisma/client";
 import { FriendRequestRepository, friendRequestRepository as legacyFriendRequestRepository } from "../repository/friend-request.repository";
@@ -17,7 +14,7 @@ type FriendRequestResponse = {
 
 type FriendRequestPaginationResult = {
   rows: unknown[];
-  pagination: PaginationResponse<string | number | null>;
+  pagination: CursorPaginationMeta;
 };
 
 @Injectable()

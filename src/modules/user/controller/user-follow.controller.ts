@@ -1,9 +1,10 @@
 import { Message } from '@/common/decorators/message.decorator';
-import { Pagination } from '@/common/decorators/pagination.decorator';
+import { CursorPagination } from '@/common/decorators/cursor-pagination.decorator';
+import { ApiCursorPaginatedResponse } from '@/common/decorators/swagger-response.decorator';
+import type { CursorPagination as CursorPaginationParams } from '@/common/helpers/cursor-pagination.helper';
 import { AccessTokenGuard } from '@/common/guards/access-token.guard';
 import { AUTH_MESSAGE, USER_MESSAGE } from '@/constants/message';
 import { NotFoundException, UnauthorizedException } from '@/errors/error';
-import { buildPagination } from '@/shared/pagination/cursor-pagination';
 import { Controller, Get, HttpCode, HttpStatus, Param, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
@@ -23,35 +24,31 @@ export class UserFollowController {
   ) { }
 
   @Get(':username/followers')
-  @Pagination()
   @Message(USER_MESSAGE.GET_FOLLOWERS_SUCCESS)
   @ApiOperation({ summary: 'Get a user’s followers' })
-  @ApiResponse({ status: 200, description: USER_MESSAGE.GET_FOLLOWERS_SUCCESS })
-  async getFollowers(@Param() params: UsernameParamsDto, @Query() query: FollowersQueryDto) {
+  @ApiCursorPaginatedResponse({ description: USER_MESSAGE.GET_FOLLOWERS_SUCCESS })
+  async getFollowers(@Param() params: UsernameParamsDto, @Query() _query: FollowersQueryDto, @CursorPagination() cursor: CursorPaginationParams) {
     const user = await this.userService.findByUsername(params.username);
     if (!user) throw new NotFoundException(USER_MESSAGE.USER_NOT_FOUND);
-    const { currentAfter, currentLimit } = buildPagination(query);
     const { users, pagination } = await this.followerService.getFollower({
       userId: user.id,
-      after: currentAfter ?? undefined,
-      take: currentLimit,
+      after: cursor.after ?? undefined,
+      take: cursor.take,
     });
     return { data: users, pagination };
   }
 
   @Get(':username/following')
-  @Pagination()
   @Message(USER_MESSAGE.GET_FOLLOWING_SUCCESS)
   @ApiOperation({ summary: 'Get users followed by a user' })
-  @ApiResponse({ status: 200, description: USER_MESSAGE.GET_FOLLOWING_SUCCESS })
-  async getFollowing(@Param() params: UsernameParamsDto, @Query() query: FollowersQueryDto) {
+  @ApiCursorPaginatedResponse({ description: USER_MESSAGE.GET_FOLLOWING_SUCCESS })
+  async getFollowing(@Param() params: UsernameParamsDto, @Query() _query: FollowersQueryDto, @CursorPagination() cursor: CursorPaginationParams) {
     const user = await this.userService.findByUsername(params.username);
     if (!user) throw new NotFoundException(USER_MESSAGE.USER_NOT_FOUND);
-    const { currentAfter, currentLimit } = buildPagination(query);
     const { users, pagination } = await this.followerService.getFollowing({
       userId: user.id,
-      after: currentAfter ?? undefined,
-      take: currentLimit,
+      after: cursor.after ?? undefined,
+      take: cursor.take,
     });
     return { data: users, pagination };
   }

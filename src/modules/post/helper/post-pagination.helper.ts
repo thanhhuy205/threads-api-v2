@@ -2,7 +2,7 @@ import { redisKey } from "@/constants/resolve-key/redis-key";
 import { PostMapper } from "@/modules/post/mapper/post.mapper";
 import { FollowerService } from "@/modules/user/service/follower.service";
 import { redisService } from "@/providers/redis.provider";
-import { buildCursorPagination, buildPagination } from "@/shared/pagination/cursor-pagination";
+import { buildCursorPagination, normalizeCursorPagination } from '@/common/helpers/cursor-pagination.helper';
 import { Prisma } from "@prisma/client";
 import { PostRepository } from "../repository/post.repository";
 
@@ -43,7 +43,7 @@ export async function paginatePosts({
   postRepository: PostRepository;
   followerService: FollowerService;
 }) {
-  const { currentAfter, currentLimit } = buildPagination({ after, take });
+  const { after: currentAfter, take: currentLimit } = normalizeCursorPagination({ after, take });
 
   const posts = await postRepository.findAll({
     after: currentAfter ?? undefined,

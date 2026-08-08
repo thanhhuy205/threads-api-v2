@@ -1,5 +1,5 @@
 import { redisKey } from "@/constants/resolve-key/redis-key";
-import { redisVersion } from "@/shared/redis-version";
+import { RedisVersionService } from '@/shared/redis-version';
 import { Prisma } from "@prisma/client";
 import { normalizeTopic } from "../helper/nomalize.hepler";
 import { Injectable } from '@nestjs/common';
@@ -16,6 +16,7 @@ export class PostMetaService {
   constructor(
     private readonly topicsPostRepository: TopicsPostRepository,
     private readonly postMentionService: PostMentionService,
+    private readonly redisVersionService: RedisVersionService,
   ) {}
   async attachPostMeta(
     tx: Prisma.TransactionClient,
@@ -52,7 +53,7 @@ export class PostMetaService {
       params.mentionNotification
         ? this.postMentionService.dispatchMentionNotifications(params.mentionNotification)
         : undefined,
-      redisVersion.bumpPostListCacheVersion(redisKey.post.listNamespace()),
+      this.redisVersionService.bumpPostListCacheVersion(redisKey.post.listNamespace()),
     ]);
   }
 }

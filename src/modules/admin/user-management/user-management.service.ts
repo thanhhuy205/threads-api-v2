@@ -1,5 +1,5 @@
 import type { BanUserUnlimitedInput } from "@/modules/admin/user-management/interfaces/ban-unlimited.input";
-import { buildPaginationResponse } from "@/shared/pagination/pagination";
+import { buildOffsetPaginationResponse } from '@/common/helpers/offset-pagination.helper';
 import { UserStatus } from "@prisma/client";
 import type { GetAdminUsersInput } from "./interfaces/get-admin-users.input";
 import { Injectable } from '@nestjs/common';
@@ -23,7 +23,7 @@ export class UserManagementService {
 
     return {
       rows,
-      pagination: buildPaginationResponse(totalUsers, input.page, input.limit),
+      pagination: buildOffsetPaginationResponse(totalUsers, input.page, input.limit),
     };
   }
 

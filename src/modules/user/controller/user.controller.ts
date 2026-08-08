@@ -2,11 +2,12 @@ import { Body, Controller, Get, HttpCode, HttpStatus, Param, Patch, Post, Query,
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { Message } from '@/common/decorators/message.decorator';
-import { Pagination } from '@/common/decorators/pagination.decorator';
+import { CursorPagination } from '@/common/decorators/cursor-pagination.decorator';
+import { ApiCursorPaginatedResponse } from '@/common/decorators/swagger-response.decorator';
+import type { CursorPagination as CursorPaginationParams } from '@/common/helpers/cursor-pagination.helper';
 import { AccessTokenGuard } from '@/common/guards/access-token.guard';
 import { AUTH_MESSAGE, USER_MESSAGE } from '@/constants/message';
 import { UnauthorizedException } from '@/errors/error';
-import { buildPagination } from '@/shared/pagination/cursor-pagination';
 import { FollowersQueryDto } from '../dto/request/followers.query.dto';
 import { FriendRequestDto } from '../dto/request/friend-id.params.dto';
 import { FriendRequestParamsDto } from '../dto/request/user-id.params.dto';
@@ -35,16 +36,14 @@ export class UserController {
   }
 
   @Get('followers')
-  @Pagination()
   @Message(USER_MESSAGE.GET_FOLLOWERS_SUCCESS)
   @ApiOperation({ summary: 'Get followers of the current user' })
-  @ApiResponse({ status: HttpStatus.OK, description: USER_MESSAGE.GET_FOLLOWERS_SUCCESS })
-  async getMyFollowers(@Query() query: FollowersQueryDto, @Req() request: Request) {
-    const { currentAfter, currentLimit } = buildPagination(query);
+  @ApiCursorPaginatedResponse({ description: USER_MESSAGE.GET_FOLLOWERS_SUCCESS })
+  async getMyFollowers(@Query() _query: FollowersQueryDto, @CursorPagination() cursor: CursorPaginationParams, @Req() request: Request) {
     const { users, pagination } = await this.followerService.getFollower({
       userId: this.userId(request),
-      after: currentAfter ?? undefined,
-      take: currentLimit,
+      after: cursor.after ?? undefined,
+      take: cursor.take,
     });
     return { data: users, pagination };
   }
@@ -85,31 +84,27 @@ export class UserController {
   }
 
   @Get('friend-requests/received')
-  @Pagination()
   @Message(USER_MESSAGE.GET_RECEIVED_FRIEND_REQUESTS_SUCCESS)
   @ApiOperation({ summary: 'Get received friend requests' })
-  @ApiResponse({ status: HttpStatus.OK, description: USER_MESSAGE.GET_RECEIVED_FRIEND_REQUESTS_SUCCESS })
-  async getReceivedFriendRequests(@Query() query: FollowersQueryDto, @Req() request: Request) {
-    const { currentAfter, currentLimit } = buildPagination(query);
+  @ApiCursorPaginatedResponse({ description: USER_MESSAGE.GET_RECEIVED_FRIEND_REQUESTS_SUCCESS })
+  async getReceivedFriendRequests(@Query() _query: FollowersQueryDto, @CursorPagination() cursor: CursorPaginationParams, @Req() request: Request) {
     const { rows, pagination } = await this.friendService.getReceivedFriendRequests({
-      take: currentLimit,
+      take: cursor.take,
       receiverId: this.userId(request),
-      senderId: currentAfter ?? undefined,
+      senderId: cursor.after ?? undefined,
     });
     return { data: rows, pagination };
   }
 
   @Get('friend-requests/sent')
-  @Pagination()
   @Message(USER_MESSAGE.GET_SENT_FRIEND_REQUESTS_SUCCESS)
   @ApiOperation({ summary: 'Get sent friend requests' })
-  @ApiResponse({ status: HttpStatus.OK, description: USER_MESSAGE.GET_SENT_FRIEND_REQUESTS_SUCCESS })
-  async getSentFriendRequests(@Query() query: FollowersQueryDto, @Req() request: Request) {
-    const { currentAfter, currentLimit } = buildPagination(query);
+  @ApiCursorPaginatedResponse({ description: USER_MESSAGE.GET_SENT_FRIEND_REQUESTS_SUCCESS })
+  async getSentFriendRequests(@Query() _query: FollowersQueryDto, @CursorPagination() cursor: CursorPaginationParams, @Req() request: Request) {
     const { rows, pagination } = await this.friendService.getSentFriendRequests({
-      take: currentLimit,
+      take: cursor.take,
       senderId: this.userId(request),
-      receiverId: currentAfter ?? undefined,
+      receiverId: cursor.after ?? undefined,
     });
     return { data: rows, pagination };
   }

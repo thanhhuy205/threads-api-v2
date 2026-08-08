@@ -1,4 +1,3 @@
-import type { BaseResponse } from '@/shared/interface/base-response.interface';
 import { PostMediaStatus, PostMediaType } from '@prisma/client';
 
 export type UploadMediaItemDataDto = {
@@ -15,4 +14,3 @@ export type UploadMediaDataDto = {
     medias: UploadMediaItemDataDto[];
 };
 
-export type UploadMediaResponseDto = BaseResponse<UploadMediaDataDto>;

@@ -1,13 +1,14 @@
 import { BadRequestException, Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Message } from '@/common/decorators/message.decorator';
-import { Pagination } from '@/common/decorators/pagination.decorator';
+import { CursorPagination } from '@/common/decorators/cursor-pagination.decorator';
+import { ApiCursorPaginatedResponse } from '@/common/decorators/swagger-response.decorator';
+import type { CursorPagination as CursorPaginationParams } from '@/common/helpers/cursor-pagination.helper';
 import { AccessTokenGuard } from '@/common/guards/access-token.guard';
 import { AUTH_MESSAGE, POST_MESSAGE } from '@/constants/message';
 import { NotFoundException, UnauthorizedException } from '@/errors/error';
 import { JwtService } from '@/modules/jwt/service/jwt.service';
 import { UserService } from '@/modules/user/service/user.service';
-import { buildPagination } from '@/shared/pagination/cursor-pagination';
 import { CreatePostDto, UpdatePostDto } from '../dto/post.dto';
 import { CursorPaginationQueryDto, HidePostDto, NewsFeedQueryDto, PublicIdParamsDto, ReportDto, SavePostDto, SearchPostQueryDto, UsernameParamsDto } from '../dto/request/post.request';
 import { PostActionService } from '../service/post-action.service';
@@ -35,16 +36,14 @@ export class PostController {
   ) {}
 
   @Get('news-feed')
-  @Pagination()
   @Message(POST_MESSAGE.RETRIEVED)
   @ApiOperation({ summary: 'Get the news feed' })
-  @ApiResponse({ status: HttpStatus.OK, description: POST_MESSAGE.RETRIEVED })
-  async getNewsFeed(@Query() query: NewsFeedQueryDto, @Req() request: AuthenticatedRequest) {
-    const { currentAfter, currentLimit } = buildPagination(query);
+  @ApiCursorPaginatedResponse({ description: POST_MESSAGE.RETRIEVED })
+  async getNewsFeed(@Query() query: NewsFeedQueryDto, @CursorPagination() cursor: CursorPaginationParams, @Req() request: AuthenticatedRequest) {
     const userId = await this.jwtService.requestAuthToken(request);
     const { posts, pagination } = await this.postFeedService.getNewsFeed({
-      after: currentAfter ?? undefined,
-      take: currentLimit,
+      after: cursor.after ?? undefined,
+      take: cursor.take,
       userId,
       feedType: query.type,
     });
@@ -67,15 +66,13 @@ export class PostController {
   @Get('me')
   @UseGuards(AccessTokenGuard)
   @ApiBearerAuth('bearer')
-  @Pagination()
   @Message(POST_MESSAGE.RETRIEVED)
   @ApiOperation({ summary: 'Get current user posts' })
-  @ApiResponse({ status: HttpStatus.OK, description: POST_MESSAGE.RETRIEVED })
-  async getPostMe(@Query() query: CursorPaginationQueryDto, @Req() request: AuthenticatedRequest) {
-    const { currentAfter, currentLimit } = buildPagination(query);
+  @ApiCursorPaginatedResponse({ description: POST_MESSAGE.RETRIEVED })
+  async getPostMe(@Query() _query: CursorPaginationQueryDto, @CursorPagination() cursor: CursorPaginationParams, @Req() request: AuthenticatedRequest) {
     const { posts, pagination } = await this.postFeedService.getPostMe({
-      after: currentAfter ?? undefined,
-      take: currentLimit,
+      after: cursor.after ?? undefined,
+      take: cursor.take,
       userId: this.userId(request),
     });
     return { data: posts, pagination };
@@ -84,16 +81,14 @@ export class PostController {
   @Get('me/replies')
   @UseGuards(AccessTokenGuard)
   @ApiBearerAuth('bearer')
-  @Pagination()
   @Message(POST_MESSAGE.REPLIES_RETRIEVED)
   @ApiOperation({ summary: 'Get current user replies' })
-  @ApiResponse({ status: HttpStatus.OK, description: POST_MESSAGE.REPLIES_RETRIEVED })
-  async getRepliesMe(@Query() query: CursorPaginationQueryDto, @Req() request: AuthenticatedRequest) {
-    const { currentAfter, currentLimit } = buildPagination(query);
+  @ApiCursorPaginatedResponse({ description: POST_MESSAGE.REPLIES_RETRIEVED })
+  async getRepliesMe(@Query() _query: CursorPaginationQueryDto, @CursorPagination() cursor: CursorPaginationParams, @Req() request: AuthenticatedRequest) {
     const userId = this.userId(request);
     const { posts, pagination } = await this.postUserService.getRepliesByUser({
-      after: currentAfter ?? undefined,
-      take: currentLimit,
+      after: cursor.after ?? undefined,
+      take: cursor.take,
       userId,
       myUserId: userId,
     });
@@ -103,16 +98,14 @@ export class PostController {
   @Get('me/quote')
   @UseGuards(AccessTokenGuard)
   @ApiBearerAuth('bearer')
-  @Pagination()
   @Message(POST_MESSAGE.RETRIEVED)
   @ApiOperation({ summary: 'Get current user quotes and reposts' })
-  @ApiResponse({ status: HttpStatus.OK, description: POST_MESSAGE.RETRIEVED })
-  async getQuoteMe(@Query() query: CursorPaginationQueryDto, @Req() request: AuthenticatedRequest) {
-    const { currentAfter, currentLimit } = buildPagination(query);
+  @ApiCursorPaginatedResponse({ description: POST_MESSAGE.RETRIEVED })
+  async getQuoteMe(@Query() _query: CursorPaginationQueryDto, @CursorPagination() cursor: CursorPaginationParams, @Req() request: AuthenticatedRequest) {
     const userId = this.userId(request);
     const { posts, pagination } = await this.postFeedService.getQuote({
-      after: currentAfter ?? undefined,
-      take: currentLimit,
+      after: cursor.after ?? undefined,
+      take: cursor.take,
       userId,
       myUserId: userId,
     });
@@ -120,63 +113,55 @@ export class PostController {
   }
 
   @Get('user/:username')
-  @Pagination()
   @Message(POST_MESSAGE.RETRIEVED)
   @ApiOperation({ summary: 'Get posts by username' })
   @ApiParam({ name: 'username' })
-  @ApiResponse({ status: HttpStatus.OK, description: POST_MESSAGE.RETRIEVED })
-  async getPostsByUser(@Param() params: UsernameParamsDto, @Query() query: CursorPaginationQueryDto, @Req() request: AuthenticatedRequest) {
+  @ApiCursorPaginatedResponse({ description: POST_MESSAGE.RETRIEVED })
+  async getPostsByUser(@Param() params: UsernameParamsDto, @Query() _query: CursorPaginationQueryDto, @CursorPagination() cursor: CursorPaginationParams, @Req() request: AuthenticatedRequest) {
     const user = await this.getUser(params.username);
-    const { currentAfter, currentLimit } = buildPagination(query);
     const { posts, pagination } = await this.postUserService.getPostsByUser({
-      after: currentAfter ?? undefined, take: currentLimit, userId: user.id,
+      after: cursor.after ?? undefined, take: cursor.take, userId: user.id,
       myUserId: await this.jwtService.requestAuthToken(request) ?? undefined,
     });
     return { data: posts, pagination };
   }
 
   @Get('user/:username/replies')
-  @Pagination()
   @Message(POST_MESSAGE.REPLIES_RETRIEVED)
   @ApiOperation({ summary: 'Get replies by username' })
   @ApiParam({ name: 'username' })
-  @ApiResponse({ status: HttpStatus.OK, description: POST_MESSAGE.REPLIES_RETRIEVED })
-  async getRepliesByUser(@Param() params: UsernameParamsDto, @Query() query: CursorPaginationQueryDto, @Req() request: AuthenticatedRequest) {
+  @ApiCursorPaginatedResponse({ description: POST_MESSAGE.REPLIES_RETRIEVED })
+  async getRepliesByUser(@Param() params: UsernameParamsDto, @Query() _query: CursorPaginationQueryDto, @CursorPagination() cursor: CursorPaginationParams, @Req() request: AuthenticatedRequest) {
     const user = await this.getUser(params.username);
-    const { currentAfter, currentLimit } = buildPagination(query);
     const { posts, pagination } = await this.postUserService.getRepliesByUser({
-      after: currentAfter ?? undefined, take: currentLimit, userId: user.id,
+      after: cursor.after ?? undefined, take: cursor.take, userId: user.id,
       myUserId: await this.jwtService.requestAuthToken(request) ?? undefined,
     });
     return { data: posts, pagination };
   }
 
   @Get('user/:username/quotes')
-  @Pagination()
   @Message(POST_MESSAGE.RETRIEVED)
   @ApiOperation({ summary: 'Get quotes and reposts by username' })
   @ApiParam({ name: 'username' })
-  @ApiResponse({ status: HttpStatus.OK, description: POST_MESSAGE.RETRIEVED })
-  async getQuote(@Param() params: UsernameParamsDto, @Query() query: CursorPaginationQueryDto, @Req() request: AuthenticatedRequest) {
+  @ApiCursorPaginatedResponse({ description: POST_MESSAGE.RETRIEVED })
+  async getQuote(@Param() params: UsernameParamsDto, @Query() _query: CursorPaginationQueryDto, @CursorPagination() cursor: CursorPaginationParams, @Req() request: AuthenticatedRequest) {
     const user = await this.getUser(params.username);
-    const { currentAfter, currentLimit } = buildPagination(query);
     const { posts, pagination } = await this.postFeedService.getQuote({
-      after: currentAfter ?? undefined, take: currentLimit, userId: user.id,
+      after: cursor.after ?? undefined, take: cursor.take, userId: user.id,
       myUserId: await this.jwtService.requestAuthToken(request) ?? undefined,
     });
     return { data: posts, pagination };
   }
 
   @Get(':publicId/replies')
-  @Pagination()
   @Message(POST_MESSAGE.REPLIES_RETRIEVED)
   @ApiOperation({ summary: 'Get replies to a post' })
   @ApiParam({ name: 'publicId' })
-  @ApiResponse({ status: HttpStatus.OK, description: POST_MESSAGE.REPLIES_RETRIEVED })
-  async getReplies(@Param() params: PublicIdParamsDto, @Query() query: CursorPaginationQueryDto, @Req() request: AuthenticatedRequest) {
-    const { currentAfter, currentLimit } = buildPagination(query);
+  @ApiCursorPaginatedResponse({ description: POST_MESSAGE.REPLIES_RETRIEVED })
+  async getReplies(@Param() params: PublicIdParamsDto, @Query() _query: CursorPaginationQueryDto, @CursorPagination() cursor: CursorPaginationParams, @Req() request: AuthenticatedRequest) {
     const { posts, pagination } = await this.postFeedService.getReplies({
-      after: currentAfter ?? undefined, take: currentLimit, publicId: params.publicId,
+      after: cursor.after ?? undefined, take: cursor.take, publicId: params.publicId,
       userId: await this.jwtService.requestAuthToken(request),
     });
     return { data: posts, pagination };

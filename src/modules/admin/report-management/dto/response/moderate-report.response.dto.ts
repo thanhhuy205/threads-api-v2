@@ -1,4 +1,3 @@
-import type { BaseResponse } from "@/shared/interface/base-response.interface";
 import type { ReportStatus, ReportTargetType } from "@prisma/client";
 import type { ReportModerationAction } from "../request/moderate-report.request.dto";
 
@@ -18,4 +17,3 @@ export interface ModerateReportDataDto {
   };
 }
 
-export type ModerateReportResponseDto = BaseResponse<ModerateReportDataDto>;

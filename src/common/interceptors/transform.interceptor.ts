@@ -7,56 +7,43 @@ import {
 import { Reflector } from '@nestjs/core';
 import { Observable, map } from 'rxjs';
 import { RESPONSE_MESSAGE_METADATA_KEY } from '../decorators/message.decorator';
-import { PAGINATION_METADATA_KEY } from '../decorators/pagination.decorator';
-
-export interface Response<T> {
-  success: boolean;
-  data: T;
-  message?: string;
-}
-
-export interface PaginationResponse<T> extends Response<T> {
-  pagination: unknown;
-}
 
 @Injectable()
 export class TransformInterceptor<T>
-  implements NestInterceptor<T, Response<T> | PaginationResponse<T>>
+  implements NestInterceptor<T>
 {
   constructor(private readonly reflector: Reflector) {}
 
   intercept(
     context: ExecutionContext,
     next: CallHandler<T>,
-  ): Observable<Response<T> | PaginationResponse<T>> {
+  ): Observable<unknown> {
     const message = this.reflector.get<string>(
       RESPONSE_MESSAGE_METADATA_KEY,
       context.getHandler(),
     );
-    const pagination = this.reflector.get<boolean>(
-      PAGINATION_METADATA_KEY,
-      context.getHandler(),
-    );
-
     return next.handle().pipe(
       map((result) => {
         const messagePayload = message ? { message } : {};
+        const isPaginated = Boolean(
+          result && typeof result === 'object' && 'pagination' in result,
+        );
 
-        if (pagination) {
+        if (isPaginated) {
           const paginatedResult = result as T & { data: T; pagination: unknown };
           return {
             success: true,
             data: paginatedResult.data ?? null,
             pagination: paginatedResult.pagination,
             ...messagePayload,
-          } as PaginationResponse<T>;
+          };
         }
 
         return {
           success: true,
           data: result ?? null,
           ...messagePayload,
-        } as Response<T>;
+        };
       }),
     );
   }

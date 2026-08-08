@@ -10,7 +10,7 @@ import { evaluationProducer } from "@/modules/job/evaluation-post/producer/evalu
 import { ReportService } from "@/modules/report/service/report.service";
 import { UserService } from "@/modules/user/service/user.service";
 import { redisService } from "@/providers/redis.provider";
-import { redisVersion } from "@/shared/redis-version";
+import { RedisVersionService } from '@/shared/redis-version';
 import {
   InteractionType,
   ReportStatus,
@@ -38,6 +38,7 @@ export class PostActionService {
     private readonly postInteractionRepository: PostInteractionRepository,
     @Inject(forwardRef(() => UserService)) private readonly userService: UserService,
     private readonly reportService: ReportService,
+    private readonly redisVersionService: RedisVersionService,
   ) {}
   async hide(
     publicId: string,
@@ -82,7 +83,7 @@ export class PostActionService {
       await this.postInteractionRepository.deleteByUserPostAndType(hiddenPayload);
     }
 
-    await redisVersion.bumpPostListCacheVersion(redisKey.post.listNamespace());
+    await this.redisVersionService.bumpPostListCacheVersion(redisKey.post.listNamespace());
   }
 
   async actionAdmin(publicId: string): Promise<void> {
@@ -92,7 +93,7 @@ export class PostActionService {
     }
 
     await this.postRepository.softDeleteByPublicId(publicId);
-    await redisVersion.bumpPostListCacheVersion(redisKey.post.listNamespace());
+    await this.redisVersionService.bumpPostListCacheVersion(redisKey.post.listNamespace());
   }
 
   async save(
@@ -123,7 +124,7 @@ export class PostActionService {
       await this.postInteractionRepository.deleteByUserPostAndType(savedPayload);
     }
 
-    await redisVersion.bumpPostListCacheVersion(redisKey.post.listNamespace());
+    await this.redisVersionService.bumpPostListCacheVersion(redisKey.post.listNamespace());
   }
 
   async like(
@@ -175,7 +176,7 @@ export class PostActionService {
       },
     );
     const likeCount = await redisService.get(countKey);
-    await redisVersion.bumpPostListCacheVersion(redisKey.post.listNamespace());
+    await this.redisVersionService.bumpPostListCacheVersion(redisKey.post.listNamespace());
     return Number(likeCount) ?? 0 + (post.likesCount ?? 0);
   }
 
@@ -191,7 +192,7 @@ export class PostActionService {
     }
 
     await this.postRepository.softDeleteByPublicId(publicId);
-    await redisVersion.bumpPostListCacheVersion(redisKey.post.listNamespace());
+    await this.redisVersionService.bumpPostListCacheVersion(redisKey.post.listNamespace());
   }
 
   async update(
@@ -210,7 +211,7 @@ export class PostActionService {
     }
 
     const updatedPost = await this.postRepository.updateByPublicId(publicId, payload);
-    await redisVersion.bumpPostListCacheVersion(redisKey.post.listNamespace());
+    await this.redisVersionService.bumpPostListCacheVersion(redisKey.post.listNamespace());
     return updatedPost;
   }
 

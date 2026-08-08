@@ -3,6 +3,7 @@ import { AccessTokenGuard } from '@/common/guards/access-token.guard';
 import { JwtModule } from '@/modules/jwt/jwt.module';
 import { ReportModule } from '@/modules/report/report.module';
 import { UserModule } from '@/modules/user/user.module';
+import { RedisVersionModule } from '@/shared/redis-version';
 import { PostBuilder } from './builder/post.builder';
 import { PostController } from './controller/post.controller';
 import { PostInteractionRepository } from './repository/post-interaction.repository';
@@ -17,7 +18,7 @@ import { PostUserService } from './service/post-user.service';
 import { PostService } from './service/post.service';
 
 @Module({
-  imports: [forwardRef(() => UserModule), ReportModule, JwtModule],
+  imports: [forwardRef(() => UserModule), ReportModule, JwtModule, RedisVersionModule],
   controllers: [PostController],
   providers: [
     AccessTokenGuard,

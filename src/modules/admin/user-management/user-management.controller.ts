@@ -2,8 +2,9 @@ import { Controller, Get, HttpCode, HttpStatus, Param, Patch, Query, Req, UseGua
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Message } from '@/common/decorators/message.decorator';
 import { Pagination } from '@/common/decorators/pagination.decorator';
+import { ApiOffsetPaginatedResponse } from '@/common/decorators/swagger-response.decorator';
 import { AccessTokenGuard } from '@/common/guards/access-token.guard';
-import { buildPagination } from '@/shared/pagination/pagination';
+import type { OffsetPagination } from '@/common/helpers/offset-pagination.helper';
 import { AdminRoleGuard } from '../guards/admin-role.guard';
 import { ListUsersQueryDto } from "./dto/request/list-users.query.dto";
 import { UserManagementService } from "./user-management.service";
@@ -18,15 +19,13 @@ export class UserManagementController {
   constructor(private readonly userManagementService: UserManagementService) {}
 
   @Get()
-  @Pagination()
   @Message('Users retrieved successfully')
   @ApiOperation({ summary: 'List users' })
-  @ApiResponse({ status: HttpStatus.OK, description: 'Users retrieved successfully' })
-  async listUsers(@Query() query: ListUsersQueryDto) {
-    const { currentPage, currentLimit } = buildPagination(query);
+  @ApiOffsetPaginatedResponse({ description: 'Users retrieved successfully' })
+  async listUsers(@Query() _query: ListUsersQueryDto, @Pagination() pagination: OffsetPagination) {
     const result = await this.userManagementService.getAllUsers({
-      page: currentPage,
-      limit: currentLimit,
+      page: pagination.page,
+      limit: pagination.limit,
     });
     return { data: result.rows, pagination: result.pagination };
   }

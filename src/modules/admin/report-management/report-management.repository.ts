@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { buildPagination } from "@/shared/pagination/pagination";
+import { normalizeOffsetPagination } from '@/common/helpers/offset-pagination.helper';
 import { Prisma, ReportStatus, ReportTargetType } from "@prisma/client";
 import { PrismaService } from '@/shared/database/prisma.service';
 
@@ -116,7 +116,7 @@ export class ReportManagementRepository {
     targetType: ReportTargetType;
     status?: ReportStatus;
   }): Promise<AdminReportRow[]> {
-    const { offset, currentLimit } = buildPagination({ page, limit });
+    const { offset, limit: currentLimit } = normalizeOffsetPagination({ page, limit });
 
     return this.prisma.report.findMany({
       where: {

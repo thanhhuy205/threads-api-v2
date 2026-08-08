@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { buildPagination } from "@/shared/pagination/pagination";
+import { normalizeOffsetPagination } from '@/common/helpers/offset-pagination.helper';
 import { Prisma } from "@prisma/client";
 import { PrismaService } from '@/shared/database/prisma.service';
 import type { GetTrendingHashtagsInput } from "./interfaces/get-trending-hashtags.input";
@@ -17,9 +17,7 @@ type TrendingHashtagRow = Prisma.TopicGetPayload<{
 }>;
 
 @Injectable()
-export class HashtagTrendingRepository
-  implements IPagination<Prisma.TopicWhereInput, TrendingHashtagRow>
-{
+export class HashtagTrendingRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   findAll({
@@ -35,7 +33,7 @@ export class HashtagTrendingRepository
       orderBy?: Prisma.TopicOrderByWithRelationInput[];
     };
   }): Promise<TrendingHashtagRow[]> {
-    const { offset, currentLimit } = buildPagination({ page, limit });
+    const { offset, limit: currentLimit } = normalizeOffsetPagination({ page, limit });
 
     return this.prisma.topic.findMany({
       where,

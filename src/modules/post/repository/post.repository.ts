@@ -45,7 +45,7 @@ type CreateRepostPayload = {
 };
 
 @Injectable()
-export class PostRepository implements ICursorPagination<Prisma.PostWhereInput, any> {
+export class PostRepository {
   constructor(private readonly prisma: PrismaService = legacyPrisma as unknown as PrismaService) {}
   private buildFeedSelect(userId?: string | null): typeof postFeedSelect {
     const select: Prisma.PostSelect = {
