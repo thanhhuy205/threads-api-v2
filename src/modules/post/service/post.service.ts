@@ -1,6 +1,5 @@
 import { NotFoundException } from "@/errors/error";
-import { Injectable } from '@nestjs/common';
-import { baseLogger } from "@/middlewares/logger";
+import { Injectable, Logger } from '@nestjs/common';
 import { dispatchReplyNotification } from "@/modules/notification-group/events/notification.dispatcher";
 import type { CreatePostPayload } from "@/modules/post/interfaces/create-post-payload";
 import { PostBuilder } from "../builder/post.builder";
@@ -10,6 +9,8 @@ import { PostMetaService } from "./post-meta.service";
 
 @Injectable()
 export class PostService {
+  private readonly logger = new Logger(PostService.name, { timestamp: true });
+
   constructor(
     private readonly postBuilder: PostBuilder,
     private readonly postRepository: PostRepository,
@@ -66,7 +67,7 @@ export class PostService {
         ),
       { topic: payload.topic, mentionIds },
     );
-    baseLogger.info("Created reply post, adding notification group");
+    this.logger.log("Created reply post, adding notification group");
     await Promise.all([
       !mentionIds.length
         ? dispatchReplyNotification({

@@ -1,5 +1,4 @@
-import { baseLogger } from "@/middlewares/logger";
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
 import { FollowerService } from '@/modules/user/service/follower.service';
 import { NewFeedType } from "@/modules/post/enum";
 import {
@@ -21,6 +20,8 @@ import { PostRepository } from "../repository/post.repository";
 
 @Injectable()
 export class PostFeedService {
+  private readonly logger = new Logger(PostFeedService.name, { timestamp: true });
+
   constructor(
     private readonly postRepository: PostRepository,
     @Inject(forwardRef(() => FollowerService)) private readonly followerService: FollowerService,
@@ -37,7 +38,7 @@ export class PostFeedService {
       userId,
       feedType,
     });
-    baseLogger.info(
+    this.logger.log(
       `Getting news feed for user ${JSON.stringify(userId)} with feed type ${JSON.stringify(feedType)}. Generated where clause: ${JSON.stringify(where)}`,
     );
     const namespace = buildPostListNamespace({

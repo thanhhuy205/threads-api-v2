@@ -1,12 +1,13 @@
 import { QUEUE_NAME, SURVEY_SYNC, SURVEY_SYNC_JOB_NAME } from "@/constants/queue";
-import { baseLogger } from "@/middlewares/logger";
+import { Logger } from '@nestjs/common';
 import { createQueue } from "@/providers/bullmq.provider";
 
 class SurveySyncProducer {
+  private readonly logger = new Logger(SurveySyncProducer.name, { timestamp: true });
   private readonly surveySyncQueue = createQueue(QUEUE_NAME.SURVEY_SYNC_QUEUE);
 
   constructor() {
-    baseLogger.info("SurveySyncProducer initialized");
+    this.logger.log("SurveySyncProducer initialized");
   }
 
   async initSyncSurveyJob() {
@@ -21,7 +22,7 @@ class SurveySyncProducer {
           this.surveySyncQueue.removeRepeatableByKey(job.key),
         ),
       );
-      baseLogger.warn(
+      this.logger.warn(
         `Removed ${surveySyncJobs.length} existing survey sync repeat jobs before re-initializing scheduler`,
       );
     }

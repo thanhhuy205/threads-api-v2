@@ -1,4 +1,4 @@
-import { baseLogger } from "@/middlewares/logger";
+import { Logger } from '@nestjs/common';
 import { NextFunction, Request, Response } from "express";
 import sharp from "sharp";
 
@@ -9,6 +9,8 @@ const IMAGE_MIME_TYPES = new Set([
     "image/webp",
     "image/avif",
 ]);
+
+const logger = new Logger('ImageResize', { timestamp: true });
 
 export const handlerResize = async (buffer: Buffer) => {
     const metadata = await sharp(buffer).metadata();
@@ -35,7 +37,7 @@ export const handlerResize = async (buffer: Buffer) => {
     const resizedWidth = resizedMetadata.width ?? width;
     const resizedHeight = resizedMetadata.height ?? height;
 
-    baseLogger.info(`Image resized from ${w}x${h} to fit within ${MAX_WIDTH}x${MAX_WIDTH}`);
+    logger.log(`Image resized from ${w}x${h} to fit within ${MAX_WIDTH}x${MAX_WIDTH}`);
     return {
         buffer: resizedBuffer,
         width: resizedWidth,

@@ -1,7 +1,6 @@
 import legacyPrisma from "@/config/prisma";
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '@/shared/database/prisma.service';
-import { baseLogger } from "@/middlewares/logger";
 import type {
   CreatePostPayload
 } from "@/modules/post/interfaces/create-post-payload";
@@ -46,6 +45,8 @@ type CreateRepostPayload = {
 
 @Injectable()
 export class PostRepository {
+  private readonly logger = new Logger(PostRepository.name, { timestamp: true });
+
   constructor(private readonly prisma: PrismaService = legacyPrisma as unknown as PrismaService) {}
   private buildFeedSelect(userId?: string | null): typeof postFeedSelect {
     const select: Prisma.PostSelect = {
@@ -99,8 +100,8 @@ export class PostRepository {
   }) {
     const sortOrder = orderBy ?? [{ createdAt: "desc" }, { id: "desc" }];
 
-    baseLogger.info(`${JSON.stringify(where)}`);
-    baseLogger.info(
+    this.logger.log(`${JSON.stringify(where)}`);
+    this.logger.log(
       `Finding posts with where: ${where ? JSON.stringify(where) : "none"}, orderBy: ${JSON.stringify(sortOrder)}, limit: ${take}, after: ${after ? 1 : 0}`,
     );
     return this.prisma.post.findMany({

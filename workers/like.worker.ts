@@ -1,4 +1,4 @@
-import { baseLogger } from "@/middlewares/logger";
+import { Logger } from '@nestjs/common';
 import { likeService } from "@/modules/post/service/like-service.service";
 import { PostRepository } from "@/modules/post/repository/post.repository";
 import { LIKE_JOB_NAME, QUEUE_NAME } from "../src/constants/queue";
@@ -15,6 +15,7 @@ type LikeEvent = {
 const postRepository = new PostRepository();
 
 class LikeWorker {
+  private readonly logger = new Logger(LikeWorker.name, { timestamp: true });
   private readonly worker = createWorker(QUEUE_NAME.LIKE_QUEUE, async (job) => {
     switch (job.name) {
       case LIKE_JOB_NAME.INIT_SYNC_JOB:
@@ -79,7 +80,10 @@ class LikeWorker {
         ]);
       } catch (error) {
         await postRepository.decreaseLikeCount(postPublicId, count);
-        baseLogger.error({ error }, "Failed to process like events");
+        this.logger.error(
+          'Failed to process like events',
+          error instanceof Error ? error.stack : String(error),
+        );
         await this.restoreEvents(events);
         return;
       }

@@ -1,22 +1,25 @@
 import app from '@/app';
+import { AppModule } from '@/app.module';
 import { HttpExceptionFilter } from '@/common/filters/http-exception.filter';
 import { TransformInterceptor } from '@/common/interceptors/transform.interceptor';
-import { AppModule } from '@/app.module';
-import { BadRequestException, ValidationPipe, type ValidationError } from '@nestjs/common';
-import { NestFactory, Reflector } from '@nestjs/core';
-import { ExpressAdapter } from '@nestjs/platform-express';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { likeProducer } from '@/modules/job/like-job/producer/like.producer';
 import { notificationProducer } from '@/modules/job/notification-job/producer/notification.producer';
 import { surveySyncProducer } from '@/modules/job/survey-sync/producer/survey-sync.producer';
 import { closeMongoDB, connectMongoDB } from '@/providers/mongodb.provider';
+import { BadRequestException, ValidationPipe, type ValidationError } from '@nestjs/common';
+import { NestFactory, Reflector } from '@nestjs/core';
+import { ExpressAdapter } from '@nestjs/platform-express';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import configService from './config/config';
 import prisma from './config/prisma';
 import { redisService } from './providers/redis.provider';
-import { errorHandler } from './middlewares/error-handler';
-import { notFoundHandler } from './middlewares/not-found';
-import router from './routes/index';
+
 import rateLimit from 'express-rate-limit';
+
+const corsOrigin =
+    configService.APP_CONFIG.CORS_ORIGIN === '*'
+        ? '*'
+        : configService.APP_CONFIG.CORS_ORIGIN.split(',').map((origin) => origin.trim()).filter(Boolean);
 
 const flattenValidationErrors = (
     errors: ValidationError[],
@@ -40,6 +43,7 @@ const createHttpApplication = async () => {
         max: 100,
     }));
 
+    nestApp.enableCors({ origin: corsOrigin });
     nestApp.setGlobalPrefix(configService.GLOBAL_PREFIX);
     const swaggerConfig = new DocumentBuilder()
         .setTitle('Threads API')
@@ -62,9 +66,7 @@ const createHttpApplication = async () => {
     nestApp.useGlobalFilters(new HttpExceptionFilter());
     await nestApp.init();
 
-    app.use(`/${configService.GLOBAL_PREFIX}`, router);
-    app.use(notFoundHandler);
-    app.use(errorHandler);
+    // app.use(`/${configService.GLOBAL_PREFIX}`, router);
 
     return nestApp;
 };

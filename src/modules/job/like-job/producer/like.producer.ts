@@ -1,12 +1,13 @@
 import { LIKE_JOB_NAME, QUEUE_NAME } from "@/constants/queue";
-import { baseLogger } from "@/middlewares/logger";
+import { Logger } from '@nestjs/common';
 import { createQueue } from "@/providers/bullmq.provider";
 import type { CreateJobLikeProducer } from "../dto/create-job-like-producer";
 
 class LikeProducer {
+  private readonly logger = new Logger(LikeProducer.name, { timestamp: true });
   private readonly likeQueue = createQueue(QUEUE_NAME.LIKE_QUEUE);
   constructor() {
-    baseLogger.info("LikeProducer initialized");
+    this.logger.log("LikeProducer initialized");
   }
 
   async syncPostLike(payload: CreateJobLikeProducer) {
@@ -27,7 +28,7 @@ class LikeProducer {
           this.likeQueue.removeRepeatableByKey(job.key),
         ),
       );
-      baseLogger.warn(
+      this.logger.warn(
         `Removed ${likeSyncRepeatableJobs.length} existing like sync repeat jobs before re-initializing scheduler`,
       );
     }

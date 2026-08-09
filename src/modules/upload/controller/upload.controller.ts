@@ -2,7 +2,6 @@ import { UPLOAD_MESSAGE } from '@/constants/message';
 import { AccessTokenGuard } from '@/common/guards/access-token.guard';
 import { Message } from '@/common/decorators/message.decorator';
 import { ResizeUploadInterceptor } from '@/common/interceptors/resize-upload.interceptor';
-import { memoryUploadOptions } from '@/middlewares/multer';
 import {
   Controller,
   HttpCode,
@@ -26,7 +25,7 @@ export class UploadController {
     @HttpCode(HttpStatus.CREATED)
     @Message(UPLOAD_MESSAGE.UPLOAD_AVATAR_SUCCESS)
     @UseInterceptors(
-        FileInterceptor('file', memoryUploadOptions as any),
+        FileInterceptor('file'),
         ResizeUploadInterceptor,
     )
     @ApiConsumes('multipart/form-data')
@@ -48,7 +47,7 @@ export class UploadController {
     @UseGuards(AccessTokenGuard)
     @Message(UPLOAD_MESSAGE.UPLOAD_MEDIA_SUCCESS)
     @UseInterceptors(
-        FilesInterceptor('medias', 5, memoryUploadOptions as any),
+        FilesInterceptor('medias', 5),
         ResizeUploadInterceptor,
     )
     @ApiBearerAuth('bearer')

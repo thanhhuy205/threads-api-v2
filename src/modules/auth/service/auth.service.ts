@@ -1,7 +1,6 @@
 import configService from "@/config/config";
 import { redisKey } from "@/constants/resolve-key/redis-key";
 import { NotFoundException } from "@/errors/error";
-import { baseLogger } from "@/middlewares/logger";
 import { roleRepository } from "@/modules/access-control/role/repository/role.repository";
 import { userRoleRepository } from "@/modules/access-control/role/repository/user-role.repository";
 import type { SessionMetadata } from "@/modules/auth/interfaces/session-metadata";
@@ -20,7 +19,7 @@ import { redisService } from "@/providers/redis.provider";
 import { UserRoleType, VerificationCodeType } from "@prisma/client";
 import crypto from "crypto";
 import ms, { StringValue } from "ms";
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import type { ForgotPasswordDto } from "../dto/request/forgot-password.request.dto";
 import type { LoginDto } from "../dto/request/login.request.dto";
 import type { LogoutDto } from "../dto/request/logout.request.dto";
@@ -44,6 +43,8 @@ import { AuthRepository } from "../repository/auth.repository";
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name, { timestamp: true });
+
   constructor(
     private readonly authRepository: AuthRepository,
     private readonly verificationRepository: VerificationRepository,
@@ -227,7 +228,7 @@ export class AuthService {
       redisKey.bloom.emails(),
       payload.email,
     );
-    baseLogger.info(
+    this.logger.log(
       `Checked email: ${payload.email} in Bloom filter, exists: ${isExistingEmail}`,
     );
     return {
@@ -242,7 +243,7 @@ export class AuthService {
       redisKey.bloom.usernames(),
       payload.username,
     );
-    baseLogger.info(
+    this.logger.log(
       `Checked username: ${payload.username} in Bloom filter, exists: ${isExistingUsername}`,
     );
 
@@ -295,7 +296,7 @@ export class AuthService {
     const refreshToken =
       await this.authRepository.findRefreshTokenByToken(hashedToken);
 
-    baseLogger.info(`Attempting to refresh token with provided refresh token. Found refresh token record: ${JSON.stringify(refreshToken)}`);
+    this.logger.log(`Attempting to refresh token with provided refresh token. Found refresh token record: ${JSON.stringify(refreshToken)}`);
     if (!refreshToken || refreshToken.revokedAt) {
       return null;
     }
@@ -303,12 +304,12 @@ export class AuthService {
     const now = new Date();
     if (refreshToken.expireAt < now) {
       await this.authRepository.revokeRefreshTokenById(refreshToken.id, now);
-      baseLogger.info(`Refresh token with id ${refreshToken.id} has expired and been revoked.`);
+      this.logger.log(`Refresh token with id ${refreshToken.id} has expired and been revoked.`);
       return null;
     }
 
     const user = await userRepository.findById(refreshToken.userId);
-    baseLogger.info(`Found user ${user?.id} for refresh token with id ${refreshToken.id} user = ${JSON.stringify(user)}.`);
+    this.logger.log(`Found user ${user?.id} for refresh token with id ${refreshToken.id} user = ${JSON.stringify(user)}.`);
     if (!user) {
       return null;
     }
@@ -325,7 +326,7 @@ export class AuthService {
       roles: roles,
     });
 
-    baseLogger.info(`Generated new token pair for user ${user.id} 
+    this.logger.log(`Generated new token pair for user ${user.id}
       with session ${refreshToken.sessionId} during refresh token flow.${tokenPair} `);
 
 

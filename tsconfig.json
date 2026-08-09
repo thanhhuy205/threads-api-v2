@@ -13,7 +13,7 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "types": ["node"],
+    "types": ["node", "multer"],
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],

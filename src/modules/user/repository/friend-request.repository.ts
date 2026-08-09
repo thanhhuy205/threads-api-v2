@@ -1,11 +1,12 @@
-import { baseLogger } from "@/middlewares/logger";
 import { PrismaService } from '@/shared/database/prisma.service';
 import { normalizeCursorPagination } from '@/common/helpers/cursor-pagination.helper';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { FriendRequest, FriendRequestStatus, Prisma } from "@prisma/client";
 
 @Injectable()
 export class FriendRequestRepository {
+  private readonly logger = new Logger(FriendRequestRepository.name, { timestamp: true });
+
   constructor(private readonly prisma: PrismaService = prisma as PrismaService) { }
 
   findAll({
@@ -146,8 +147,8 @@ export class FriendRequestRepository {
     { senderId, receiverId }: { senderId: string; receiverId: string },
     tx?: Prisma.TransactionClient,
   ) {
-    baseLogger.info(`UserId ${receiverId}`);
-    baseLogger.info(`SenderId ${senderId}`);
+    this.logger.log(`UserId ${receiverId}`);
+    this.logger.log(`SenderId ${senderId}`);
     return (tx ?? this.prisma).friendRequest.findUnique({
       where: {
         senderId_receiverId: {

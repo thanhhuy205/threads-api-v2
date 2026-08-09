@@ -1,13 +1,14 @@
 import { NOTIFICATION_JOB_NAME, QUEUE_NAME } from "@/constants/queue";
-import { baseLogger } from "@/middlewares/logger";
+import { Logger } from '@nestjs/common';
 import { createQueue } from "@/providers/bullmq.provider";
 import type { NotificationJobDto } from "../dto/notification.job.dto";
 
 class NotificationProducer {
+  private readonly logger = new Logger(NotificationProducer.name, { timestamp: true });
   private readonly notificationQueue = createQueue(QUEUE_NAME.NOTIFICATION_QUEUE);
   private readonly friendRequestQueue = createQueue(QUEUE_NAME.FRIEND_REQUEST_QUEUE);
   constructor() {
-    baseLogger.info("NotificationProducer initialized");
+    this.logger.log("NotificationProducer initialized");
   }
 
 
@@ -23,7 +24,7 @@ class NotificationProducer {
           this.notificationQueue.removeRepeatableByKey(job.key),
         ),
       );
-      baseLogger.warn(
+      this.logger.warn(
         `Removed ${notificationRepeatableJobs.length} existing notification repeat jobs before re-initializing scheduler`,
       );
     }
@@ -56,7 +57,7 @@ class NotificationProducer {
           this.friendRequestQueue.removeRepeatableByKey(job.key),
         ),
       );
-      baseLogger.warn(
+      this.logger.warn(
         `Removed ${messageRepeatable.length} existing notification repeat jobs before re-initializing scheduler`,
       );
     }

@@ -1,8 +1,5 @@
 import configService from '@/config/config';
-import { corsOrigin } from '@/middlewares/cors';
-import { logger } from '@/middlewares/logger';
 import compression from 'compression';
-import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
 import morgan from 'morgan';
@@ -22,15 +19,12 @@ app.use(
         },
     }),
 );
-app.use(cors({ origin: corsOrigin }));
 app.use(compression());
 app.set('trust proxy', 1)
 app.use(morgan(configService.IS_DEV ? 'dev' : 'combined'));
 
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
-app.use(logger);
-
 app.use(responseHandler);
 
 

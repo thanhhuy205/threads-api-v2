@@ -1,12 +1,13 @@
 import ejs from 'ejs';
 import path from 'path';
+import { Logger } from '@nestjs/common';
 import configService from '../src/config/config';
 import { EMAIL_JOB_NAME, QUEUE_NAME } from '../src/constants/queue';
-import { baseLogger } from '../src/middlewares/logger';
 import { ForgotPasswordProducer } from '../src/modules/job/email/dto/forgot-password.dto';
 import { nodemailerService } from '../src/modules/nodemailer/service/nodemailer.service';
 import { createWorker } from '../src/providers/bullmq.provider';
 class EmailWorker {
+    private readonly logger = new Logger(EmailWorker.name, { timestamp: true });
     private readonly worker = createWorker(QUEUE_NAME.EMAIL_QUEUE, async (job) => {
         switch (job.name) {
             case EMAIL_JOB_NAME.SEND_VERIFICATION_EMAIL:
@@ -34,7 +35,7 @@ class EmailWorker {
             }
         );
         await nodemailerService.sendMail(data.email, 'Verify your email', html, {});
-        baseLogger.info(`Sent verification email to: ${data.email}`);
+        this.logger.log(`Sent verification email to: ${data.email}`);
     }
 
 
@@ -50,7 +51,7 @@ class EmailWorker {
             }
         );
         await nodemailerService.sendMail(data.email, 'Reset your password', html, {});
-        baseLogger.info(`Sent forgot password email to: ${data.email}`);
+        this.logger.log(`Sent forgot password email to: ${data.email}`);
     }
 
     async sendInvitationEmail(data: { email: string; token: string, username: string }) {
@@ -65,7 +66,7 @@ class EmailWorker {
             }
         );
         await nodemailerService.sendMail(data.email, 'You are invited to join Threads', html, {});
-        baseLogger.info(`Sent invitation email to: ${data.email}`);
+        this.logger.log(`Sent invitation email to: ${data.email}`);
     }
 };
 

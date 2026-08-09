@@ -1,6 +1,6 @@
 import { QUEUE_NAME, SURVEY_SYNC_JOB_NAME } from "../src/constants/queue";
 import { redisKey } from "../src/constants/resolve-key/redis-key";
-import { baseLogger } from "../src/middlewares/logger";
+import { Logger } from '@nestjs/common';
 import prisma from "../src/config/prisma";
 import type { PollVoteCountUpdate } from "../src/modules/poll/repository/poll.repository";
 import { createWorker } from "../src/providers/bullmq.provider";
@@ -8,6 +8,7 @@ import { redisService } from "../src/providers/redis.provider";
 import { Prisma } from '@prisma/client';
 
 class SurveySyncWorker {
+  private readonly logger = new Logger(SurveySyncWorker.name, { timestamp: true });
   private readonly worker = createWorker(
     QUEUE_NAME.SURVEY_SYNC_QUEUE,
     async (job) => {
@@ -64,11 +65,11 @@ class SurveySyncWorker {
       }
       await redisService.sRem(dirtyKey, pollIds);
 
-      baseLogger.info(
+      this.logger.log(
         `Survey sync processed ${pollIds.length} dirty surveys, updated ${updates.length} polls`,
       );
     } catch (error) {
-      baseLogger.error(`Error processing survey sync job: ${JSON.stringify(error)}`);
+      this.logger.error(`Error processing survey sync job: ${JSON.stringify(error)}`);
     }
   }
 }

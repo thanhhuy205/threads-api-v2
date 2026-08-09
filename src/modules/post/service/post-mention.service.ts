@@ -1,12 +1,13 @@
 import { BadRequestException } from "@/errors/error";
-import { baseLogger } from "@/middlewares/logger";
 import { dispatchMentionNotification } from "@/modules/notification-group/events/notification.dispatcher";
 import type { CreatePostPayload } from "@/modules/post/interfaces/create-post-payload";
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
 import { UserService } from '@/modules/user/service/user.service';
 
 @Injectable()
 export class PostMentionService {
+  private readonly logger = new Logger(PostMentionService.name, { timestamp: true });
+
   constructor(@Inject(forwardRef(() => UserService)) private readonly userService: UserService) {}
   async validateMentions(
     mentions?: CreatePostPayload["mentions"],
@@ -81,7 +82,7 @@ export class PostMentionService {
       const recipientId = recipientIds[index];
       const message =
         result.reason instanceof Error ? result.reason.message : String(result.reason);
-      baseLogger.error(
+      this.logger.error(
         `[mention-notification] Failed to enqueue mention notification for recipient ${recipientId}: ${message}`,
       );
     });

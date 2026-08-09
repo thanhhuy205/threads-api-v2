@@ -1,4 +1,3 @@
-import { baseLogger } from "@/middlewares/logger";
 import { registerNotificationHandlers } from '@/modules/notification-group/events/notification.dispatcher';
 import { MentionNotification, ReplyNotification } from "@/modules/notification-group/events/notification.events";
 import type {
@@ -14,7 +13,7 @@ import { PusherService } from "@/modules/pusher/service/pusher.service";
 import { FriendService } from '@/modules/user/service/friend.service';
 import { UserService } from "@/modules/user/service/user.service";
 import { redisService } from "@/providers/redis.provider";
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { buildCursorPagination, type CursorPaginationMeta } from '@/common/helpers/cursor-pagination.helper';
 
 type NotificationGroupListRow = Awaited<
@@ -27,6 +26,8 @@ type NotificationTargetPost = Awaited<
 
 @Injectable()
 export class NotificationService implements OnModuleInit {
+  private readonly logger = new Logger(NotificationService.name, { timestamp: true });
+
   constructor(
     private readonly notificationRepository: NotificationRepository,
     private readonly friendService: FriendService,
@@ -152,7 +153,7 @@ export class NotificationService implements OnModuleInit {
     const redisKey: PendingCommentNotificationRedisKey =
       `notification:pending:${recipientId}:${key}:${resolvedGroupKey}`;
 
-    baseLogger.info(`Handling pending notification for Redis key: ${redisKey}`);
+    this.logger.log(`Handling pending notification for Redis key: ${redisKey}`);
     const pipeline = redisService.multi();
 
     const payload: PendingCommentNotificationRedisPayload = {
@@ -224,10 +225,10 @@ export class NotificationService implements OnModuleInit {
       targetType: "POST",
     };
 
-    baseLogger.info(`Enqueuing like count update notification for recipient ${recipientId} for post ${postPublicId} with like count ${likeCount}`);
+    this.logger.log(`Enqueuing like count update notification for recipient ${recipientId} for post ${postPublicId} with like count ${likeCount}`);
     const actorNotIncludeOwner = actorIds.filter((id) => id !== recipientId);
     if (actorNotIncludeOwner.length === 0) {
-      baseLogger.info(`No actors to notify for like count update on post ${postPublicId} for recipient ${recipientId}, skipping notification`);
+      this.logger.log(`No actors to notify for like count update on post ${postPublicId} for recipient ${recipientId}, skipping notification`);
       return;
     }
     await Promise.all([

@@ -1,6 +1,6 @@
 import { generateVideoSegments } from "@/util/ffmpeg.util";
+import { Logger } from '@nestjs/common';
 import { HLS_JOB_NAME, QUEUE_NAME } from "../src/constants/queue";
-import { baseLogger } from '../src/middlewares/logger';
 import type { HlsQueueDto } from "../src/modules/job/video/dto/hls-queue.dto";
 import { createWorker } from "../src/providers/bullmq.provider";
 import { postMediaRepository } from "../src/modules/upload/repository/post-media.repository";
@@ -8,6 +8,7 @@ import { PostMediaStatus } from "@prisma/client";
 import configService from '../src/config/config';
 
 class HlsWorker {
+    private readonly logger = new Logger(HlsWorker.name, { timestamp: true });
     private readonly worker = createWorker(QUEUE_NAME.VIDEO_QUEUE, async (job) => {
         switch (job.name) {
             case HLS_JOB_NAME.HLS_JOB_GENERATE_HLS:
@@ -23,7 +24,7 @@ class HlsWorker {
 
     async addJobGenerateHls(data: HlsQueueDto) {
         const { inputPath, outputDir, title, fileName, outputCloudDir } = data;
-        baseLogger.info(`Generating HLS for title: ${title}, filePath: ${inputPath}, outputDir: ${outputDir}`);
+        this.logger.log(`Generating HLS for title: ${title}, filePath: ${inputPath}, outputDir: ${outputDir}`);
         await generateVideoSegments(inputPath, outputDir, fileName, outputCloudDir);
 
         await postMediaRepository.updateMediaStatus({

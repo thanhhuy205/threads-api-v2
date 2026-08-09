@@ -1,4 +1,4 @@
-import { baseLogger } from "@/middlewares/logger";
+import { Logger } from '@nestjs/common';
 import { Post, Prisma, UserStatus } from "@prisma/client";
 import { postFeedSelect } from "../selector/post.selector";
 
@@ -74,6 +74,8 @@ export type UserSnapshot = {
 };
 
 export class PostMapper {
+  private static readonly logger = new Logger(PostMapper.name, { timestamp: true });
+
   static toUserSnapshot(user: any): UserSnapshot {
     return {
       id: user.id,
@@ -96,7 +98,7 @@ export class PostMapper {
     };
   }
   static toFeedResponse(post: any, userId?: string): PostFeedResponse {
-    baseLogger.info(
+    this.logger.log(
       `Mapping post with id ${post.publicId} to feed response for user ${userId}. Post derivatives: ${JSON.stringify(post.derivatives)}, Likes: ${JSON.stringify(post.likes)}`,
     );
     const topics: string[] =

@@ -9,8 +9,8 @@ import { pusherChannel } from "@/modules/pusher/channel/pusher-channel";
 import { collections } from "@/providers/mongodb.provider";
 import { pusher } from "@/providers/pusher.provider";
 import { redisService } from "@/providers/redis.provider";
+import { Logger } from '@nestjs/common';
 import { NOTIFICATION_JOB_KEY, NOTIFICATION_JOB_NAME, QUEUE_NAME } from "../src/constants/queue";
-import { baseLogger } from "../src/middlewares/logger";
 import { createWorker } from "../src/providers/bullmq.provider";
 
 const pendingCommentKeyPattern =
@@ -57,6 +57,7 @@ type PushNotificationPayload = {
 };
 
 class NotificationWorker {
+  private readonly logger = new Logger(NotificationWorker.name, { timestamp: true });
   private readonly worker = createWorker(QUEUE_NAME.NOTIFICATION_QUEUE, async (job) => {
     switch (job.name) {
       case NOTIFICATION_JOB_NAME.BATCH_SYNC_NOTIFICATION:
@@ -111,7 +112,7 @@ class NotificationWorker {
     const notificationSave: PendingCommentNotificationBatchItem[] = [];
 
     for (const redisKey of dueItems as PendingCommentNotificationRedisKey[]) {
-      baseLogger.info(`[QUEUE_ITEM] ${redisKey}`);
+      this.logger.log(`[QUEUE_ITEM] ${redisKey}`);
 
       const [rawMeta, actorCount, actors] = await Promise.all([
         redisService.hGetAll(redisKey),
@@ -126,7 +127,7 @@ class NotificationWorker {
       );
 
       if (!meta || !recipientId) {
-        baseLogger.warn(
+        this.logger.warn(
           `[notification-worker] Invalid pending comment notification: ${JSON.stringify({
             redisKey,
             recipientId,

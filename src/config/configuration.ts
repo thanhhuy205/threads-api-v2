@@ -19,6 +19,8 @@ import { R2Configuration } from './r2.config';
 import { RedisConfiguration } from './redis.config';
 
 export class Configuration extends BaseConfiguration {
+  private readonly logger = new Logger(Configuration.name, { timestamp: true });
+
   @ValidateNested()
   @Type(() => AppConfiguration)
   APP_CONFIG = new AppConfiguration();
@@ -70,7 +72,7 @@ export class Configuration extends BaseConfiguration {
   validate(): this {
     const errors = validateSync(this, { validationError: { target: false } });
     if (errors.length > 0) {
-      Logger.error(`Invalid configuration fields: ${collectInvalidFields(errors).join(', ')}`, 'Configuration');
+      this.logger.error(`Invalid configuration fields: ${collectInvalidFields(errors).join(', ')}`);
       throw new Error('Configuration contains invalid or missing values');
     }
     return this;

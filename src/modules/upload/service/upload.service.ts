@@ -1,10 +1,9 @@
 import configService from '@/config/config';
-import { baseLogger } from '@/middlewares/logger';
 import { videoProcedure } from '@/modules/job/video';
 import { putObject } from '@/providers/cloudflare.provider';
 import { generateKeyImage } from '@/util/upload.util';
 import { PostMediaStatus } from '@prisma/client';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { mkdir, writeFile } from 'fs/promises';
 import path from 'path';
 import { v4 as uuid } from 'uuid';
@@ -13,6 +12,8 @@ import { PostMediaRepository } from '../repository/post-media.repository';
 
 @Injectable()
 export class UploadService {
+    private readonly logger = new Logger(UploadService.name, { timestamp: true });
+
     constructor(private readonly postMediaRepository: PostMediaRepository) {}
 
     async uploadImage(file: Express.Multer.File, folder = 'avatars') {
@@ -77,7 +78,7 @@ export class UploadService {
         await mkdir(path.join(tempDirectory, folder), { recursive: true });
         await writeFile(path.join(tempDirectory, fileName), file.buffer);
 
-        baseLogger.info(`Added video to temp directory: ${fileName}, path: ${path.join(tempDirectory, fileName)}`);
+        this.logger.log(`Added video to temp directory: ${fileName}, path: ${path.join(tempDirectory, fileName)}`);
         await videoProcedure.addHlsQueue({
             fileName,
             inputPath: path.join(tempDirectory, fileName),

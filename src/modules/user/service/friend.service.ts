@@ -1,7 +1,6 @@
 import { USER_MESSAGE } from "@/constants/message";
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { NotFoundException } from "@/errors/error";
-import { baseLogger } from "@/middlewares/logger";
 import { UserRepository, userRepository as legacyUserRepository } from "@/modules/user/repository/user.repository";
 import { buildCursorPagination, type CursorPaginationMeta } from '@/common/helpers/cursor-pagination.helper';
 import { TransactionService } from "@/shared/transaction/transaction.service";
@@ -19,6 +18,8 @@ type FriendRequestPaginationResult = {
 
 @Injectable()
 export class FriendService {
+  private readonly logger = new Logger(FriendService.name, { timestamp: true });
+
   constructor(
     private readonly userRepository: UserRepository = legacyUserRepository,
     private readonly friendRequestRepository: FriendRequestRepository = legacyFriendRequestRepository,
@@ -44,7 +45,7 @@ export class FriendService {
   }
 
   async handleFriendRequestCancel(userId: string, receiverUsername: string) {
-    baseLogger.info(
+    this.logger.log(
       `handleFriendRequest receiverUsername: ${receiverUsername}`,
     );
     return this.transactionService.doInTransaction(async (tx) => {
@@ -53,7 +54,7 @@ export class FriendService {
         tx,
       );
       if (!receiver) {
-        baseLogger.info(USER_MESSAGE.USER_NOT_FOUND);
+        this.logger.log(USER_MESSAGE.USER_NOT_FOUND);
         throw new NotFoundException(USER_MESSAGE.USER_NOT_FOUND);
       }
 
@@ -80,11 +81,11 @@ export class FriendService {
     senderUsername: string,
     isAccept: boolean,
   ) {
-    baseLogger.info(`handleFriendRequest senderUsername: ${senderUsername}`);
+    this.logger.log(`handleFriendRequest senderUsername: ${senderUsername}`);
     return this.transactionService.doInTransaction(async (tx) => {
       const sender = await this.userRepository.findByUsername(senderUsername, tx);
       if (!sender) {
-        baseLogger.info(USER_MESSAGE.USER_NOT_FOUND);
+        this.logger.log(USER_MESSAGE.USER_NOT_FOUND);
         throw new NotFoundException(USER_MESSAGE.USER_NOT_FOUND);
       }
 
