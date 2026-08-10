@@ -1,12 +1,13 @@
 import { LIKE_JOB_NAME, QUEUE_NAME } from "@/constants/queue";
-import { Logger } from '@nestjs/common';
-import { createQueue } from "@/providers/bullmq.provider";
+import { InjectQueue } from '@nestjs/bullmq';
+import { Injectable, Logger } from '@nestjs/common';
+import { Queue } from 'bullmq';
 import type { CreateJobLikeProducer } from "../dto/create-job-like-producer";
 
-class LikeProducer {
+@Injectable()
+export class LikeProducer {
   private readonly logger = new Logger(LikeProducer.name, { timestamp: true });
-  private readonly likeQueue = createQueue(QUEUE_NAME.LIKE_QUEUE);
-  constructor() {
+  constructor(@InjectQueue(QUEUE_NAME.LIKE_QUEUE) private readonly likeQueue: Queue) {
     this.logger.log("LikeProducer initialized");
   }
 
@@ -44,5 +45,3 @@ class LikeProducer {
     return this.likeQueue;
   }
 }
-
-export const likeProducer = new LikeProducer();

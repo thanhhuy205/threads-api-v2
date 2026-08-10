@@ -1,10 +1,11 @@
 import { BLOOM_JOB_NAME, QUEUE_NAME } from '@/constants/queue';
-import { createQueue } from '@/providers/bullmq.provider';
-class BloomProducer {
-    private readonly queue = createQueue(QUEUE_NAME.BLOOM_QUEUE);
+import { InjectQueue } from '@nestjs/bullmq';
+import { Injectable } from '@nestjs/common';
+import { Queue } from 'bullmq';
 
-    constructor() {
-    }
+@Injectable()
+export class BloomProducer {
+    constructor(@InjectQueue(QUEUE_NAME.BLOOM_QUEUE) private readonly queue: Queue) { }
 
     async addUserNameAndEmailToBloom(payload: { userName: string; email: string }) {
         await this.queue.add(BLOOM_JOB_NAME.GENERATE_BLOOM, {
@@ -12,5 +13,3 @@ class BloomProducer {
         });
     }
 }
-
-export const bloomProducer = new BloomProducer();

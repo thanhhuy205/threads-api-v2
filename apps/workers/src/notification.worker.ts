@@ -9,9 +9,10 @@ import { pusherChannel } from "@api/modules/pusher/channel/pusher-channel";
 import { collections } from "@libs/core/providers/mongodb.provider";
 import { pusher } from "@libs/core/providers/pusher.provider";
 import { redisService } from "@libs/core/providers/redis.provider";
+import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import { NOTIFICATION_JOB_KEY, NOTIFICATION_JOB_NAME, QUEUE_NAME } from "@libs/core/constants/queue";
-import { createWorker } from "@libs/core/providers/bullmq.provider";
+import { Job } from 'bullmq';
 
 const pendingCommentKeyPattern =
   /^notification:pending:([^:]+):([^:]+):(post|thread):(.+)$/;
@@ -56,16 +57,17 @@ type PushNotificationPayload = {
   originPostId: string;
 };
 
-class NotificationWorker {
+@Processor(QUEUE_NAME.NOTIFICATION_QUEUE)
+export class NotificationWorker extends WorkerHost {
   private readonly logger = new Logger(NotificationWorker.name, { timestamp: true });
-  private readonly worker = createWorker(QUEUE_NAME.NOTIFICATION_QUEUE, async (job) => {
+  async process(job: Job<any, any, string>): Promise<any> {
     switch (job.name) {
       case NOTIFICATION_JOB_NAME.BATCH_SYNC_NOTIFICATION:
         return this.batchCommentNotification();
       default:
         throw new Error(`Unknown job name: ${job.name}`);
     }
-  });
+  }
 
   buildNotificationMessage({
     meta,
@@ -190,5 +192,3 @@ class NotificationWorker {
     });
   }
 }
-
-export const notificationWorker = new NotificationWorker();

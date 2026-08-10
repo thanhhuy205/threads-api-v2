@@ -6,7 +6,7 @@ import {
   ForbiddenException,
   NotFoundException,
 } from "@/errors/error";
-import { evaluationProducer } from "@/modules/job/evaluation-post/producer/evaluation.producer";
+import { EvaluationProducer } from "@/modules/job/evaluation-post/producer/evaluation.producer";
 import { ReportService } from "@/modules/report/service/report.service";
 import { UserService } from "@/modules/user/service/user.service";
 import { redisService } from "@/providers/redis.provider";
@@ -39,6 +39,7 @@ export class PostActionService {
     @Inject(forwardRef(() => UserService)) private readonly userService: UserService,
     private readonly reportService: ReportService,
     private readonly redisVersionService: RedisVersionService,
+    private readonly evaluationProducer: EvaluationProducer,
   ) {}
   async hide(
     publicId: string,
@@ -278,7 +279,7 @@ export class PostActionService {
       status: ReportStatus.PENDING,
     });
 
-    await evaluationProducer.enqueueEvaluationReport({
+    await this.evaluationProducer.enqueueEvaluationReport({
       reportId: report.id,
       type: payload.type,
       targetPublicId: targetPost.publicId,

@@ -1,5 +1,5 @@
 import configService from '@/config/config';
-import { videoProcedure } from '@/modules/job/video';
+import { VideoProcedure } from '@/modules/job/video/producer/video.procedure';
 import { putObject } from '@/providers/cloudflare.provider';
 import { generateKeyImage } from '@/util/upload.util';
 import { PostMediaStatus } from '@prisma/client';
@@ -15,7 +15,10 @@ import { PostMediaRepository } from '../repository/post-media.repository';
 export class UploadService {
     private readonly logger = new Logger(UploadService.name, { timestamp: true });
 
-    constructor(private readonly postMediaRepository: PostMediaRepository) {}
+    constructor(
+        private readonly postMediaRepository: PostMediaRepository,
+        private readonly videoProcedure: VideoProcedure,
+    ) {}
 
     async uploadImage(file: UploadedFile, folder = 'avatars') {
         const key = generateKeyImage(folder, file.originalname);
@@ -80,7 +83,7 @@ export class UploadService {
         await writeFile(path.join(tempDirectory, fileName), file.buffer);
 
         this.logger.log(`Added video to temp directory: ${fileName}, path: ${path.join(tempDirectory, fileName)}`);
-        await videoProcedure.addHlsQueue({
+        await this.videoProcedure.addHlsQueue({
             fileName,
             inputPath: path.join(tempDirectory, fileName),
             outputCloudDir: `hls/${folder}`,

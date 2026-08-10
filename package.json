@@ -17,7 +17,7 @@
         "db:pull": "prisma db pull --config apps/api/prisma.config.ts",
         "db:studio": "prisma studio --config apps/api/prisma.config.ts",
         "db:format": "prisma format --config apps/api/prisma.config.ts",
-        "worker": "tsx apps/workers/src/index.ts",
+        "worker": "tsx apps/workers/src/main.ts",
         "start:prod": "node dist/apps/api/src/main.js",
         "start:worker": "node dist/apps/workers/src/index.js",
         "all:workers:queues": "pnpm run worker",

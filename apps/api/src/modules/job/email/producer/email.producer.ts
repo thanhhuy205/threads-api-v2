@@ -1,12 +1,13 @@
 import { EMAIL_JOB_NAME, QUEUE_NAME } from '@/constants/queue';
 import { ForgotPasswordProducer } from '@/modules/job/email/dto/forgot-password.dto';
 import { CreateVerifyEmailProducer } from '@/modules/job/email/dto/verify-email.dto';
-import { createQueue } from '@/providers/bullmq.provider';
-class EmailProducer {
-    private readonly queue = createQueue(QUEUE_NAME.EMAIL_QUEUE);
+import { InjectQueue } from '@nestjs/bullmq';
+import { Injectable } from '@nestjs/common';
+import { Queue } from 'bullmq';
 
-    constructor() {
-    }
+@Injectable()
+export class EmailProducer {
+    constructor(@InjectQueue(QUEUE_NAME.EMAIL_QUEUE) private readonly queue: Queue) { }
 
 
     async sendVerifyEmail(payload: CreateVerifyEmailProducer) {
@@ -27,5 +28,3 @@ class EmailProducer {
         });
     }
 }
-
-export const emailProducer = new EmailProducer();

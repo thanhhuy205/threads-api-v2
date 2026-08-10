@@ -7,9 +7,9 @@ import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import configService from '@/config/config';
-import { likeProducer } from './modules/job/like-job/producer/like.producer';
-import { notificationProducer } from './modules/job/notification-job/producer/notification.producer';
-import { surveySyncProducer } from './modules/job/survey-sync/producer/survey-sync.producer';
+import { LikeProducer } from './modules/job/like-job/producer/like.producer';
+import { NotificationProducer } from './modules/job/notification-job/producer/notification.producer';
+import { SurveySyncProducer } from './modules/job/survey-sync/producer/survey-sync.producer';
 import { closeMongoDB, connectMongoDB } from '@/providers/mongodb.provider';
 import { redisService } from '@/providers/redis.provider';
 import { PrismaService } from '@libs/database';
@@ -34,6 +34,9 @@ const flattenValidationErrors = (
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const prismaService = app.get(PrismaService);
+  const likeProducer = app.get(LikeProducer);
+  const notificationProducer = app.get(NotificationProducer);
+  const surveySyncProducer = app.get(SurveySyncProducer);
 
   app.enableCors({ origin: corsOrigin });
   app.setGlobalPrefix(configService.GLOBAL_PREFIX);

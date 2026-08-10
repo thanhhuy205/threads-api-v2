@@ -1,27 +1,28 @@
 import { QUEUE_NAME, SURVEY_SYNC_JOB_NAME } from "@libs/core/constants/queue";
 import { redisKey } from "@libs/core/constants/resolve-key/redis-key";
+import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import { PrismaService } from '@libs/database';
 import type { PollVoteCountUpdate } from "@api/modules/poll/repository/poll.repository";
-import { createWorker } from "@libs/core/providers/bullmq.provider";
 import { redisService } from "@libs/core/providers/redis.provider";
 import { Prisma } from '@prisma/client';
+import { Job } from 'bullmq';
 
-class SurveySyncWorker {
+@Processor(QUEUE_NAME.SURVEY_SYNC_QUEUE)
+export class SurveySyncWorker extends WorkerHost {
   private readonly logger = new Logger(SurveySyncWorker.name, { timestamp: true });
 
-  constructor(private readonly prismaService: PrismaService) {}
-  private readonly worker = createWorker(
-    QUEUE_NAME.SURVEY_SYNC_QUEUE,
-    async (job) => {
+  constructor(private readonly prismaService: PrismaService) {
+    super();
+  }
+  async process(job: Job<any, any, string>): Promise<any> {
       switch (job.name) {
         case SURVEY_SYNC_JOB_NAME.SYNC_VOTE_COUNT:
           return this.syncVoteCount();
         default:
           throw new Error(`Unknown job name: ${job.name}`);
       }
-    },
-  );
+  }
 
   async syncVoteCount() {
     try {
@@ -75,6 +76,3 @@ class SurveySyncWorker {
     }
   }
 }
-
-export const createSurveySyncWorker = (prismaService: PrismaService) =>
-  new SurveySyncWorker(prismaService);

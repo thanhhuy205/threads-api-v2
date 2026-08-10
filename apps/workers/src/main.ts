@@ -1,8 +1,22 @@
 import { NestFactory } from '@nestjs/core';
+import { redisService } from '@libs/core/providers/redis.provider';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  await app.listen(process.env.PORT ?? 3000);
+  if (!redisService.isOpen) {
+    await redisService.connect();
+  }
+
+  const app = await NestFactory.createApplicationContext(AppModule);
+  const shutdown = async () => {
+    await app.close();
+    if (redisService.isOpen) {
+      await redisService.disconnect();
+    }
+  };
+
+  process.once('SIGINT', () => void shutdown());
+  process.once('SIGTERM', () => void shutdown());
 }
-bootstrap();
+
+void bootstrap();

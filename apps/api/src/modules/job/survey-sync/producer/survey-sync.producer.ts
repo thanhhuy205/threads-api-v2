@@ -1,12 +1,12 @@
 import { QUEUE_NAME, SURVEY_SYNC, SURVEY_SYNC_JOB_NAME } from "@/constants/queue";
-import { Logger } from '@nestjs/common';
-import { createQueue } from "@/providers/bullmq.provider";
+import { InjectQueue } from '@nestjs/bullmq';
+import { Injectable, Logger } from '@nestjs/common';
+import { Queue } from 'bullmq';
 
-class SurveySyncProducer {
+@Injectable()
+export class SurveySyncProducer {
   private readonly logger = new Logger(SurveySyncProducer.name, { timestamp: true });
-  private readonly surveySyncQueue = createQueue(QUEUE_NAME.SURVEY_SYNC_QUEUE);
-
-  constructor() {
+  constructor(@InjectQueue(QUEUE_NAME.SURVEY_SYNC_QUEUE) private readonly surveySyncQueue: Queue) {
     this.logger.log("SurveySyncProducer initialized");
   }
 
@@ -42,5 +42,3 @@ class SurveySyncProducer {
     return this.surveySyncQueue;
   }
 }
-
-export const surveySyncProducer = new SurveySyncProducer();

@@ -10,16 +10,16 @@ import {
   hashPassword,
 } from "@/modules/auth/util/hasher-password";
 import { hasherToken } from "@/modules/auth/util/hasher-token";
-import { bloomProducer } from "@/modules/job/bloom/producer/bloom.producer";
-import { emailProducer } from "@/modules/job/email/producer/email.producer";
+import { BloomProducer } from "@/modules/job/bloom/producer/bloom.producer";
+import { EmailProducer } from "@/modules/job/email/producer/email.producer";
 import { TokenPairResponse } from "@/modules/jwt/dto/response/token-pair.response";
 import { JwtService } from "@/modules/jwt/service/jwt.service";
 import { UserRepository } from "@/modules/user/repository/user.repository";
 import { redisService } from "@/providers/redis.provider";
+import { Injectable, Logger } from '@nestjs/common';
 import { UserRoleType, VerificationCodeType } from "@prisma/client";
 import crypto from "crypto";
 import ms, { StringValue } from "ms";
-import { Injectable, Logger } from '@nestjs/common';
 import type { ForgotPasswordDto } from "../dto/request/forgot-password.request.dto";
 import type { LoginDto } from "../dto/request/login.request.dto";
 import type { LogoutDto } from "../dto/request/logout.request.dto";
@@ -52,7 +52,9 @@ export class AuthService {
     private readonly roleRepository: RoleRepository,
     private readonly userRoleRepository: UserRoleRepository,
     private readonly userRepository: UserRepository,
-  ) {}
+    private readonly bloomProducer: BloomProducer,
+    private readonly emailProducer: EmailProducer,
+  ) { }
 
   async register(
     payload: RegisterDto,
@@ -79,7 +81,7 @@ export class AuthService {
         tokenPair.sessionId,
         metadata,
       ),
-      bloomProducer.addUserNameAndEmailToBloom({
+      this.bloomProducer.addUserNameAndEmailToBloom({
         email: user.email,
         userName: user.username,
       }),
@@ -104,7 +106,7 @@ export class AuthService {
     const hashedToken = hasherToken(token);
 
     await Promise.all([
-      emailProducer.sendForgotPasswordEmail({
+      this.emailProducer.sendForgotPasswordEmail({
         userId: user.id,
         email: user.email,
         token,
@@ -191,7 +193,7 @@ export class AuthService {
     const hashedToken = hasherToken(token);
 
     await Promise.all([
-      emailProducer.sendVerifyEmail({
+      this.emailProducer.sendVerifyEmail({
         userName: user.username,
         email: user.email,
         token,

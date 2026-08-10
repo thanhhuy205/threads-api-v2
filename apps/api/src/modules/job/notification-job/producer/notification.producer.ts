@@ -1,13 +1,16 @@
 import { NOTIFICATION_JOB_NAME, QUEUE_NAME } from "@/constants/queue";
-import { Logger } from '@nestjs/common';
-import { createQueue } from "@/providers/bullmq.provider";
+import { InjectQueue } from '@nestjs/bullmq';
+import { Injectable, Logger } from '@nestjs/common';
+import { Queue } from 'bullmq';
 import type { NotificationJobDto } from "../dto/notification.job.dto";
 
-class NotificationProducer {
+@Injectable()
+export class NotificationProducer {
   private readonly logger = new Logger(NotificationProducer.name, { timestamp: true });
-  private readonly notificationQueue = createQueue(QUEUE_NAME.NOTIFICATION_QUEUE);
-  private readonly friendRequestQueue = createQueue(QUEUE_NAME.FRIEND_REQUEST_QUEUE);
-  constructor() {
+  constructor(
+    @InjectQueue(QUEUE_NAME.NOTIFICATION_QUEUE) private readonly notificationQueue: Queue,
+    @InjectQueue(QUEUE_NAME.FRIEND_REQUEST_QUEUE) private readonly friendRequestQueue: Queue,
+  ) {
     this.logger.log("NotificationProducer initialized");
   }
 
@@ -83,5 +86,3 @@ class NotificationProducer {
     return this.notificationQueue;
   }
 }
-
-export const notificationProducer = new NotificationProducer();

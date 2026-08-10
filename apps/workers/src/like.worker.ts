@@ -1,9 +1,10 @@
+import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import { LikeService } from "@api/modules/post/service/like-service.service";
 import { PostRepository } from "@api/modules/post/repository/post.repository";
 import { LIKE_JOB_NAME, QUEUE_NAME } from "@libs/core/constants/queue";
-import { createWorker } from "@libs/core/providers/bullmq.provider";
 import { redisService } from "@libs/core/providers/redis.provider";
+import { Job } from 'bullmq';
 
 type LikeEvent = {
   postPublicId: string;
@@ -12,23 +13,24 @@ type LikeEvent = {
   isLiked: boolean;
 };
 
-class LikeWorker {
+@Processor(QUEUE_NAME.LIKE_QUEUE, { concurrency: 1 })
+export class LikeWorker extends WorkerHost {
   private readonly logger = new Logger(LikeWorker.name, { timestamp: true });
 
   constructor(
     private readonly postRepository: PostRepository,
     private readonly likeService: LikeService,
-  ) {}
-  private readonly worker = createWorker(QUEUE_NAME.LIKE_QUEUE, async (job) => {
+  ) {
+    super();
+  }
+  async process(job: Job<any, any, string>): Promise<any> {
     switch (job.name) {
       case LIKE_JOB_NAME.INIT_SYNC_JOB:
         return this.initSyncJob();
       default:
         throw new Error(`Unknown job name: ${job.name}`);
     }
-  }, {
-    concurrency: 1,
-  });
+  }
 
   async initSyncJob() {
     try {
@@ -138,8 +140,3 @@ class LikeWorker {
     }
   }
 }
-
-export const createLikeWorker = (
-  postRepository: PostRepository,
-  likeService: LikeService,
-) => new LikeWorker(postRepository, likeService);

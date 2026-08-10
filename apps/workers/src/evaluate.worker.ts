@@ -4,7 +4,8 @@ import { pusherService } from "@api/modules/pusher/service/pusher.service";
 import { ReportRepository } from "@api/modules/report/repository/report.repository";
 import { ReportStatus, ReportTargetType } from "@prisma/client";
 import { EVALUATION_JOB_NAME, QUEUE_NAME } from "@libs/core/constants/queue";
-import { createWorker } from "@libs/core/providers/bullmq.provider";
+import { Processor, WorkerHost } from '@nestjs/bullmq';
+import { Job } from 'bullmq';
 
 interface EvaluationReportJob {
   reportId: string;
@@ -15,12 +16,23 @@ interface EvaluationReportJob {
   reporterId: string;
 }
 
-const processEvaluationReport = async (
-  job: EvaluationReportJob,
-  reportRepository: ReportRepository,
-) => {
-  try {
-    const report = await reportRepository.findById(job.reportId);
+@Processor(QUEUE_NAME.EVALUATION_QUEUE)
+export class EvaluateWorker extends WorkerHost {
+  constructor(private readonly reportRepository: ReportRepository) {
+    super();
+  }
+
+  async process(job: Job<any, any, string>): Promise<any> {
+    if (job.name !== EVALUATION_JOB_NAME.EVALUATION_REPORT) {
+      throw new Error(`Unknown job name: ${job.name}`);
+    }
+
+    return this.processEvaluationReport(job.data as EvaluationReportJob);
+  }
+
+  private async processEvaluationReport(job: EvaluationReportJob): Promise<void> {
+    try {
+    const report = await this.reportRepository.findById(job.reportId);
     if (!report) throw new Error(`Report ${job.reportId} not found`);
 
     const result = await aiService.evaluateReportAI({
@@ -29,7 +41,7 @@ const processEvaluationReport = async (
       targetType: job.type,
     });
     const confidence = Number(Math.max(0, Math.min(1, result.confidence)).toFixed(2));
-    await reportRepository.updateById(job.reportId, {
+    await this.reportRepository.updateById(job.reportId, {
       assistantNote: result.assistantNote,
       confidence,
       isDisinformation: result.isDisinformation ?? false,
@@ -47,13 +59,5 @@ const processEvaluationReport = async (
     console.error("[EVALUATE] Error processing report:", error);
     throw error;
   }
-};
-
-export const createEvaluateWorker = (reportRepository: ReportRepository) =>
-  createWorker(QUEUE_NAME.EVALUATION_QUEUE, async (job) => {
-    if (job.name === EVALUATION_JOB_NAME.EVALUATION_REPORT) {
-      return processEvaluationReport(job.data, reportRepository);
-    }
-    console.warn(`Unknown job name: ${job.name}`);
-    return null;
-  });
+  }
+}

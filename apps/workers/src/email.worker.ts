@@ -1,14 +1,17 @@
 import ejs from 'ejs';
 import path from 'path';
+import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import configService from '@libs/core/config/config';
 import { EMAIL_JOB_NAME, QUEUE_NAME } from '@libs/core/constants/queue';
 import { ForgotPasswordProducer } from '@api/modules/job/email/dto/forgot-password.dto';
 import { nodemailerService } from '@api/modules/nodemailer/service/nodemailer.service';
-import { createWorker } from '@libs/core/providers/bullmq.provider';
-class EmailWorker {
+import { Job } from 'bullmq';
+
+@Processor(QUEUE_NAME.EMAIL_QUEUE)
+export class EmailWorker extends WorkerHost {
     private readonly logger = new Logger(EmailWorker.name, { timestamp: true });
-    private readonly worker = createWorker(QUEUE_NAME.EMAIL_QUEUE, async (job) => {
+    async process(job: Job<any, any, string>): Promise<any> {
         switch (job.name) {
             case EMAIL_JOB_NAME.SEND_VERIFICATION_EMAIL:
                 return this.sendVerificationEmail(job.data);
@@ -20,7 +23,7 @@ class EmailWorker {
             default:
                 throw new Error(`Unknown job name: ${job.name}`);
         }
-    })
+    }
 
 
     async sendVerificationEmail(data: { email: string; token: string, originUrl: string }) {
@@ -68,6 +71,4 @@ class EmailWorker {
         await nodemailerService.sendMail(data.email, 'You are invited to join Threads', html, {});
         this.logger.log(`Sent invitation email to: ${data.email}`);
     }
-};
-
-export const emailWorker = new EmailWorker();
+}

@@ -1,15 +1,17 @@
 import { BLOOM_JOB_NAME, QUEUE_NAME } from "@libs/core/constants/queue";
 import { redisKey } from "@libs/core/constants/resolve-key/redis-key";
+import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import { CreateBloomUserProducer } from '@api/modules/job/bloom/dto/create-bloom-user.dto';
-import { createWorker } from "@libs/core/providers/bullmq.provider";
 import { redisService } from '@libs/core/providers/redis.provider';
+import { Job } from 'bullmq';
 
 
 
-class BloomWorker {
+@Processor(QUEUE_NAME.BLOOM_QUEUE)
+export class BloomWorker extends WorkerHost {
     private readonly logger = new Logger(BloomWorker.name, { timestamp: true });
-    private readonly worker = createWorker(QUEUE_NAME.BLOOM_QUEUE, async (job) => {
+    async process(job: Job<any, any, string>): Promise<any> {
         switch (job.name) {
             case BLOOM_JOB_NAME.GENERATE_BLOOM:
                 return this.addUserNameAndEmailToBloom(job.data);
@@ -17,7 +19,7 @@ class BloomWorker {
             default:
                 throw new Error(`Unknown job name: ${job.name}`);
         }
-    });
+    }
 
 
     async addUserNameAndEmailToBloom(data: CreateBloomUserProducer) {
@@ -26,5 +28,3 @@ class BloomWorker {
         this.logger.log(`Added userName: ${data.userName} and email: ${data.email} to Bloom filter`);
     }
 }
-
-export const bloomWorker = new BloomWorker();
