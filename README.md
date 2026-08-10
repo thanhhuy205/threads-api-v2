@@ -32,7 +32,7 @@ Gợi ý: mở link online hoặc file `docs/index.html` trước, sau đó đi 
 | Layer | Công nghệ |
 |---|---|
 | Runtime | Node.js, TypeScript |
-| HTTP API | Express 5 |
+| HTTP API | NestJS 11 |
 | Database | MySQL + Prisma ORM |
 | Queue | BullMQ |
 | Cache / Data structure | Redis + Redis Bloom |
