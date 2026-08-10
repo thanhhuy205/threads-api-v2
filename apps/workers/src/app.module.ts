@@ -1,12 +1,14 @@
-import { QUEUE_NAME } from '@libs/core/constants/queue';
-import { DatabaseModule } from '@libs/database';
-import { BullModule } from '@nestjs/bullmq';
-import { Module } from '@nestjs/common';
 import { LikeRepository } from '@api/modules/post/repository/like.repository';
 import { PostRepository } from '@api/modules/post/repository/post.repository';
 import { LikeService } from '@api/modules/post/service/like-service.service';
 import { ReportRepository } from '@api/modules/report/repository/report.repository';
 import { PostMediaRepository } from '@api/modules/upload/repository/post-media.repository';
+import { configurationFactory } from '@libs/core/config/config';
+import { QUEUE_NAME } from '@libs/core/constants/queue';
+import { DatabaseModule } from '@libs/database';
+import { BullModule } from '@nestjs/bullmq';
+import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { BloomWorker } from './bloom.worker';
 import { EmailWorker } from './email.worker';
 import { EvaluateWorker } from './evaluate.worker';
@@ -18,6 +20,12 @@ import { SurveySyncWorker } from './survey-sync.worker';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      cache: true,
+      load: [configurationFactory],
+    }),
+
     BullModule.forRoot({
       connection: {
         host: 'localhost',

@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/shared/database/prisma.service';
+import { Injectable } from '@nestjs/common';
 import { FriendRequestStatus, Prisma } from "@prisma/client";
 
 const userProfileSelect = {
@@ -65,7 +65,7 @@ export type UserUsernameItem = {
 
 @Injectable()
 export class UserRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async findById(id: string): Promise<UserProfile | null> {
     return this.prisma.user.findUnique({

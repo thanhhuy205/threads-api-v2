@@ -1,14 +1,14 @@
 import { PostMapper } from "@/modules/post/mapper/post.mapper";
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { FollowerService } from '@/modules/user/service/follower.service';
+import { Injectable } from '@nestjs/common';
 import { PostRepository } from "../repository/post.repository";
 
 @Injectable()
 export class PostSearchService {
   constructor(
     private readonly postRepository: PostRepository,
-    @Inject(forwardRef(() => FollowerService)) private readonly followerService: FollowerService,
-  ) {}
+    private readonly followerService: FollowerService,
+  ) { }
   async search(query: {
     q: string;
     topics: string;

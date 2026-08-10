@@ -2,8 +2,8 @@ import 'dotenv/config';
 
 import { Logger } from '@nestjs/common';
 import { Type } from 'class-transformer';
-import { ValidateNested, validateSync } from 'class-validator';
 import type { ValidationError } from 'class-validator';
+import { ValidateNested, validateSync } from 'class-validator';
 import { AppConfiguration } from './app.config';
 import { BaseConfiguration } from './base.config';
 import { DatabaseConfiguration } from './database.config';

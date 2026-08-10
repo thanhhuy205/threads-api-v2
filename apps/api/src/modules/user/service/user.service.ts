@@ -1,8 +1,7 @@
 import { redisKey } from "@/constants/resolve-key/redis-key";
-import { PostSearchService } from "@/modules/post/service/post-search.service";
 import { UserRepository } from "@/modules/user/repository/user.repository";
 import { redisService } from "@/providers/redis.provider";
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Prisma } from "@prisma/client";
 import type { UpdateProfileDto } from "../dto/request/update-profile.request.dto";
 import { mapUserProfileForFE } from "../mapper/user.mapper";
@@ -17,7 +16,6 @@ export class UserService {
   constructor(
     private readonly userRepository: UserRepository,
     private readonly followRepository: FollowRepository,
-    @Inject(forwardRef(() => PostSearchService)) private readonly postSearchService: PostSearchService,
   ) { }
 
   async updateProfile(userId: string, payload: UpdateProfileDto) {
@@ -51,10 +49,9 @@ export class UserService {
   }
 
   async getMyStatusProfile(userId: string) {
-    const [user, followingCount, postCount] = await Promise.all([
+    const [user, followingCount] = await Promise.all([
       this.userRepository.findStatusProfileById(userId),
       this.followRepository.countActiveFollowing(userId),
-      this.postSearchService.count(userId)
     ]);
 
     if (!user) {
@@ -64,7 +61,6 @@ export class UserService {
     return {
       isSuccessFollow: followingCount >= 10,
       isSuccessBio: user.bio !== null,
-      isSuccessPost: postCount >= 1,
       isSuccessAvatar: user.avatar !== null && user.avatar !== "",
     };
   }
@@ -89,26 +85,20 @@ export class UserService {
     }
 
     if (!userId) {
-      const postCount = await this.postSearchService.count(user.id);
       return mapUserProfileForFE({
         ...user,
-        postsCount: postCount,
-        postCount,
       });
     }
 
-    const [requestUser, follower, postCount] = await Promise.all([
+    const [requestUser, follower] = await Promise.all([
       this.userRepository.findUserRequestFriend(userId, user.id),
       this.userRepository.findUserFollowing(userId, user.id),
-      this.postSearchService.count(user.id),
     ]);
 
     return mapUserProfileForFE({
       ...user,
       ...requestUser,
       ...follower,
-      postsCount: postCount,
-      postCount,
     });
   }
 

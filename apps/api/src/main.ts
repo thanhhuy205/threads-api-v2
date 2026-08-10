@@ -1,3 +1,5 @@
+import configService from '@/config/config';
+import { connectMongoDB } from '@/providers/mongodb.provider';
 import { BadRequestException, ValidationPipe, type ValidationError } from '@nestjs/common';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -6,13 +8,6 @@ import morgan from 'morgan';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
-import configService from '@/config/config';
-import { LikeProducer } from './modules/job/like-job/producer/like.producer';
-import { NotificationProducer } from './modules/job/notification-job/producer/notification.producer';
-import { SurveySyncProducer } from './modules/job/survey-sync/producer/survey-sync.producer';
-import { closeMongoDB, connectMongoDB } from '@/providers/mongodb.provider';
-import { redisService } from '@/providers/redis.provider';
-import { PrismaService } from '@libs/database';
 
 const corsOrigin =
   configService.APP_CONFIG.CORS_ORIGIN === '*'
@@ -33,10 +28,6 @@ const flattenValidationErrors = (
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  const prismaService = app.get(PrismaService);
-  const likeProducer = app.get(LikeProducer);
-  const notificationProducer = app.get(NotificationProducer);
-  const surveySyncProducer = app.get(SurveySyncProducer);
 
   app.enableCors({ origin: corsOrigin });
   app.setGlobalPrefix(configService.GLOBAL_PREFIX);
@@ -80,7 +71,7 @@ async function bootstrap() {
     app.use(morgan('dev'));
   }
 
-  await redisService.connect();
+  // await redisService.connect();
   await connectMongoDB();
 
   await Promise.all([
@@ -89,17 +80,17 @@ async function bootstrap() {
     surveySyncProducer.initSyncSurveyJob(),
   ]);
 
-  const shutdown = async () => {
-    await app.close();
-    await Promise.allSettled([
-      prismaService.$disconnect(),
-      closeMongoDB(),
-      redisService.isOpen ? redisService.disconnect() : Promise.resolve(),
-    ]);
-  };
+  // const shutdown = async () => {
+  //   await app.close();
+  //   await Promise.allSettled([
+  //     prismaService.$disconnect(),
+  //     closeMongoDB(),
+  //     redisService.isOpen ? redisService.disconnect() : Promise.resolve(),
+  //   ]);
+  // };
 
-  process.once('SIGINT', () => void shutdown());
-  process.once('SIGTERM', () => void shutdown());
+  // process.once('SIGINT', () => void shutdown());
+  // process.once('SIGTERM', () => void shutdown());
 
   // 2. Start the HTTP server listening on a defined port.
   await app.listen(process.env.PORT ?? 3000);

@@ -1,12 +1,10 @@
-import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
-import { FollowerService } from '@/modules/user/service/follower.service';
 import { NewFeedType } from "@/modules/post/enum";
 import {
   buildNewFeedWhere,
+  buildPostListNamespace,
   buildQuoteWhere,
   buildRepliesWhere,
   buildUserPostsWhere,
-  buildPostListNamespace,
   paginatePosts,
   postListCacheTtlSeconds,
 } from "@/modules/post/helper";
@@ -14,7 +12,9 @@ import type { GetPostWithPublicId } from "@/modules/post/interfaces/get-post-wit
 import type { GetPostWithUser } from "@/modules/post/interfaces/get-post-with-user";
 import type { NewsFeedPayload } from "@/modules/post/interfaces/news-feed-payload";
 import { PostMapper } from "@/modules/post/mapper/post.mapper";
+import { FollowerService } from '@/modules/user/service/follower.service';
 import { RedisVersionService } from '@/shared/redis-version';
+import { Injectable, Logger } from '@nestjs/common';
 import { primaryPostTypes } from "../constants/post-type";
 import { PostRepository } from "../repository/post.repository";
 
@@ -24,9 +24,9 @@ export class PostFeedService {
 
   constructor(
     private readonly postRepository: PostRepository,
-    @Inject(forwardRef(() => FollowerService)) private readonly followerService: FollowerService,
+    private readonly followerService: FollowerService,
     private readonly redisVersionService: RedisVersionService,
-  ) {}
+  ) { }
   async getNewsFeed({
     after,
     take,

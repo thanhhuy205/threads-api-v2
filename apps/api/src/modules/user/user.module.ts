@@ -1,7 +1,6 @@
 import { AccessTokenGuard } from '@/common/guards/access-token.guard';
-import { forwardRef, Module } from '@nestjs/common';
-import { PostModule } from '../post/post.module';
 import { TransactionModule } from '@/shared/transaction/transaction.module';
+import { Module } from '@nestjs/common';
 import { JwtModule } from '../jwt/jwt.module';
 import { UserFollowController } from './controller/user-follow.controller';
 import { UserController } from './controller/user.controller';
@@ -14,7 +13,7 @@ import { FriendService } from './service/friend.service';
 import { UserService } from './service/user.service';
 
 @Module({
-  imports: [TransactionModule, JwtModule, forwardRef(() => PostModule)],
+  imports: [TransactionModule, JwtModule],
   controllers: [UserController, UsersController, UserFollowController],
   providers: [
     UserService,

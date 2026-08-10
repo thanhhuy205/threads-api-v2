@@ -1,5 +1,4 @@
 import { QUEUE_NAME } from "@/constants/queue";
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { redisKey } from "@/constants/resolve-key/redis-key";
 import {
   BadRequestException,
@@ -11,11 +10,11 @@ import { ReportService } from "@/modules/report/service/report.service";
 import { UserService } from "@/modules/user/service/user.service";
 import { redisService } from "@/providers/redis.provider";
 import { RedisVersionService } from '@/shared/redis-version';
+import { Injectable } from '@nestjs/common';
 import {
   InteractionType,
   ReportStatus,
-  ReportTargetType,
-  VisibilityPost,
+  ReportTargetType
 } from "@prisma/client";
 import { UpdatePostDto } from "../dto/post.dto";
 import { PostInteractionRepository } from "../repository/post-interaction.repository";
@@ -36,11 +35,11 @@ export class PostActionService {
   constructor(
     private readonly postRepository: PostRepository,
     private readonly postInteractionRepository: PostInteractionRepository,
-    @Inject(forwardRef(() => UserService)) private readonly userService: UserService,
+    private readonly userService: UserService,
     private readonly reportService: ReportService,
     private readonly redisVersionService: RedisVersionService,
     private readonly evaluationProducer: EvaluationProducer,
-  ) {}
+  ) { }
   async hide(
     publicId: string,
     userId: string,

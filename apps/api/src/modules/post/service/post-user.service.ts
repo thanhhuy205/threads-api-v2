@@ -1,25 +1,24 @@
 import {
-  buildUserPostsWhere,
   buildPostListNamespace,
+  buildUserPostsWhere,
   paginatePosts,
   postListCacheTtlSeconds,
 } from "@/modules/post/helper";
-import { Injectable } from '@nestjs/common';
 import type { GetPostWithUser } from "@/modules/post/interfaces/get-post-with-user";
-import { RedisVersionService } from '@/shared/redis-version';
-import { forwardRef, Inject } from '@nestjs/common';
 import { FollowerService } from '@/modules/user/service/follower.service';
-import { PostRepository } from '../repository/post.repository';
+import { RedisVersionService } from '@/shared/redis-version';
+import { Injectable } from '@nestjs/common';
 import { PostType } from "@prisma/client";
 import { primaryPostTypes } from "../constants/post-type";
+import { PostRepository } from '../repository/post.repository';
 
 @Injectable()
 export class PostUserService {
   constructor(
     private readonly postRepository: PostRepository,
-    @Inject(forwardRef(() => FollowerService)) private readonly followerService: FollowerService,
+    private readonly followerService: FollowerService,
     private readonly redisVersionService: RedisVersionService,
-  ) {}
+  ) { }
   async getPostsByUser({ after, take, userId, myUserId }: GetPostWithUser) {
     const namespace = buildPostListNamespace({
       scope: "post-user",
