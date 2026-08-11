@@ -1,4 +1,4 @@
-import { CONFIGURATION } from '@libs/core/config/configuration';
+import { CONFIGURATION } from '@/config/configuration';
 import { BadRequestException, ValidationPipe, type ValidationError } from '@nestjs/common';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
