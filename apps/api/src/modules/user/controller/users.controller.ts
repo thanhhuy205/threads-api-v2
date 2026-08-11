@@ -1,8 +1,8 @@
-import { Controller, Get, Param, Query, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Query, Req } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { HttpRequest as Request } from '@/common/types/http.type';
 import { Message } from '@/common/decorators/message.decorator';
-import { AccessTokenGuard } from '@/common/guards/access-token.guard';
+import { IsPublic } from '@/common/decorators/is-public.decorator';
 import { AUTH_MESSAGE, USER_MESSAGE } from '@/constants/message';
 import { NotFoundException, UnauthorizedException } from '@/errors/error';
 import { JwtService } from '@/modules/jwt/service/jwt.service';
@@ -18,6 +18,7 @@ export class UsersController {
   ) {}
 
   @Get('mention')
+  @IsPublic()
   @Message('Usernames retrieved successfully')
   @ApiOperation({ summary: 'Search usernames for mentions' })
   @ApiResponse({ status: 200, description: 'Usernames retrieved successfully' })
@@ -29,7 +30,6 @@ export class UsersController {
   }
 
   @Get('me/status-profile')
-  @UseGuards(AccessTokenGuard)
   @ApiBearerAuth('bearer')
   @Message('User status profile retrieved successfully')
   @ApiOperation({ summary: 'Get profile completion status for the current user' })
@@ -47,6 +47,7 @@ export class UsersController {
   }
 
   @Get(':username')
+  @IsPublic()
   @Message(USER_MESSAGE.GET_USER_SUCCESS)
   @ApiOperation({ summary: 'Get a user profile by username' })
   @ApiResponse({ status: 200, description: USER_MESSAGE.GET_USER_SUCCESS })

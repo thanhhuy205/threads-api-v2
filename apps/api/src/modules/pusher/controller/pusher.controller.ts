@@ -1,15 +1,13 @@
 import { BadRequestException, ForbiddenException, UnauthorizedException } from "@/errors/error";
-import { AccessTokenGuard } from '@/common/guards/access-token.guard';
 import { pusherChannel } from "@/modules/pusher/channel/pusher-channel";
 import { PusherAuthDto } from "@/modules/pusher/dto/pusher-auth.dto";
-import { Body, Controller, HttpCode, HttpStatus, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post, Req } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { HttpRequest as Request } from '@/common/types/http.type';
 import { PusherService } from '../service/pusher.service';
 
 @ApiTags('Pusher')
 @ApiBearerAuth('bearer')
-@UseGuards(AccessTokenGuard)
 @Controller('pusher')
 export class PusherController {
   constructor(private readonly pusherService: PusherService) {}

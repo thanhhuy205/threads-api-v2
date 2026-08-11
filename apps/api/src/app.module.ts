@@ -1,8 +1,10 @@
 import { configurationFactory } from '@/config/configuration';
+import { AccessTokenGuard } from '@/common/guards/access-token.guard';
 import { DatabaseModule } from '@libs/database';
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
 import { AdminModule } from './modules/admin/admin.module';
 import { AiModule } from './modules/ai/ai.module';
 import { AuthModule } from './modules/auth/auth.module';
@@ -41,8 +43,9 @@ import { UserModule } from './modules/user/user.module';
         removeOnFail: false,
       },
     }),
-    JobModule,
     DatabaseModule,
+    JwtModule,
+    JobModule,
     AuthModule,
     HealthModule,
     AiModule,
@@ -52,11 +55,16 @@ import { UserModule } from './modules/user/user.module';
     SearchModule,
     NotificationGroupModule,
     ReportModule,
-    JwtModule,
     PusherModule,
     UploadModule,
     AdminModule,
     PostModule,
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: AccessTokenGuard,
+    },
   ],
 })
 export class AppModule { }

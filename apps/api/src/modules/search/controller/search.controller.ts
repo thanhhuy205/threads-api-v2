@@ -2,8 +2,7 @@ import { Message } from '@/common/decorators/message.decorator';
 import { CursorPagination } from '@/common/decorators/cursor-pagination.decorator';
 import { ApiCursorPaginatedResponse } from '@/common/decorators/swagger-response.decorator';
 import type { CursorPagination as CursorPaginationParams } from '@/common/helpers/cursor-pagination.helper';
-import { AccessTokenGuard } from '@/common/guards/access-token.guard';
-import { Body, Controller, Get, HttpStatus, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpStatus, Query, Req } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { HttpRequest as Request } from '@/common/types/http.type';
 import { SearchPostsQueryDto, SearchTopicQueryDto, SearchUsernameQueryDto } from '../dto/search.dto';
@@ -12,7 +11,6 @@ import { UserService } from '@/modules/user/service/user.service';
 
 @ApiTags('Search')
 @ApiBearerAuth('bearer')
-@UseGuards(AccessTokenGuard)
 @Controller('search')
 export class SearchController {
   constructor(

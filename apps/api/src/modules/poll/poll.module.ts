@@ -1,4 +1,3 @@
-import { AccessTokenGuard } from '@/common/guards/access-token.guard';
 import { Module } from '@nestjs/common';
 import { TransactionModule } from '@/shared/transaction/transaction.module';
 import { PollController } from './controller/poll.controller';
@@ -19,7 +18,6 @@ import { VoteService } from './service/vote.service';
     PollRepository,
     PollOptionsRepository,
     VoteRepository,
-    AccessTokenGuard,
   ],
 })
 export class PollModule {}

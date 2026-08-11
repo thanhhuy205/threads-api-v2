@@ -1,8 +1,7 @@
 import { Message } from '@/common/decorators/message.decorator';
-import { AccessTokenGuard } from '@/common/guards/access-token.guard';
 import { AUTH_MESSAGE } from '@/constants/message';
 import { UnauthorizedException } from '@/errors/error';
-import { Body, Controller, HttpCode, HttpStatus, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post, Req } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { HttpRequest as Request } from '@/common/types/http.type';
 import { GenerateImageRequestDto } from '../dto/request/generate-image.request.dto';
@@ -15,7 +14,6 @@ export class AiController {
 
     @Post('generate-image')
     @HttpCode(HttpStatus.OK)
-    @UseGuards(AccessTokenGuard)
     @Message('Image generation job created')
     @ApiBearerAuth('bearer')
     @ApiOperation({ summary: 'Submit an image generation job' })

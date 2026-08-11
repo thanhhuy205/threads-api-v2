@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { AccessTokenGuard } from '@/common/guards/access-token.guard';
 import { JwtModule } from '@/modules/jwt/jwt.module';
 import { PostModule } from '@/modules/post/post.module';
 import { AdminRoleGuard } from './guards/admin-role.guard';
@@ -29,7 +28,6 @@ import { UserManagementService } from './user-management/user-management.service
     StatisticsController,
   ],
   providers: [
-    AccessTokenGuard,
     AdminRoleGuard,
     AdminAuthService,
     AdminAuthRepository,

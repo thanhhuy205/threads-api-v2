@@ -3,7 +3,6 @@ import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagg
 import { Message } from '@/common/decorators/message.decorator';
 import { Pagination } from '@/common/decorators/pagination.decorator';
 import { ApiOffsetPaginatedResponse } from '@/common/decorators/swagger-response.decorator';
-import { AccessTokenGuard } from '@/common/guards/access-token.guard';
 import type { OffsetPagination } from '@/common/helpers/offset-pagination.helper';
 import { AdminRoleGuard } from '../guards/admin-role.guard';
 import { TrendingHashtagQueryDto } from "./dto/request/trending-hashtag.query.dto";
@@ -11,7 +10,7 @@ import { HashtagTrendingService } from "./hashtag-trending.service";
 
 @ApiTags('Admin')
 @ApiBearerAuth('bearer')
-@UseGuards(AccessTokenGuard, AdminRoleGuard)
+@UseGuards(AdminRoleGuard)
 @Controller('admin/hashtags')
 export class HashtagTrendingController {
   constructor(private readonly hashtagTrendingService: HashtagTrendingService) {}

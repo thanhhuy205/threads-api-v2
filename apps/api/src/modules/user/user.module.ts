@@ -1,4 +1,3 @@
-import { AccessTokenGuard } from '@/common/guards/access-token.guard';
 import { TransactionModule } from '@/shared/transaction/transaction.module';
 import { Module } from '@nestjs/common';
 import { JwtModule } from '../jwt/jwt.module';
@@ -22,7 +21,6 @@ import { UserService } from './service/user.service';
     UserRepository,
     FriendRequestRepository,
     FollowRepository,
-    AccessTokenGuard,
   ],
   exports: [UserService, FriendService, FollowerService, UserRepository],
 })

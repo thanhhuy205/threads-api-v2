@@ -1,4 +1,3 @@
-import { AccessTokenGuard } from '@/common/guards/access-token.guard';
 import { Module } from '@nestjs/common';
 import { UserModule } from '../user/user.module';
 import { PusherModule } from '../pusher/pusher.module';
@@ -9,6 +8,6 @@ import { NotificationService } from './service/notification.service';
 @Module({
   imports: [UserModule, PusherModule],
   controllers: [NotificationController],
-  providers: [NotificationService, NotificationRepository, AccessTokenGuard],
+  providers: [NotificationService, NotificationRepository],
 })
 export class NotificationGroupModule {}

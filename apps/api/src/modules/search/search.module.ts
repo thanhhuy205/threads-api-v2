@@ -1,4 +1,3 @@
-import { AccessTokenGuard } from '@/common/guards/access-token.guard';
 import { Module } from '@nestjs/common';
 import { TopicModule } from '../topic/topic.module';
 import { UserModule } from '../user/user.module';
@@ -9,6 +8,6 @@ import { SearchService } from './service/search.service';
 @Module({
   imports: [TopicModule, UserModule, PostModule],
   controllers: [SearchController],
-  providers: [SearchService, AccessTokenGuard],
+  providers: [SearchService],
 })
 export class SearchModule { }

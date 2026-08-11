@@ -1,23 +1,23 @@
 import configService from '@/config/config';
-import { Injectable } from '@nestjs/common';
-import { JwtService as NestJwtService } from '@nestjs/jwt';
-import { JwtPayload } from 'jsonwebtoken';
-import crypto from 'crypto';
-import ms from 'ms';
-import { v4 as uuidv4 } from 'uuid';
 import {
   PayloadSignTokenDto,
   SignTokenDto,
   VerifyTokenDto,
 } from '@/modules/jwt/dto';
 import { TokenPairResponse } from '@/modules/jwt/dto/response/token-pair.response';
+import { Injectable } from '@nestjs/common';
+import { JwtService as NestJwtService } from '@nestjs/jwt';
+import crypto from 'crypto';
+import { JwtPayload } from 'jsonwebtoken';
+import ms from 'ms';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class JwtService {
   private readonly jwtSecret = configService.JWT_CONFIG.JWT_SECRET;
   private readonly accessExpires = configService.JWT_CONFIG.ACCESS_EXPIRES;
 
-  constructor(private readonly nestJwtService: NestJwtService) {}
+  constructor(private readonly nestJwtService: NestJwtService) { }
 
   async signAccessToken({ userId, status, sessionId, roles }: PayloadSignTokenDto) {
     return this.signToken({

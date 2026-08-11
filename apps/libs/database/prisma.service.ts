@@ -7,7 +7,9 @@ export type PrismaClientTransaction = Prisma.TransactionClient;
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
-  constructor(configService: ConfigService) {
+  constructor(private readonly configService: ConfigService) {
+    console.log('Initializing PrismaService...');
+    console.log(configService);
     const adapter = new PrismaMariaDb({
       host: configService.get<string>('DATABASE_CONFIG.DB_HOST'),
       port: configService.get<number>('DATABASE_CONFIG.DB_PORT'),

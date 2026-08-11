@@ -1,8 +1,10 @@
 import { pusher } from "@/providers/pusher.provider";
+import { IsPublic } from "@api/common/decorators/is-public.decorator";
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class PusherService {
+  @IsPublic()
   async trigger(channel: string, event: string, data: any) {
     return pusher.trigger(channel, event, data);
   }

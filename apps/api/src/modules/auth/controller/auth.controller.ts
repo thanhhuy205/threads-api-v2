@@ -20,7 +20,7 @@ import {
 import type { HttpRequest as Request } from '@/common/types/http.type';
 import configService from '@/config/config';
 import { Message } from '@/common/decorators/message.decorator';
-import { AccessTokenGuard } from '@/common/guards/access-token.guard';
+import { IsPublic } from '@/common/decorators/is-public.decorator';
 import { RefreshTokenHeaderGuard } from '@/common/guards/refresh-token-header.guard';
 import { AUTH_MESSAGE } from '@/constants/message';
 import {
@@ -43,6 +43,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
+  @IsPublic()
   @HttpCode(HttpStatus.CREATED)
   @Message(AUTH_MESSAGE.REGISTER_SUCCESS)
   @ApiOperation({ summary: 'Register a new account' })
@@ -52,6 +53,7 @@ export class AuthController {
   }
 
   @Post('login')
+  @IsPublic()
   @HttpCode(HttpStatus.OK)
   @Message(AUTH_MESSAGE.LOGIN_SUCCESS)
   @ApiOperation({ summary: 'Log in' })
@@ -66,6 +68,7 @@ export class AuthController {
   }
 
   @Post('forgot-password')
+  @IsPublic()
   @HttpCode(HttpStatus.OK)
   @Message(AUTH_MESSAGE.FORGOT_PASSWORD_SUCCESS)
   @ApiOperation({ summary: 'Request a password reset email' })
@@ -76,7 +79,6 @@ export class AuthController {
 
   @Post('profile')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AccessTokenGuard)
   @Message(AUTH_MESSAGE.UPDATE_USER_SUCCESS)
   @ApiBearerAuth('bearer')
   @ApiOperation({ summary: 'Update the authenticated user profile' })
@@ -86,6 +88,7 @@ export class AuthController {
   }
 
   @Post('refresh-token')
+  @IsPublic()
   @HttpCode(HttpStatus.OK)
   @UseGuards(RefreshTokenHeaderGuard)
   @Message(AUTH_MESSAGE.REFRESH_TOKEN_SUCCESS)
@@ -108,7 +111,6 @@ export class AuthController {
   }
 
   @Get('me')
-  @UseGuards(AccessTokenGuard)
   @Message(AUTH_MESSAGE.GET_ME_SUCCESS)
   @ApiBearerAuth('bearer')
   @ApiOperation({ summary: 'Get the authenticated user' })
@@ -123,7 +125,7 @@ export class AuthController {
 
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AccessTokenGuard, RefreshTokenHeaderGuard)
+  @UseGuards(RefreshTokenHeaderGuard)
   @Message(AUTH_MESSAGE.LOGOUT_SUCCESS)
   @ApiBearerAuth('bearer')
   @ApiHeader({ name: 'x-refresh-token', required: true, description: 'Refresh token to revoke' })
@@ -139,7 +141,6 @@ export class AuthController {
 
   @Post('resend-verify-email')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AccessTokenGuard)
   @Message(AUTH_MESSAGE.RESEND_VERIFY_EMAIL_SUCCESS)
   @ApiBearerAuth('bearer')
   @ApiHeader({ name: 'x-origin-url', required: false, description: 'Frontend URL used in the verification email' })
@@ -157,6 +158,7 @@ export class AuthController {
   }
 
   @Post('verify-email')
+  @IsPublic()
   @HttpCode(HttpStatus.OK)
   @Message(AUTH_MESSAGE.VERIFY_EMAIL_SUCCESS)
   @ApiOperation({ summary: 'Verify an email address' })
@@ -167,6 +169,7 @@ export class AuthController {
   }
 
   @Post('validate/email')
+  @IsPublic()
   @HttpCode(HttpStatus.OK)
   @Message(AUTH_MESSAGE.VALIDATE_EMAIL_SUCCESS)
   @ApiOperation({ summary: 'Check email availability' })
@@ -176,6 +179,7 @@ export class AuthController {
   }
 
   @Post('validate/username')
+  @IsPublic()
   @HttpCode(HttpStatus.OK)
   @Message(AUTH_MESSAGE.VALIDATE_USERNAME_SUCCESS)
   @ApiOperation({ summary: 'Check username availability' })
@@ -185,6 +189,7 @@ export class AuthController {
   }
 
   @Get('reset-password/validate')
+  @IsPublic()
   @Message(AUTH_MESSAGE.VALIDATE_RESET_PASSWORD_TOKEN_SUCCESS)
   @ApiOperation({ summary: 'Validate a password reset token' })
   @ApiResponse({ status: HttpStatus.OK, description: AUTH_MESSAGE.VALIDATE_RESET_PASSWORD_TOKEN_SUCCESS })
@@ -193,6 +198,7 @@ export class AuthController {
   }
 
   @Post('reset-password')
+  @IsPublic()
   @HttpCode(HttpStatus.OK)
   @Message(AUTH_MESSAGE.RESET_PASSWORD_SUCCESS)
   @ApiOperation({ summary: 'Reset a password' })

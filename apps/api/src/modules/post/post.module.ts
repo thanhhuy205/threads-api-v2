@@ -1,5 +1,4 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { AccessTokenGuard } from '@/common/guards/access-token.guard';
 import { JwtModule } from '@/modules/jwt/jwt.module';
 import { ReportModule } from '@/modules/report/report.module';
 import { UserModule } from '@/modules/user/user.module';
@@ -23,7 +22,6 @@ import { PostService } from './service/post.service';
   imports: [forwardRef(() => UserModule), ReportModule, JwtModule, RedisVersionModule],
   controllers: [PostController],
   providers: [
-    AccessTokenGuard,
     PostBuilder,
     PostRepository,
     PostInteractionRepository,

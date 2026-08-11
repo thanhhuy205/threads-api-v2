@@ -2,6 +2,7 @@ import { AUTH_MESSAGE } from "@/constants/message";
 import { Body, Controller, HttpCode, HttpStatus, Post, Req } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Message } from '@/common/decorators/message.decorator';
+import { IsPublic } from '@/common/decorators/is-public.decorator';
 import { LoginDto } from "@/modules/auth/dto/request/login.request.dto";
 import { UnauthorizedException } from '@/errors/error';
 import { AdminAuthService } from "./admin-auth.service";
@@ -14,6 +15,7 @@ export class AdminAuthController {
   constructor(private readonly adminAuthService: AdminAuthService) {}
 
   @Post('login')
+  @IsPublic()
   @HttpCode(HttpStatus.OK)
   @Message(AUTH_MESSAGE.LOGIN_SUCCESS)
   @ApiOperation({ summary: 'Log in with an admin or moderator account' })

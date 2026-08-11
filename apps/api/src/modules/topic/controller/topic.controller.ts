@@ -1,4 +1,5 @@
 import { Message } from '@/common/decorators/message.decorator';
+import { IsPublic } from '@/common/decorators/is-public.decorator';
 import { Body, Controller, Get, HttpCode, HttpStatus, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CreateTopicDto, SearchTopicQueryDto } from '../dto/request/topic.request';
@@ -10,6 +11,7 @@ export class TopicController {
   constructor(private readonly topicService: TopicService) {}
 
   @Get()
+  @IsPublic()
   @Message('Topics retrieved successfully')
   @ApiOperation({ summary: 'Search topics by query' })
   @ApiResponse({ status: HttpStatus.OK, description: 'Topics retrieved successfully' })
@@ -18,6 +20,7 @@ export class TopicController {
   }
 
   @Post()
+  @IsPublic()
   @HttpCode(HttpStatus.CREATED)
   @Message('Topic upserted')
   @ApiOperation({ summary: 'Create a topic or increment its count' })

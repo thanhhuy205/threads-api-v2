@@ -1,5 +1,5 @@
 import { UPLOAD_MESSAGE } from '@/constants/message';
-import { AccessTokenGuard } from '@/common/guards/access-token.guard';
+import { IsPublic } from '@/common/decorators/is-public.decorator';
 import { Message } from '@/common/decorators/message.decorator';
 import { ResizeUploadInterceptor } from '@/common/interceptors/resize-upload.interceptor';
 import type { UploadedFile as UploadedFileData } from '@/common/types/http.type';
@@ -10,7 +10,6 @@ import {
   Post,
   UploadedFile,
   UploadedFiles,
-  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
@@ -23,6 +22,7 @@ export class UploadController {
     constructor(private readonly uploadService: UploadService) {}
 
     @Post('avatar')
+    @IsPublic()
     @HttpCode(HttpStatus.CREATED)
     @Message(UPLOAD_MESSAGE.UPLOAD_AVATAR_SUCCESS)
     @UseInterceptors(
@@ -45,7 +45,6 @@ export class UploadController {
 
     @Post('media')
     @HttpCode(HttpStatus.CREATED)
-    @UseGuards(AccessTokenGuard)
     @Message(UPLOAD_MESSAGE.UPLOAD_MEDIA_SUCCESS)
     @UseInterceptors(
         FilesInterceptor('medias', 5),

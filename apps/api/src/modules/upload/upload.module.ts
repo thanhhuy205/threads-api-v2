@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { MulterModule } from '@nestjs/platform-express';
-import { AccessTokenGuard } from '@/common/guards/access-token.guard';
 import { ResizeUploadInterceptor } from '@/common/interceptors/resize-upload.interceptor';
 import { UploadController } from './controller/upload.controller';
 import { PostMediaRepository } from './repository/post-media.repository';
@@ -22,7 +21,6 @@ import { UploadService } from './service/upload.service';
   providers: [
     UploadService,
     PostMediaRepository,
-    AccessTokenGuard,
     ResizeUploadInterceptor,
   ],
   exports: [UploadService],

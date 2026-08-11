@@ -1,11 +1,10 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, Req } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { HttpRequest as Request } from '@/common/types/http.type';
 import { Message } from '@/common/decorators/message.decorator';
 import { CursorPagination } from '@/common/decorators/cursor-pagination.decorator';
 import { ApiCursorPaginatedResponse } from '@/common/decorators/swagger-response.decorator';
 import type { CursorPagination as CursorPaginationParams } from '@/common/helpers/cursor-pagination.helper';
-import { AccessTokenGuard } from '@/common/guards/access-token.guard';
 import { AUTH_MESSAGE, USER_MESSAGE } from '@/constants/message';
 import { UnauthorizedException } from '@/errors/error';
 import { FollowersQueryDto } from '../dto/request/followers.query.dto';
@@ -18,7 +17,6 @@ import { UserService } from '../service/user.service';
 
 @ApiTags('User')
 @ApiBearerAuth('bearer')
-@UseGuards(AccessTokenGuard)
 @Controller('me')
 export class UserController {
   constructor(

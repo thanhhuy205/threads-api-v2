@@ -2,10 +2,10 @@ import { Message } from '@/common/decorators/message.decorator';
 import { CursorPagination } from '@/common/decorators/cursor-pagination.decorator';
 import { ApiCursorPaginatedResponse } from '@/common/decorators/swagger-response.decorator';
 import type { CursorPagination as CursorPaginationParams } from '@/common/helpers/cursor-pagination.helper';
-import { AccessTokenGuard } from '@/common/guards/access-token.guard';
+import { IsPublic } from '@/common/decorators/is-public.decorator';
 import { AUTH_MESSAGE, USER_MESSAGE } from '@/constants/message';
 import { NotFoundException, UnauthorizedException } from '@/errors/error';
-import { Controller, Get, HttpCode, HttpStatus, Param, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, HttpCode, HttpStatus, Param, Post, Query, Req } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { HttpRequest as Request } from '@/common/types/http.type';
 import { FollowersQueryDto } from '../dto/request/followers.query.dto';
@@ -24,6 +24,7 @@ export class UserFollowController {
   ) { }
 
   @Get(':username/followers')
+  @IsPublic()
   @Message(USER_MESSAGE.GET_FOLLOWERS_SUCCESS)
   @ApiOperation({ summary: 'Get a user’s followers' })
   @ApiCursorPaginatedResponse({ description: USER_MESSAGE.GET_FOLLOWERS_SUCCESS })
@@ -39,6 +40,7 @@ export class UserFollowController {
   }
 
   @Get(':username/following')
+  @IsPublic()
   @Message(USER_MESSAGE.GET_FOLLOWING_SUCCESS)
   @ApiOperation({ summary: 'Get users followed by a user' })
   @ApiCursorPaginatedResponse({ description: USER_MESSAGE.GET_FOLLOWING_SUCCESS })
@@ -55,7 +57,6 @@ export class UserFollowController {
 
   @Post(':username/friend-request')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AccessTokenGuard)
   @ApiBearerAuth('bearer')
   @Message(USER_MESSAGE.FRIEND_REQUEST_SENT)
   @ApiOperation({ summary: 'Send a friend request' })
@@ -66,7 +67,6 @@ export class UserFollowController {
 
   @Post(':username/follower')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(AccessTokenGuard)
   @ApiBearerAuth('bearer')
   @Message(USER_MESSAGE.FOLLOW_SUCCESS)
   @ApiOperation({ summary: 'Follow or unfollow a user' })

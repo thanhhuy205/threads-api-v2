@@ -1,13 +1,13 @@
 import { CursorPagination } from '@/common/decorators/cursor-pagination.decorator';
+import { IsPublic } from '@/common/decorators/is-public.decorator';
 import { Message } from '@/common/decorators/message.decorator';
 import { ApiCursorPaginatedResponse } from '@/common/decorators/swagger-response.decorator';
-import { AccessTokenGuard } from '@/common/guards/access-token.guard';
 import type { CursorPagination as CursorPaginationParams } from '@/common/helpers/cursor-pagination.helper';
 import { AUTH_MESSAGE, POST_MESSAGE } from '@/constants/message';
 import { NotFoundException, UnauthorizedException } from '@/errors/error';
 import { JwtService } from '@/modules/jwt/service/jwt.service';
 import { UserService } from '@/modules/user/service/user.service';
-import { BadRequestException, Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, Req } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CreatePostDto, UpdatePostDto } from '../dto/post.dto';
 import { CursorPaginationQueryDto, HidePostDto, NewsFeedQueryDto, PublicIdParamsDto, ReportDto, SavePostDto, SearchPostQueryDto, UsernameParamsDto } from '../dto/request/post.request';
@@ -36,6 +36,7 @@ export class PostController {
   ) { }
 
   @Get('news-feed')
+  @IsPublic()
   @Message(POST_MESSAGE.RETRIEVED)
   @ApiOperation({ summary: 'Get the news feed' })
   @ApiCursorPaginatedResponse({ description: POST_MESSAGE.RETRIEVED })
@@ -51,6 +52,7 @@ export class PostController {
   }
 
   @Get('search')
+  @IsPublic()
   @Message(POST_MESSAGE.SEARCH_SUCCESS)
   @ApiOperation({ summary: 'Search posts' })
   @ApiResponse({ status: HttpStatus.OK, description: POST_MESSAGE.SEARCH_SUCCESS })
@@ -64,7 +66,6 @@ export class PostController {
   }
 
   @Get('me')
-  @UseGuards(AccessTokenGuard)
   @ApiBearerAuth('bearer')
   @Message(POST_MESSAGE.RETRIEVED)
   @ApiOperation({ summary: 'Get current user posts' })
@@ -79,7 +80,6 @@ export class PostController {
   }
 
   @Get('me/replies')
-  @UseGuards(AccessTokenGuard)
   @ApiBearerAuth('bearer')
   @Message(POST_MESSAGE.REPLIES_RETRIEVED)
   @ApiOperation({ summary: 'Get current user replies' })
@@ -96,7 +96,6 @@ export class PostController {
   }
 
   @Get('me/quote')
-  @UseGuards(AccessTokenGuard)
   @ApiBearerAuth('bearer')
   @Message(POST_MESSAGE.RETRIEVED)
   @ApiOperation({ summary: 'Get current user quotes and reposts' })
@@ -113,6 +112,7 @@ export class PostController {
   }
 
   @Get('user/:username')
+  @IsPublic()
   @Message(POST_MESSAGE.RETRIEVED)
   @ApiOperation({ summary: 'Get posts by username' })
   @ApiParam({ name: 'username' })
@@ -127,6 +127,7 @@ export class PostController {
   }
 
   @Get('user/:username/replies')
+  @IsPublic()
   @Message(POST_MESSAGE.REPLIES_RETRIEVED)
   @ApiOperation({ summary: 'Get replies by username' })
   @ApiParam({ name: 'username' })
@@ -141,6 +142,7 @@ export class PostController {
   }
 
   @Get('user/:username/quotes')
+  @IsPublic()
   @Message(POST_MESSAGE.RETRIEVED)
   @ApiOperation({ summary: 'Get quotes and reposts by username' })
   @ApiParam({ name: 'username' })
@@ -155,6 +157,7 @@ export class PostController {
   }
 
   @Get(':publicId/replies')
+  @IsPublic()
   @Message(POST_MESSAGE.REPLIES_RETRIEVED)
   @ApiOperation({ summary: 'Get replies to a post' })
   @ApiParam({ name: 'publicId' })
@@ -168,6 +171,7 @@ export class PostController {
   }
 
   @Get(':publicId')
+  @IsPublic()
   @Message(POST_MESSAGE.RETRIEVED)
   @ApiOperation({ summary: 'Get a post' })
   @ApiParam({ name: 'publicId' })
@@ -179,7 +183,6 @@ export class PostController {
   }
 
   @Post()
-  @UseGuards(AccessTokenGuard)
   @ApiBearerAuth('bearer')
   @Message(POST_MESSAGE.CREATED)
   @ApiOperation({ summary: 'Create a post' })
@@ -189,7 +192,6 @@ export class PostController {
   }
 
   @Post(':publicId/reply')
-  @UseGuards(AccessTokenGuard)
   @ApiBearerAuth('bearer')
   @Message(POST_MESSAGE.CREATED)
   @ApiOperation({ summary: 'Reply to a post' })
@@ -199,7 +201,6 @@ export class PostController {
   }
 
   @Post(':publicId/like')
-  @UseGuards(AccessTokenGuard)
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth('bearer')
   @Message(POST_MESSAGE.RETRIEVED)
@@ -209,7 +210,6 @@ export class PostController {
   }
 
   @Post(':publicId/repost')
-  @UseGuards(AccessTokenGuard)
   @ApiBearerAuth('bearer')
   @Message(POST_MESSAGE.CREATED)
   @ApiOperation({ summary: 'Repost a post' })
@@ -218,7 +218,6 @@ export class PostController {
   }
 
   @Post(':publicId/quote')
-  @UseGuards(AccessTokenGuard)
   @ApiBearerAuth('bearer')
   @Message(POST_MESSAGE.CREATED)
   @ApiOperation({ summary: 'Quote a post' })
@@ -227,7 +226,6 @@ export class PostController {
   }
 
   @Post(':publicId/save')
-  @UseGuards(AccessTokenGuard)
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth('bearer')
   @Message(POST_MESSAGE.RETRIEVED)
@@ -238,7 +236,6 @@ export class PostController {
   }
 
   @Post(':publicId/hide')
-  @UseGuards(AccessTokenGuard)
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth('bearer')
   @Message(POST_MESSAGE.RETRIEVED)
@@ -249,7 +246,6 @@ export class PostController {
   }
 
   @Post(':publicId/report')
-  @UseGuards(AccessTokenGuard)
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth('bearer')
   @Message(POST_MESSAGE.RETRIEVED)
@@ -260,7 +256,6 @@ export class PostController {
   }
 
   @Patch(':publicId')
-  @UseGuards(AccessTokenGuard)
   @ApiBearerAuth('bearer')
   @Message(POST_MESSAGE.RETRIEVED)
   @ApiOperation({ summary: 'Update a post' })
@@ -272,7 +267,6 @@ export class PostController {
   }
 
   @Delete(':publicId')
-  @UseGuards(AccessTokenGuard)
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth('bearer')
   @Message(POST_MESSAGE.RETRIEVED)

@@ -1,8 +1,9 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtModule as NestJwtModule } from '@nestjs/jwt';
-import { JwtService } from './service/jwt.service';
+import { JwtService as AppJwtService } from './service/jwt.service';
 
+@Global()
 @Module({
   imports: [
     NestJwtModule.registerAsync({
@@ -13,7 +14,7 @@ import { JwtService } from './service/jwt.service';
       }),
     }),
   ],
-  providers: [JwtService],
-  exports: [JwtService],
+  providers: [AppJwtService],
+  exports: [AppJwtService],
 })
-export class JwtModule {}
+export class JwtModule { }

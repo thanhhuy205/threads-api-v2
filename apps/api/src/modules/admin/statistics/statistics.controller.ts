@@ -1,14 +1,13 @@
 import { BadRequestException, Controller, Get, HttpStatus, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Message } from '@/common/decorators/message.decorator';
-import { AccessTokenGuard } from '@/common/guards/access-token.guard';
 import { AdminRoleGuard } from '../guards/admin-role.guard';
 import { AdminStatsQueryDto } from "./dto/request/admin-stats.query.dto";
 import { StatisticsService } from "./statistics.service";
 
 @ApiTags('Admin')
 @ApiBearerAuth('bearer')
-@UseGuards(AccessTokenGuard, AdminRoleGuard)
+@UseGuards(AdminRoleGuard)
 @Controller('admin')
 export class StatisticsController {
   constructor(private readonly statisticsService: StatisticsService) {}

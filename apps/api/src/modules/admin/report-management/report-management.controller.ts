@@ -3,7 +3,6 @@ import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@ne
 import { Message } from '@/common/decorators/message.decorator';
 import { Pagination } from '@/common/decorators/pagination.decorator';
 import { ApiOffsetPaginatedResponse } from '@/common/decorators/swagger-response.decorator';
-import { AccessTokenGuard } from '@/common/guards/access-token.guard';
 import type { OffsetPagination } from '@/common/helpers/offset-pagination.helper';
 import { AdminRoleGuard } from '../guards/admin-role.guard';
 import { ListReportsQueryDto } from "./dto/request/list-reports.query.dto";
@@ -14,7 +13,7 @@ type AuthenticatedRequest = { user?: { sub?: string } };
 
 @ApiTags('Admin')
 @ApiBearerAuth('bearer')
-@UseGuards(AccessTokenGuard, AdminRoleGuard)
+@UseGuards(AdminRoleGuard)
 @Controller('admin/reports')
 export class ReportManagementController {
   constructor(private readonly reportManagementService: ReportManagementService) {}

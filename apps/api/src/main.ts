@@ -1,5 +1,4 @@
-import configService from '@/config/config';
-import { connectMongoDB } from '@/providers/mongodb.provider';
+import { CONFIGURATION } from '@libs/core/config/configuration';
 import { BadRequestException, ValidationPipe, type ValidationError } from '@nestjs/common';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -10,9 +9,9 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 
 const corsOrigin =
-  configService.APP_CONFIG.CORS_ORIGIN === '*'
+  CONFIGURATION.APP_CONFIG.CORS_ORIGIN === '*'
     ? '*'
-    : configService.APP_CONFIG.CORS_ORIGIN.split(',')
+    : CONFIGURATION.APP_CONFIG.CORS_ORIGIN.split(',')
       .map((origin) => origin.trim())
       .filter(Boolean);
 
@@ -30,7 +29,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.enableCors({ origin: corsOrigin });
-  app.setGlobalPrefix(configService.GLOBAL_PREFIX);
+  app.setGlobalPrefix(CONFIGURATION.GLOBAL_PREFIX);
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Threads API')
@@ -71,14 +70,15 @@ async function bootstrap() {
     app.use(morgan('dev'));
   }
 
+  await app.listen(process.env.PORT ?? 3000);
   // await redisService.connect();
-  await connectMongoDB();
+  // await connectMongoDB();
 
-  await Promise.all([
-    likeProducer.initSyncJob(),
-    notificationProducer.initSyncNotificationBatchJob(),
-    surveySyncProducer.initSyncSurveyJob(),
-  ]);
+  // await Promise.all([
+  //   likeProducer.initSyncJob(),
+  //   notificationProducer.initSyncNotificationBatchJob(),
+  //   surveySyncProducer.initSyncSurveyJob(),
+  // ]);
 
   // const shutdown = async () => {
   //   await app.close();
@@ -93,7 +93,6 @@ async function bootstrap() {
   // process.once('SIGTERM', () => void shutdown());
 
   // 2. Start the HTTP server listening on a defined port.
-  await app.listen(process.env.PORT ?? 3000);
 }
 
 void bootstrap();
