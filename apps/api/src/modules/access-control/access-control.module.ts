@@ -26,4 +26,4 @@ import { UserRoleService } from './role/service/user-role.service';
     UserRoleRepository,
   ],
 })
-export class AccessControlModule {}
+export class AccessControlModule { }

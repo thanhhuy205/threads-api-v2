@@ -1,5 +1,5 @@
-class AccessControlService {
-  // Common access control logic
-}
+// class AccessControlService {
+//   // Common access control logic
+// }
 
-export const accessControlService = new AccessControlService();
+// export const accessControlService = new AccessControlService();
