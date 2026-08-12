@@ -1,6 +1,6 @@
 import { redisKey } from "@/constants/resolve-key/redis-key";
 import { UserRepository } from "@/modules/user/repository/user.repository";
-import { redisService } from "@/providers/redis.provider";
+import { RedisService } from "@libs/cache/redis.service";
 import { Injectable } from '@nestjs/common';
 import { Prisma } from "@prisma/client";
 import type { UpdateProfileDto } from "../dto/request/update-profile.request.dto";
@@ -16,6 +16,7 @@ export class UserService {
   constructor(
     private readonly userRepository: UserRepository,
     private readonly followRepository: FollowRepository,
+    private readonly redisService: RedisService,
   ) { }
 
   async updateProfile(userId: string, payload: UpdateProfileDto) {
@@ -38,7 +39,7 @@ export class UserService {
     }
 
     const user = await this.userRepository.updateProfile(userId, data);
-    await redisService.del(redisKey.auth.me(userId));
+    await this.redisService.redis.del(redisKey.auth.me(userId));
 
     return {
       name: user.name,

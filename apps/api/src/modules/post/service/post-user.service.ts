@@ -7,6 +7,7 @@ import {
 import type { GetPostWithUser } from "@/modules/post/interfaces/get-post-with-user";
 import { FollowerService } from '@/modules/user/service/follower.service';
 import { RedisVersionService } from '@/shared/redis-version';
+import { RedisService } from '@libs/cache/redis.service';
 import { Injectable } from '@nestjs/common';
 import { PostType } from "@prisma/client";
 import { primaryPostTypes } from "../constants/post-type";
@@ -18,6 +19,7 @@ export class PostUserService {
     private readonly postRepository: PostRepository,
     private readonly followerService: FollowerService,
     private readonly redisVersionService: RedisVersionService,
+    private readonly redisService: RedisService,
   ) { }
   async getPostsByUser({ after, take, userId, myUserId }: GetPostWithUser) {
     const namespace = buildPostListNamespace({
@@ -42,6 +44,7 @@ export class PostUserService {
           }),
           postRepository: this.postRepository,
           followerService: this.followerService,
+          redisService: this.redisService,
         }),
     );
   }
@@ -69,6 +72,7 @@ export class PostUserService {
           }),
           postRepository: this.postRepository,
           followerService: this.followerService,
+          redisService: this.redisService,
         }),
     );
   }

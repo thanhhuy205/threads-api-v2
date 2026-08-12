@@ -1,8 +1,8 @@
+import { buildCursorPagination, normalizeCursorPagination } from '@/common/helpers/cursor-pagination.helper';
 import { redisKey } from "@/constants/resolve-key/redis-key";
 import { PostMapper } from "@/modules/post/mapper/post.mapper";
 import { FollowerService } from "@/modules/user/service/follower.service";
-import { redisService } from "@/providers/redis.provider";
-import { buildCursorPagination, normalizeCursorPagination } from '@/common/helpers/cursor-pagination.helper';
+import { RedisService } from "@libs/cache/redis.service";
 import { Prisma } from "@prisma/client";
 import { PostRepository } from "../repository/post.repository";
 
@@ -35,6 +35,7 @@ export async function paginatePosts({
   userId,
   postRepository,
   followerService,
+  redisService,
 }: {
   after?: string;
   take: number;
@@ -42,6 +43,7 @@ export async function paginatePosts({
   userId?: string | null;
   postRepository: PostRepository;
   followerService: FollowerService;
+  redisService: RedisService;
 }) {
   const { after: currentAfter, take: currentLimit } = normalizeCursorPagination({ after, take });
 
@@ -77,7 +79,7 @@ export async function paginatePosts({
   if (mapPostIdToPollId.size > 0) {
     const pollIds = Array.from(mapPostIdToPollId.values())
     const keys = pollIds.map(id => redisKey.poll.countVote(id))
-    const voteCountAll = await redisService.mGet(keys);
+    const voteCountAll = await redisService.redis.mGet(keys);
     pollIds.forEach((pollId, index) => {
       if (voteCountAll[index] !== null) {
         voteCountMap.set(pollId, JSON.parse(voteCountAll[index]))

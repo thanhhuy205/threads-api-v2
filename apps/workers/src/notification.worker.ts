@@ -6,12 +6,12 @@ import type {
 } from "@api/modules/notification-group/interface/notification.types";
 import type { NotificationType } from "@api/modules/notification-group/model/notification.model";
 import { pusherChannel } from "@api/modules/pusher/channel/pusher-channel";
+import { RedisService } from "@libs/cache/redis.service";
+import { NOTIFICATION_JOB_KEY, NOTIFICATION_JOB_NAME, QUEUE_NAME } from "@libs/core/constants/queue";
 import { collections } from "@libs/core/providers/mongodb.provider";
 import { pusher } from "@libs/core/providers/pusher.provider";
-import { redisService } from "@libs/core/providers/redis.provider";
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
-import { NOTIFICATION_JOB_KEY, NOTIFICATION_JOB_NAME, QUEUE_NAME } from "@libs/core/constants/queue";
 import { Job } from 'bullmq';
 
 const pendingCommentKeyPattern =
@@ -60,6 +60,9 @@ type PushNotificationPayload = {
 @Processor(QUEUE_NAME.NOTIFICATION_QUEUE)
 export class NotificationWorker extends WorkerHost {
   private readonly logger = new Logger(NotificationWorker.name, { timestamp: true });
+  constructor(private readonly redisService: RedisService) {
+    super();
+  }
   async process(job: Job<any, any, string>): Promise<any> {
     switch (job.name) {
       case NOTIFICATION_JOB_NAME.BATCH_SYNC_NOTIFICATION:
@@ -104,7 +107,7 @@ export class NotificationWorker extends WorkerHost {
   async batchCommentNotification() {
     const now = Date.now();
 
-    const dueItems = await redisService.zRangeByScore(
+    const dueItems = await this.redisService.redis.zRangeByScore(
       NOTIFICATION_JOB_KEY.BATCH_SYNC_NOTIFICATION,
       "-inf",
       now
@@ -117,9 +120,9 @@ export class NotificationWorker extends WorkerHost {
       this.logger.log(`[QUEUE_ITEM] ${redisKey}`);
 
       const [rawMeta, actorCount, actors] = await Promise.all([
-        redisService.hGetAll(redisKey),
-        redisService.sCard(`${redisKey}:actors`),
-        redisService.sMembers(`${redisKey}:actors`),
+        this.redisService.redis.hGetAll(redisKey),
+        this.redisService.redis.sCard(`${redisKey}:actors`),
+        this.redisService.redis.sMembers(`${redisKey}:actors`),
       ]);
 
       const meta = toPendingCommentNotificationMeta(rawMeta);
@@ -137,7 +140,7 @@ export class NotificationWorker extends WorkerHost {
             meta: rawMeta,
           })}`,
         );
-        await redisService.zRem(NOTIFICATION_JOB_KEY.BATCH_SYNC_NOTIFICATION, redisKey);
+        await this.redisService.redis.zRem(NOTIFICATION_JOB_KEY.BATCH_SYNC_NOTIFICATION, redisKey);
         continue;
       }
 
@@ -165,28 +168,29 @@ export class NotificationWorker extends WorkerHost {
         originPostId: meta.originPostId,
       });
 
-      await redisService.del([redisKey, `${redisKey}:actors`]);
-      await redisService.zRem(NOTIFICATION_JOB_KEY.BATCH_SYNC_NOTIFICATION, redisKey);
+      await this.redisService.redis.del([redisKey, `${redisKey}:actors`]);
+      await this.redisService.redis.zRem(NOTIFICATION_JOB_KEY.BATCH_SYNC_NOTIFICATION, redisKey);
     }
     if (notificationSave.length) {
       await collections('notifications').insertMany(
         notificationSave.map((item) => ({
-        recipientId: item.recipientId,
-        type: item.meta.type as NotificationType,
-        targetType: item.meta.targetType,
-        targetId: item.meta.targetPostId,
-        originPostId: item.meta.originPostId,
-        actorIds: item.actors,
-        lastActorId: item.meta.lastActorId,
-        lastEventAt: new Date(),
-        count: Number(item.meta.count ?? 0),
+          recipientId: item.recipientId,
+          type: item.meta.type as NotificationType,
+          targetType: item.meta.targetType,
+          targetId: item.meta.targetPostId,
+          originPostId: item.meta.originPostId,
+          actorIds: item.actors,
+          lastActorId: item.meta.lastActorId,
+          lastEventAt: new Date(),
+          count: Number(item.meta.count ?? 0),
         })),
         { ordered: false },
       );
     }
   }
 
-  async sendPushNotification(recipientId: string, payload: PushNotificationPayload) {    await pusher.trigger(pusherChannel.privateNotification(recipientId), "new-notifications", {
+  async sendPushNotification(recipientId: string, payload: PushNotificationPayload) {
+    await pusher.trigger(pusherChannel.privateNotification(recipientId), "new-notifications", {
       recipientId,
       payload,
     });

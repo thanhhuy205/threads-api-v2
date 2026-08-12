@@ -1,10 +1,10 @@
+import type { PollVoteCountUpdate } from "@api/modules/poll/repository/poll.repository";
+import { RedisService } from "@libs/cache/redis.service";
 import { QUEUE_NAME, SURVEY_SYNC_JOB_NAME } from "@libs/core/constants/queue";
 import { redisKey } from "@libs/core/constants/resolve-key/redis-key";
+import { PrismaService } from '@libs/database';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
-import { PrismaService } from '@libs/database';
-import type { PollVoteCountUpdate } from "@api/modules/poll/repository/poll.repository";
-import { redisService } from "@libs/core/providers/redis.provider";
 import { Prisma } from '@prisma/client';
 import { Job } from 'bullmq';
 
@@ -12,22 +12,25 @@ import { Job } from 'bullmq';
 export class SurveySyncWorker extends WorkerHost {
   private readonly logger = new Logger(SurveySyncWorker.name, { timestamp: true });
 
-  constructor(private readonly prismaService: PrismaService) {
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly redisService: RedisService,
+  ) {
     super();
   }
   async process(job: Job<any, any, string>): Promise<any> {
-      switch (job.name) {
-        case SURVEY_SYNC_JOB_NAME.SYNC_VOTE_COUNT:
-          return this.syncVoteCount();
-        default:
-          throw new Error(`Unknown job name: ${job.name}`);
-      }
+    switch (job.name) {
+      case SURVEY_SYNC_JOB_NAME.SYNC_VOTE_COUNT:
+        return this.syncVoteCount();
+      default:
+        throw new Error(`Unknown job name: ${job.name}`);
+    }
   }
 
   async syncVoteCount() {
     try {
       const dirtyKey = redisKey.poll.dirtySurveys();
-      const pollIds = await redisService.sMembers(dirtyKey);
+      const pollIds = await this.redisService.redis.sMembers(dirtyKey);
 
       if (pollIds.length === 0) {
         return;
@@ -37,7 +40,7 @@ export class SurveySyncWorker extends WorkerHost {
         redisKey.poll.countVote(Number(pollId)),
       );
 
-      const counts = await redisService.mGet(countKeys);
+      const counts = await this.redisService.redis.mGet(countKeys);
 
       const updates: PollVoteCountUpdate[] = [];
       pollIds.forEach((pollId, index) => {
@@ -66,7 +69,7 @@ export class SurveySyncWorker extends WorkerHost {
           WHERE id IN (${Prisma.join(ids)})
         `;
       }
-      await redisService.sRem(dirtyKey, pollIds);
+      await this.redisService.redis.sRem(dirtyKey, pollIds);
 
       this.logger.log(
         `Survey sync processed ${pollIds.length} dirty surveys, updated ${updates.length} polls`,

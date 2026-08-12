@@ -5,6 +5,7 @@ import { ReportRepository } from '@api/modules/report/repository/report.reposito
 import { PostMediaRepository } from '@api/modules/upload/repository/post-media.repository';
 import { configurationFactory } from '@libs/core/config/config';
 import { QUEUE_NAME } from '@libs/core/constants/queue';
+import { RedisModule } from '@libs/cache/redis.module';
 import { DatabaseModule } from '@libs/database';
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
@@ -42,6 +43,7 @@ import { SurveySyncWorker } from './survey-sync.worker';
       { name: QUEUE_NAME.SURVEY_SYNC_QUEUE },
     ),
     DatabaseModule,
+    RedisModule,
   ],
   providers: [
     BloomWorker,

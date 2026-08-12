@@ -15,7 +15,7 @@ import { EmailProducer } from "@/modules/job/email/producer/email.producer";
 import { TokenPairResponse } from "@/modules/jwt/dto/response/token-pair.response";
 import { JwtService } from "@/modules/jwt/service/jwt.service";
 import { UserRepository } from "@/modules/user/repository/user.repository";
-import { redisService } from "@/providers/redis.provider";
+import { RedisService } from "@libs/cache/redis.service";
 import { Injectable, Logger } from '@nestjs/common';
 import { UserRoleType, VerificationCodeType } from "@prisma/client";
 import crypto from "crypto";
@@ -54,6 +54,7 @@ export class AuthService {
     private readonly userRepository: UserRepository,
     private readonly bloomProducer: BloomProducer,
     private readonly emailProducer: EmailProducer,
+    private readonly redisService: RedisService,
   ) { }
 
   async register(
@@ -223,13 +224,13 @@ export class AuthService {
     }
 
     await this.authRepository.updateVerifiedEmail(verificationRecord.userId);
-    await redisService.del(redisKey.auth.me(verificationRecord.userId));
+    await this.redisService.redis.del(redisKey.auth.me(verificationRecord.userId));
   }
 
   async validateEmail(
     payload: ValidateEmailDto,
   ): Promise<ValidateUserResponseDto> {
-    const isExistingEmail = await redisService.bf.exists(
+    const isExistingEmail = await this.redisService.redis.bf.exists(
       redisKey.bloom.emails(),
       payload.email,
     );
@@ -244,7 +245,7 @@ export class AuthService {
   async validateUsername(
     payload: ValidateUsernameDto,
   ): Promise<ValidateUserResponseDto> {
-    const isExistingUsername = await redisService.bf.exists(
+    const isExistingUsername = await this.redisService.redis.bf.exists(
       redisKey.bloom.usernames(),
       payload.username,
     );
@@ -347,7 +348,7 @@ export class AuthService {
 
   async me(userId: string): Promise<AuthMeResponseDto | null> {
     // const cacheKey = redisKey.auth.me(userId);
-    // const cached = await redisService.get(cacheKey);
+    // const cached = await this.redisService.redis.get(cacheKey);
     // if (cached) {
     //   try {
     //     return JSON.parse(cached) as AuthMeResponseDto;
@@ -366,7 +367,7 @@ export class AuthService {
       user,
     });
 
-    // await redisService.set(cacheKey, JSON.stringify(response), {
+    // await this.redisService.redis.set(cacheKey, JSON.stringify(response), {
     //   EX: 30,
     // });
 
@@ -374,7 +375,7 @@ export class AuthService {
   }
 
   async logout(accessToken: string, payload: LogoutDto): Promise<void> {
-    await redisService.set(redisKey.auth.accessTokenBlacklist(accessToken), "1", {
+    await this.redisService.redis.set(redisKey.auth.accessTokenBlacklist(accessToken), "1", {
       EX: 15 * 60,
     });
 

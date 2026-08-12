@@ -1,7 +1,7 @@
 import { NotFoundException } from "@/errors/error";
-import { Injectable, Logger } from '@nestjs/common';
 import { dispatchReplyNotification } from "@/modules/notification-group/events/notification.dispatcher";
 import type { CreatePostPayload } from "@/modules/post/interfaces/create-post-payload";
+import { Injectable, Logger } from '@nestjs/common';
 import { PostBuilder } from "../builder/post.builder";
 import { CreatePostDto } from "../dto/post.dto";
 import { PostRecord, PostRepository } from "../repository/post.repository";
@@ -15,8 +15,10 @@ export class PostService {
     private readonly postBuilder: PostBuilder,
     private readonly postRepository: PostRepository,
     private readonly postMetaService: PostMetaService,
-  ) {}
+  ) { }
   async create(payload: CreatePostPayload) {
+
+    this.logger.log(`Creating post for user ${payload.userId} with content: ${payload.content}`);
     const builder = this.postBuilder.fork().user(payload.userId)
       .replyPermission(payload.replyPermission)
       .visibility(payload.visibility)

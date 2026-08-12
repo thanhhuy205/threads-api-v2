@@ -71,28 +71,6 @@ async function bootstrap() {
   }
 
   await app.listen(process.env.PORT ?? 3000);
-  // await redisService.connect();
-  // await connectMongoDB();
-
-  // await Promise.all([
-  //   likeProducer.initSyncJob(),
-  //   notificationProducer.initSyncNotificationBatchJob(),
-  //   surveySyncProducer.initSyncSurveyJob(),
-  // ]);
-
-  // const shutdown = async () => {
-  //   await app.close();
-  //   await Promise.allSettled([
-  //     prismaService.$disconnect(),
-  //     closeMongoDB(),
-  //     redisService.isOpen ? redisService.disconnect() : Promise.resolve(),
-  //   ]);
-  // };
-
-  // process.once('SIGINT', () => void shutdown());
-  // process.once('SIGTERM', () => void shutdown());
-
-  // 2. Start the HTTP server listening on a defined port.
 }
 
 void bootstrap();

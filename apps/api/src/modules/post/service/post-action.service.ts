@@ -8,8 +8,8 @@ import {
 import { EvaluationProducer } from "@/modules/job/evaluation-post/producer/evaluation.producer";
 import { ReportService } from "@/modules/report/service/report.service";
 import { UserService } from "@/modules/user/service/user.service";
-import { redisService } from "@/providers/redis.provider";
 import { RedisVersionService } from '@/shared/redis-version';
+import { RedisService } from "@libs/cache/redis.service";
 import { Injectable } from '@nestjs/common';
 import {
   InteractionType,
@@ -39,6 +39,7 @@ export class PostActionService {
     private readonly reportService: ReportService,
     private readonly redisVersionService: RedisVersionService,
     private readonly evaluationProducer: EvaluationProducer,
+    private readonly redisService: RedisService,
   ) { }
   async hide(
     publicId: string,
@@ -137,7 +138,7 @@ export class PostActionService {
     }
     const likeKey = redisKey.post.likesSet(publicId);
     const countKey = redisKey.post.likeCount(publicId);
-    const changed = await redisService.eval(
+    const changed = await this.redisService.redis.eval(
       `
     local changed = redis.call("SADD", KEYS[1], ARGV[1])
 
@@ -175,7 +176,7 @@ export class PostActionService {
         ],
       },
     );
-    const likeCount = await redisService.get(countKey);
+    const likeCount = await this.redisService.redis.get(countKey);
     await this.redisVersionService.bumpPostListCacheVersion(redisKey.post.listNamespace());
     return Number(likeCount) ?? 0 + (post.likesCount ?? 0);
   }

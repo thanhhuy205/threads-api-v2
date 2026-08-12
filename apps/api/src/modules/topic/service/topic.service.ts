@@ -1,5 +1,5 @@
 import { redisKey } from "@/constants/resolve-key/redis-key";
-import { redisService } from "@/providers/redis.provider";
+import { RedisService } from "@libs/cache/redis.service";
 import { Injectable } from '@nestjs/common';
 import { TopicRepository } from "../repository/topic.repository";
 
@@ -7,7 +7,10 @@ import { TopicRepository } from "../repository/topic.repository";
 export class TopicService {
   private readonly topicListCacheTtlSeconds = 60 * 5;
 
-  constructor(private readonly topicRepository: TopicRepository) { }
+  constructor(
+    private readonly topicRepository: TopicRepository,
+    private readonly redisService: RedisService,
+  ) { }
 
   private normalizeTopicName(name: string): string {
     return name.trim().replace(/\s+/g, " ").toLowerCase();
@@ -30,7 +33,7 @@ export class TopicService {
   async createOrIncrement(name: string) {
     const normalizedName = this.normalizeTopicName(name);
     const topic = await this.topicRepository.upsertByName(normalizedName);
-    await redisService.del(redisKey.topic.listNames());
+    await this.redisService.redis.del(redisKey.topic.listNames());
     return topic;
   }
 }

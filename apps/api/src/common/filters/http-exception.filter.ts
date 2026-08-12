@@ -1,14 +1,15 @@
-import {
-  ArgumentsHost,
-  BadRequestException as NestBadRequestException,
-  Catch,
-  ExceptionFilter,
-  HttpException as NestHttpException,
-} from '@nestjs/common';
-import { Prisma } from '@prisma/client';
 import type { HttpResponse } from '@/common/types/http.type';
 import { COMMON_MESSAGE } from '@/constants/message';
 import { HttpException } from '@/errors/error';
+import {
+  ArgumentsHost,
+  Catch,
+  ExceptionFilter,
+  Logger,
+  BadRequestException as NestBadRequestException,
+  HttpException as NestHttpException,
+} from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 
 type ValidationErrorResponse = {
   message?: string;
@@ -17,10 +18,12 @@ type ValidationErrorResponse = {
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
+  private readonly logger = new Logger(HttpExceptionFilter.name, { timestamp: true }); // Replace with your preferred logger
   catch(exception: unknown, host: ArgumentsHost): void {
     const response = host.switchToHttp().getResponse<HttpResponse>();
 
     if (exception instanceof HttpException) {
+      this.logger.error(exception.message);
       response.status(exception.statusCode).json({
         success: false,
         message: exception.message,
@@ -68,7 +71,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
       response.status(exception.getStatus()).json({ success: false, message });
       return;
     }
-
+    this.logger.error('Unhandled exception:', exception);
     response.status(500).json({
       success: false,
       message: COMMON_MESSAGE.INTERNAL_SERVER_ERROR,

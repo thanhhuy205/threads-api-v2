@@ -1,5 +1,6 @@
-import { configurationFactory } from '@/config/configuration';
 import { AccessTokenGuard } from '@/common/guards/access-token.guard';
+import { configurationFactory } from '@/config/configuration';
+import { RedisModule } from '@libs/cache/redis.module';
 import { DatabaseModule } from '@libs/database';
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
@@ -44,6 +45,7 @@ import { UserModule } from './modules/user/user.module';
       },
     }),
     DatabaseModule,
+    RedisModule,
     JwtModule,
     JobModule,
     AuthModule,

@@ -1,3 +1,5 @@
+import { buildCursorPagination, type CursorPaginationMeta } from '@/common/helpers/cursor-pagination.helper';
+import { NOTIFICATION_JOB_KEY } from "@/constants/queue";
 import { registerNotificationHandlers } from '@/modules/notification-group/events/notification.dispatcher';
 import { MentionNotification, ReplyNotification } from "@/modules/notification-group/events/notification.events";
 import type {
@@ -12,9 +14,8 @@ import { NotificationRepository } from "@/modules/notification-group/repository/
 import { PusherService } from "@/modules/pusher/service/pusher.service";
 import { FriendService } from '@/modules/user/service/friend.service';
 import { UserService } from "@/modules/user/service/user.service";
-import { redisService } from "@/providers/redis.provider";
+import { RedisService } from "@libs/cache/redis.service";
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { buildCursorPagination, type CursorPaginationMeta } from '@/common/helpers/cursor-pagination.helper';
 
 type NotificationGroupListRow = Awaited<
   ReturnType<NotificationRepository['findByRecipientId']>
@@ -33,7 +34,8 @@ export class NotificationService implements OnModuleInit {
     private readonly friendService: FriendService,
     private readonly pusherService: PusherService,
     private readonly userService: UserService,
-  ) {}
+    private readonly redisService: RedisService,
+  ) { }
 
   onModuleInit() {
     registerNotificationHandlers({
@@ -154,7 +156,7 @@ export class NotificationService implements OnModuleInit {
       `notification:pending:${recipientId}:${key}:${resolvedGroupKey}`;
 
     this.logger.log(`Handling pending notification for Redis key: ${redisKey}`);
-    const pipeline = redisService.multi();
+    const pipeline = this.redisService.redis.multi();
 
     const payload: PendingCommentNotificationRedisPayload = {
       key,
@@ -179,7 +181,7 @@ export class NotificationService implements OnModuleInit {
 
     await pipeline.exec();
 
-    await redisService.zAdd(NOTIFICATION_JOB_KEY.BATCH_SYNC_NOTIFICATION, {
+    await this.redisService.redis.zAdd(NOTIFICATION_JOB_KEY.BATCH_SYNC_NOTIFICATION, {
       score: Date.now() + 5000,
       value: redisKey,
     });
@@ -250,4 +252,4 @@ export class NotificationService implements OnModuleInit {
     await this.notificationRepository.markGroupAsRead(userId);
   }
 }
-import { NOTIFICATION_JOB_KEY } from "@/constants/queue";
+

@@ -14,6 +14,7 @@ import type { NewsFeedPayload } from "@/modules/post/interfaces/news-feed-payloa
 import { PostMapper } from "@/modules/post/mapper/post.mapper";
 import { FollowerService } from '@/modules/user/service/follower.service';
 import { RedisVersionService } from '@/shared/redis-version';
+import { RedisService } from '@libs/cache/redis.service';
 import { Injectable, Logger } from '@nestjs/common';
 import { primaryPostTypes } from "../constants/post-type";
 import { PostRepository } from "../repository/post.repository";
@@ -26,6 +27,7 @@ export class PostFeedService {
     private readonly postRepository: PostRepository,
     private readonly followerService: FollowerService,
     private readonly redisVersionService: RedisVersionService,
+    private readonly redisService: RedisService,
   ) { }
   async getNewsFeed({
     after,
@@ -59,6 +61,7 @@ export class PostFeedService {
           where,
           postRepository: this.postRepository,
           followerService: this.followerService,
+          redisService: this.redisService,
         }),
     );
   }
@@ -87,6 +90,7 @@ export class PostFeedService {
           }),
           postRepository: this.postRepository,
           followerService: this.followerService,
+          redisService: this.redisService,
         }),
     );
   }
@@ -113,6 +117,7 @@ export class PostFeedService {
           }),
           postRepository: this.postRepository,
           followerService: this.followerService,
+          redisService: this.redisService,
         }),
     );
   }
@@ -139,6 +144,7 @@ export class PostFeedService {
           }),
           postRepository: this.postRepository,
           followerService: this.followerService,
+          redisService: this.redisService,
         }),
     );
   }

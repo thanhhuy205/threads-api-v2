@@ -1,9 +1,9 @@
+import { PostRepository } from "@api/modules/post/repository/post.repository";
+import { LikeService } from "@api/modules/post/service/like-service.service";
+import { RedisService } from "@libs/cache/redis.service";
+import { LIKE_JOB_NAME, QUEUE_NAME } from "@libs/core/constants/queue";
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
-import { LikeService } from "@api/modules/post/service/like-service.service";
-import { PostRepository } from "@api/modules/post/repository/post.repository";
-import { LIKE_JOB_NAME, QUEUE_NAME } from "@libs/core/constants/queue";
-import { redisService } from "@libs/core/providers/redis.provider";
 import { Job } from 'bullmq';
 
 type LikeEvent = {
@@ -20,6 +20,7 @@ export class LikeWorker extends WorkerHost {
   constructor(
     private readonly postRepository: PostRepository,
     private readonly likeService: LikeService,
+    private readonly redisService: RedisService,
   ) {
     super();
   }
@@ -99,7 +100,7 @@ export class LikeWorker extends WorkerHost {
     key: string,
     count: number,
   ): Promise<LikeEvent[]> {
-    const elements = await redisService.rPopCount(key, count);
+    const elements = await this.redisService.redis.rPopCount(key, count);
     if (!elements) {
       return [];
     }
@@ -114,7 +115,7 @@ export class LikeWorker extends WorkerHost {
       return;
     }
 
-    await redisService.rPush(
+    await this.redisService.redis.rPush(
       QUEUE_NAME.POST_LIKE_EVENT_QUEUE,
       events
         .slice()

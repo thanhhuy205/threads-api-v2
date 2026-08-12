@@ -14,9 +14,9 @@ export const AUTH_MESSAGE = {
   GET_ME_SUCCESS: "Get me success",
   LOGOUT_SUCCESS: "Logout success",
   INVALID_CREDENTIALS: "Invalid credentials",
-  TOKEN_INVALID: "TOKEN_INVALID",
+  TOKEN_INVALID: "Login session is invalid or has expired. Please log in again.",
   USER_NOT_FOUND: "User not found",
-  USER_BANNED: "USER_BANNED",
+  USER_BANNED: "User is banned",
 } as const;
 
 export const AUTH_ERROR_MESSAGE = {

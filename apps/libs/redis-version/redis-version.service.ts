@@ -1,18 +1,20 @@
+import { RedisService } from '@libs/cache/redis.service';
 import { Injectable } from '@nestjs/common';
-import { redisService } from '@libs/core/providers/redis.provider';
 
 @Injectable()
 export class RedisVersionService {
+  constructor(private readonly redisService: RedisService) {}
+
   private getCacheName(namespace: string) {
     return `${namespace}:version`;
   }
 
   private async getCurrentVersion(namespace: string) {
     const cacheName = this.getCacheName(namespace);
-    const version = await redisService.get(cacheName);
+    const version = await this.redisService.redis.get(cacheName);
 
     if (!version) {
-      await redisService.set(cacheName, '1');
+      await this.redisService.redis.set(cacheName, '1');
       return '1';
     }
 
@@ -21,7 +23,7 @@ export class RedisVersionService {
 
   private async getCacheVersionValue<T>(namespace: string): Promise<T | null> {
     const version = await this.getCurrentVersion(namespace);
-    const cached = await redisService.get(`${namespace}:data:v${version}`);
+    const cached = await this.redisService.redis.get(`${namespace}:data:v${version}`);
     if (!cached) return null;
 
     try {
@@ -33,11 +35,11 @@ export class RedisVersionService {
 
   private async setCacheVersionValue<T>(namespace: string, data: T, ttlSeconds: number) {
     const version = await this.getCurrentVersion(namespace);
-    await redisService.set(`${namespace}:data:v${version}`, JSON.stringify(data), { EX: ttlSeconds });
+    await this.redisService.redis.set(`${namespace}:data:v${version}`, JSON.stringify(data), { EX: ttlSeconds });
   }
 
   async bumpPostListCacheVersion(namespace: string) {
-    await redisService.incr(this.getCacheName(namespace));
+    await this.redisService.redis.incr(this.getCacheName(namespace));
   }
 
   async wrapperCacheVersion<T>(namespace: string, ttlSeconds: number, factory: () => Promise<T>): Promise<T> {

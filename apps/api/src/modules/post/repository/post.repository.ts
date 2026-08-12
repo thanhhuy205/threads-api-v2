@@ -1,5 +1,3 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from '@/shared/database/prisma.service';
 import type {
   CreatePostPayload
 } from "@/modules/post/interfaces/create-post-payload";
@@ -7,6 +5,8 @@ import {
   postFeedSelect,
   postSelectRepository,
 } from "@/modules/post/selector/post.selector";
+import { PrismaService } from '@/shared/database/prisma.service';
+import { Injectable, Logger } from '@nestjs/common';
 import {
   InteractionType,
   PostType,
@@ -14,8 +14,8 @@ import {
   ReplyPermission,
   VisibilityPost
 } from "@prisma/client";
-import { UpdatePostDto } from "../dto/post.dto";
 import { primaryPostTypes } from "../constants/post-type";
+import { UpdatePostDto } from "../dto/post.dto";
 import { UserSnapshot } from "../mapper/post.mapper";
 
 
@@ -46,7 +46,7 @@ type CreateRepostPayload = {
 export class PostRepository {
   private readonly logger = new Logger(PostRepository.name, { timestamp: true });
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
   private buildFeedSelect(userId?: string | null): typeof postFeedSelect {
     const select: Prisma.PostSelect = {
       ...postFeedSelect,
@@ -330,7 +330,6 @@ export class PostRepository {
         ...this.baseData(
           {
             ...payload,
-            title: "",
             content: payload.content ?? "",
             visibility: payload.visibility ?? VisibilityPost.PUBLIC,
             replyPermission: payload.replyPermission ?? ReplyPermission.EVERYONE,

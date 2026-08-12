@@ -1,7 +1,7 @@
 import { redisKey } from "@/constants/resolve-key/redis-key";
 import { ConflictException } from "@/errors/error";
-import { redisService } from "@/providers/redis.provider";
 import { TransactionService } from "@/shared/transaction/transaction.service";
+import { RedisService } from "@libs/cache/redis.service";
 import { Injectable } from '@nestjs/common';
 import { VoteRepository } from "../repository/vote.repository";
 import { PollService } from "./poll.service";
@@ -20,13 +20,14 @@ export class VoteService {
     private readonly voteRepository: VoteRepository,
     private readonly pollService: PollService,
     private readonly transactionService: TransactionService,
-  ) {}
+    private readonly redisService: RedisService,
+  ) { }
 
   async createVote(payload: CreateVotePayload) {
     const lockKey = redisKey.poll.voteLock(payload.userId, payload.pollOptionId);
     const countVoteKey = redisKey.poll.countVote(payload.pollId);
-    await redisService.sAdd(redisKey.poll.dirtySurveys(), String(payload.pollId));
-    const locked = await redisService.set(lockKey, "1", {
+    await this.redisService.redis.sAdd(redisKey.poll.dirtySurveys(), String(payload.pollId));
+    const locked = await this.redisService.redis.set(lockKey, "1", {
       NX: true,
       EX: this.voteLockTtlSeconds,
     });
@@ -60,18 +61,18 @@ export class VoteService {
       return result;
     });
     let votesCount = 0;
-    const exists = await redisService.exists(countVoteKey);
+    const exists = await this.redisService.redis.exists(countVoteKey);
     if (!exists) {
       const totalVotes = await this.pollService.getCountVoted(payload.pollId);
       votesCount = totalVotes.count;
-      await redisService.set(countVoteKey, String(votesCount), {
+      await this.redisService.redis.set(countVoteKey, String(votesCount), {
         EX: 24 * 60 * 60, // 24 hours
 
       });
     } else {
-      votesCount = await redisService.incr(countVoteKey);
+      votesCount = await this.redisService.redis.incr(countVoteKey);
     }
-    await redisService.del(lockKey);
+    await this.redisService.redis.del(lockKey);
 
     return {
       totalVotes: votesCount,

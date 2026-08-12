@@ -1,6 +1,6 @@
-import { Transform, Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { PostType, ReplyPermission, VisibilityPost } from '@prisma/client';
+import { ReplyPermission, VisibilityPost } from '@prisma/client';
+import { Transform, Type } from 'class-transformer';
 import {
   ArrayMaxSize,
   ArrayMinSize,
@@ -11,12 +11,10 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
-  Max,
   MaxLength,
-  Min,
   MinLength,
   ValidateIf,
-  ValidateNested,
+  ValidateNested
 } from 'class-validator';
 import { creatablePostTypes } from '../constants/post-type';
 
@@ -53,13 +51,6 @@ export class PostMediaDto {
 }
 
 export class CreatePostDto {
-  @ApiProperty({ example: 'Hello Threads' })
-  @IsString()
-  @Transform(({ value }) => typeof value === 'string' ? value.trim() : value)
-  @MinLength(1, { message: 'Title must be at least 1 character' })
-  @MaxLength(255, { message: 'Title must be at most 255 characters' })
-  title!: string;
-
   @ApiPropertyOptional({ maxLength: 5000 })
   @IsOptional()
   @IsString()
