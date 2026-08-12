@@ -346,15 +346,15 @@ export class AuthService {
   }
 
   async me(userId: string): Promise<AuthMeResponseDto | null> {
-    const cacheKey = redisKey.auth.me(userId);
-    const cached = await redisService.get(cacheKey);
-    if (cached) {
-      try {
-        return JSON.parse(cached) as AuthMeResponseDto;
-      } catch {
-        // Ignore malformed cache and rebuild from the database.
-      }
-    }
+    // const cacheKey = redisKey.auth.me(userId);
+    // const cached = await redisService.get(cacheKey);
+    // if (cached) {
+    //   try {
+    //     return JSON.parse(cached) as AuthMeResponseDto;
+    //   } catch {
+    //     // Ignore malformed cache and rebuild from the database.
+    //   }
+    // }
 
     const user = await this.userRepository.findById(userId);
     if (!user) {
@@ -366,9 +366,9 @@ export class AuthService {
       user,
     });
 
-    await redisService.set(cacheKey, JSON.stringify(response), {
-      EX: 30,
-    });
+    // await redisService.set(cacheKey, JSON.stringify(response), {
+    //   EX: 30,
+    // });
 
     return response;
   }

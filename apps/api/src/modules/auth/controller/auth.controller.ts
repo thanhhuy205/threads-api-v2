@@ -1,3 +1,13 @@
+import { IsPublic } from '@/common/decorators/is-public.decorator';
+import { Message } from '@/common/decorators/message.decorator';
+import { RefreshTokenHeaderGuard } from '@/common/guards/refresh-token-header.guard';
+import type { HttpRequest as Request } from '@/common/types/http.type';
+import configService from '@/config/config';
+import { AUTH_MESSAGE } from '@/constants/message';
+import {
+  NotFoundException,
+  UnauthorizedException,
+} from '@/errors/error';
 import {
   Body,
   Controller,
@@ -5,6 +15,7 @@ import {
   Headers,
   HttpCode,
   HttpStatus,
+  Logger,
   Post,
   Query,
   Req,
@@ -17,16 +28,6 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import type { HttpRequest as Request } from '@/common/types/http.type';
-import configService from '@/config/config';
-import { Message } from '@/common/decorators/message.decorator';
-import { IsPublic } from '@/common/decorators/is-public.decorator';
-import { RefreshTokenHeaderGuard } from '@/common/guards/refresh-token-header.guard';
-import { AUTH_MESSAGE } from '@/constants/message';
-import {
-  NotFoundException,
-  UnauthorizedException,
-} from '@/errors/error';
 import { ForgotPasswordDto } from '../dto/request/forgot-password.request.dto';
 import { LoginDto } from '../dto/request/login.request.dto';
 import { RegisterDto } from '../dto/request/register.request.dto';
@@ -40,7 +41,8 @@ import { AuthService } from '../service/auth.service';
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  private readonly logger = new Logger(AuthController.name);
+  constructor(private readonly authService: AuthService) { }
 
   @Post('register')
   @IsPublic()
@@ -64,6 +66,8 @@ export class AuthController {
     if (!user) {
       throw new UnauthorizedException(AUTH_MESSAGE.INVALID_CREDENTIALS);
     }
+    this.logger.log(`User ${user.user.username} logged in successfully from IP ${request.ip}`);
+    this.logger.debug(user);
     return user;
   }
 
@@ -209,6 +213,7 @@ export class AuthController {
   }
 
   private userId(request: Request): string {
+    console.log(request.user);
     const userId = request.user?.sub;
     if (!userId) {
       throw new UnauthorizedException(AUTH_MESSAGE.TOKEN_INVALID);

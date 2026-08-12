@@ -11,7 +11,7 @@ export class AccessTokenGuard implements CanActivate {
   constructor(
     private readonly jwtService: JwtService,
     private readonly reflector: Reflector,
-  ) {}
+  ) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
@@ -21,9 +21,10 @@ export class AccessTokenGuard implements CanActivate {
     if (isPublic) {
       return true;
     }
-
+    console.log('AccessTokenGuard: Checking access token...');
     const request = context.switchToHttp().getRequest<HttpRequest>();
     const header = request.headers.authorization;
+    console.log('AccessTokenGuard: Authorization header:', header);
     if (typeof header !== 'string') {
       throw new UnauthorizedException(AUTH_MESSAGE.TOKEN_INVALID);
     }
