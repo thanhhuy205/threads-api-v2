@@ -5,7 +5,6 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from "@prisma/client";
 import type { UpdateProfileDto } from "../dto/request/update-profile.request.dto";
 import { mapUserProfileForFE } from "../mapper/user.mapper";
-import { FollowRepository } from "../repository/follow.repository";
 
 type GetNetworkUsernamesInput = {
   query: string;
@@ -15,7 +14,6 @@ type GetNetworkUsernamesInput = {
 export class UserService {
   constructor(
     private readonly userRepository: UserRepository,
-    private readonly followRepository: FollowRepository,
     private readonly redisService: RedisService,
   ) { }
 
@@ -50,17 +48,13 @@ export class UserService {
   }
 
   async getMyStatusProfile(userId: string) {
-    const [user, followingCount] = await Promise.all([
-      this.userRepository.findStatusProfileById(userId),
-      this.followRepository.countActiveFollowing(userId),
-    ]);
+    const user = await this.userRepository.findStatusProfileById(userId);
 
     if (!user) {
       return null;
     }
 
     return {
-      isSuccessFollow: followingCount >= 10,
       isSuccessBio: user.bio !== null,
       isSuccessAvatar: user.avatar !== null && user.avatar !== "",
     };
@@ -91,16 +85,7 @@ export class UserService {
       });
     }
 
-    const [requestUser, follower] = await Promise.all([
-      this.userRepository.findUserRequestFriend(userId, user.id),
-      this.userRepository.findUserFollowing(userId, user.id),
-    ]);
-
-    return mapUserProfileForFE({
-      ...user,
-      ...requestUser,
-      ...follower,
-    });
+    return mapUserProfileForFE(user);
   }
 
   async findExistingIds(userIds: string[]) {

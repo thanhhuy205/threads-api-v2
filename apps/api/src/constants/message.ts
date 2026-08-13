@@ -51,18 +51,8 @@ export const HEALTH_MESSAGE = {
 } as const;
 
 export const USER_MESSAGE = {
-  GET_FOLLOWERS_SUCCESS: "Get followers success",
-  FOLLOW_SUCCESS: "Follow success",
-  UNFOLLOW_SUCCESS: "Unfollow success",
-  FRIEND_REQUEST_SENT: "Send request",
-  FRIEND_REQUEST_PROCESSED: "Friend request processed",
   USER_NOT_FOUND: "User not found",
   GET_USER_SUCCESS: "User fetched successfully",
-  FRIEND_REQUEST_NOT_FOUND: "Friend request not found",
-  GET_RECEIVED_FRIEND_REQUESTS_SUCCESS:
-    "Received friend requests fetched successfully",
-  GET_SENT_FRIEND_REQUESTS_SUCCESS: "Sent friend requests fetched successfully",
-  GET_FOLLOWING_SUCCESS: "Get following success",
 } as const;
 
 export const POST_MESSAGE = {

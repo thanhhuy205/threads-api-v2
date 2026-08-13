@@ -257,8 +257,8 @@ export class PostRepository {
       content: payload.content,
       userId: payload.userId,
       type: payload.type ?? PostType.POST,
-      replyPermission: payload.replyPermission ?? ReplyPermission.EVERYONE,
-      visibility: payload.visibility ?? VisibilityPost.PUBLIC,
+      replyPermission: ReplyPermission.EVERYONE,
+      visibility: VisibilityPost.WORKSPACE,
       userSnapshot,
       isSurvey: Boolean(payload.isSurvey || payload.polls?.length),
       poll: this.createPoll(payload.polls),
@@ -292,7 +292,12 @@ export class PostRepository {
 
   async createReply(
     payload: RepositoryCreatePostPayload,
-    parent: { id: number; publicId: string },
+    parent: {
+      id: number;
+      publicId: string;
+      rootId: number;
+      rootPublicId: string;
+    },
     userSnapshot: UserSnapshot,
     tx: Prisma.TransactionClient = this.prisma,
   ) {
@@ -301,7 +306,9 @@ export class PostRepository {
         ...this.baseData(payload, userSnapshot),
         parentId: parent.id,
         parentPublicId: parent.publicId,
-        type: PostType.REPLY,
+        rootPostId: parent.rootId,
+        rootPublicId: parent.rootPublicId,
+        type: PostType.POST,
       },
       select: postSelectRepository,
     });
@@ -331,15 +338,13 @@ export class PostRepository {
           {
             ...payload,
             content: payload.content ?? "",
-            visibility: payload.visibility ?? VisibilityPost.PUBLIC,
-            replyPermission: payload.replyPermission ?? ReplyPermission.EVERYONE,
             contentJson: "",
           },
           userSnapshot,
         ),
         originPublicId: originPublicId,
-        isQuote: true,
-        type: PostType.REPOST,
+        isQuote: false,
+        type: PostType.POST,
         originPostId: originPostId,
       },
       select: postSelectRepository,
@@ -368,7 +373,7 @@ export class PostRepository {
       data: {
         ...this.baseData(payload, userSnapshot),
         isQuote: true,
-        type: PostType.QUOTE,
+        type: PostType.POST,
         originPostId,
         originPublicId,
       },
@@ -523,7 +528,6 @@ export class PostRepository {
       where: { publicId },
       data: {
         content: payload.content,
-        visibility: payload.visibility,
       },
       select: {
         publicId: true,
@@ -592,7 +596,7 @@ export class PostRepository {
       WHERE MATCH(p.content) AGAINST (${q} IN BOOLEAN MODE)
         AND p.type IN (${Prisma.join(primaryPostTypes)})
         AND p.deleted_at IS NULL
-        AND p.visibility = ${VisibilityPost.PUBLIC}
+        AND p.visibility = ${VisibilityPost.WORKSPACE}
         AND (
           ${cursor} IS NULL
           OR p.created_at < cursor_post.created_at
@@ -614,7 +618,7 @@ export class PostRepository {
         },
         type: { in: [...primaryPostTypes] },
         deletedAt: null,
-        visibility: VisibilityPost.PUBLIC,
+        visibility: VisibilityPost.WORKSPACE,
         ...(userId
           ? {
             postInteractions: {

@@ -6,7 +6,6 @@ export const QUEUE_NAME = {
   AUTO_REMOVE_BAN_QUEUE: "auto_remove_ban_queue",
   POST_LIKE_EVENT_QUEUE: "likes_events",
   EVALUATION_QUEUE: "evaluation_queue",
-  FRIEND_REQUEST_QUEUE: "friend_request_queue",
   HLS_QUEUE: "hls_queue",
   VIDEO_QUEUE: "video_queue",
   SURVEY_SYNC_QUEUE: "survey_sync_queue",
@@ -45,7 +44,6 @@ export const AUTO_REMOVE_BAN_JOB_NAME = {
 export const NOTIFICATION_JOB_NAME = {
   INIT_SYNC_NOTIFICATION_BATCH: "initSyncNotificationBatch",
   BATCH_SYNC_NOTIFICATION: "batchSyncNotification",
-  REALTIME_FRIEND_REQUEST_NOTIFICATION: "realtimeFriendRequestNotification",
 };
 
 export const NOTIFICATION_JOB_KEY = {

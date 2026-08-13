@@ -23,8 +23,6 @@ export type PostFeedItem = Prisma.PostGetPayload<{
   postInteractions?: {
     userId: string;
   }[];
-  isFollowingAuthor?: boolean;
-  isFollowedByAuthor?: boolean;
 };
 
 export type PostFeedResponse = Omit<
@@ -40,8 +38,9 @@ export type PostFeedResponse = Omit<
   isLikedByAuth: boolean;
   isRepostByAuth: boolean;
   isSavedByAuth: boolean;
-  isFollowingAuthor: boolean;
-  isFollowedByAuthor: boolean;
+  isReply: boolean;
+  isRepost: boolean;
+  isQuote: boolean;
   repliesCount: number;
   repostsCountAndQuoteCount: number;
   topics: string[];
@@ -124,12 +123,12 @@ export class PostMapper {
       publicId: post.publicId,
       content: post.content,
       type: post.type,
-      visibility: post.visibility,
       parentId: post.parentId,
+      parentPublicId: post.parentPublicId,
       originPostId: post.originPostId,
       rootPostId: post.rootPostId,
+      rootPublicId: post.rootPublicId,
       userSnapshot: post.userSnapshot,
-      replyPermission: post.replyPermission,
       likesCount: post.likesCount,
       repliesCount,
       repostsCountAndQuoteCount,
@@ -149,8 +148,9 @@ export class PostMapper {
       isRepostByAuth: Boolean(
         userId && post.derivatives && post.derivatives.length > 0,
       ),
-      isFollowingAuthor: post.isFollowingAuthor ?? false,
-      isFollowedByAuthor: post.isFollowedByAuthor ?? false,
+      isReply: post.parentId !== null,
+      isRepost: post.originPostId !== null && !post.isQuote,
+      isQuote: post.originPostId !== null && post.isQuote,
       isSavedByAuth,
     };
   }

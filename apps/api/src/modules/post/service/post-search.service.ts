@@ -1,5 +1,4 @@
 import { PostMapper } from "@/modules/post/mapper/post.mapper";
-import { FollowerService } from '@/modules/user/service/follower.service';
 import { Injectable } from '@nestjs/common';
 import { PostRepository } from "../repository/post.repository";
 
@@ -7,7 +6,6 @@ import { PostRepository } from "../repository/post.repository";
 export class PostSearchService {
   constructor(
     private readonly postRepository: PostRepository,
-    private readonly followerService: FollowerService,
   ) { }
   async search(query: {
     q: string;
@@ -47,27 +45,6 @@ export class PostSearchService {
       userId,
     });
 
-    const authorIds = [...new Set(posts.map((post) => post.userId))];
-    const following = await this.followerService.getUserFollowingPostByAuth(
-      userId ?? "",
-      authorIds,
-    );
-    const followers = await this.followerService.getUserFollowersByAuth(
-      userId ?? "",
-      authorIds,
-    );
-    const followingSet = new Set(following.map((row) => row.followingId));
-    const followerSet = new Set(followers.map((row) => row.userId));
-
-    return posts.map((post) =>
-      PostMapper.toFeedResponse(
-        {
-          ...post,
-          isFollowingAuthor: followingSet.has(post.userId),
-          isFollowedByAuthor: followerSet.has(post.userId),
-        },
-        userId,
-      ),
-    );
+    return posts.map((post) => PostMapper.toFeedResponse(post, userId));
   }
 }

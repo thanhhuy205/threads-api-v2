@@ -1,10 +1,8 @@
-import { NewFeedType } from "@/modules/post/enum";
 import {
   buildNewFeedWhere,
   buildPostListNamespace,
   buildQuoteWhere,
   buildRepliesWhere,
-  buildUserPostsWhere,
   paginatePosts,
   postListCacheTtlSeconds,
 } from "@/modules/post/helper";
@@ -12,11 +10,9 @@ import type { GetPostWithPublicId } from "@/modules/post/interfaces/get-post-wit
 import type { GetPostWithUser } from "@/modules/post/interfaces/get-post-with-user";
 import type { NewsFeedPayload } from "@/modules/post/interfaces/news-feed-payload";
 import { PostMapper } from "@/modules/post/mapper/post.mapper";
-import { FollowerService } from '@/modules/user/service/follower.service';
 import { RedisVersionService } from '@/shared/redis-version';
 import { RedisService } from '@libs/cache/redis.service';
 import { Injectable, Logger } from '@nestjs/common';
-import { primaryPostTypes } from "../constants/post-type";
 import { PostRepository } from "../repository/post.repository";
 
 @Injectable()
@@ -25,7 +21,6 @@ export class PostFeedService {
 
   constructor(
     private readonly postRepository: PostRepository,
-    private readonly followerService: FollowerService,
     private readonly redisVersionService: RedisVersionService,
     private readonly redisService: RedisService,
   ) { }
@@ -33,22 +28,16 @@ export class PostFeedService {
     after,
     take,
     userId,
-    feedType = NewFeedType.FOR_YOU,
   }: NewsFeedPayload) {
-    const where = buildNewFeedWhere({
-      after,
-      userId,
-      feedType,
-    });
+    const where = buildNewFeedWhere();
     this.logger.log(
-      `Getting news feed for user ${JSON.stringify(userId)} with feed type ${JSON.stringify(feedType)}. Generated where clause: ${JSON.stringify(where)}`,
+      `Getting news feed for user ${JSON.stringify(userId)}. Generated where clause: ${JSON.stringify(where)}`,
     );
     const namespace = buildPostListNamespace({
       scope: "news-feed",
       after,
       take,
       userId,
-      extra: feedType,
     });
     return this.redisVersionService.wrapperCacheVersion(
       namespace,
@@ -60,7 +49,6 @@ export class PostFeedService {
           take,
           where,
           postRepository: this.postRepository,
-          followerService: this.followerService,
           redisService: this.redisService,
         }),
     );
@@ -83,13 +71,8 @@ export class PostFeedService {
           after,
           take,
           userId,
-          where: buildUserPostsWhere({
-            after,
-            userId,
-            postTypes: primaryPostTypes,
-          }),
+          where: { userId, parentId: null, originPostId: null },
           postRepository: this.postRepository,
-          followerService: this.followerService,
           redisService: this.redisService,
         }),
     );
@@ -116,7 +99,6 @@ export class PostFeedService {
             publicId,
           }),
           postRepository: this.postRepository,
-          followerService: this.followerService,
           redisService: this.redisService,
         }),
     );
@@ -143,7 +125,6 @@ export class PostFeedService {
             userId,
           }),
           postRepository: this.postRepository,
-          followerService: this.followerService,
           redisService: this.redisService,
         }),
     );

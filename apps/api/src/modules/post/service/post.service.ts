@@ -1,10 +1,12 @@
 import { NotFoundException } from "@/errors/error";
 import { dispatchReplyNotification } from "@/modules/notification-group/events/notification.dispatcher";
 import type { CreatePostPayload } from "@/modules/post/interfaces/create-post-payload";
-import { Injectable, Logger } from '@nestjs/common';
-import { PostBuilder } from "../builder/post.builder";
-import { CreatePostDto } from '../dto/request';
-import { PostRecord, PostRepository } from "../repository/post.repository";
+import { UserService } from "@/modules/user/service/user.service";
+import { PrismaService } from "@/shared/database/prisma.service";
+import { Injectable, Logger } from "@nestjs/common";
+import { PostMapper } from "../mapper/post.mapper";
+import { PostRepository } from "../repository/post.repository";
+import { PostMentionService } from "./post-mention.service";
 import { PostMetaService } from "./post-meta.service";
 
 @Injectable()
@@ -12,170 +14,135 @@ export class PostService {
   private readonly logger = new Logger(PostService.name, { timestamp: true });
 
   constructor(
-    private readonly postBuilder: PostBuilder,
+    private readonly prisma: PrismaService,
+    private readonly userService: UserService,
     private readonly postRepository: PostRepository,
+    private readonly postMentionService: PostMentionService,
     private readonly postMetaService: PostMetaService,
-  ) { }
+  ) {}
+
   async create(payload: CreatePostPayload) {
-
-    this.logger.log(`Creating post for user ${payload.userId} with content: ${payload.content}`);
-    const builder = this.postBuilder.fork().user(payload.userId)
-      .replyPermission(payload.replyPermission)
-      .visibility(payload.visibility)
-      .mentions(payload.mentions);
-
-    const { snapshot, options, mentionIds } = await builder.build();
-
-    const post = await builder.createPost(
-      () => this.postRepository.create({ ...payload, ...options }, snapshot),
-      { topic: payload.topic, mentionIds },
-    );
-
-    await this.postMetaService.finalizePostCreation({
-      mentionNotification: {
+    const { snapshot, mentionIds } = await this.resolveAuthorAndMentions(payload);
+    const post = await this.prisma.$transaction(async (tx) => {
+      const created = await this.postRepository.create(payload, snapshot, tx);
+      await this.postMetaService.attachPostMeta(tx, created.id!, {
+        topic: payload.topic,
         mentionIds,
-        actorId: payload.userId,
-        username: snapshot.username,
-        avatar: snapshot.avatar,
-        targetPostId: post.publicId,
-        originPostId: post.publicId,
-        postOwnerId: payload.userId,
-        content: payload.content,
-      },
+      });
+      return created;
     });
+    await this.finalizeCreation(post, payload, snapshot, mentionIds, post.publicId, payload.userId);
     return post;
   }
 
-  async reply(publicId: string, payload: CreatePostDto & { userId: string }) {
-    const builder = this.postBuilder.fork().user(payload.userId)
-      .replyPermission(payload.replyPermission)
-      .visibility(payload.visibility)
-      .mentions(payload.mentions)
-      .existPost(publicId);
-
-    const { snapshot, options, mentionIds, existPost } = await builder.build();
-    if (!existPost) {
-      throw new NotFoundException("Origin post not found");
-    }
-    const post = await builder.createPost(
-      () =>
-        this.postRepository.createReply(
-          { ...payload, ...options },
-          {
-            id: existPost.id,
-            publicId: existPost.publicId,
-          },
-          snapshot,
-        ),
-      { topic: payload.topic, mentionIds },
-    );
-    this.logger.log("Created reply post, adding notification group");
-    await Promise.all([
-      !mentionIds.length
-        ? dispatchReplyNotification({
-          replyContent: payload.content,
-          actorId: payload.userId,
-          recipientId: existPost.userId,
-          targetPostId: post.publicId,
-          lastActorId: payload.userId,
-          lastActor: {
-            id: payload.userId,
-            username: snapshot.username,
-            avatar: snapshot.avatar,
-          },
-          originPostId: existPost.publicId,
-          postOwnerId: existPost.userId,
-          username: snapshot.username,
-          avatar: snapshot.avatar,
-        })
-        : undefined,
-      this.postMetaService.finalizePostCreation({
-        mentionNotification: {
-          mentionIds,
-          actorId: payload.userId,
-          username: snapshot.username,
-          avatar: snapshot.avatar,
-          targetPostId: post.publicId,
-          originPostId: existPost.publicId,
-          postOwnerId: existPost.userId,
-          content: payload.content,
-        },
-      }),
+  async reply(publicId: string, payload: CreatePostPayload) {
+    const [parent, author] = await Promise.all([
+      this.postRepository.findByPublicId(publicId),
+      this.resolveAuthorAndMentions(payload),
     ]);
-    return {
-      publicId: post.publicId,
-      content: post.content!,
-      userId: post.userId,
-      type: post.type,
-      visibility: post.visibility,
-      createdAt: post.createdAt,
-    } as PostRecord;
+    if (!parent) throw new NotFoundException("Origin post not found");
+
+    const post = await this.prisma.$transaction(async (tx) => {
+      const created = await this.postRepository.createReply(
+        payload,
+        {
+          id: parent.id,
+          publicId: parent.publicId,
+          rootId: parent.rootPostId ?? parent.id,
+          rootPublicId: parent.rootPublicId ?? parent.publicId,
+        },
+        author.snapshot,
+        tx,
+      );
+      await this.postMetaService.attachPostMeta(tx, created.id!, {
+        topic: payload.topic,
+        mentionIds: author.mentionIds,
+      });
+      return created;
+    });
+
+    await this.finalizeCreation(
+      post,
+      payload,
+      author.snapshot,
+      author.mentionIds,
+      parent.rootPublicId ?? parent.publicId,
+      parent.userId,
+      true,
+    );
+    return post;
   }
 
   async repost(publicId: string, userId: string) {
-    const { snapshot, originPost, resolvedOriginPostId, resolvedOriginPublicId } =
-      await this.postBuilder.fork().user(userId).originPost(publicId).build();
-    if (
-      !originPost ||
-      resolvedOriginPostId === undefined ||
-      resolvedOriginPublicId === undefined
-    ) {
-      throw new NotFoundException("Origin post not found");
-    }
+    const [origin, author] = await Promise.all([
+      this.postRepository.findOriginReferenceByPublicId(publicId),
+      this.resolveAuthorAndMentions({ userId }),
+    ]);
+    if (!origin) throw new NotFoundException("Origin post not found");
 
-    const post = await this.postRepository.createRepost(
-      { userId },
-      resolvedOriginPublicId,
-      snapshot,
-      resolvedOriginPostId,
+    const post = await this.prisma.$transaction((tx) =>
+      this.postRepository.createRepost(
+        { userId },
+        origin.originPublicId ?? origin.publicId,
+        author.snapshot,
+        origin.originPostId ?? origin.id,
+        tx,
+      ),
     );
-
-    await this.postMetaService.finalizePostCreation({
-    });
-    return {
-      publicId: post.publicId,
-      content: post.content,
-      userId: post.userId,
-      type: post.type,
-      visibility: post.visibility,
-      createdAt: post.createdAt,
-    } as PostRecord;
+    await this.postMetaService.finalizePostCreation({});
+    return post;
   }
 
-  async quote(publicId: string, payload: CreatePostDto & { userId: string }) {
-    const builder = this.postBuilder.fork().user(payload.userId)
-      .replyPermission(payload.replyPermission)
-      .visibility(payload.visibility)
-      .mentions(payload.mentions)
-      .originPost(publicId);
+  async quote(publicId: string, payload: CreatePostPayload) {
+    const [origin, author] = await Promise.all([
+      this.postRepository.findOriginReferenceByPublicId(publicId),
+      this.resolveAuthorAndMentions(payload),
+    ]);
+    if (!origin) throw new NotFoundException("Origin post not found");
 
-    const {
-      snapshot,
-      options,
-      mentionIds,
-      originPost,
-      resolvedOriginPostId,
-      resolvedOriginPublicId,
-    } = await builder.build();
-    if (
-      !originPost ||
-      resolvedOriginPostId === undefined ||
-      resolvedOriginPublicId === undefined
-    ) {
-      throw new NotFoundException("Origin post not found");
-    }
-
-    const post = await builder.createPost(
-      () =>
-        this.postRepository.createQuote(
-          { ...payload, ...options },
-          resolvedOriginPublicId,
-          snapshot,
-          resolvedOriginPostId,
-        ),
-      { topic: payload.topic, mentionIds },
+    const post = await this.prisma.$transaction(async (tx) => {
+      const created = await this.postRepository.createQuote(
+        payload,
+        origin.originPublicId ?? origin.publicId,
+        author.snapshot,
+        origin.originPostId ?? origin.id,
+        tx,
+      );
+      await this.postMetaService.attachPostMeta(tx, created.id!, {
+        topic: payload.topic,
+        mentionIds: author.mentionIds,
+      });
+      return created;
+    });
+    await this.finalizeCreation(
+      post,
+      payload,
+      author.snapshot,
+      author.mentionIds,
+      origin.originPublicId ?? origin.publicId,
+      origin.userId,
     );
+    return post;
+  }
 
+  private async resolveAuthorAndMentions(payload: Pick<CreatePostPayload, "userId" | "mentions">) {
+    const [user, mentionIds] = await Promise.all([
+      this.userService.findByUserId(payload.userId),
+      this.postMentionService.validateMentions(payload.mentions),
+    ]);
+    if (!user) throw new NotFoundException("User not found");
+    return { snapshot: PostMapper.toUserSnapshot(user), mentionIds };
+  }
+
+  private async finalizeCreation(
+    post: { publicId: string },
+    payload: CreatePostPayload,
+    snapshot: ReturnType<typeof PostMapper.toUserSnapshot>,
+    mentionIds: string[],
+    originPostId: string,
+    postOwnerId: string,
+    isReply = false,
+  ) {
     await this.postMetaService.finalizePostCreation({
       mentionNotification: {
         mentionIds,
@@ -183,27 +150,25 @@ export class PostService {
         username: snapshot.username,
         avatar: snapshot.avatar,
         targetPostId: post.publicId,
-        originPostId: resolvedOriginPublicId,
-        postOwnerId: originPost.userId,
+        originPostId,
+        postOwnerId,
         content: payload.content,
       },
     });
-    return {
-      publicId: post.publicId,
-      content: post.content,
-      userId: payload.userId,
-      type: post.type,
-      visibility: post.visibility,
-      createdAt: new Date().toISOString(),
-    } as PostRecord;
+    if (isReply && !mentionIds.length && payload.userId !== postOwnerId) {
+      await dispatchReplyNotification({
+        replyContent: payload.content,
+        actorId: payload.userId,
+        recipientId: postOwnerId,
+        targetPostId: post.publicId,
+        lastActorId: payload.userId,
+        lastActor: { id: payload.userId, username: snapshot.username, avatar: snapshot.avatar },
+        originPostId,
+        postOwnerId,
+        username: snapshot.username,
+        avatar: snapshot.avatar,
+      });
+    }
+    this.logger.log(`${isReply ? "Reply" : "Post"} created: ${post.publicId}`);
   }
-
-  increaseLikeCount(publicId: string, count: number) {
-    return this.postRepository.increaseLikeCount(publicId, count);
-  }
-
-  decreaseLikeCount(publicId: string, count: number) {
-    return this.postRepository.decreaseLikeCount(publicId, count);
-  }
-
 }

@@ -1,5 +1,4 @@
-import { NewFeedType } from "@/modules/post/enum";
-import { FriendRequestStatus, PostType, Prisma, VisibilityPost } from "@prisma/client";
+import { PostType, Prisma, VisibilityPost } from "@prisma/client";
 
 type PostCursorInfo = {
     id: number;
@@ -14,13 +13,6 @@ type BuildUserPostsWhereOptions = {
     excludeReplies?: boolean;
 }
 
-type BuildNewFeedWhereOptions = {
-    after?: string | null;
-    cursorInfo?: PostCursorInfo | null;
-    userId: string | null;
-    feedType: NewFeedType;
-};
-
 type BuildRepliesWhereOptions = {
     after?: string | null;
     cursorInfo?: PostCursorInfo | null;
@@ -33,61 +25,12 @@ type BuildQuoteWhereOptions = {
     userId: string;
 };
 
-export const buildNewFeedWhere = ({
-    userId,
-    feedType
-}: BuildNewFeedWhereOptions) => {
-    const where: Prisma.PostWhereInput = {
-        type: {
-            notIn: [PostType.REPLY, PostType.QUOTE, PostType.REPOST],
-        },
-        visibility: {
-            notIn: [VisibilityPost.FRIEND, VisibilityPost.PRIVATE]
-        },
-    };
-
-    if (feedType === NewFeedType.FOLLOWING && userId) {
-        return ({
-            ...where,
-            user: {
-                followers: {
-                    some: {
-                        userId,
-                        isFollowing: true,
-                    },
-                },
-            },
-        });
-    }
-    if (feedType === NewFeedType.FRIEND && userId) {
-        return ({
-            ...where,
-            user: {
-                OR: [
-                    {
-                        friendRequests: {
-                            some: {
-                                receiverId: userId,
-                                status: FriendRequestStatus.ACCEPTED,
-                            },
-                        },
-                    },
-                    {
-                        receivedRequests: {
-                            some: {
-                                senderId: userId,
-                                status: FriendRequestStatus.ACCEPTED,
-                            },
-                        },
-                    },
-                ],
-            },
-        });
-    }
-
-    return where;
-
-}
+export const buildNewFeedWhere = (): Prisma.PostWhereInput => ({
+    type: { in: [PostType.POST, PostType.ANNOUNCEMENT] },
+    visibility: VisibilityPost.WORKSPACE,
+    parentId: null,
+    originPostId: null,
+});
 
 
 export const buildRepliesWhere = ({
@@ -95,7 +38,7 @@ export const buildRepliesWhere = ({
 }: BuildRepliesWhereOptions): Prisma.PostWhereInput => {
     return ({
         parentPublicId: publicId,
-        type: PostType.REPLY,
+        parentId: { not: null },
     });
 };
 export const buildUserPostsWhere = ({
@@ -114,24 +57,13 @@ export const buildUserPostsWhere = ({
         });
     }
 
-    if (excludeReplies) {
-        return ({
-            ...where,
-            type: {
-                notIn: [PostType.REPLY]
-            }
-        });
-    }
-
-    return where;
+    return { ...where, parentId: excludeReplies ? null : undefined };
 };
 export const buildQuoteWhere = ({
     userId,
 }: BuildQuoteWhereOptions): Prisma.PostWhereInput => {
     return ({
         userId,
-        type: {
-            in: [PostType.REPOST, PostType.QUOTE],
-        },
+        originPostId: { not: null },
     });
 };

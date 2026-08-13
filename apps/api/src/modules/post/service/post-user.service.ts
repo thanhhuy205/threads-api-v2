@@ -5,19 +5,15 @@ import {
   postListCacheTtlSeconds,
 } from "@/modules/post/helper";
 import type { GetPostWithUser } from "@/modules/post/interfaces/get-post-with-user";
-import { FollowerService } from '@/modules/user/service/follower.service';
 import { RedisVersionService } from '@/shared/redis-version';
 import { RedisService } from '@libs/cache/redis.service';
 import { Injectable } from '@nestjs/common';
-import { PostType } from "@prisma/client";
-import { primaryPostTypes } from "../constants/post-type";
 import { PostRepository } from '../repository/post.repository';
 
 @Injectable()
 export class PostUserService {
   constructor(
     private readonly postRepository: PostRepository,
-    private readonly followerService: FollowerService,
     private readonly redisVersionService: RedisVersionService,
     private readonly redisService: RedisService,
   ) { }
@@ -37,13 +33,8 @@ export class PostUserService {
           after,
           take,
           userId: myUserId,
-          where: buildUserPostsWhere({
-            after,
-            userId,
-            postTypes: primaryPostTypes,
-          }),
+          where: { userId, parentId: null, originPostId: null },
           postRepository: this.postRepository,
-          followerService: this.followerService,
           redisService: this.redisService,
         }),
     );
@@ -65,13 +56,8 @@ export class PostUserService {
           after,
           take,
           userId: myUserId,
-          where: buildUserPostsWhere({
-            after,
-            userId,
-            postTypes: [PostType.REPLY],
-          }),
+          where: { userId, parentId: { not: null } },
           postRepository: this.postRepository,
-          followerService: this.followerService,
           redisService: this.redisService,
         }),
     );

@@ -1,7 +1,6 @@
 import { buildCursorPagination, normalizeCursorPagination } from '@/common/helpers/cursor-pagination.helper';
 import { redisKey } from "@/constants/resolve-key/redis-key";
 import { PostMapper } from "@/modules/post/mapper/post.mapper";
-import { FollowerService } from "@/modules/user/service/follower.service";
 import { RedisService } from "@libs/cache/redis.service";
 import { Prisma } from "@prisma/client";
 import { PostRepository } from "../repository/post.repository";
@@ -34,7 +33,6 @@ export async function paginatePosts({
   where,
   userId,
   postRepository,
-  followerService,
   redisService,
 }: {
   after?: string;
@@ -42,7 +40,6 @@ export async function paginatePosts({
   where: Prisma.PostWhereInput;
   userId?: string | null;
   postRepository: PostRepository;
-  followerService: FollowerService;
   redisService: RedisService;
 }) {
   const { after: currentAfter, take: currentLimit } = normalizeCursorPagination({ after, take });
@@ -56,16 +53,6 @@ export async function paginatePosts({
       orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     },
   });
-
-  const authorIds = [...new Set(posts.map((post) => post.userId))];
-  const following = await followerService.getUserFollowingPostByAuth(userId ?? "", authorIds);
-  const follower = await followerService.getUserFollowersByAuth(userId ?? "", authorIds);
-  const followingSet = new Set(
-    following.map((row) => row.followingId)
-  );
-  const followerSet = new Set(
-    follower.map((row) => row.userId)
-  );
 
   // Poll
   const mapPostIdToPollId = new Map<string, number>();
@@ -89,8 +76,6 @@ export async function paginatePosts({
 
   const data = posts.map((post) => ({
     ...post,
-    isFollowingAuthor: followingSet.has(post.userId),
-    isFollowedByAuthor: followerSet.has(post.userId),
     poll: post?.poll && mapPostIdToPollId.has(post.publicId) ? {
       ...post.poll,
       voteCount: voteCountMap.get(post?.poll.id) ?? post.poll?.voteCount ?? 0,

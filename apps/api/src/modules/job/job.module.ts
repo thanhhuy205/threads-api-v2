@@ -20,7 +20,6 @@ import { VideoProcedure } from './video/producer/video.procedure';
       { name: QUEUE_NAME.AUTO_REMOVE_BAN_QUEUE },
       { name: QUEUE_NAME.POST_LIKE_EVENT_QUEUE },
       { name: QUEUE_NAME.EVALUATION_QUEUE },
-      { name: QUEUE_NAME.FRIEND_REQUEST_QUEUE },
       { name: QUEUE_NAME.HLS_QUEUE },
       {
         name: QUEUE_NAME.VIDEO_QUEUE,

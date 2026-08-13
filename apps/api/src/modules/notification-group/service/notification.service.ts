@@ -12,7 +12,6 @@ import type {
 } from "@/modules/notification-group/interface/notification.types";
 import { NotificationRepository } from "@/modules/notification-group/repository/notification.repository";
 import { PusherService } from "@/modules/pusher/service/pusher.service";
-import { FriendService } from '@/modules/user/service/friend.service';
 import { UserService } from "@/modules/user/service/user.service";
 import { RedisService } from "@libs/cache/redis.service";
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
@@ -31,7 +30,6 @@ export class NotificationService implements OnModuleInit {
 
   constructor(
     private readonly notificationRepository: NotificationRepository,
-    private readonly friendService: FriendService,
     private readonly pusherService: PusherService,
     private readonly userService: UserService,
     private readonly redisService: RedisService,
@@ -106,10 +104,6 @@ export class NotificationService implements OnModuleInit {
       recipientId,
     );
     return Boolean(unread);
-  }
-
-  countReceivedFriendRequests(userId: string) {
-    return this.friendService.countReceivedFriendRequests(userId);
   }
 
   private resolveGroupKey({

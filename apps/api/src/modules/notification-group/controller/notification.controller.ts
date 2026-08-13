@@ -38,15 +38,6 @@ export class NotificationController {
     return { isNotification: hasUnread };
   }
 
-  @Get('friend-request')
-  @Message('Friend request count retrieved')
-  @ApiOperation({ summary: 'Get received friend request count' })
-  @ApiResponse({ status: HttpStatus.OK, description: 'Friend request count retrieved' })
-  async getFriendRequestCount(@Req() request: Request) {
-    const friendRequestCount = await this.notificationService.countReceivedFriendRequests(this.userId(request));
-    return { friendRequestCount };
-  }
-
   @Post('read')
   @HttpCode(HttpStatus.OK)
   @Message('Notifications marked as read')

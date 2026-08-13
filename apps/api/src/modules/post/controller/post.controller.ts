@@ -45,7 +45,6 @@ export class PostController {
       after: cursor.after ?? undefined,
       take: cursor.take,
       userId,
-      feedType: query.type,
     });
     return { data: posts, pagination };
   }
@@ -259,8 +258,8 @@ export class PostController {
   @Message(POST_MESSAGE.RETRIEVED)
   @ApiOperation({ summary: 'Update a post' })
   updatePost(@Param() params: PublicIdParamsDto, @Body() payload: UpdatePostDto, @Req() request: AuthenticatedRequest) {
-    if (payload.content === undefined && payload.visibility === undefined) {
-      throw new BadRequestException('At least one of content or visibility is required');
+    if (payload.content === undefined) {
+      throw new BadRequestException('Content is required');
     }
     return this.postActionService.update(params.publicId, this.userId(request), payload);
   }

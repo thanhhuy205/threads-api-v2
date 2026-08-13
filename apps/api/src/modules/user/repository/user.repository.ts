@@ -1,6 +1,6 @@
 import { PrismaService } from '@/shared/database/prisma.service';
 import { Injectable } from '@nestjs/common';
-import { FriendRequestStatus, Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 
 const userProfileSelect = {
   id: true,
@@ -11,9 +11,6 @@ const userProfileSelect = {
   avatar: true,
   verifiedAt: true,
   status: true,
-  followersCount: true,
-  followingCount: true,
-  postsCount: true,
   location: true,
   website: true,
   labelWebsite: true,
@@ -27,9 +24,6 @@ const userByUsernameSelect = {
   bio: true,
   avatar: true,
   verifiedAt: true,
-  followersCount: true,
-  followingCount: true,
-  postsCount: true,
   location: true,
   website: true,
   labelWebsite: true,
@@ -168,72 +162,6 @@ export class UserRepository {
     });
   }
 
-  async findUserRequestFriend(currentUserId: string, targetUserId: string) {
-    const [receivedFriendRequest, sentFriendRequest, isFriend] = await Promise.all([
-      this.prisma.friendRequest.findFirst({
-        where: {
-          senderId: targetUserId,
-          receiverId: currentUserId,
-          status: FriendRequestStatus.PENDING,
-        },
-        select: {
-          id: true,
-        },
-      }),
-      this.prisma.friendRequest.findFirst({
-        where: {
-          senderId: currentUserId,
-          receiverId: targetUserId,
-          status: FriendRequestStatus.PENDING,
-        },
-        select: {
-          id: true,
-        },
-      }),
-      this.prisma.friendRequest.findFirst({
-        where: {
-          OR: [
-            {
-              senderId: currentUserId,
-              receiverId: targetUserId,
-            },
-            {
-              senderId: targetUserId,
-              receiverId: currentUserId,
-            },
-          ],
-          status: FriendRequestStatus.ACCEPTED,
-        },
-        select: {
-          id: true,
-        },
-      }),
-    ]);
-
-    return {
-      hasReceivedFriendRequest: Boolean(receivedFriendRequest),
-      hasSentFriendRequest: Boolean(sentFriendRequest),
-      isFriend: Boolean(isFriend),
-    };
-  }
-
-  async findUserFollowing(currentUserId: string, targetUserId: string) {
-    const follow = await this.prisma.follow.findUnique({
-      where: {
-        userId_followingId: {
-          userId: currentUserId,
-          followingId: targetUserId,
-        },
-      },
-      select: {
-        isFollowing: true,
-      },
-    });
-
-    return {
-      isFollowing: Boolean(follow?.isFollowing),
-    };
-  }
 
   async findExistingIds(userIds: string[]) {
     if (!userIds.length) {
@@ -254,44 +182,6 @@ export class UserRepository {
     return users.map((user) => user.id);
   }
 
-  async incrementFollowersCount(
-    userId: string,
-    tx?: Prisma.TransactionClient,
-  ) {
-    return (tx ?? this.prisma).user.update({
-      where: {
-        id: userId,
-      },
-      data: {
-        followersCount: {
-          increment: 1,
-        },
-      },
-      select: {
-        id: true,
-        followersCount: true,
-      },
-    });
-  }
-
-  async decrementFollowersCount(
-    userId: string,
-    tx?: Prisma.TransactionClient,
-  ) {
-    return (tx ?? this.prisma).user.updateMany({
-      where: {
-        id: userId,
-        followersCount: {
-          gt: 0,
-        },
-      },
-      data: {
-        followersCount: {
-          decrement: 1,
-        },
-      },
-    });
-  }
 
   async searchUsernameOneQuery(query: string) {
     return this.prisma.user.findMany({
