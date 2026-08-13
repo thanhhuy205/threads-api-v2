@@ -7,6 +7,7 @@ import { configurationFactory } from '@libs/core/config/config';
 import { QUEUE_NAME } from '@libs/core/constants/queue';
 import { RedisModule } from '@libs/cache/redis.module';
 import { DatabaseModule } from '@libs/database';
+import { CloudflareModule } from '@libs/storage/cloudflare.module';
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
@@ -44,6 +45,7 @@ import { SurveySyncWorker } from './survey-sync.worker';
     ),
     DatabaseModule,
     RedisModule,
+    CloudflareModule,
   ],
   providers: [
     BloomWorker,

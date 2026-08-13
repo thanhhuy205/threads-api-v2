@@ -1,10 +1,10 @@
+import type { UploadedFile } from '@/common/types/http.type';
 import configService from '@/config/config';
 import { VideoProcedure } from '@/modules/job/video/producer/video.procedure';
-import { putObject } from '@/providers/cloudflare.provider';
 import { generateKeyImage } from '@/util/upload.util';
-import { PostMediaStatus } from '@prisma/client';
+import { CloudflareService } from '@libs/storage/cloudflare.service';
 import { Injectable, Logger } from '@nestjs/common';
-import type { UploadedFile } from '@/common/types/http.type';
+import { PostMediaStatus } from '@prisma/client';
 import { mkdir, writeFile } from 'fs/promises';
 import path from 'path';
 import { v4 as uuid } from 'uuid';
@@ -18,12 +18,13 @@ export class UploadService {
     constructor(
         private readonly postMediaRepository: PostMediaRepository,
         private readonly videoProcedure: VideoProcedure,
-    ) {}
+        private readonly cloudflareService: CloudflareService,
+    ) { }
 
     async uploadImage(file: UploadedFile, folder = 'avatars') {
         const key = generateKeyImage(folder, file.originalname);
 
-        return putObject({
+        return this.cloudflareService.putObject({
             key,
             body: file.resizedBuffer || file.buffer,
             contentType: file.mimetype,
@@ -32,7 +33,7 @@ export class UploadService {
 
     async uploadAiImage(buffer: Buffer, folder = 'ai-images') {
         const key = generateKeyImage(folder, uuid());
-        return putObject({
+        return this.cloudflareService.putObject({
             key,
             body: buffer,
             contentType: 'image/png',
@@ -48,7 +49,7 @@ export class UploadService {
                     return this.getUploadVideosUrl(file);
                 }
                 const key = generateKeyImage('medias', file.originalname);
-                const result = await putObject({
+                const result = await this.cloudflareService.putObject({
                     key,
                     body: file.resizedBuffer || file.buffer,
                     contentType: file.mimetype,

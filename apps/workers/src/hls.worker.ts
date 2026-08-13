@@ -6,13 +6,17 @@ import type { HlsQueueDto } from "@api/modules/job/video/dto/hls-queue.dto";
 import { PostMediaRepository } from "@api/modules/upload/repository/post-media.repository";
 import { PostMediaStatus } from "@prisma/client";
 import configService from '@libs/core/config/config';
+import { CloudflareService } from '@libs/storage/cloudflare.service';
 import { Job } from 'bullmq';
 
 @Processor(QUEUE_NAME.VIDEO_QUEUE, { concurrency: 1 })
 export class HlsWorker extends WorkerHost {
     private readonly logger = new Logger(HlsWorker.name, { timestamp: true });
 
-    constructor(private readonly postMediaRepository: PostMediaRepository) {
+    constructor(
+        private readonly postMediaRepository: PostMediaRepository,
+        private readonly cloudflareService: CloudflareService,
+    ) {
         super();
     }
     async process(job: Job<any, any, string>): Promise<any> {
@@ -28,7 +32,7 @@ export class HlsWorker extends WorkerHost {
     async addJobGenerateHls(data: HlsQueueDto) {
         const { inputPath, outputDir, title, fileName, outputCloudDir } = data;
         this.logger.log(`Generating HLS for title: ${title}, filePath: ${inputPath}, outputDir: ${outputDir}`);
-        await generateVideoSegments(inputPath, outputDir, fileName, outputCloudDir);
+        await generateVideoSegments(inputPath, outputDir, fileName, outputCloudDir, this.cloudflareService);
 
         await this.postMediaRepository.updateMediaStatus({
             key: title,

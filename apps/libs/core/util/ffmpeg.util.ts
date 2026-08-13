@@ -1,5 +1,5 @@
 
-import { uploadDirToR2 } from '@/util/upload.util';
+import { CloudflareService } from '@libs/storage/cloudflare.service';
 import { ffprobePath } from 'ffmpeg-ffprobe-static';
 import ffmpegPath from 'ffmpeg-static';
 import ffmpeg from 'fluent-ffmpeg';
@@ -30,7 +30,13 @@ async function generateThumbnail(filePath: string, outputDir: string) {
     });
 }
 
-export async function generateVideoSegments(inputPath: string, outputDir: string, filename: string, outputCloudDir: string) {
+export async function generateVideoSegments(
+    inputPath: string,
+    outputDir: string,
+    filename: string,
+    outputCloudDir: string,
+    cloudflareService: CloudflareService,
+) {
     return new Promise((resolve, reject) => {
         ffmpeg(inputPath)
             .on('filenames', function (filename) {            })
@@ -51,7 +57,8 @@ export async function generateVideoSegments(inputPath: string, outputDir: string
             ])
             .on('end', async () => {
                 await unlink(inputPath);
-                await uploadDirToR2(outputDir, outputCloudDir);                return resolve(true);
+                await cloudflareService.uploadDirectory(outputDir, outputCloudDir);
+                return resolve(true);
             })
             .on('error', (err) => {
                 console.error('FFmpeg error:', err);
