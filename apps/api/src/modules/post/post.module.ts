@@ -3,6 +3,7 @@ import { JwtModule } from '@/modules/jwt/jwt.module';
 import { ReportModule } from '@/modules/report/report.module';
 import { UserModule } from '@/modules/user/user.module';
 import { RedisVersionModule } from '@/shared/redis-version';
+import { TransactionModule } from '@/shared/transaction/transaction.module';
 import { PostController } from './controller/post.controller';
 import { PostInteractionRepository } from './repository/post-interaction.repository';
 import { LikeRepository } from './repository/like.repository';
@@ -18,7 +19,13 @@ import { LikeService } from './service/like-service.service';
 import { PostService } from './service/post.service';
 
 @Module({
-  imports: [forwardRef(() => UserModule), ReportModule, JwtModule, RedisVersionModule],
+  imports: [
+    forwardRef(() => UserModule),
+    ReportModule,
+    JwtModule,
+    RedisVersionModule,
+    TransactionModule,
+  ],
   controllers: [PostController],
   providers: [
     PostRepository,

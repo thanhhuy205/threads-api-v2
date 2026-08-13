@@ -38,9 +38,23 @@ type RepositoryCreatePostPayload = Omit<CreatePostPayload, "isSurvey"> & {
 type CreateRepostPayload = {
   userId: string;
   content?: string;
-  replyPermission?: ReplyPermission;
-  visibility?: VisibilityPost;
 };
+
+type CreateReplyData = {
+  parentPostId: number;
+  parentPublicId: string;
+  rootPostId: number;
+  rootPublicId: string;
+  userSnapshot: UserSnapshot;
+};
+
+type CreateRepostData = {
+  originPublicId: string;
+  originPostId: number;
+  userSnapshot: UserSnapshot;
+};
+
+type CreateQuoteData = CreateRepostData;
 
 @Injectable()
 export class PostRepository {
@@ -210,18 +224,11 @@ export class PostRepository {
       },
     });
   }
+
   private connectMedia(media?: { id: number }[]) {
     return media?.length
       ? { connect: media.map((m) => ({ id: m.id })) }
       : undefined;
-  }
-
-  private resolveContentJson(contentJson?: unknown): Prisma.InputJsonValue | undefined {
-    if (contentJson === undefined) {
-      return undefined;
-    }
-
-    return contentJson as Prisma.InputJsonValue;
   }
 
   private createPoll(polls?: string[]) {
@@ -292,22 +299,22 @@ export class PostRepository {
 
   async createReply(
     payload: RepositoryCreatePostPayload,
-    parent: {
-      id: number;
-      publicId: string;
-      rootId: number;
-      rootPublicId: string;
-    },
-    userSnapshot: UserSnapshot,
+    {
+      parentPostId,
+      parentPublicId,
+      rootPostId,
+      rootPublicId,
+      userSnapshot,
+    }: CreateReplyData,
     tx: Prisma.TransactionClient = this.prisma,
   ) {
     const post = await tx.post.create({
       data: {
         ...this.baseData(payload, userSnapshot),
-        parentId: parent.id,
-        parentPublicId: parent.publicId,
-        rootPostId: parent.rootId,
-        rootPublicId: parent.rootPublicId,
+        parentId: parentPostId,
+        parentPublicId,
+        rootPostId,
+        rootPublicId,
         type: PostType.POST,
       },
       select: postSelectRepository,
@@ -327,9 +334,11 @@ export class PostRepository {
 
   async createRepost(
     payload: CreateRepostPayload,
-    originPublicId: string,
-    userSnapshot: UserSnapshot,
-    originPostId: number,
+    {
+      originPublicId,
+      originPostId,
+      userSnapshot,
+    }: CreateRepostData,
     tx: Prisma.TransactionClient = this.prisma,
   ) {
     const post = await tx.post.create({
@@ -342,10 +351,10 @@ export class PostRepository {
           },
           userSnapshot,
         ),
-        originPublicId: originPublicId,
+        originPublicId,
         isQuote: false,
         type: PostType.POST,
-        originPostId: originPostId,
+        originPostId,
       },
       select: postSelectRepository,
     });
@@ -364,9 +373,11 @@ export class PostRepository {
 
   async createQuote(
     payload: RepositoryCreatePostPayload,
-    originPublicId: string,
-    userSnapshot: UserSnapshot,
-    originPostId: number,
+    {
+      originPublicId,
+      originPostId,
+      userSnapshot,
+    }: CreateQuoteData,
     tx: Prisma.TransactionClient = this.prisma,
   ) {
     const post = await tx.post.create({

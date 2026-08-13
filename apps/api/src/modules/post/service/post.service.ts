@@ -2,7 +2,7 @@ import { NotFoundException } from "@/errors/error";
 import { dispatchReplyNotification } from "@/modules/notification-group/events/notification.dispatcher";
 import type { CreatePostPayload } from "@/modules/post/interfaces/create-post-payload";
 import { UserService } from "@/modules/user/service/user.service";
-import { PrismaService } from "@/shared/database/prisma.service";
+import { TransactionService } from "@/shared/transaction/transaction.service";
 import { Injectable, Logger } from "@nestjs/common";
 import { PostMapper } from "../mapper/post.mapper";
 import { PostRepository } from "../repository/post.repository";
@@ -14,7 +14,7 @@ export class PostService {
   private readonly logger = new Logger(PostService.name, { timestamp: true });
 
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly transactionService: TransactionService,
     private readonly userService: UserService,
     private readonly postRepository: PostRepository,
     private readonly postMentionService: PostMentionService,
@@ -23,7 +23,7 @@ export class PostService {
 
   async create(payload: CreatePostPayload) {
     const { snapshot, mentionIds } = await this.resolveAuthorAndMentions(payload);
-    const post = await this.prisma.$transaction(async (tx) => {
+    const post = await this.transactionService.doInTransaction(async (tx) => {
       const created = await this.postRepository.create(payload, snapshot, tx);
       await this.postMetaService.attachPostMeta(tx, created.id!, {
         topic: payload.topic,
@@ -42,16 +42,16 @@ export class PostService {
     ]);
     if (!parent) throw new NotFoundException("Origin post not found");
 
-    const post = await this.prisma.$transaction(async (tx) => {
+    const post = await this.transactionService.doInTransaction(async (tx) => {
       const created = await this.postRepository.createReply(
         payload,
         {
-          id: parent.id,
-          publicId: parent.publicId,
-          rootId: parent.rootPostId ?? parent.id,
+          parentPostId: parent.id,
+          parentPublicId: parent.publicId,
+          rootPostId: parent.rootPostId ?? parent.id,
           rootPublicId: parent.rootPublicId ?? parent.publicId,
+          userSnapshot: author.snapshot,
         },
-        author.snapshot,
         tx,
       );
       await this.postMetaService.attachPostMeta(tx, created.id!, {
@@ -80,12 +80,14 @@ export class PostService {
     ]);
     if (!origin) throw new NotFoundException("Origin post not found");
 
-    const post = await this.prisma.$transaction((tx) =>
+    const post = await this.transactionService.doInTransaction((tx) =>
       this.postRepository.createRepost(
         { userId },
-        origin.originPublicId ?? origin.publicId,
-        author.snapshot,
-        origin.originPostId ?? origin.id,
+        {
+          originPublicId: origin.originPublicId ?? origin.publicId,
+          originPostId: origin.originPostId ?? origin.id,
+          userSnapshot: author.snapshot,
+        },
         tx,
       ),
     );
@@ -100,12 +102,14 @@ export class PostService {
     ]);
     if (!origin) throw new NotFoundException("Origin post not found");
 
-    const post = await this.prisma.$transaction(async (tx) => {
+    const post = await this.transactionService.doInTransaction(async (tx) => {
       const created = await this.postRepository.createQuote(
         payload,
-        origin.originPublicId ?? origin.publicId,
-        author.snapshot,
-        origin.originPostId ?? origin.id,
+        {
+          originPublicId: origin.originPublicId ?? origin.publicId,
+          originPostId: origin.originPostId ?? origin.id,
+          userSnapshot: author.snapshot,
+        },
         tx,
       );
       await this.postMetaService.attachPostMeta(tx, created.id!, {
