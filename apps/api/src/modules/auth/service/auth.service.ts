@@ -1,8 +1,8 @@
 import configService from "@/config/config";
 import { redisKey } from "@/constants/resolve-key/redis-key";
 import { NotFoundException } from "@/errors/error";
-import { RoleRepository } from "@/modules/access-control/role/repository/role.repository";
-import { UserRoleRepository } from "@/modules/access-control/role/repository/user-role.repository";
+import { RoleService } from "@/modules/access-control/role/service/role.service";
+import { UserRoleService } from "@/modules/access-control/role/service/user-role.service";
 import type { SessionMetadata } from "@/modules/auth/interfaces/session-metadata";
 import { VerificationRepository } from "@/modules/auth/repository/verification.repository";
 import {
@@ -14,7 +14,7 @@ import { BloomProducer } from "@/modules/job/bloom/producer/bloom.producer";
 import { EmailProducer } from "@/modules/job/email/producer/email.producer";
 import { TokenPairResponse } from "@/modules/jwt/dto/response/token-pair.response";
 import { JwtService } from "@/modules/jwt/service/jwt.service";
-import { UserRepository } from "@/modules/user/repository/user.repository";
+import { UserService } from "@/modules/user/service/user.service";
 import { RedisService } from "@libs/cache/redis.service";
 import { Injectable, Logger } from '@nestjs/common';
 import { UserRoleType, VerificationCodeType } from "@prisma/client";
@@ -49,9 +49,9 @@ export class AuthService {
     private readonly authRepository: AuthRepository,
     private readonly verificationRepository: VerificationRepository,
     private readonly jwtService: JwtService,
-    private readonly roleRepository: RoleRepository,
-    private readonly userRoleRepository: UserRoleRepository,
-    private readonly userRepository: UserRepository,
+    private readonly roleService: RoleService,
+    private readonly userRoleService: UserRoleService,
+    private readonly userService: UserService,
     private readonly bloomProducer: BloomProducer,
     private readonly emailProducer: EmailProducer,
     private readonly redisService: RedisService,
@@ -64,9 +64,9 @@ export class AuthService {
     const password = hashPassword(payload.password);
     const user = await this.authRepository.createUser({ ...payload, password });
 
-    const role = await this.roleRepository.findByName(UserRoleType.USER);
+    const role = await this.roleService.findByName(UserRoleType.USER);
     if (role) {
-      await this.userRoleRepository.assignRole(user.id, role.id);
+      await this.userRoleService.assignRoleToUser(user.id, role.id);
     }
 
     const tokenPair = await this.jwtService.generateTokenPair({
@@ -147,7 +147,7 @@ export class AuthService {
       return null;
     }
 
-    const userRoles = await this.userRoleRepository.findByUserId(user.id);
+    const userRoles = await this.userRoleService.findByUserId(user.id);
     const roles = userRoles.map((ur) => ur.role.name as UserRoleType);
 
     const tokenPair = await this.jwtService.generateTokenPair({
@@ -171,7 +171,7 @@ export class AuthService {
   }
 
   async resendVerifyEmail(originUrl: string, userId?: string): Promise<void> {
-    const user = await this.userRepository.findById(userId ?? "");
+    const user = await this.userService.findByUserId(userId ?? "");
     if (!user) {
       throw new NotFoundException("User not found");
     }
@@ -314,7 +314,7 @@ export class AuthService {
       return null;
     }
 
-    const user = await this.userRepository.findById(refreshToken.userId);
+    const user = await this.userService.findByUserId(refreshToken.userId);
     this.logger.log(`Found user ${user?.id} for refresh token with id ${refreshToken.id} user = ${JSON.stringify(user)}.`);
     if (!user) {
       return null;
@@ -322,7 +322,7 @@ export class AuthService {
 
     await this.authRepository.revokeRefreshTokenById(refreshToken.id, now);
 
-    const userRoles = await this.userRoleRepository.findByUserId(user.id);
+    const userRoles = await this.userRoleService.findByUserId(user.id);
     const roles = userRoles.map((ur) => ur.role.name as UserRoleType);
 
     const tokenPair = await this.jwtService.generateTokenPair({
@@ -357,7 +357,7 @@ export class AuthService {
     //   }
     // }
 
-    const user = await this.userRepository.findById(userId);
+    const user = await this.userService.findByUserId(userId);
     if (!user) {
       return null;
     }

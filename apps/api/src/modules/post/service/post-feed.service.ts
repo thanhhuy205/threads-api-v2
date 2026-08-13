@@ -28,6 +28,7 @@ export class PostFeedService {
     after,
     take,
     userId,
+    type,
   }: NewsFeedPayload) {
     const where = buildNewFeedWhere();
     this.logger.log(
@@ -38,20 +39,16 @@ export class PostFeedService {
       after,
       take,
       userId,
+      extra: type,
     });
-    return this.redisVersionService.wrapperCacheVersion(
-      namespace,
-      postListCacheTtlSeconds,
-      () =>
-        paginatePosts({
-          userId,
-          after,
-          take,
-          where,
-          postRepository: this.postRepository,
-          redisService: this.redisService,
-        }),
-    );
+    return paginatePosts({
+      userId,
+      after,
+      take,
+      where,
+      postRepository: this.postRepository,
+      redisService: this.redisService,
+    }),
   }
 
   async getPostMe({ after, take, userId }: GetPostWithUser) {

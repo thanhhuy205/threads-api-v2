@@ -9,6 +9,6 @@ import { UserService } from './service/user.service';
   imports: [JwtModule],
   controllers: [UserController, UsersController],
   providers: [UserService, UserRepository],
-  exports: [UserService, UserRepository],
+  exports: [UserService],
 })
 export class UserModule { }

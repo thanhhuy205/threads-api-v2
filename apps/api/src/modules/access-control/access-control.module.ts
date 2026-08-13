@@ -20,10 +20,10 @@ import { UserRoleService } from './role/service/user-role.service';
     UserRoleService,
   ],
   exports: [
-    PermissionRepository,
-    RolePermissionRepository,
-    RoleRepository,
-    UserRoleRepository,
+    PermissionService,
+    RolePermissionService,
+    RoleService,
+    UserRoleService,
   ],
 })
 export class AccessControlModule { }

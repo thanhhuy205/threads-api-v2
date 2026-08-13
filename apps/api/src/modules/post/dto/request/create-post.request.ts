@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { VisibilityPost } from '@prisma/client';
 import { Transform, Type } from 'class-transformer';
 import { ArrayMaxSize, ArrayMinSize, IsArray, IsBoolean, IsEnum, IsOptional, IsString, MaxLength, MinLength, ValidateIf, ValidateNested } from 'class-validator';
 import { creatablePostTypes } from '../../constants/post-type';
@@ -66,4 +67,17 @@ export class CreatePostDto {
   @IsEnum(creatablePostTypes)
   type?: (typeof creatablePostTypes)[number];
 
+
+  @ApiPropertyOptional({ default: 'EVERYONE' })
+  @IsOptional()
+  @Transform(normalizeEnum)
+  @IsEnum(['EVERYONE', 'FOLLOWERS', 'MENTIONED'], { message: 'Invalid replyPermission value' })
+  replyPermission?: string = 'EVERYONE';
+
+
+  @ApiPropertyOptional({ default: 'WORKSPACE' })
+  @IsOptional()
+  @Transform(normalizeEnum)
+  @IsEnum(VisibilityPost, { message: 'Invalid visibility value' })
+  visibility?: string = 'WORKSPACE';
 }

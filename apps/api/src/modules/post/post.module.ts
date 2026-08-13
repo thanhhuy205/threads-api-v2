@@ -41,6 +41,6 @@ import { PostService } from './service/post.service';
     PostUserService,
     LikeService,
   ],
-  exports: [PostActionService, PostSearchService, LikeService, PostRepository],
+  exports: [PostActionService, PostSearchService, LikeService],
 })
 export class PostModule {}

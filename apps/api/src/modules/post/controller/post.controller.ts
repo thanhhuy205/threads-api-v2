@@ -79,6 +79,7 @@ export class PostController {
       after: cursor.after ?? undefined,
       take: cursor.take,
       userId,
+      type: query.type ?? 'for_you',
     });
     return { data: posts, pagination };
   }
