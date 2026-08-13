@@ -1,13 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
-export class UsernameParamsDto {
-  @ApiProperty({ example: 'john_doe' })
-  @IsString()
-  @IsNotEmpty()
-  username!: string;
-}
-
 export class UsernameQueryDto {
   @ApiProperty({ example: 'john' })
   @IsString()
@@ -23,11 +16,4 @@ export class UsernameQueryDto {
   @IsOptional()
   @IsString()
   take?: string;
-}
-
-export class UserNameMentionQueryDto {
-  @ApiProperty({ example: 'john' })
-  @IsString()
-  @IsNotEmpty()
-  q!: string;
 }

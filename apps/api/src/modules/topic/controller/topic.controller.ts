@@ -2,7 +2,7 @@ import { Message } from '@/common/decorators/message.decorator';
 import { IsPublic } from '@/common/decorators/is-public.decorator';
 import { Body, Controller, Get, HttpCode, HttpStatus, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { CreateTopicDto, SearchTopicQueryDto } from '../dto/request/topic.request';
+import { CreateTopicDto, SearchTopicQueryDto } from '../dto/request';
 import { TopicService } from '../service/topic.service';
 
 @ApiTags('Topic')

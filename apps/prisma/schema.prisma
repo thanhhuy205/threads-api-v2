@@ -14,21 +14,7 @@ enum UserRoleType {
 
 enum PostType {
   POST
-  REPLY
-  REPOST
-  QUOTE
   ANNOUNCEMENT
-  DISCUSSION
-  KNOWLEDGE
-  QUESTION
-  INCIDENT
-  FEEDBACK
-}
-
-enum FollowStatus {
-  PENDING
-  ACCEPTED
-  REJECTED
 }
 
 enum QueueStatus {
@@ -77,9 +63,10 @@ enum ReportStatus {
 }
 
 enum VisibilityPost {
-  PUBLIC
-  FRIEND
-  PRIVATE
+  WORKSPACE
+  GROUP
+  CUSTOM
+  ONLY_ME
 }
 
 enum Position {
@@ -133,13 +120,6 @@ enum PostMediaStatus {
   UPLOADED
   FAILED
   DELETED
-}
-
-enum FriendRequestStatus {
-  PENDING
-  ACCEPTED
-  REJECTED
-  CANCELLED
 }
 
 model Role {
@@ -207,10 +187,6 @@ model User {
   verifiedAt DateTime?  @map("verified_at")
   status     UserStatus @default(ACTIVE)
 
-  followersCount Int @default(0) @map("followers_count")
-  followingCount Int @default(0) @map("following_count")
-  postsCount     Int @default(0) @map("posts_count")
-
   position     Position? @default(OTHER)
   location     String?   @db.VarChar(255)
   website      String?   @db.VarChar(255)
@@ -223,16 +199,14 @@ model User {
   posts             Post[]
   refreshTokens     RefreshToken[]
   verificationCodes VerificationCode[]
-  follows           Follow[]           @relation("FollowUser")
-  followers         Follow[]           @relation("FollowFollowing")
-  likes             Like[]
-  friendRequests    FriendRequest[]    @relation("FriendRequestSender")
-  receivedRequests  FriendRequest[]    @relation("FriendRequestReceiver")
-  userRoles         UserRole[]
-  reports           Report[]           @relation("UserReports")
-  postMentions      PostMention[]
-  votes             Vote[]
-  postInteractions  PostInteraction[]
+
+  likes                Like[]
+  userRoles            UserRole[]
+  reports              Report[]              @relation("UserReports")
+  postMentions         PostMention[]
+  votes                Vote[]
+  postInteractions     PostInteraction[]
+  announcementReceipts AnnouncementReceipt[]
 
   @@index([email], map: "idx_users_email")
   @@index([name], map: "idx_users_name")
@@ -240,6 +214,21 @@ model User {
   @@index([deletedAt], map: "idx_users_deleted_at")
   @@fulltext([username, name], map: "idx_users_username_name_fulltext")
   @@map("users")
+}
+
+model AnnouncementReceipt {
+  id             Int       @id @default(autoincrement())
+  postId         Int       @map("post_id")
+  userId         String    @map("user_id")
+  readAt         DateTime? @map("read_at")
+  acknowledgedAt DateTime? @map("acknowledged_at")
+
+  post Post @relation(fields: [postId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([postId, userId])
+  @@index([userId, readAt])
+  @@map("announcement_receipts")
 }
 
 model PostInteraction {
@@ -300,64 +289,81 @@ model VerificationCode {
 model Post {
   id       Int    @id @default(autoincrement())
   publicId String @unique @default(nanoid()) @map("public_id")
+  userId   String @map("user_id")
 
-  userId      String @map("user_id")
-  content     String @db.Text
-  contentJson Json?  @map("content_json")
+  content     String   @db.Text
+  contentJson Json?    @map("content_json")
+  type        PostType @default(POST)
 
-  type       PostType       @default(POST)
-  visibility VisibilityPost @default(PUBLIC)
-
-  parentId     Int? @map("parent_id") // reply -> parent
-  originPostId Int? @map("origin_post_id") // repost/quote -> original
-  rootPostId   Int? @map("root_post_id") // conversation root
+  // Thread structure
+  parentId   Int? @map("parent_id") // Reply trực tiếp
+  rootPostId Int? @map("root_post_id") // Bài gốc của cuộc thảo luận
 
   parentPublicId String? @map("parent_public_id")
-  originPublicId String? @map("origin_public_id")
   rootPublicId   String? @map("root_public_id")
 
-  userSnapshot    Json?           @map("user_snapshot")
-  replyPermission ReplyPermission @default(EVERYONE) @map("reply_permission")
+  // Repost / Quote
+  originPostId   Int?    @map("origin_post_id")
+  originPublicId String? @map("origin_public_id")
+  isQuote        Boolean @default(false) @map("is_quote")
 
+  // Access and interaction rules
+  visibility      VisibilityPost  @default(WORKSPACE)
+  replyPermission ReplyPermission @default(EVERYONE) @map("reply_permission")
+  commentsEnabled Boolean         @default(true)
+
+  // Official announcement
+  isPinned                Boolean   @default(false) @map("is_pinned")
+  requiresAcknowledgement Boolean   @default(false) @map("requires_acknowledgement")
+  publishedAt             DateTime? @map("published_at")
+
+  // Survey
+  isSurvey   Boolean   @default(false) @map("is_survey")
+  deadlineAt DateTime? @map("deadline_at")
+
+  // Snapshot
+  userSnapshot Json? @map("user_snapshot")
+
+  // Counters
   likesCount                Int @default(0) @map("likes_count")
   repliesCount              Int @default(0) @map("replies_count")
   repostsCountAndQuoteCount Int @default(0) @map("reposts_and_quotes_count")
   viewsCount                Int @default(0) @map("views_count")
 
-  isQuote  Boolean @default(false) @map("is_quote")
-  isSurvey Boolean @default(false) @map("is_survey")
-
-  deadlineAt DateTime? @map("deadline_at") // thời hạn kết thúc khảo sát, chỉ có ý nghĩa khi isSurvey = true
-
+  // Lifecycle
   deletedAt DateTime? @map("deleted_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
 
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
+  // Author
   user User @relation(fields: [userId], references: [id])
 
+  // Thread relations
   parent   Post?  @relation("PostParent", fields: [parentId], references: [id])
   children Post[] @relation("PostParent")
-
-  origin      Post?  @relation("PostOrigin", fields: [originPostId], references: [id])
-  derivatives Post[] @relation("PostOrigin")
 
   root   Post?  @relation("PostRoot", fields: [rootPostId], references: [id])
   thread Post[] @relation("PostRoot")
 
-  media            PostMedia[]
-  mentions         PostMention[]
-  topicsPosts      TopicsPost[]
-  likes            Like[]
-  poll             Poll?
-  postInteractions PostInteraction[]
+  // Repost / Quote relations
+  origin      Post?  @relation("PostOrigin", fields: [originPostId], references: [id])
+  derivatives Post[] @relation("PostOrigin")
 
+  // Feature relations
+  media                PostMedia[]
+  mentions             PostMention[]
+  topicsPosts          TopicsPost[]
+  likes                Like[]
+  poll                 Poll?
+  postInteractions     PostInteraction[]
+  announcementReceipts AnnouncementReceipt[]
+
+  // Indexes
   @@index([userId, createdAt])
   @@index([parentId])
-  @@index([originPostId])
   @@index([rootPostId])
+  @@index([originPostId])
   @@index([createdAt])
-  @@index([publicId], map: "idx_posts_public_id")
   @@fulltext([content], map: "idx_posts_content_fulltext")
   @@map("posts")
 }
@@ -443,43 +449,6 @@ model PostMention {
   @@index([postId], map: "idx_post_mentions_post_id")
   @@index([userId], map: "idx_post_mentions_user_id")
   @@map("post_mentions")
-}
-
-model Follow {
-  id          Int          @id @default(autoincrement())
-  userId      String       @map("user_id")
-  followingId String       @map("following_id")
-  isFollowing Boolean      @default(true) @map("is_following")
-  status      FollowStatus @default(PENDING)
-
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  user      User @relation("FollowUser", fields: [userId], references: [id])
-  following User @relation("FollowFollowing", fields: [followingId], references: [id])
-
-  @@unique([userId, followingId])
-  @@index([userId])
-  @@index([followingId])
-  @@index([followingId, status])
-  @@map("follows")
-}
-
-model FriendRequest {
-  id         Int                 @id @default(autoincrement())
-  senderId   String              @map("sender_id")
-  receiverId String              @map("receiver_id")
-  status     FriendRequestStatus @default(PENDING)
-  createdAt  DateTime            @default(now()) @map("created_at")
-  updatedAt  DateTime            @updatedAt @map("updated_at")
-
-  sender   User @relation("FriendRequestSender", fields: [senderId], references: [id])
-  receiver User @relation("FriendRequestReceiver", fields: [receiverId], references: [id])
-
-  @@unique([senderId, receiverId])
-  @@index([senderId])
-  @@index([receiverId])
-  @@map("friend_requests")
 }
 
 model Like {

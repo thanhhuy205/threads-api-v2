@@ -1,14 +1,6 @@
-import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsInt, IsOptional, IsString, Max, MaxLength, Min, MinLength } from 'class-validator';
-
-export class CreateTopicDto {
-  @ApiProperty({ minLength: 1, maxLength: 255, example: 'NestJS' })
-  @IsString()
-  @MinLength(1)
-  @MaxLength(255)
-  name!: string;
-}
+import { Type } from 'class-transformer';
+import { IsInt, IsOptional, IsString, Max, Min, MinLength } from 'class-validator';
 
 export class SearchTopicQueryDto {
   @ApiProperty({ minLength: 1, example: 'nestjs' })

@@ -6,7 +6,7 @@ import { IsPublic } from '@/common/decorators/is-public.decorator';
 import { AUTH_MESSAGE, USER_MESSAGE } from '@/constants/message';
 import { NotFoundException, UnauthorizedException } from '@/errors/error';
 import { JwtService } from '@/modules/jwt/service/jwt.service';
-import { UserNameMentionQueryDto, UsernameParamsDto } from '../dto/request/username.params.dto';
+import { UserNameMentionQueryDto, UsernameParamsDto } from '../dto/request';
 import { UserService } from '../service/user.service';
 
 @ApiTags('User')

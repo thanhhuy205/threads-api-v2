@@ -9,7 +9,7 @@ import { Controller, Get, HttpCode, HttpStatus, Param, Post, Query, Req } from '
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { HttpRequest as Request } from '@/common/types/http.type';
 import { FollowersQueryDto } from '../dto/request/followers.query.dto';
-import { UsernameParamsDto } from '../dto/request/username.params.dto';
+import { UsernameParamsDto } from '../dto/request';
 import { FollowerService } from '../service/follower.service';
 import { FriendService } from '../service/friend.service';
 import { UserService } from '../service/user.service';

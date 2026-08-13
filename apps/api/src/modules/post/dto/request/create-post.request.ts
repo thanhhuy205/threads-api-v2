@@ -1,54 +1,13 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { ReplyPermission, VisibilityPost } from '@prisma/client';
 import { Transform, Type } from 'class-transformer';
-import {
-  ArrayMaxSize,
-  ArrayMinSize,
-  IsArray,
-  IsBoolean,
-  IsEnum,
-  IsInt,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  MaxLength,
-  MinLength,
-  ValidateIf,
-  ValidateNested
-} from 'class-validator';
-import { creatablePostTypes } from '../constants/post-type';
+import { ArrayMaxSize, ArrayMinSize, IsArray, IsBoolean, IsEnum, IsOptional, IsString, MaxLength, MinLength, ValidateIf, ValidateNested } from 'class-validator';
+import { creatablePostTypes } from '../../constants/post-type';
+import { PostMediaDto } from '../response/post-media.response';
+import { PostMentionDto } from '../response/post-mention.response';
 
 const normalizeEnum = ({ value }: { value: unknown }) =>
   typeof value === 'string' ? value.trim().toUpperCase() : value;
-
-export class PostMentionDto {
-  @ApiProperty()
-  @IsString()
-  @Transform(({ value }) => typeof value === 'string' ? value.trim() : value)
-  @IsNotEmpty({ message: 'Mention userId is required' })
-  userId!: string;
-
-  @ApiProperty()
-  @IsString()
-  @Transform(({ value }) => typeof value === 'string' ? value.trim() : value)
-  @IsNotEmpty({ message: 'Mention username is required' })
-  username!: string;
-}
-
-export class PostMediaDto {
-  @ApiProperty()
-  @Type(() => Number)
-  @IsInt()
-  id!: number;
-
-  @ApiProperty()
-  @IsString()
-  key!: string;
-
-  @ApiProperty()
-  @IsString()
-  url!: string;
-}
 
 export class CreatePostDto {
   @ApiPropertyOptional({ maxLength: 5000 })
@@ -119,19 +78,4 @@ export class CreatePostDto {
   @Transform(normalizeEnum)
   @IsEnum(VisibilityPost)
   visibility: VisibilityPost = VisibilityPost.PUBLIC;
-}
-
-export class UpdatePostDto {
-  @ApiPropertyOptional({ maxLength: 5000 })
-  @IsOptional()
-  @IsString()
-  @MinLength(1, { message: 'Content must be at least 1 character' })
-  @MaxLength(5000, { message: 'Content must be at most 5000 characters' })
-  content?: string;
-
-  @ApiPropertyOptional({ enum: VisibilityPost })
-  @IsOptional()
-  @Transform(normalizeEnum)
-  @IsEnum(VisibilityPost)
-  visibility?: VisibilityPost;
 }

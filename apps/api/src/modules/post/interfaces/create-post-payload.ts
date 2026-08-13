@@ -1,4 +1,4 @@
-import type { CreatePostDto } from '@/modules/post/dto/post.dto';
+import type { CreatePostDto } from '@api/modules/post/dto/request';
 
 export type CreatePostPayload = CreatePostDto & {
     userId: string;

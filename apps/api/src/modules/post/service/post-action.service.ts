@@ -16,7 +16,7 @@ import {
   ReportStatus,
   ReportTargetType
 } from "@prisma/client";
-import { UpdatePostDto } from "../dto/post.dto";
+import { UpdatePostDto } from '../dto/request';
 import { PostInteractionRepository } from "../repository/post-interaction.repository";
 import { PostRecord, PostRepository } from "../repository/post.repository";
 

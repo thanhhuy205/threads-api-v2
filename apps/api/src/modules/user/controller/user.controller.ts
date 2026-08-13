@@ -9,7 +9,7 @@ import { AUTH_MESSAGE, USER_MESSAGE } from '@/constants/message';
 import { UnauthorizedException } from '@/errors/error';
 import { FollowersQueryDto } from '../dto/request/followers.query.dto';
 import { FriendRequestDto } from '../dto/request/friend-id.params.dto';
-import { FriendRequestParamsDto } from '../dto/request/user-id.params.dto';
+import { FriendRequestParamsDto } from '../dto/request';
 import { UpdateProfileDto } from '../dto/request/update-profile.request.dto';
 import { FriendService } from '../service/friend.service';
 import { FollowerService } from '../service/follower.service';

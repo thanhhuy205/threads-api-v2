@@ -15,7 +15,7 @@ import {
   VisibilityPost
 } from "@prisma/client";
 import { primaryPostTypes } from "../constants/post-type";
-import { UpdatePostDto } from "../dto/post.dto";
+import { UpdatePostDto } from '../dto/request';
 import { UserSnapshot } from "../mapper/post.mapper";
 
 

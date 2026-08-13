@@ -3,7 +3,7 @@ import { dispatchReplyNotification } from "@/modules/notification-group/events/n
 import type { CreatePostPayload } from "@/modules/post/interfaces/create-post-payload";
 import { Injectable, Logger } from '@nestjs/common';
 import { PostBuilder } from "../builder/post.builder";
-import { CreatePostDto } from "../dto/post.dto";
+import { CreatePostDto } from '../dto/request';
 import { PostRecord, PostRepository } from "../repository/post.repository";
 import { PostMetaService } from "./post-meta.service";
 
