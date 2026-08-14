@@ -1,6 +1,7 @@
 import { TransactionModule } from '@/shared/transaction/transaction.module';
 import { Module } from '@nestjs/common';
 import { UserModule } from '../user/user.module';
+import { AccessControlModule } from '../access-control/access-control.module';
 import { GroupTeamController } from './controller/group-team.controller';
 import { GroupTeamRepository } from './repository/group-team.repository';
 import { UserTeamRepository } from './repository/user-team.repository';
@@ -8,7 +9,7 @@ import { GroupTeamService } from './service/group-team.service';
 import { UserTeamService } from './service/user-team.service';
 
 @Module({
-  imports: [TransactionModule, UserModule],
+  imports: [TransactionModule, UserModule, AccessControlModule],
   controllers: [GroupTeamController],
   providers: [
     GroupTeamService,

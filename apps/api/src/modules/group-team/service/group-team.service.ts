@@ -5,6 +5,8 @@ import {
   NotFoundException,
 } from '@/errors/error';
 import { TransactionService } from '@/shared/transaction/transaction.service';
+import { PERMISSIONS } from '@/common/constants/permission.constant';
+import { AccessControlService } from '@/modules/access-control/services/access-control.service';
 import { Injectable } from '@nestjs/common';
 import type { Position } from '@prisma/client';
 import { GroupTeamRepository } from '../repository/group-team.repository';
@@ -28,9 +30,15 @@ export class GroupTeamService {
     private readonly groupTeamRepository: GroupTeamRepository,
     private readonly userTeamService: UserTeamService,
     private readonly transactionService: TransactionService,
+    private readonly accessControlService: AccessControlService,
   ) {}
 
   async create(payload: CreateGroupTeamPayload) {
+    await this.accessControlService.assertPermission(
+      payload.createdById,
+      PERMISSIONS.GROUP_CREATE,
+    );
+
     const name = this.normalizeName(payload.name);
 
     if (!name) {
@@ -83,6 +91,20 @@ export class GroupTeamService {
       teamId: team.id,
       position: payload.position,
     });
+  }
+
+  async resolveGroupForPost(groupPublicId: string, userId: string) {
+    const team = await this.groupTeamRepository.findByPublicId(groupPublicId);
+
+    if (!team) {
+      throw new NotFoundException('Team not found');
+    }
+
+    if (!(await this.userTeamService.isMember(userId, team.id))) {
+      throw new ForbiddenException('User is not a member of this team');
+    }
+
+    return team;
   }
 
   private normalizeName(name: string) {

@@ -45,6 +45,16 @@ export class UserTeamService {
     }
   }
 
+  async isMember(
+    userId: string,
+    teamId: number,
+    tx?: Prisma.TransactionClient,
+  ): Promise<boolean> {
+    return Boolean(
+      await this.userTeamRepository.findByUserAndTeam(userId, teamId, tx),
+    );
+  }
+
   private isUniqueConstraintError(error: unknown): error is { code: 'P2002' } {
     return (
       typeof error === 'object' &&

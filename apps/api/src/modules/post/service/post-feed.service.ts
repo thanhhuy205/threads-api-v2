@@ -34,13 +34,7 @@ export class PostFeedService {
     this.logger.log(
       `Getting news feed for user ${JSON.stringify(userId)}. Generated where clause: ${JSON.stringify(where)}`,
     );
-    const namespace = buildPostListNamespace({
-      scope: "news-feed",
-      after,
-      take,
-      userId,
-      extra: type,
-    });
+
     return paginatePosts({
       userId,
       after,
@@ -48,8 +42,8 @@ export class PostFeedService {
       where,
       postRepository: this.postRepository,
       redisService: this.redisService,
-    }),
-  } 
+    });
+  }
 
   async getPostMe({ after, take, userId }: GetPostWithUser) {
     const namespace = buildPostListNamespace({

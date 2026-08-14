@@ -402,8 +402,12 @@ export class PostController {
     @Body() payload: UpdatePostDto,
     @GetUserId() userId: string,
   ) {
-    if (payload.content === undefined) {
-      throw new BadRequestException("Content is required");
+    if (
+      payload.content === undefined &&
+      payload.isPinned === undefined &&
+      payload.expiresAt === undefined
+    ) {
+      throw new BadRequestException("At least one update field is required");
     }
     return this.postActionService.update(
       params.publicId,

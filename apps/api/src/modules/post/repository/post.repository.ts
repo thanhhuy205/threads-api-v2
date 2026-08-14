@@ -27,6 +27,9 @@ export type PostRecord = {
   userId: string;
   type: PostType;
   visibility: VisibilityPost;
+  isPinned?: boolean;
+  expiresAt?: Date | null;
+  groupTeamId?: number | null;
   createdAt: string;
 };
 
@@ -280,6 +283,12 @@ export class PostRepository {
     const post = await tx.post.create({
       data: {
         ...this.baseData(payload, userSnapshot),
+        contentJson: payload.contentJson,
+        visibility: payload.visibility ?? VisibilityPost.WORKSPACE,
+        isPinned: payload.isPinned ?? false,
+        expiresAt: payload.expiresAt,
+        publishedAt: payload.scheduleTime,
+        groupTeamId: payload.groupTeamId,
       },
 
       select: postSelectRepository,
@@ -293,6 +302,9 @@ export class PostRepository {
       userId: post.userId,
       type: post.type,
       visibility: post.visibility,
+      isPinned: post.isPinned,
+      expiresAt: post.expiresAt,
+      groupTeamId: post.groupTeamId,
       createdAt: post.createdAt.toISOString(),
     };
   }
@@ -539,6 +551,8 @@ export class PostRepository {
       where: { publicId },
       data: {
         content: payload.content,
+        isPinned: payload.isPinned,
+        expiresAt: payload.expiresAt,
       },
       select: {
         publicId: true,
@@ -546,6 +560,9 @@ export class PostRepository {
         userId: true,
         type: true,
         visibility: true,
+        isPinned: true,
+        expiresAt: true,
+        groupTeamId: true,
         createdAt: true,
       },
     });
@@ -556,6 +573,9 @@ export class PostRepository {
       userId: post.userId,
       type: post.type,
       visibility: post.visibility,
+      isPinned: post.isPinned,
+      expiresAt: post.expiresAt,
+      groupTeamId: post.groupTeamId,
       createdAt: post.createdAt.toISOString(),
     };
   }

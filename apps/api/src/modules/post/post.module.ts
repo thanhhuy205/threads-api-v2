@@ -2,6 +2,8 @@ import { forwardRef, Module } from '@nestjs/common';
 import { JwtModule } from '@/modules/jwt/jwt.module';
 import { ReportModule } from '@/modules/report/report.module';
 import { UserModule } from '@/modules/user/user.module';
+import { AccessControlModule } from '@/modules/access-control/access-control.module';
+import { GroupTeamModule } from '@/modules/group-team/group-team.module';
 import { RedisVersionModule } from '@/shared/redis-version';
 import { TransactionModule } from '@/shared/transaction/transaction.module';
 import { PostController } from './controller/post.controller';
@@ -25,6 +27,8 @@ import { PostService } from './service/post.service';
     JwtModule,
     RedisVersionModule,
     TransactionModule,
+    AccessControlModule,
+    GroupTeamModule,
   ],
   controllers: [PostController],
   providers: [

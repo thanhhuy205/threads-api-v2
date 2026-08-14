@@ -3,8 +3,4 @@ export const ROLES = {
   USER: "USER",
 } as const;
 
-export const PERMISSIONS = {
-  // Example permissions
-  CREATE_POST: "create_post",
-  DELETE_POST: "delete_post",
-} as const;
+export { PERMISSIONS } from '@/common/constants/permission.constant';

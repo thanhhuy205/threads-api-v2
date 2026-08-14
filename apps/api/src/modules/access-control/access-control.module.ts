@@ -7,6 +7,7 @@ import { RoleRepository } from './role/repository/role.repository';
 import { UserRoleRepository } from './role/repository/user-role.repository';
 import { RoleService } from './role/service/role.service';
 import { UserRoleService } from './role/service/user-role.service';
+import { AccessControlService } from './services/access-control.service';
 
 @Module({
   providers: [
@@ -18,12 +19,14 @@ import { UserRoleService } from './role/service/user-role.service';
     RolePermissionService,
     RoleService,
     UserRoleService,
+    AccessControlService,
   ],
   exports: [
     PermissionService,
     RolePermissionService,
     RoleService,
     UserRoleService,
+    AccessControlService,
   ],
 })
 export class AccessControlModule { }

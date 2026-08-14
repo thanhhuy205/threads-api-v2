@@ -17,6 +17,7 @@
         "db:pull": "prisma db pull --config apps/api/prisma.config.ts",
         "db:studio": "prisma studio --config apps/api/prisma.config.ts",
         "db:format": "prisma format --config apps/api/prisma.config.ts",
+        "db:seed": "prisma db seed --config apps/api/prisma.config.ts",
         "worker": "pnpm run build && node dist/apps/workers/src/main.js",
         "start:prod": "node dist/apps/api/src/main.js",
         "start:worker": "node dist/apps/workers/src/index.js",

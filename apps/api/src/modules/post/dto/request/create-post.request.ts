@@ -79,11 +79,30 @@ export class CreatePostDto {
   @IsOptional()
   @Transform(normalizeEnum)
   @IsEnum(VisibilityPost, { message: 'Invalid visibility value' })
-  visibility?: string = 'WORKSPACE';
+  visibility?: VisibilityPost = VisibilityPost.WORKSPACE;
+
+  @ApiPropertyOptional({ description: 'Public ID of the target group' })
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  @MaxLength(255)
+  groupPublicId?: string;
+
+  @ApiPropertyOptional({ default: false })
+  @IsOptional()
+  @IsBoolean()
+  isPinned?: boolean = false;
+
+  @ApiPropertyOptional({ type: Date, nullable: true })
+  @IsOptional()
+  @Type(() => Date)
+  @IsDate()
+  expiresAt?: Date | null;
 
 
   @ApiPropertyOptional({ default: null })
   @IsOptional()
+  @Type(() => Date)
   @IsDate()
   scheduleTime?: Date;
 }

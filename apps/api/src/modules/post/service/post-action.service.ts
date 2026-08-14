@@ -1,4 +1,5 @@
 import { QUEUE_NAME } from "@/constants/queue";
+import { PERMISSIONS } from '@/common/constants/permission.constant';
 import { redisKey } from "@/constants/resolve-key/redis-key";
 import {
   BadRequestException,
@@ -6,6 +7,7 @@ import {
   NotFoundException,
 } from "@/errors/error";
 import { EvaluationProducer } from "@/modules/job/evaluation-post/producer/evaluation.producer";
+import { AccessControlService } from '@/modules/access-control/services/access-control.service';
 import { ReportService } from "@/modules/report/service/report.service";
 import { UserService } from "@/modules/user/service/user.service";
 import { RedisVersionService } from '@/shared/redis-version';
@@ -13,8 +15,10 @@ import { RedisService } from "@libs/cache/redis.service";
 import { Injectable } from '@nestjs/common';
 import {
   InteractionType,
+  PermissionScope,
   ReportStatus,
-  ReportTargetType
+  ReportTargetType,
+  VisibilityPost,
 } from "@prisma/client";
 import { UpdatePostDto } from '../dto/request';
 import { PostInteractionRepository } from "../repository/post-interaction.repository";
@@ -40,6 +44,7 @@ export class PostActionService {
     private readonly redisVersionService: RedisVersionService,
     private readonly evaluationProducer: EvaluationProducer,
     private readonly redisService: RedisService,
+    private readonly accessControlService: AccessControlService,
   ) { }
   async hide(
     publicId: string,
@@ -209,6 +214,33 @@ export class PostActionService {
 
     if (post.userId !== userId) {
       throw new ForbiddenException("Users can only update their own posts");
+    }
+
+    const scope =
+      post.visibility === VisibilityPost.GROUP
+        ? PermissionScope.GROUP
+        : PermissionScope.WORKSPACE;
+
+    if (payload.isPinned !== undefined) {
+      await this.accessControlService.assertPermission(
+        userId,
+        PERMISSIONS.POST_PIN,
+        scope,
+      );
+    }
+
+    if (payload.expiresAt !== undefined) {
+      if (
+        payload.expiresAt !== null &&
+        payload.expiresAt.getTime() <= Date.now()
+      ) {
+        throw new BadRequestException('expiresAt must be in the future');
+      }
+      await this.accessControlService.assertPermission(
+        userId,
+        PERMISSIONS.POST_EXPIRE,
+        scope,
+      );
     }
 
     const updatedPost = await this.postRepository.updateByPublicId(publicId, payload);

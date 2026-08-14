@@ -70,11 +70,20 @@ enum VisibilityPost {
   ONLY_ME
 }
 
+enum PermissionScope {
+  WORKSPACE
+  GROUP
+}
+
 enum Position {
   SOFTWARE_ENGINEER
+  SENIOR_SOFTWARE_ENGINEER
+  INTERN_SOFTWARE_ENGINEER
+  TECH_LEAD
   DATA_SCIENTIST
   PRODUCT_MANAGER
   DESIGNER
+  HR
   MARKETING_SPECIALIST
   SALES_REPRESENTATIVE
   CUSTOMER_SUPPORT
@@ -150,12 +159,13 @@ model UserRole {
 }
 
 model Permission {
-  id              String           @id @default(nanoid())
-  name            String           @unique @db.VarChar(50)
-  code            String           @unique @db.VarChar(50)
-  createdAt       DateTime         @default(now()) @map("created_at")
-  updatedAt       DateTime         @updatedAt @map("updated_at")
-  rolePermissions RolePermission[]
+  id                  String               @id @default(nanoid())
+  name                String               @unique @db.VarChar(50)
+  code                String               @unique @db.VarChar(50)
+  createdAt           DateTime             @default(now()) @map("created_at")
+  updatedAt           DateTime             @updatedAt @map("updated_at")
+  rolePermissions     RolePermission[]
+  positionPermissions PositionPermission[]
 
   @@index([code], map: "idx_permissions_code")
   @@map("permissions")
@@ -209,7 +219,6 @@ model User {
   announcementReceipts AnnouncementReceipt[]
   userTeams            UserTeam[]
   groupTeams           GroupTeam[]
-  positionPermissions  PositionPermission[]
   userPositions        UserPosition[]
 
   @@index([email], map: "idx_users_email")
@@ -229,20 +238,24 @@ model UserPosition {
 
   user User @relation(fields: [userId], references: [id])
 
+  @@unique([userId, position], map: "uq_user_positions_user_id_position")
   @@index([userId], map: "idx_user_positions_user_id")
   @@map("user_positions")
 }
 
 model PositionPermission {
-  id        Int      @id @default(autoincrement())
-  userId    String   @map("user_id")
-  position  Position @default(OTHER)
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id           Int             @id @default(autoincrement())
+  position     Position
+  permissionId String          @map("permission_id")
+  scope        PermissionScope @default(WORKSPACE)
+  createdAt    DateTime        @default(now()) @map("created_at")
+  updatedAt    DateTime        @updatedAt @map("updated_at")
 
-  user User @relation(fields: [userId], references: [id])
+  permission Permission @relation(fields: [permissionId], references: [id])
 
-  @@index([userId], map: "idx_position_permissions_user_id")
+  @@unique([position, permissionId, scope], map: "uq_position_permissions_position_permission_scope")
+  @@index([permissionId], map: "idx_position_permissions_permission_id")
+  @@index([position, scope], map: "idx_position_permissions_position_scope")
   @@map("position_permissions")
 }
 
@@ -346,6 +359,11 @@ model Post {
   isPinned                Boolean   @default(false) @map("is_pinned")
   requiresAcknowledgement Boolean   @default(false) @map("requires_acknowledgement")
   publishedAt             DateTime? @map("published_at")
+  // TODO: filter, archive, or soft-delete expired posts when expiration behavior is implemented.
+  expiresAt               DateTime? @map("expires_at")
+
+  groupTeamId Int?       @map("group_team_id")
+  groupTeam   GroupTeam? @relation(fields: [groupTeamId], references: [id])
 
   // Survey
   isSurvey   Boolean   @default(false) @map("is_survey")
@@ -393,6 +411,7 @@ model Post {
   @@index([parentId])
   @@index([rootPostId])
   @@index([originPostId])
+  @@index([groupTeamId])
   @@index([createdAt])
   @@fulltext([content], map: "idx_posts_content_fulltext")
   @@map("posts")
@@ -405,6 +424,7 @@ model GroupTeam {
   createdAt DateTime   @default(now()) @map("created_at")
   updatedAt DateTime   @updatedAt @map("updated_at")
   userTeams UserTeam[]
+  posts     Post[]
 
   createdBy   User   @relation(fields: [createdById], references: [id])
   createdById String @map("created_by_id")
