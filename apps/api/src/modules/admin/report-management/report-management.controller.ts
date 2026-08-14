@@ -1,4 +1,5 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Patch, Query, Req, UseGuards } from '@nestjs/common';
+import { GetUserId } from '@/common/decorators/get-user-id.decorator';
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Patch, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Message } from '@/common/decorators/message.decorator';
 import { Pagination } from '@/common/decorators/pagination.decorator';
@@ -8,8 +9,6 @@ import { AdminRoleGuard } from '../guards/admin-role.guard';
 import { ListReportsQueryDto } from "./dto/request/list-reports.query.dto";
 import { ModerateReportRequestDto } from "./dto/request/moderate-report.request.dto";
 import { ReportManagementService } from "./report-management.service";
-
-type AuthenticatedRequest = { user?: { sub?: string } };
 
 @ApiTags('Admin')
 @ApiBearerAuth('bearer')
@@ -50,13 +49,13 @@ export class ReportManagementController {
   moderateReport(
     @Param('reportId') reportId: string,
     @Body() payload: ModerateReportRequestDto,
-    @Req() request: AuthenticatedRequest,
+    @GetUserId() adminId: string,
   ) {
     return this.reportManagementService.moderateReport({
       reportId,
       action: payload.action,
       adminNote: payload.adminNote,
-      adminId: request.user?.sub,
+      adminId,
     });
   }
 }

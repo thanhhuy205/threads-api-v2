@@ -10,6 +10,7 @@ import { AdminModule } from './modules/admin/admin.module';
 import { AiModule } from './modules/ai/ai.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { HealthModule } from './modules/health/health.module';
+import { GroupTeamModule } from './modules/group-team/group-team.module';
 import { JobModule } from './modules/job/job.module';
 import { JwtModule } from './modules/jwt/jwt.module';
 import { NotificationGroupModule } from './modules/notification-group/notification-group.module';
@@ -50,6 +51,7 @@ import { UserModule } from './modules/user/user.module';
     JobModule,
     AuthModule,
     HealthModule,
+    GroupTeamModule,
     AiModule,
     UserModule,
     PollModule,

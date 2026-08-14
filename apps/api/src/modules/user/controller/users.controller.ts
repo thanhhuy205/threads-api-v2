@@ -2,9 +2,10 @@ import { Controller, Get, Param, Query, Req } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { HttpRequest as Request } from '@/common/types/http.type';
 import { Message } from '@/common/decorators/message.decorator';
+import { GetUserId } from '@/common/decorators/get-user-id.decorator';
 import { IsPublic } from '@/common/decorators/is-public.decorator';
-import { AUTH_MESSAGE, USER_MESSAGE } from '@/constants/message';
-import { NotFoundException, UnauthorizedException } from '@/errors/error';
+import { USER_MESSAGE } from '@/constants/message';
+import { NotFoundException } from '@/errors/error';
 import { JwtService } from '@/modules/jwt/service/jwt.service';
 import { UserNameMentionQueryDto, UsernameParamsDto } from '../dto/request';
 import { UserService } from '../service/user.service';
@@ -34,11 +35,7 @@ export class UsersController {
   @Message('User status profile retrieved successfully')
   @ApiOperation({ summary: 'Get profile completion status for the current user' })
   @ApiResponse({ status: 200, description: 'User status profile retrieved successfully' })
-  async getMyStatusProfile(@Req() request: Request) {
-    const userId = request.user?.sub;
-    if (!userId) {
-      throw new UnauthorizedException(AUTH_MESSAGE.TOKEN_INVALID);
-    }
+  async getMyStatusProfile(@GetUserId() userId: string) {
     const statusProfile = await this.userService.getMyStatusProfile(userId);
     if (!statusProfile) {
       throw new NotFoundException(USER_MESSAGE.USER_NOT_FOUND);

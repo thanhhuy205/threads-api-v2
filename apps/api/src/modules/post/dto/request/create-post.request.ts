@@ -1,7 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { VisibilityPost } from '@prisma/client';
 import { Transform, Type } from 'class-transformer';
-import { ArrayMaxSize, ArrayMinSize, IsArray, IsBoolean, IsEnum, IsOptional, IsString, MaxLength, MinLength, ValidateIf, ValidateNested } from 'class-validator';
+import { ArrayMaxSize, ArrayMinSize, IsArray, IsBoolean, IsDate, IsEnum, IsOptional, IsString, MaxLength, MinLength, ValidateIf, ValidateNested } from 'class-validator';
 import { creatablePostTypes } from '../../constants/post-type';
 import { PostMediaDto } from '../response/post-media.response';
 import { PostMentionDto } from '../response/post-mention.response';
@@ -80,4 +80,10 @@ export class CreatePostDto {
   @Transform(normalizeEnum)
   @IsEnum(VisibilityPost, { message: 'Invalid visibility value' })
   visibility?: string = 'WORKSPACE';
+
+
+  @ApiPropertyOptional({ default: null })
+  @IsOptional()
+  @IsDate()
+  scheduleTime?: Date;
 }

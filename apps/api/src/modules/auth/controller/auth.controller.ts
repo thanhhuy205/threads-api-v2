@@ -1,3 +1,4 @@
+import { GetUserId } from '@/common/decorators/get-user-id.decorator';
 import { IsPublic } from '@/common/decorators/is-public.decorator';
 import { Message } from '@/common/decorators/message.decorator';
 import { RefreshTokenHeaderGuard } from '@/common/guards/refresh-token-header.guard';
@@ -87,8 +88,11 @@ export class AuthController {
   @ApiBearerAuth('bearer')
   @ApiOperation({ summary: 'Update the authenticated user profile' })
   @ApiResponse({ status: HttpStatus.OK, description: AUTH_MESSAGE.UPDATE_USER_SUCCESS })
-  updateProfile(@Body() payload: UpdateProfileDto, @Req() request: Request) {
-    return this.authService.updateProfile(this.userId(request), payload);
+  updateProfile(
+    @Body() payload: UpdateProfileDto,
+    @GetUserId() userId: string,
+  ) {
+    return this.authService.updateProfile(userId, payload);
   }
 
   @Post('refresh-token')
@@ -119,8 +123,8 @@ export class AuthController {
   @ApiBearerAuth('bearer')
   @ApiOperation({ summary: 'Get the authenticated user' })
   @ApiResponse({ status: HttpStatus.OK, description: AUTH_MESSAGE.GET_ME_SUCCESS })
-  async me(@Req() request: Request) {
-    const user = await this.authService.me(this.userId(request));
+  async me(@GetUserId() userId: string) {
+    const user = await this.authService.me(userId);
     if (!user) {
       throw new NotFoundException(AUTH_MESSAGE.USER_NOT_FOUND);
     }
@@ -152,11 +156,11 @@ export class AuthController {
   @ApiResponse({ status: HttpStatus.OK, description: AUTH_MESSAGE.RESEND_VERIFY_EMAIL_SUCCESS })
   async resendVerifyEmail(
     @Headers('x-origin-url') originUrl: string | undefined,
-    @Req() request: Request,
+    @GetUserId() userId: string,
   ) {
     await this.authService.resendVerifyEmail(
       originUrl ?? configService.APP_CONFIG.FRONTEND_URL,
-      this.userId(request),
+      userId,
     );
     return null;
   }
@@ -210,15 +214,6 @@ export class AuthController {
   async resetPassword(@Body() payload: ResetPasswordDto) {
     await this.authService.resetPassword(payload);
     return null;
-  }
-
-  private userId(request: Request): string {
-    console.log(request.user);
-    const userId = request.user?.sub;
-    if (!userId) {
-      throw new UnauthorizedException(AUTH_MESSAGE.TOKEN_INVALID);
-    }
-    return userId;
   }
 
   private sessionMetadata(request: Request) {

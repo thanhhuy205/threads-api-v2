@@ -49,7 +49,7 @@ export class PostFeedService {
       postRepository: this.postRepository,
       redisService: this.redisService,
     }),
-  }
+  } 
 
   async getPostMe({ after, take, userId }: GetPostWithUser) {
     const namespace = buildPostListNamespace({

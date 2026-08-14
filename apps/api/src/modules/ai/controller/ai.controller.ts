@@ -1,9 +1,7 @@
+import { GetUserId } from '@/common/decorators/get-user-id.decorator';
 import { Message } from '@/common/decorators/message.decorator';
-import { AUTH_MESSAGE } from '@/constants/message';
-import { UnauthorizedException } from '@/errors/error';
-import { Body, Controller, HttpCode, HttpStatus, Post, Req } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import type { HttpRequest as Request } from '@/common/types/http.type';
 import { GenerateImageRequestDto } from '../dto/request/generate-image.request.dto';
 import { AiService } from '../service/ai.service';
 
@@ -20,14 +18,8 @@ export class AiController {
     @ApiResponse({ status: HttpStatus.OK, description: 'Image generation job created' })
     async generateImageCaption(
         @Body() payload: GenerateImageRequestDto,
-        @Req() req: Request,
+        @GetUserId() userId: string,
     ) {
-        const userId = req.user?.sub;
-
-        if (!userId) {
-            throw new UnauthorizedException(AUTH_MESSAGE.TOKEN_INVALID);
-        }
-
         const sdGenerationJob = await this.aiService.generateImageCaption({
             content: payload.content,
             userId,

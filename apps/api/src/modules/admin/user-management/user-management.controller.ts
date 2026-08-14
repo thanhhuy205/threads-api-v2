@@ -1,4 +1,5 @@
-import { Controller, Get, HttpCode, HttpStatus, Param, Patch, Query, Req, UseGuards } from '@nestjs/common';
+import { GetUserId } from '@/common/decorators/get-user-id.decorator';
+import { Controller, Get, HttpCode, HttpStatus, Param, Patch, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Message } from '@/common/decorators/message.decorator';
 import { Pagination } from '@/common/decorators/pagination.decorator';
@@ -7,8 +8,6 @@ import type { OffsetPagination } from '@/common/helpers/offset-pagination.helper
 import { AdminRoleGuard } from '../guards/admin-role.guard';
 import { ListUsersQueryDto } from "./dto/request/list-users.query.dto";
 import { UserManagementService } from "./user-management.service";
-
-type AuthenticatedRequest = { user?: { sub?: string } };
 
 @ApiTags('Admin')
 @ApiBearerAuth('bearer')
@@ -35,10 +34,13 @@ export class UserManagementController {
   @ApiOperation({ summary: 'Unban a user' })
   @ApiParam({ name: 'userId' })
   @ApiResponse({ status: HttpStatus.OK, description: 'User unbanned successfully' })
-  async unbanUser(@Param('userId') userId: string, @Req() request: AuthenticatedRequest) {
+  async unbanUser(
+    @Param('userId') userId: string,
+    @GetUserId() adminId: string,
+  ) {
     return this.userManagementService.unbanUser({
       userId,
-      adminId: request.user?.sub,
+      adminId,
     });
   }
 
@@ -48,10 +50,13 @@ export class UserManagementController {
   @ApiOperation({ summary: 'Ban a user indefinitely' })
   @ApiParam({ name: 'userId' })
   @ApiResponse({ status: HttpStatus.OK, description: 'User banned indefinitely successfully' })
-  async banUserUnlimited(@Param('userId') userId: string, @Req() request: AuthenticatedRequest) {
+  async banUserUnlimited(
+    @Param('userId') userId: string,
+    @GetUserId() adminId: string,
+  ) {
     return this.userManagementService.banUserUnlimited({
       userId,
-      adminId: request.user?.sub,
+      adminId,
     });
   }
 }

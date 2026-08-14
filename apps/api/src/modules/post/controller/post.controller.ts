@@ -1,10 +1,11 @@
 import { CursorPagination } from "@/common/decorators/cursor-pagination.decorator";
+import { GetUserId } from "@/common/decorators/get-user-id.decorator";
 import { IsPublic } from "@/common/decorators/is-public.decorator";
 import { Message } from "@/common/decorators/message.decorator";
 import { ApiCursorPaginatedResponse } from "@/common/decorators/swagger-response.decorator";
 import type { CursorPagination as CursorPaginationParams } from "@/common/helpers/cursor-pagination.helper";
-import { AUTH_MESSAGE, POST_MESSAGE } from "@/constants/message";
-import { NotFoundException, UnauthorizedException } from "@/errors/error";
+import { POST_MESSAGE } from "@/constants/message";
+import { NotFoundException } from "@/errors/error";
 import { JwtService } from "@/modules/jwt/service/jwt.service";
 import { UserService } from "@/modules/user/service/user.service";
 import {
@@ -109,12 +110,12 @@ export class PostController {
   async getPostMe(
     @Query() _query: CursorPaginationQueryDto,
     @CursorPagination() cursor: CursorPaginationParams,
-    @Req() request: AuthenticatedRequest,
+    @GetUserId() userId: string,
   ) {
     const { posts, pagination } = await this.postFeedService.getPostMe({
       after: cursor.after ?? undefined,
       take: cursor.take,
-      userId: this.userId(request),
+      userId,
     });
     return { data: posts, pagination };
   }
@@ -127,9 +128,8 @@ export class PostController {
   async getRepliesMe(
     @Query() _query: CursorPaginationQueryDto,
     @CursorPagination() cursor: CursorPaginationParams,
-    @Req() request: AuthenticatedRequest,
+    @GetUserId() userId: string,
   ) {
-    const userId = this.userId(request);
     const { posts, pagination } = await this.postUserService.getRepliesByUser({
       after: cursor.after ?? undefined,
       take: cursor.take,
@@ -147,9 +147,8 @@ export class PostController {
   async getQuoteMe(
     @Query() _query: CursorPaginationQueryDto,
     @CursorPagination() cursor: CursorPaginationParams,
-    @Req() request: AuthenticatedRequest,
+    @GetUserId() userId: string,
   ) {
-    const userId = this.userId(request);
     const { posts, pagination } = await this.postFeedService.getQuote({
       after: cursor.after ?? undefined,
       take: cursor.take,
@@ -274,11 +273,11 @@ export class PostController {
   })
   createPost(
     @Body() payload: CreatePostDto,
-    @Req() request: AuthenticatedRequest,
+    @GetUserId() userId: string,
   ) {
     return this.postService.create({
       ...payload,
-      userId: this.userId(request),
+      userId,
     });
   }
 
@@ -290,11 +289,11 @@ export class PostController {
   replyPost(
     @Param() params: PublicIdParamsDto,
     @Body() payload: CreatePostDto,
-    @Req() request: AuthenticatedRequest,
+    @GetUserId() userId: string,
   ) {
     return this.postService.reply(params.publicId, {
       ...payload,
-      userId: this.userId(request),
+      userId,
     });
   }
 
@@ -305,12 +304,12 @@ export class PostController {
   @ApiOperation({ summary: "Like or unlike a post" })
   async likePost(
     @Param() params: PublicIdParamsDto,
-    @Req() request: AuthenticatedRequest,
+    @GetUserId() userId: string,
   ) {
     return {
       liked: await this.postActionService.like(
         params.publicId,
-        this.userId(request),
+        userId,
       ),
     };
   }
@@ -321,9 +320,9 @@ export class PostController {
   @ApiOperation({ summary: "Repost a post" })
   repostPost(
     @Param() params: PublicIdParamsDto,
-    @Req() request: AuthenticatedRequest,
+    @GetUserId() userId: string,
   ) {
-    return this.postService.repost(params.publicId, this.userId(request));
+    return this.postService.repost(params.publicId, userId);
   }
 
   @Post(":publicId/quote")
@@ -333,11 +332,11 @@ export class PostController {
   quotePost(
     @Param() params: PublicIdParamsDto,
     @Body() payload: CreatePostDto,
-    @Req() request: AuthenticatedRequest,
+    @GetUserId() userId: string,
   ) {
     return this.postService.quote(params.publicId, {
       ...payload,
-      userId: this.userId(request),
+      userId,
     });
   }
 
@@ -349,11 +348,11 @@ export class PostController {
   async savePost(
     @Param() params: PublicIdParamsDto,
     @Body() payload: SavePostDto,
-    @Req() request: AuthenticatedRequest,
+    @GetUserId() userId: string,
   ) {
     await this.postActionService.save(
       params.publicId,
-      this.userId(request),
+      userId,
       payload.isSaved,
     );
     return { saved: payload.isSaved };
@@ -367,11 +366,11 @@ export class PostController {
   async hidePost(
     @Param() params: PublicIdParamsDto,
     @Body() payload: HidePostDto,
-    @Req() request: AuthenticatedRequest,
+    @GetUserId() userId: string,
   ) {
     await this.postActionService.hide(
       params.publicId,
-      this.userId(request),
+      userId,
       payload.isHidden,
     );
     return { hidden: payload.isHidden };
@@ -385,11 +384,11 @@ export class PostController {
   async reportPost(
     @Param() params: PublicIdParamsDto,
     @Body() payload: ReportDto,
-    @Req() request: AuthenticatedRequest,
+    @GetUserId() userId: string,
   ) {
     const report = await this.postActionService.report(params.publicId, {
       ...payload,
-      reporterId: this.userId(request),
+      reporterId: userId,
     });
     return { reported: true, report };
   }
@@ -401,14 +400,14 @@ export class PostController {
   updatePost(
     @Param() params: PublicIdParamsDto,
     @Body() payload: UpdatePostDto,
-    @Req() request: AuthenticatedRequest,
+    @GetUserId() userId: string,
   ) {
     if (payload.content === undefined) {
       throw new BadRequestException("Content is required");
     }
     return this.postActionService.update(
       params.publicId,
-      this.userId(request),
+      userId,
       payload,
     );
   }
@@ -420,9 +419,9 @@ export class PostController {
   @ApiOperation({ summary: "Delete a post" })
   async deletePost(
     @Param() params: PublicIdParamsDto,
-    @Req() request: AuthenticatedRequest,
+    @GetUserId() userId: string,
   ) {
-    await this.postActionService.delete(params.publicId, this.userId(request));
+    await this.postActionService.delete(params.publicId, userId);
     return { deleted: true };
   }
 
@@ -432,9 +431,4 @@ export class PostController {
     return user;
   }
 
-  private userId(request: AuthenticatedRequest): string {
-    if (!request.user?.sub)
-      throw new UnauthorizedException(AUTH_MESSAGE.TOKEN_INVALID);
-    return request.user.sub;
-  }
 }

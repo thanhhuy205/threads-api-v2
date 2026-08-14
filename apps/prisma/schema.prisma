@@ -10,6 +10,7 @@ enum UserRoleType {
   USER
   ADMIN
   MODERATOR
+  WORKSPACE_OWNER
 }
 
 enum PostType {
@@ -187,10 +188,9 @@ model User {
   verifiedAt DateTime?  @map("verified_at")
   status     UserStatus @default(ACTIVE)
 
-  position     Position? @default(OTHER)
-  location     String?   @db.VarChar(255)
-  website      String?   @db.VarChar(255)
-  labelWebsite String?   @map("label_website") @db.VarChar(255)
+  location     String? @db.VarChar(255)
+  website      String? @db.VarChar(255)
+  labelWebsite String? @map("label_website") @db.VarChar(255)
 
   deletedAt DateTime? @map("deleted_at")
   createdAt DateTime  @default(now()) @map("created_at")
@@ -207,6 +207,10 @@ model User {
   votes                Vote[]
   postInteractions     PostInteraction[]
   announcementReceipts AnnouncementReceipt[]
+  userTeams            UserTeam[]
+  groupTeams           GroupTeam[]
+  positionPermissions  PositionPermission[]
+  userPositions        UserPosition[]
 
   @@index([email], map: "idx_users_email")
   @@index([name], map: "idx_users_name")
@@ -214,6 +218,32 @@ model User {
   @@index([deletedAt], map: "idx_users_deleted_at")
   @@fulltext([username, name], map: "idx_users_username_name_fulltext")
   @@map("users")
+}
+
+model UserPosition {
+  id        Int      @id @default(autoincrement())
+  userId    String   @map("user_id")
+  position  Position @default(OTHER)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId], map: "idx_user_positions_user_id")
+  @@map("user_positions")
+}
+
+model PositionPermission {
+  id        Int      @id @default(autoincrement())
+  userId    String   @map("user_id")
+  position  Position @default(OTHER)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId], map: "idx_position_permissions_user_id")
+  @@map("position_permissions")
 }
 
 model AnnouncementReceipt {
@@ -366,6 +396,38 @@ model Post {
   @@index([createdAt])
   @@fulltext([content], map: "idx_posts_content_fulltext")
   @@map("posts")
+}
+
+model GroupTeam {
+  id        Int        @id @default(autoincrement())
+  publicId  String     @unique @default(nanoid()) @map("public_id")
+  name      String     @unique @db.VarChar(255)
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+  userTeams UserTeam[]
+
+  createdBy   User   @relation(fields: [createdById], references: [id])
+  createdById String @map("created_by_id")
+
+  @@index([name], map: "idx_group_teams_name")
+  @@map("group_teams")
+}
+
+model UserTeam {
+  id        Int       @id @default(autoincrement())
+  userId    String    @map("user_id")
+  teamId    Int       @map("team_id")
+  position  Position? @default(OTHER)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  user User      @relation(fields: [userId], references: [id])
+  team GroupTeam @relation(fields: [teamId], references: [id])
+
+  @@unique([userId, teamId], map: "uq_user_teams_user_id_team_id")
+  @@index([userId], map: "idx_user_teams_user_id")
+  @@index([teamId], map: "idx_user_teams_team_id")
+  @@map("user_teams")
 }
 
 model Poll {
