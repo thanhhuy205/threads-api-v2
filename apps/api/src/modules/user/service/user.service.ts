@@ -46,7 +46,9 @@ export class UserService {
       website: user.website,
     };
   }
-
+  async getPermissionPositionByUserId(userId: string) {
+    return await this.userRepository.getPermissionPositionByUserId(userId);
+  }
   async getMyStatusProfile(userId: string) {
     const user = await this.userRepository.findStatusProfileById(userId);
 

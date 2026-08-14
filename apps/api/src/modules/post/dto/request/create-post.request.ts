@@ -100,9 +100,15 @@ export class CreatePostDto {
   expiresAt?: Date | null;
 
 
-  @ApiPropertyOptional({ default: null })
+  @ApiPropertyOptional({ type: Date, nullable: true })
   @IsOptional()
   @Type(() => Date)
   @IsDate()
-  scheduleTime?: Date;
+  announceStartDay?: Date | null;
+
+  @ApiPropertyOptional({ type: Date, nullable: true })
+  @IsOptional()
+  @Type(() => Date)
+  @IsDate()
+  announceEndDay?: Date | null;
 }

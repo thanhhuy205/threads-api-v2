@@ -6,8 +6,7 @@ import type { HttpRequest as Request } from '@/common/types/http.type';
 import configService from '@/config/config';
 import { AUTH_MESSAGE } from '@/constants/message';
 import {
-  NotFoundException,
-  UnauthorizedException,
+  UnauthorizedException
 } from '@/errors/error';
 import {
   Body,
@@ -126,7 +125,7 @@ export class AuthController {
   async me(@GetUserId() userId: string) {
     const user = await this.authService.me(userId);
     if (!user) {
-      throw new NotFoundException(AUTH_MESSAGE.USER_NOT_FOUND);
+      throw new UnauthorizedException(AUTH_MESSAGE.TOKEN_INVALID);
     }
     return user;
   }

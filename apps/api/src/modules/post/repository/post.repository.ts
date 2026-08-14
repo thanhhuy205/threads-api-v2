@@ -287,7 +287,7 @@ export class PostRepository {
         visibility: payload.visibility ?? VisibilityPost.WORKSPACE,
         isPinned: payload.isPinned ?? false,
         expiresAt: payload.expiresAt,
-        publishedAt: payload.scheduleTime,
+        publishedAt: payload.announceEndDay ? new Date() : undefined,
         groupTeamId: payload.groupTeamId,
       },
 

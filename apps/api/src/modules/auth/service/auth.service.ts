@@ -162,12 +162,14 @@ export class AuthService {
       tokenPair.sessionId,
       metadata,
     );
+    const permission = await this.userService.getPermissionPositionByUserId(user.id);
+    const positionPermission = permission?.userPositions.map((pos) => pos.positionPermission.permission.code) || [];
 
     return authResponse.toResponse({
       type: "auth",
       user,
       ...tokenPair,
-    });
+    }, positionPermission);
   }
 
   async resendVerifyEmail(originUrl: string, userId?: string): Promise<void> {
@@ -347,29 +349,32 @@ export class AuthService {
   }
 
   async me(userId: string): Promise<AuthMeResponseDto | null> {
-    // const cacheKey = redisKey.auth.me(userId);
-    // const cached = await this.redisService.redis.get(cacheKey);
-    // if (cached) {
-    //   try {
-    //     return JSON.parse(cached) as AuthMeResponseDto;
-    //   } catch {
-    //     // Ignore malformed cache and rebuild from the database.
-    //   }
-    // }
+    const cacheKey = redisKey.auth.me(userId);
+    const cached = await this.redisService.redis.get(cacheKey);
+    if (cached) {
+      try {
+        return JSON.parse(cached) as AuthMeResponseDto;
+      } catch {
+        // Ignore malformed cache and rebuild from the database.
+      }
+    }
 
     const user = await this.userService.findByUserId(userId);
     if (!user) {
       return null;
     }
 
+    const permission = await this.userService.getPermissionPositionByUserId(userId);
+    const positionPermission = permission?.userPositions.map((pos) => pos.positionPermission.permission.code) || [];
+    console.log(positionPermission);
     const response = authResponse.toResponse({
       type: "me",
       user,
+    }, positionPermission);
+    console.log(response);
+    await this.redisService.redis.set(cacheKey, JSON.stringify(response), {
+      EX: 30,
     });
-
-    // await this.redisService.redis.set(cacheKey, JSON.stringify(response), {
-    //   EX: 30,
-    // });
 
     return response;
   }

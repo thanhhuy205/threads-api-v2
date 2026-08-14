@@ -230,16 +230,20 @@ model User {
 }
 
 model UserPosition {
-  id        Int      @id @default(autoincrement())
-  userId    String   @map("user_id")
+  id                   Int    @id @default(autoincrement())
+  userId               String @map("user_id")
+  positionPermissionId Int    @map("position_permission_id")
+
   position  Position @default(OTHER)
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  user User @relation(fields: [userId], references: [id])
+  user               User               @relation(fields: [userId], references: [id])
+  positionPermission PositionPermission @relation(fields: [positionPermissionId], references: [id])
 
-  @@unique([userId, position], map: "uq_user_positions_user_id_position")
+  @@unique([userId, positionPermissionId], map: "uq_user_positions_user_id_position_permission_id")
   @@index([userId], map: "idx_user_positions_user_id")
+  @@index([positionPermissionId], map: "idx_user_positions_position_permission_id")
   @@map("user_positions")
 }
 
@@ -251,7 +255,8 @@ model PositionPermission {
   createdAt    DateTime        @default(now()) @map("created_at")
   updatedAt    DateTime        @updatedAt @map("updated_at")
 
-  permission Permission @relation(fields: [permissionId], references: [id])
+  permission    Permission     @relation(fields: [permissionId], references: [id])
+  userPositions UserPosition[]
 
   @@unique([position, permissionId, scope], map: "uq_position_permissions_position_permission_scope")
   @@index([permissionId], map: "idx_position_permissions_permission_id")

@@ -1,5 +1,6 @@
 import { CursorPagination } from "@/common/decorators/cursor-pagination.decorator";
 import { GetUserId } from "@/common/decorators/get-user-id.decorator";
+import { ResponseOperation } from "@/common/decorators/http-message-operration.decorator";
 import { IsPublic } from "@/common/decorators/is-public.decorator";
 import { Message } from "@/common/decorators/message.decorator";
 import { ApiCursorPaginatedResponse } from "@/common/decorators/swagger-response.decorator";
@@ -14,7 +15,6 @@ import {
   Controller,
   Delete,
   Get,
-  HttpCode,
   HttpStatus,
   Param,
   Patch,
@@ -26,7 +26,6 @@ import {
   ApiBearerAuth,
   ApiOperation,
   ApiParam,
-  ApiResponse,
   ApiTags,
 } from "@nestjs/swagger";
 import {
@@ -87,12 +86,7 @@ export class PostController {
 
   @Get("search")
   @IsPublic()
-  @Message(POST_MESSAGE.SEARCH_SUCCESS)
-  @ApiOperation({ summary: "Search posts" })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: POST_MESSAGE.SEARCH_SUCCESS,
-  })
+  @ResponseOperation(POST_MESSAGE.SEARCH_SUCCESS, HttpStatus.OK, "Search posts")
   search(@Query() query: SearchPostQueryDto) {
     return this.postSearchService.search({
       q: query.q ?? "",
@@ -247,10 +241,8 @@ export class PostController {
 
   @Get(":publicId")
   @IsPublic()
-  @Message(POST_MESSAGE.RETRIEVED)
-  @ApiOperation({ summary: "Get a post" })
+  @ResponseOperation(POST_MESSAGE.RETRIEVED, HttpStatus.OK, "Get a post")
   @ApiParam({ name: "publicId" })
-  @ApiResponse({ status: HttpStatus.OK, description: POST_MESSAGE.RETRIEVED })
   async getPost(
     @Param() params: PublicIdParamsDto,
     @Req() request: AuthenticatedRequest,
@@ -265,12 +257,7 @@ export class PostController {
 
   @Post()
   @ApiBearerAuth("bearer")
-  @Message(POST_MESSAGE.CREATED)
-  @ApiOperation({ summary: "Create a post" })
-  @ApiResponse({
-    status: HttpStatus.CREATED,
-    description: POST_MESSAGE.CREATED,
-  })
+  @ResponseOperation(POST_MESSAGE.CREATED, HttpStatus.CREATED, "Create a post")
   createPost(
     @Body() payload: CreatePostDto,
     @GetUserId() userId: string,
@@ -283,8 +270,7 @@ export class PostController {
 
   @Post(":publicId/reply")
   @ApiBearerAuth("bearer")
-  @Message(POST_MESSAGE.CREATED)
-  @ApiOperation({ summary: "Reply to a post" })
+  @ResponseOperation(POST_MESSAGE.CREATED, HttpStatus.CREATED, "Reply to a post")
   @ApiParam({ name: "publicId" })
   replyPost(
     @Param() params: PublicIdParamsDto,
@@ -298,10 +284,8 @@ export class PostController {
   }
 
   @Post(":publicId/like")
-  @HttpCode(HttpStatus.OK)
   @ApiBearerAuth("bearer")
-  @Message(POST_MESSAGE.RETRIEVED)
-  @ApiOperation({ summary: "Like or unlike a post" })
+  @ResponseOperation(POST_MESSAGE.RETRIEVED, HttpStatus.OK, "Like or unlike a post")
   async likePost(
     @Param() params: PublicIdParamsDto,
     @GetUserId() userId: string,
@@ -316,8 +300,7 @@ export class PostController {
 
   @Post(":publicId/repost")
   @ApiBearerAuth("bearer")
-  @Message(POST_MESSAGE.CREATED)
-  @ApiOperation({ summary: "Repost a post" })
+  @ResponseOperation(POST_MESSAGE.CREATED, HttpStatus.CREATED, "Repost a post")
   repostPost(
     @Param() params: PublicIdParamsDto,
     @GetUserId() userId: string,
@@ -327,8 +310,7 @@ export class PostController {
 
   @Post(":publicId/quote")
   @ApiBearerAuth("bearer")
-  @Message(POST_MESSAGE.CREATED)
-  @ApiOperation({ summary: "Quote a post" })
+  @ResponseOperation(POST_MESSAGE.CREATED, HttpStatus.CREATED, "Quote a post")
   quotePost(
     @Param() params: PublicIdParamsDto,
     @Body() payload: CreatePostDto,
@@ -341,10 +323,8 @@ export class PostController {
   }
 
   @Post(":publicId/save")
-  @HttpCode(HttpStatus.OK)
   @ApiBearerAuth("bearer")
-  @Message(POST_MESSAGE.RETRIEVED)
-  @ApiOperation({ summary: "Save or unsave a post" })
+  @ResponseOperation(POST_MESSAGE.RETRIEVED, HttpStatus.OK, "Save or unsave a post")
   async savePost(
     @Param() params: PublicIdParamsDto,
     @Body() payload: SavePostDto,
@@ -359,10 +339,8 @@ export class PostController {
   }
 
   @Post(":publicId/hide")
-  @HttpCode(HttpStatus.OK)
   @ApiBearerAuth("bearer")
-  @Message(POST_MESSAGE.RETRIEVED)
-  @ApiOperation({ summary: "Hide or unhide a post" })
+  @ResponseOperation(POST_MESSAGE.RETRIEVED, HttpStatus.OK, "Hide or unhide a post")
   async hidePost(
     @Param() params: PublicIdParamsDto,
     @Body() payload: HidePostDto,
@@ -377,10 +355,8 @@ export class PostController {
   }
 
   @Post(":publicId/report")
-  @HttpCode(HttpStatus.OK)
   @ApiBearerAuth("bearer")
-  @Message(POST_MESSAGE.RETRIEVED)
-  @ApiOperation({ summary: "Report a post or user" })
+  @ResponseOperation(POST_MESSAGE.RETRIEVED, HttpStatus.OK, "Report a post or user")
   async reportPost(
     @Param() params: PublicIdParamsDto,
     @Body() payload: ReportDto,
@@ -395,8 +371,7 @@ export class PostController {
 
   @Patch(":publicId")
   @ApiBearerAuth("bearer")
-  @Message(POST_MESSAGE.RETRIEVED)
-  @ApiOperation({ summary: "Update a post" })
+  @ResponseOperation(POST_MESSAGE.RETRIEVED, HttpStatus.OK, "Update a post")
   updatePost(
     @Param() params: PublicIdParamsDto,
     @Body() payload: UpdatePostDto,
@@ -417,10 +392,8 @@ export class PostController {
   }
 
   @Delete(":publicId")
-  @HttpCode(HttpStatus.OK)
   @ApiBearerAuth("bearer")
-  @Message(POST_MESSAGE.RETRIEVED)
-  @ApiOperation({ summary: "Delete a post" })
+  @ResponseOperation(POST_MESSAGE.RETRIEVED, HttpStatus.OK, "Delete a post")
   async deletePost(
     @Param() params: PublicIdParamsDto,
     @GetUserId() userId: string,

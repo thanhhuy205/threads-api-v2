@@ -66,7 +66,32 @@ export class UserRepository {
       where: {
         id,
       },
-      select: userProfileSelect,
+      select: {
+        ...userProfileSelect,
+      },
+    });
+  }
+
+  async getPermissionPositionByUserId(userId: string) {
+    return await this.prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+      select: {
+        userPositions: {
+          select: {
+            positionPermission: {
+              select: {
+                permission: {
+                  select: {
+                    code: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     });
   }
 

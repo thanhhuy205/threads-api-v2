@@ -205,16 +205,27 @@ async function seedEmployees(userRoleId: string) {
       });
     }
 
-    await prisma.userPosition.upsert({
-      where: {
-        userId_position: {
+    const positionPermissions = await prisma.positionPermission.findMany({
+      where: { position: employee.position },
+      select: { id: true },
+    });
+
+    for (const positionPermission of positionPermissions) {
+      await prisma.userPosition.upsert({
+        where: {
+          userId_positionPermissionId: {
+            userId: user.id,
+            positionPermissionId: positionPermission.id,
+          },
+        },
+        update: { position: employee.position },
+        create: {
           userId: user.id,
           position: employee.position,
+          positionPermissionId: positionPermission.id,
         },
-      },
-      update: {},
-      create: { userId: user.id, position: employee.position },
-    });
+      });
+    }
 
     users.set(employee.key, user);
   }

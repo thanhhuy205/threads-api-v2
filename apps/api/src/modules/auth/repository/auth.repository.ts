@@ -1,5 +1,5 @@
-import { Injectable } from "@nestjs/common";
 import { PrismaService } from "@/shared/database/prisma.service";
+import { Injectable } from "@nestjs/common";
 import type { Prisma } from "@prisma/client";
 import type { RegisterDto } from "../dto/request/register.request.dto";
 
@@ -45,7 +45,7 @@ type CreateRefreshTokenPayload = {
 
 @Injectable()
 export class AuthRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async createUser(payload: RegisterDto): Promise<AuthSessionUser> {
     const user = await this.prisma.user.create({
@@ -66,7 +66,9 @@ export class AuthRepository {
       where: {
         OR: [{ email: login }, { username: login }],
       },
-      select: authSessionUserSelect,
+      select: {
+        ...authSessionUserSelect,
+      },
     });
 
     return user;

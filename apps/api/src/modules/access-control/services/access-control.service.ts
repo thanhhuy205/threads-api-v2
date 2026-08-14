@@ -1,12 +1,14 @@
 import type { PermissionCode } from '@/common/constants/permission.constant';
 import { ForbiddenException } from '@/errors/error';
-import { PrismaService } from '@/shared/database/prisma.service';
 import { Injectable } from '@nestjs/common';
 import { PermissionScope } from '@prisma/client';
+import { UserPositionRepository } from '../position/repository/user-position.repository';
 
 @Injectable()
 export class AccessControlService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly userPositionRepository: UserPositionRepository,
+  ) { }
 
   async hasPermission(
     userId: string,
@@ -18,23 +20,11 @@ export class AccessControlService {
         ? [PermissionScope.WORKSPACE, PermissionScope.GROUP]
         : [PermissionScope.WORKSPACE];
 
-    const permission = await this.prisma.positionPermission.findFirst({
-      where: {
-        scope: { in: allowedScopes },
-        permission: { code: permissionCode },
-        position: {
-          in: (
-            await this.prisma.userPosition.findMany({
-              where: { userId },
-              select: { position: true },
-            })
-          ).map(({ position }) => position),
-        },
-      },
-      select: { id: true },
-    });
-
-    return permission !== null;
+    return this.userPositionRepository.hasPermission(
+      userId,
+      permissionCode,
+      allowedScopes,
+    );
   }
 
   async assertPermission(
