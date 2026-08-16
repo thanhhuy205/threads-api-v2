@@ -276,7 +276,7 @@ async function seedPosts(
   users: Map<string, { id: string; username: string; name: string | null }>,
   groupId: number,
 ) {
-  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+  const dateRangeTo = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
   const postDefinitions = [
     {
       publicId: 'seed-ceo-announcement',
@@ -285,7 +285,7 @@ async function seedPosts(
       type: PostType.ANNOUNCEMENT,
       visibility: VisibilityPost.WORKSPACE,
       isPinned: true,
-      expiresAt,
+      dateRangeTo,
     },
     {
       publicId: 'seed-hr-announcement',
@@ -294,7 +294,7 @@ async function seedPosts(
       type: PostType.ANNOUNCEMENT,
       visibility: VisibilityPost.WORKSPACE,
       isPinned: false,
-      expiresAt,
+      dateRangeTo,
     },
     {
       publicId: 'seed-cto-post',
@@ -303,7 +303,7 @@ async function seedPosts(
       type: PostType.POST,
       visibility: VisibilityPost.WORKSPACE,
       isPinned: false,
-      expiresAt: null,
+      dateRangeTo: null,
     },
     {
       publicId: 'seed-tech-lead-post',
@@ -312,7 +312,7 @@ async function seedPosts(
       type: PostType.POST,
       visibility: VisibilityPost.WORKSPACE,
       isPinned: false,
-      expiresAt: null,
+      dateRangeTo: null,
     },
     ...[
       ['seniorDeveloper', 'Senior Developer chia sẻ kế hoạch triển khai trong nhóm.'],
@@ -326,7 +326,7 @@ async function seedPosts(
       type: PostType.POST,
       visibility: VisibilityPost.GROUP,
       isPinned: false,
-      expiresAt: null,
+      dateRangeTo: null,
     })),
   ];
 
@@ -353,7 +353,7 @@ async function seedPosts(
         type: definition.type,
         visibility: definition.visibility,
         isPinned: definition.isPinned,
-        expiresAt: definition.expiresAt,
+        dateRangeTo: definition.dateRangeTo,
         groupTeamId,
         userSnapshot,
         deletedAt: null,
@@ -365,7 +365,7 @@ async function seedPosts(
         type: definition.type,
         visibility: definition.visibility,
         isPinned: definition.isPinned,
-        expiresAt: definition.expiresAt,
+        dateRangeTo: definition.dateRangeTo,
         groupTeamId,
         userSnapshot,
         publishedAt: new Date(),

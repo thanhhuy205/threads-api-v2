@@ -365,8 +365,8 @@ model Post {
   requiresAcknowledgement Boolean   @default(false) @map("requires_acknowledgement")
   publishedAt             DateTime? @map("published_at")
   // Time post is scheduled to be published, if null, post is published immediately
-  scheduledTimeFrom       DateTime? @map("scheduled_time_from")
-  scheduledTimeTo         DateTime? @map("scheduled_time_to")
+  scheduledTimeFrom       DateTime? @map("scheduled_time_from") @db.Time(0)
+  scheduledTimeTo         DateTime? @map("scheduled_time_to") @db.Time(0)
   dateRangeFrom           DateTime? @map("date_range_from")
   dateRangeTo             DateTime? @map("date_range_to")
 

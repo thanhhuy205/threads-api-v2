@@ -49,6 +49,9 @@ import { PostService } from './service/post.service';
     PostSearchService,
     PostUserService,
     LikeService,
+    AnnouncementPolicy,
+    PinPolicy,
+    ExpirationPolicy,
     {
       provide: POST_CREATION_POLICIES,
 

@@ -17,7 +17,7 @@ export class ExpirationPolicy implements PostCreationPolicy {
         payload: CreatePostPayload,
         ctx: PostCreationContext,
     ): Promise<void> {
-        if (payload.dateRangeFrom!.getTime() <= Date.now()) {
+        if (payload.dateRangeFrom!.getTime() < Date.now()) {
             throw new BadRequestException('dateRangeFrom must be in the future');
         }
         await this.accessControlService.assertPermission(

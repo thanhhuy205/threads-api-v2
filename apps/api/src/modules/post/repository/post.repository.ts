@@ -1,6 +1,7 @@
 import type {
   CreatePostPayload
 } from "@/modules/post/interfaces/create-post-payload";
+import { toTime } from "@/modules/post/helper/conver-date.helper";
 import {
   postFeedSelect,
   postSelectRepository,
@@ -291,8 +292,8 @@ export class PostRepository {
         isPinned: payload.isPinned ?? false,
         dateRangeFrom: payload.dateRangeFrom,
         dateRangeTo: payload.dateRangeTo,
-        scheduledTimeFrom: payload.scheduledTimeFrom,
-        scheduledTimeTo: payload.scheduledTimeTo,
+        scheduledTimeFrom: toTime(payload.scheduledTimeFrom),
+        scheduledTimeTo: toTime(payload.scheduledTimeTo),
         groupTeamId: payload.groupTeamId,
       },
 
@@ -562,8 +563,14 @@ export class PostRepository {
         isPinned: payload.isPinned,
         dateRangeFrom: payload.dateRangeFrom,
         dateRangeTo: payload.dateRangeTo,
-        scheduledTimeFrom: payload.scheduledTimeFrom,
-        scheduledTimeTo: payload.scheduledTimeTo,
+        scheduledTimeFrom:
+          payload.scheduledTimeFrom === undefined
+            ? undefined
+            : toTime(payload.scheduledTimeFrom),
+        scheduledTimeTo:
+          payload.scheduledTimeTo === undefined
+            ? undefined
+            : toTime(payload.scheduledTimeTo),
       },
       select: {
         publicId: true,
