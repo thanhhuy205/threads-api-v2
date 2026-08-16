@@ -6,8 +6,10 @@ import { dispatchReplyNotification } from "@/modules/notification-group/events/n
 import type { CreatePostPayload } from "@/modules/post/interfaces/create-post-payload";
 import { UserService } from "@/modules/user/service/user.service";
 import { TransactionService } from "@/shared/transaction/transaction.service";
-import { Injectable, Logger } from "@nestjs/common";
-import { PermissionScope, PostType, VisibilityPost } from '@prisma/client';
+import { PostCreationContext } from '@api/modules/post/context/post-creation-context';
+import { POST_CREATION_POLICIES, PostCreationPolicy } from '@api/modules/post/policies/interface/post-creation-policy.interface';
+import { Inject, Injectable, Logger } from "@nestjs/common";
+import { PermissionScope, VisibilityPost } from '@prisma/client';
 import { PostMapper } from "../mapper/post.mapper";
 import { PostRepository } from "../repository/post.repository";
 import { PostMentionService } from "./post-mention.service";
@@ -25,12 +27,16 @@ export class PostService {
     private readonly postMetaService: PostMetaService,
     private readonly accessControlService: AccessControlService,
     private readonly groupTeamService: GroupTeamService,
-  ) {}
+    @Inject(POST_CREATION_POLICIES)
+    private readonly postCreationPolicies: PostCreationPolicy[],
+  ) { }
 
   async create(payload: CreatePostPayload) {
     const groupTeamId = await this.authorizeCreation(payload);
     const createPayload = { ...payload, groupTeamId };
+
     const { snapshot, mentionIds } = await this.resolveAuthorAndMentions(payload);
+
     const post = await this.transactionService.doInTransaction(async (tx) => {
       const created = await this.postRepository.create(createPayload, snapshot, tx);
       await this.postMetaService.attachPostMeta(tx, created.id!, {
@@ -39,77 +45,59 @@ export class PostService {
       });
       return created;
     });
+
     await this.finalizeCreation(post, payload, snapshot, mentionIds, post.publicId, payload.userId);
     return post;
   }
 
-  private async authorizeCreation(
+  private async resolveCreationContext(
     payload: CreatePostPayload,
-  ): Promise<number | undefined> {
+  ): Promise<PostCreationContext> {
     const visibility = payload.visibility ?? VisibilityPost.WORKSPACE;
+
     const scope =
       visibility === VisibilityPost.GROUP
         ? PermissionScope.GROUP
         : PermissionScope.WORKSPACE;
 
-    let groupTeamId: number | undefined;
-    if (visibility === VisibilityPost.GROUP) {
-      if (!payload.groupPublicId) {
-        throw new BadRequestException(
-          'groupPublicId is required for group posts',
-        );
-      }
-      groupTeamId = (
-        await this.groupTeamService.resolveGroupForPost(
-          payload.groupPublicId,
-          payload.userId,
-        )
-      ).id;
-    } else if (payload.groupPublicId) {
+    if (visibility !== VisibilityPost.GROUP) {
+      return { scope };
+    }
+
+    if (!payload.groupPublicId) {
       throw new BadRequestException(
-        'groupPublicId is only allowed for group posts',
+        'groupPublicId is required for group posts',
       );
     }
+
+    const group = await this.groupTeamService.resolveGroupForPost(
+      payload.groupPublicId,
+      payload.userId,
+    );
+
+    return { scope, groupTeamId: group.id };
+  }
+
+  private async authorizeCreation(
+    payload: CreatePostPayload,
+  ): Promise<number | undefined> {
+    const ctx = await this.resolveCreationContext(payload);
 
     await this.accessControlService.assertPermission(
       payload.userId,
       PERMISSIONS.POST_CREATE,
-      scope,
+      ctx.scope,
     );
 
-    if (payload.type === PostType.ANNOUNCEMENT) {
-      if (visibility !== VisibilityPost.WORKSPACE) {
-        throw new BadRequestException(
-          'Announcements can only be published to the workspace',
-        );
+    for (const policy of this.postCreationPolicies) {
+      if (policy.applies(payload)) {
+        await policy.enforce(payload, ctx);
       }
-      await this.accessControlService.assertPermission(
-        payload.userId,
-        PERMISSIONS.ANNOUNCEMENT_CREATE,
-      );
     }
 
-    if (payload.isPinned) {
-      await this.accessControlService.assertPermission(
-        payload.userId,
-        PERMISSIONS.POST_PIN,
-        scope,
-      );
-    }
-
-    if (payload.expiresAt !== undefined && payload.expiresAt !== null) {
-      if (payload.expiresAt.getTime() <= Date.now()) {
-        throw new BadRequestException('expiresAt must be in the future');
-      }
-      await this.accessControlService.assertPermission(
-        payload.userId,
-        PERMISSIONS.POST_EXPIRE,
-        scope,
-      );
-    }
-
-    return groupTeamId;
+    return ctx.groupTeamId;
   }
+
 
   async reply(publicId: string, payload: CreatePostPayload) {
     const [parent, author] = await Promise.all([

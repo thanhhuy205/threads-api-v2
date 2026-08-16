@@ -4,7 +4,7 @@ import { TransportOptions } from "nodemailer";
 
 class NodemailerService {
     private readonly transporter = transporter;
-
+    
     async sendMail(to: string, subject: string, html: string, options: TransportOptions) {
         try {
             const info = await this.transporter.sendMail({

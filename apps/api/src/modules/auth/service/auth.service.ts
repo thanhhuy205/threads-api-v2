@@ -337,7 +337,6 @@ export class AuthService {
     this.logger.log(`Generated new token pair for user ${user.id}
       with session ${refreshToken.sessionId} during refresh token flow.${tokenPair} `);
 
-
     await this.createRefreshToken(
       tokenPair.refreshToken,
       user.id,
@@ -366,12 +365,11 @@ export class AuthService {
 
     const permission = await this.userService.getPermissionPositionByUserId(userId);
     const positionPermission = permission?.userPositions.map((pos) => pos.positionPermission.permission.code) || [];
-    console.log(positionPermission);
     const response = authResponse.toResponse({
       type: "me",
       user,
     }, positionPermission);
-    console.log(response);
+
     await this.redisService.redis.set(cacheKey, JSON.stringify(response), {
       EX: 30,
     });
