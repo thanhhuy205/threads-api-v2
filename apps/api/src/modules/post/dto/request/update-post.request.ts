@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsBoolean, IsDate, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsBoolean, IsDate, IsMilitaryTime, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 
 export class UpdatePostDto {
   @ApiPropertyOptional({ maxLength: 5000 })
@@ -19,6 +19,22 @@ export class UpdatePostDto {
   @IsOptional()
   @Type(() => Date)
   @IsDate()
-  expiresAt?: Date | null;
+  dateRangeFrom?: Date | null;
+
+  @ApiPropertyOptional({ type: Date, nullable: true })
+  @IsOptional()
+  @Type(() => Date)
+  @IsDate()
+  dateRangeTo?: Date | null;
+
+  @ApiPropertyOptional({ type: String, example: '09:00', nullable: true })
+  @IsOptional()
+  @IsMilitaryTime()
+  scheduledTimeFrom?: string | null;
+
+  @ApiPropertyOptional({ type: String, example: '17:30', nullable: true })
+  @IsOptional()
+  @IsMilitaryTime()
+  scheduledTimeTo?: string | null;
 
 }

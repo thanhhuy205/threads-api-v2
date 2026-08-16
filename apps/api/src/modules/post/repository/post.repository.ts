@@ -28,7 +28,10 @@ export type PostRecord = {
   type: PostType;
   visibility: VisibilityPost;
   isPinned?: boolean;
-  expiresAt?: Date | null;
+  dateRangeFrom?: Date | null;
+  dateRangeTo?: Date | null;
+  scheduledTimeFrom?: Date | null;
+  scheduledTimeTo?: Date | null;
   groupTeamId?: number | null;
   createdAt: string;
 };
@@ -286,8 +289,10 @@ export class PostRepository {
         contentJson: payload.contentJson,
         visibility: payload.visibility ?? VisibilityPost.WORKSPACE,
         isPinned: payload.isPinned ?? false,
-        expiresAt: payload.expiresAt,
-        publishedAt: payload.announceEndDay ? new Date() : undefined,
+        dateRangeFrom: payload.dateRangeFrom,
+        dateRangeTo: payload.dateRangeTo,
+        scheduledTimeFrom: payload.scheduledTimeFrom,
+        scheduledTimeTo: payload.scheduledTimeTo,
         groupTeamId: payload.groupTeamId,
       },
 
@@ -303,7 +308,10 @@ export class PostRepository {
       type: post.type,
       visibility: post.visibility,
       isPinned: post.isPinned,
-      expiresAt: post.expiresAt,
+      dateRangeFrom: post.dateRangeFrom,
+      dateRangeTo: post.dateRangeTo,
+      scheduledTimeFrom: post.scheduledTimeFrom,
+      scheduledTimeTo: post.scheduledTimeTo,
       groupTeamId: post.groupTeamId,
       createdAt: post.createdAt.toISOString(),
     };
@@ -552,7 +560,10 @@ export class PostRepository {
       data: {
         content: payload.content,
         isPinned: payload.isPinned,
-        expiresAt: payload.expiresAt,
+        dateRangeFrom: payload.dateRangeFrom,
+        dateRangeTo: payload.dateRangeTo,
+        scheduledTimeFrom: payload.scheduledTimeFrom,
+        scheduledTimeTo: payload.scheduledTimeTo,
       },
       select: {
         publicId: true,
@@ -561,7 +572,10 @@ export class PostRepository {
         type: true,
         visibility: true,
         isPinned: true,
-        expiresAt: true,
+        dateRangeFrom: true,
+        dateRangeTo: true,
+        scheduledTimeFrom: true,
+        scheduledTimeTo: true,
         groupTeamId: true,
         createdAt: true,
       },
@@ -574,7 +588,10 @@ export class PostRepository {
       type: post.type,
       visibility: post.visibility,
       isPinned: post.isPinned,
-      expiresAt: post.expiresAt,
+      dateRangeFrom: post.dateRangeFrom,
+      dateRangeTo: post.dateRangeTo,
+      scheduledTimeFrom: post.scheduledTimeFrom,
+      scheduledTimeTo: post.scheduledTimeTo,
       groupTeamId: post.groupTeamId,
       createdAt: post.createdAt.toISOString(),
     };

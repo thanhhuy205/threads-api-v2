@@ -380,7 +380,10 @@ export class PostController {
     if (
       payload.content === undefined &&
       payload.isPinned === undefined &&
-      payload.expiresAt === undefined
+      payload.dateRangeFrom === undefined &&
+      payload.dateRangeTo === undefined &&
+      payload.scheduledTimeFrom === undefined &&
+      payload.scheduledTimeTo === undefined
     ) {
       throw new BadRequestException("At least one update field is required");
     }

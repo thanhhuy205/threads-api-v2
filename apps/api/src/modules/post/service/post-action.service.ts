@@ -229,12 +229,18 @@ export class PostActionService {
       );
     }
 
-    if (payload.expiresAt !== undefined) {
+    if (
+      payload.dateRangeFrom !== undefined ||
+      payload.dateRangeTo !== undefined ||
+      payload.scheduledTimeFrom !== undefined ||
+      payload.scheduledTimeTo !== undefined
+    ) {
       if (
-        payload.expiresAt !== null &&
-        payload.expiresAt.getTime() <= Date.now()
+        payload.dateRangeFrom !== undefined &&
+        payload.dateRangeFrom !== null &&
+        payload.dateRangeFrom.getTime() <= Date.now()
       ) {
-        throw new BadRequestException('expiresAt must be in the future');
+        throw new BadRequestException('dateRangeFrom must be in the future');
       }
       await this.accessControlService.assertPermission(
         userId,

@@ -1,7 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { VisibilityPost } from '@prisma/client';
 import { Transform, Type } from 'class-transformer';
-import { ArrayMaxSize, ArrayMinSize, IsArray, IsBoolean, IsDate, IsEnum, IsOptional, IsString, MaxLength, MinLength, ValidateIf, ValidateNested } from 'class-validator';
+import { ArrayMaxSize, ArrayMinSize, IsArray, IsBoolean, IsDate, IsEnum, IsMilitaryTime, IsOptional, IsString, MaxLength, MinLength, ValidateIf, ValidateNested } from 'class-validator';
 import { creatablePostTypes } from '../../constants/post-type';
 import { PostMediaDto } from '../response/post-media.response';
 import { PostMentionDto } from '../response/post-mention.response';
@@ -93,22 +93,36 @@ export class CreatePostDto {
   @IsBoolean()
   isPinned?: boolean = false;
 
+
   @ApiPropertyOptional({ type: Date, nullable: true })
   @IsOptional()
   @Type(() => Date)
   @IsDate()
-  expiresAt?: Date | null;
+  dateRangeFrom?: Date | null;
 
 
   @ApiPropertyOptional({ type: Date, nullable: true })
   @IsOptional()
   @Type(() => Date)
   @IsDate()
-  announceStartDay?: Date | null;
+  dateRangeTo?: Date | null;
 
-  @ApiPropertyOptional({ type: Date, nullable: true })
+
+  @ApiPropertyOptional({
+    type: String,
+    example: '09:00',
+    nullable: true,
+  })
   @IsOptional()
-  @Type(() => Date)
-  @IsDate()
-  announceEndDay?: Date | null;
+  @IsMilitaryTime()
+  scheduledTimeFrom?: string | null;
+
+  @ApiPropertyOptional({
+    type: String,
+    example: '17:30',
+    nullable: true,
+  })
+  @IsOptional()
+  @IsMilitaryTime()
+  scheduledTimeTo?: string | null;
 }

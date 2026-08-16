@@ -364,8 +364,11 @@ model Post {
   isPinned                Boolean   @default(false) @map("is_pinned")
   requiresAcknowledgement Boolean   @default(false) @map("requires_acknowledgement")
   publishedAt             DateTime? @map("published_at")
-  // TODO: filter, archive, or soft-delete expired posts when expiration behavior is implemented.
-  expiresAt               DateTime? @map("expires_at")
+  // Time post is scheduled to be published, if null, post is published immediately
+  scheduledTimeFrom       DateTime? @map("scheduled_time_from")
+  scheduledTimeTo         DateTime? @map("scheduled_time_to")
+  dateRangeFrom           DateTime? @map("date_range_from")
+  dateRangeTo             DateTime? @map("date_range_to")
 
   groupTeamId Int?       @map("group_team_id")
   groupTeam   GroupTeam? @relation(fields: [groupTeamId], references: [id])

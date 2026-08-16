@@ -7,7 +7,10 @@ export const postFeedSelect = Prisma.validator<Prisma.PostSelect>()({
   visibility: true,
   type: true,
   isPinned: true,
-  expiresAt: true,
+  dateRangeFrom: true,
+  dateRangeTo: true,
+  scheduledTimeFrom: true,
+  scheduledTimeTo: true,
   groupTeam: {
     select: {
       publicId: true,
@@ -85,7 +88,10 @@ export const postSelectRepository = {
   userId: true,
   visibility: true,
   isPinned: true,
-  expiresAt: true,
+  dateRangeFrom: true,
+  dateRangeTo: true,
+  scheduledTimeFrom: true,
+  scheduledTimeTo: true,
   groupTeamId: true,
   createdAt: true,
   userSnapshot: true,

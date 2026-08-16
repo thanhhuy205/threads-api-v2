@@ -10,15 +10,15 @@ export class ExpirationPolicy implements PostCreationPolicy {
     constructor(private readonly accessControlService: AccessControlService) { }
 
     applies(payload: CreatePostPayload): boolean {
-        return payload.expiresAt !== undefined && payload.expiresAt !== null;
+        return payload.dateRangeFrom !== undefined && payload.dateRangeTo !== undefined;
     }
 
     async enforce(
         payload: CreatePostPayload,
         ctx: PostCreationContext,
     ): Promise<void> {
-        if (payload.expiresAt!.getTime() <= Date.now()) {
-            throw new BadRequestException('expiresAt must be in the future');
+        if (payload.dateRangeFrom!.getTime() <= Date.now()) {
+            throw new BadRequestException('dateRangeFrom must be in the future');
         }
         await this.accessControlService.assertPermission(
             payload.userId,
