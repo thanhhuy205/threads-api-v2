@@ -3,7 +3,6 @@ export * from './cursor-pagination-query.request';
 export * from './hide-post.request';
 export * from './news-feed-query.request';
 export * from './public-id-params.request';
-export * from './report.request';
 export * from './save-post.request';
 export * from './search-post-query.request';
 export * from './update-post.request';

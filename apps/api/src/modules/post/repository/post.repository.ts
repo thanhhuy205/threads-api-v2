@@ -522,21 +522,6 @@ export class PostRepository {
     });
   }
 
-  async findReportTargetByPublicId(publicId: string) {
-    return this.prisma.post.findFirst({
-      where: {
-        publicId,
-        deletedAt: null,
-      },
-      select: {
-        publicId: true,
-        userId: true,
-        content: true,
-        type: true,
-      },
-    });
-  }
-
   async findDeleteTargetByPublicId(publicId: string) {
     return this.prisma.post.findFirst({
       where: {

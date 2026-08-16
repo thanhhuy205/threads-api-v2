@@ -34,7 +34,6 @@ import {
   HidePostDto,
   NewsFeedQueryDto,
   PublicIdParamsDto,
-  ReportDto,
   SavePostDto,
   SearchPostQueryDto,
   UpdatePostDto,
@@ -352,21 +351,6 @@ export class PostController {
       payload.isHidden,
     );
     return { hidden: payload.isHidden };
-  }
-
-  @Post(":publicId/report")
-  @ApiBearerAuth("bearer")
-  @ResponseOperation(POST_MESSAGE.RETRIEVED, HttpStatus.OK, "Report a post or user")
-  async reportPost(
-    @Param() params: PublicIdParamsDto,
-    @Body() payload: ReportDto,
-    @GetUserId() userId: string,
-  ) {
-    const report = await this.postActionService.report(params.publicId, {
-      ...payload,
-      reporterId: userId,
-    });
-    return { reported: true, report };
   }
 
   @Patch(":publicId")

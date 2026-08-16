@@ -5,7 +5,6 @@ export const QUEUE_NAME = {
   NOTIFICATION_QUEUE: "notification",
   AUTO_REMOVE_BAN_QUEUE: "auto_remove_ban_queue",
   POST_LIKE_EVENT_QUEUE: "likes_events",
-  EVALUATION_QUEUE: "evaluation_queue",
   HLS_QUEUE: "hls_queue",
   VIDEO_QUEUE: "video_queue",
   SURVEY_SYNC_QUEUE: "survey_sync_queue",
@@ -18,7 +17,6 @@ export const WORKER_NAME = {
   LIKE_WORKER: "like_worker",
   NOTIFICATION_WORKER: "notification_worker",
   AUTO_REMOVE_BAN_WORKER: "auto_remove_ban_worker",
-  EVALUATE_WORKER: "evaluate_worker",
   VIDEO_WORKER: "video_worker",
   SURVEY_SYNC_WORKER: "survey_sync_worker",
 };
@@ -53,10 +51,6 @@ export const NOTIFICATION_JOB_KEY = {
 export const BLOOM_KEY = {
   FILTER_USERNAME: "filter:usernames",
   FILTER_EMAIL: "filter:emails",
-};
-
-export const EVALUATION_JOB_NAME = {
-  EVALUATION_REPORT: "evaluation-report",
 };
 
 export const HLS_JOB_NAME = {

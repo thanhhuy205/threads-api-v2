@@ -52,17 +52,6 @@ enum UserStatus {
   DEACTIVATED
 }
 
-enum ReportTargetType {
-  POST
-  USER
-}
-
-enum ReportStatus {
-  PENDING
-  RESOLVED
-  DISMISSED
-}
-
 enum VisibilityPost {
   WORKSPACE
   GROUP
@@ -212,7 +201,6 @@ model User {
 
   likes                Like[]
   userRoles            UserRole[]
-  reports              Report[]              @relation("UserReports")
   postMentions         PostMention[]
   votes                Vote[]
   postInteractions     PostInteraction[]
@@ -220,6 +208,7 @@ model User {
   userTeams            UserTeam[]
   groupTeams           GroupTeam[]
   userPositions        UserPosition[]
+  overviewDeclines     OverviewDecline[]
 
   @@index([email], map: "idx_users_email")
   @@index([name], map: "idx_users_name")
@@ -295,28 +284,6 @@ model PostInteraction {
   @@map("post_interactions")
 }
 
-model Report {
-  id               String           @id @default(nanoid())
-  reporterId       String           @map("reporter_id")
-  targetType       ReportTargetType @map("target_type")
-  targetId         String           @map("target_id") @db.VarChar(255)
-  reason           String           @db.Text
-  status           ReportStatus     @default(PENDING)
-  assistantNote    String?          @map("assistant_note") @db.Text
-  confidence       Decimal?         @db.Decimal(3, 2) // 0.00 - 1.00, chỉ số này do hệ thống tự động đánh giá dựa trên nội dung report 
-  // và lịch sử của người báo cáo, giúp admin ưu tiên xử lý những report có độ tin cậy cao
-  isDisinformation Boolean          @default(false) @map("is_disinformation") // bot đánh dấu nội dung có khả năng sai sự thật cao, giúp admin ưu tiên xử lý và có thể áp dụng biện pháp nhẹ nhàng hơn như ẩn bài viết khỏi feed trước khi quyết định xóa hoàn toàn
-  adminNote        String?          @map("admin_note") @db.Text
-  createdAt        DateTime         @default(now()) @map("created_at")
-
-  reporter User @relation("UserReports", fields: [reporterId], references: [id])
-
-  @@index([reporterId], map: "idx_reports_reporter_id")
-  @@index([targetType, targetId], map: "idx_reports_target")
-  @@index([status, createdAt], map: "idx_reports_status_created_at")
-  @@map("reports")
-}
-
 model VerificationCode {
   id        Int                  @id @default(autoincrement())
   userId    String               @map("user_id")
@@ -370,6 +337,8 @@ model Post {
   dateRangeFrom           DateTime? @map("date_range_from")
   dateRangeTo             DateTime? @map("date_range_to")
 
+  isDecline Boolean @default(false) @map("is_decline") // Xác nhận đã kết thúc cuộc thảo luận, không cho phép thêm bình luận mới, nhưng vẫn hiển thị các bình luận cũ
+
   groupTeamId Int?       @map("group_team_id")
   groupTeam   GroupTeam? @relation(fields: [groupTeamId], references: [id])
 
@@ -413,6 +382,7 @@ model Post {
   poll                 Poll?
   postInteractions     PostInteraction[]
   announcementReceipts AnnouncementReceipt[]
+  overviewDeclines     OverviewDecline[]
 
   // Indexes
   @@index([userId, createdAt])
@@ -423,6 +393,25 @@ model Post {
   @@index([createdAt])
   @@fulltext([content], map: "idx_posts_content_fulltext")
   @@map("posts")
+}
+
+model OverviewDecline {
+  id     Int    @id @default(autoincrement())
+  postId Int    @map("post_id")
+  userId String @map("user_id")
+
+  context String @db.Text
+  reason  String @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  post Post @relation(fields: [postId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([postId, userId], map: "uq_overview_declines_post_user")
+  @@index([postId], map: "idx_overview_declines_post_id")
+  @@index([userId], map: "idx_overview_declines_user_id")
+  @@map("overview_declines")
 }
 
 model GroupTeam {

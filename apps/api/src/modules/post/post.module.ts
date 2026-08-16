@@ -1,7 +1,6 @@
 import { AccessControlModule } from '@/modules/access-control/access-control.module';
 import { GroupTeamModule } from '@/modules/group-team/group-team.module';
 import { JwtModule } from '@/modules/jwt/jwt.module';
-import { ReportModule } from '@/modules/report/report.module';
 import { UserModule } from '@/modules/user/user.module';
 import { RedisVersionModule } from '@/shared/redis-version';
 import { TransactionModule } from '@/shared/transaction/transaction.module';
@@ -27,7 +26,6 @@ import { PostService } from './service/post.service';
 @Module({
   imports: [
     forwardRef(() => UserModule),
-    ReportModule,
     JwtModule,
     RedisVersionModule,
     TransactionModule,

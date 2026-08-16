@@ -9,15 +9,14 @@ import { APP_GUARD } from '@nestjs/core';
 import { AdminModule } from './modules/admin/admin.module';
 import { AiModule } from './modules/ai/ai.module';
 import { AuthModule } from './modules/auth/auth.module';
-import { HealthModule } from './modules/health/health.module';
 import { GroupTeamModule } from './modules/group-team/group-team.module';
+import { HealthModule } from './modules/health/health.module';
 import { JobModule } from './modules/job/job.module';
 import { JwtModule } from './modules/jwt/jwt.module';
 import { NotificationGroupModule } from './modules/notification-group/notification-group.module';
 import { PollModule } from './modules/poll/poll.module';
 import { PostModule } from './modules/post/post.module';
 import { PusherModule } from './modules/pusher/pusher.module';
-import { ReportModule } from './modules/report/report.module';
 import { SearchModule } from './modules/search/search.module';
 import { TopicModule } from './modules/topic/topic.module';
 import { UploadModule } from './modules/upload/upload.module';
@@ -58,7 +57,6 @@ import { UserModule } from './modules/user/user.module';
     TopicModule,
     SearchModule,
     NotificationGroupModule,
-    ReportModule,
     PusherModule,
     UploadModule,
     AdminModule,
@@ -69,6 +67,7 @@ import { UserModule } from './modules/user/user.module';
       provide: APP_GUARD,
       useClass: AccessTokenGuard,
     },
+
   ],
 })
 export class AppModule { }

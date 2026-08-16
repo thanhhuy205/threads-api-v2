@@ -8,9 +8,6 @@ import { AdminAuthService } from './auth/admin-auth.service';
 import { HashtagTrendingController } from './hashtag-trending/hashtag-trending.controller';
 import { HashtagTrendingRepository } from './hashtag-trending/hashtag-trending.repository';
 import { HashtagTrendingService } from './hashtag-trending/hashtag-trending.service';
-import { ReportManagementController } from './report-management/report-management.controller';
-import { ReportManagementRepository } from './report-management/report-management.repository';
-import { ReportManagementService } from './report-management/report-management.service';
 import { StatisticsController } from './statistics/statistics.controller';
 import { StatisticsRepository } from './statistics/statistics.repository';
 import { StatisticsService } from './statistics/statistics.service';
@@ -23,7 +20,6 @@ import { UserManagementService } from './user-management/user-management.service
   controllers: [
     AdminAuthController,
     UserManagementController,
-    ReportManagementController,
     HashtagTrendingController,
     StatisticsController,
   ],
@@ -33,8 +29,6 @@ import { UserManagementService } from './user-management/user-management.service
     AdminAuthRepository,
     UserManagementService,
     UserManagementRepository,
-    ReportManagementService,
-    ReportManagementRepository,
     HashtagTrendingService,
     HashtagTrendingRepository,
     StatisticsService,

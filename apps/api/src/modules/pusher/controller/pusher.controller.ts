@@ -30,7 +30,6 @@ export class PusherController {
 
     const supportedChannels = [
       pusherChannel.privateNotification(userId),
-      pusherChannel.privateReport(userId),
       pusherChannel.privateUser(userId),
     ];
     if (supportedChannels.includes(channelName)) {

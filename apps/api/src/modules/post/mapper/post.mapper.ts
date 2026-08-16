@@ -86,6 +86,7 @@ export class PostMapper {
       verifiedAt: user.verifiedAt,
     };
   }
+
   static toPostRecord(post: Post, userId?: string): PostRecord {
     return {
       publicId: post.publicId,
@@ -97,10 +98,13 @@ export class PostMapper {
       createdAt: post.createdAt.toISOString() ?? new Date().toISOString(),
     };
   }
+
   static toFeedResponse(post: any, userId?: string): PostFeedResponse {
+
     this.logger.log(
       `Mapping post with id ${post.publicId} to feed response for user ${userId}. Post derivatives: ${JSON.stringify(post.derivatives)}, Likes: ${JSON.stringify(post.likes)}`,
     );
+
     const topics: string[] =
       post?.topicsPosts
         ?.map((tp: { topic?: { name?: string | null } | null }) => tp.topic?.name)
@@ -116,6 +120,7 @@ export class PostMapper {
         }
       ]
     }) => op.votes != null) ?? false;
+
 
     const isSavedByAuth = Boolean(userId && post.postInteractions?.length);
     return {

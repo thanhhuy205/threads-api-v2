@@ -6,9 +6,7 @@ import {
   ForbiddenException,
   NotFoundException,
 } from "@/errors/error";
-import { EvaluationProducer } from "@/modules/job/evaluation-post/producer/evaluation.producer";
 import { AccessControlService } from '@/modules/access-control/services/access-control.service';
-import { ReportService } from "@/modules/report/service/report.service";
 import { UserService } from "@/modules/user/service/user.service";
 import { RedisVersionService } from '@/shared/redis-version';
 import { RedisService } from "@libs/cache/redis.service";
@@ -16,23 +14,11 @@ import { Injectable } from '@nestjs/common';
 import {
   InteractionType,
   PermissionScope,
-  ReportStatus,
-  ReportTargetType,
   VisibilityPost,
 } from "@prisma/client";
 import { UpdatePostDto } from '../dto/request';
 import { PostInteractionRepository } from "../repository/post-interaction.repository";
 import { PostRecord, PostRepository } from "../repository/post.repository";
-
-export type ReportSubmissionResult = {
-  id: string;
-  targetType: ReportTargetType;
-  targetId: string;
-  reason: string;
-  status: ReportStatus;
-  createdAt: Date;
-  evaluationQueued: boolean;
-};
 
 @Injectable()
 export class PostActionService {
@@ -40,9 +26,7 @@ export class PostActionService {
     private readonly postRepository: PostRepository,
     private readonly postInteractionRepository: PostInteractionRepository,
     private readonly userService: UserService,
-    private readonly reportService: ReportService,
     private readonly redisVersionService: RedisVersionService,
-    private readonly evaluationProducer: EvaluationProducer,
     private readonly redisService: RedisService,
     private readonly accessControlService: AccessControlService,
   ) { }
@@ -254,87 +238,4 @@ export class PostActionService {
     return updatedPost;
   }
 
-  async report(
-    publicId: string,
-    payload: {
-      reason: string;
-      type: ReportTargetType;
-      reporterId: string;
-    },
-  ): Promise<ReportSubmissionResult> {
-    if (payload.type === ReportTargetType.USER) {
-      const targetUser = await this.userService.findByUserId(publicId);
-      if (!targetUser) {
-        throw new NotFoundException("User not found");
-      }
-
-      if (targetUser.id === payload.reporterId) {
-        throw new ForbiddenException("Users cannot report themselves");
-      }
-
-      const report = await this.reportService.create({
-        reporterId: payload.reporterId,
-        targetType: ReportTargetType.USER,
-        targetId: targetUser.id,
-        reason: payload.reason,
-        status: ReportStatus.PENDING,
-      });
-
-      return {
-        id: report.id,
-        targetType: report.targetType,
-        targetId: report.targetId,
-        reason: report.reason,
-        status: report.status,
-        createdAt: report.createdAt,
-        evaluationQueued: false,
-      };
-    }
-
-    const targetPost = await this.postRepository.findReportTargetByPublicId(publicId);
-    if (!targetPost) {
-      throw new NotFoundException("Post not found");
-    }
-
-    if (targetPost.userId === payload.reporterId) {
-      throw new ForbiddenException("Users cannot report their own posts");
-    }
-
-    const existingReport = await this.reportService.findExistingReport({
-      reporterId: payload.reporterId,
-      targetType: payload.type,
-      targetId: targetPost.publicId,
-    });
-
-    if (existingReport) {
-      throw new BadRequestException("You have already reported this content");
-    }
-    const report = await this.reportService.create({
-      reporterId: payload.reporterId,
-      targetType: payload.type,
-      targetId: targetPost.publicId,
-      reason: payload.reason,
-      status: ReportStatus.PENDING,
-    });
-
-    await this.evaluationProducer.enqueueEvaluationReport({
-      reportId: report.id,
-      type: payload.type,
-      targetPublicId: targetPost.publicId,
-      targetContent: targetPost.content,
-      reason: payload.reason,
-      reporterId: payload.reporterId,
-      reportedUserId: targetPost.userId,
-    });
-
-    return {
-      id: report.id,
-      targetType: report.targetType,
-      targetId: report.targetId,
-      reason: report.reason,
-      status: report.status,
-      createdAt: report.createdAt,
-      evaluationQueued: true,
-    };
-  }
 }

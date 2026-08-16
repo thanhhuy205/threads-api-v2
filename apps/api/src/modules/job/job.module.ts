@@ -3,7 +3,6 @@ import { BullModule } from '@nestjs/bullmq';
 import { Global, Module } from '@nestjs/common';
 import { BloomProducer } from './bloom/producer/bloom.producer';
 import { EmailProducer } from './email/producer/email.producer';
-import { EvaluationProducer } from './evaluation-post/producer/evaluation.producer';
 import { LikeProducer } from './like-job/producer/like.producer';
 import { NotificationProducer } from './notification-job/producer/notification.producer';
 import { SurveySyncProducer } from './survey-sync/producer/survey-sync.producer';
@@ -19,7 +18,6 @@ import { VideoProcedure } from './video/producer/video.procedure';
       { name: QUEUE_NAME.NOTIFICATION_QUEUE },
       { name: QUEUE_NAME.AUTO_REMOVE_BAN_QUEUE },
       { name: QUEUE_NAME.POST_LIKE_EVENT_QUEUE },
-      { name: QUEUE_NAME.EVALUATION_QUEUE },
       { name: QUEUE_NAME.HLS_QUEUE },
       {
         name: QUEUE_NAME.VIDEO_QUEUE,
@@ -35,7 +33,6 @@ import { VideoProcedure } from './video/producer/video.procedure';
   providers: [
     BloomProducer,
     EmailProducer,
-    EvaluationProducer,
     LikeProducer,
     NotificationProducer,
     SurveySyncProducer,
@@ -44,7 +41,6 @@ import { VideoProcedure } from './video/producer/video.procedure';
   exports: [
     BloomProducer,
     EmailProducer,
-    EvaluationProducer,
     LikeProducer,
     NotificationProducer,
     SurveySyncProducer,

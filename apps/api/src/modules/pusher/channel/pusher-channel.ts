@@ -10,7 +10,6 @@ const notification = ({ type, userId, typeId }: { type: NotificationType; userId
 
 
 const privateNotification = (userId: string) => `private-user-notification-${userId}`;
-const privateReport = (userId: string) => `private-report-${userId}`;
 const privateGeneratedImage = (userId: string) => `private-generated-image-${userId}`;
 
 export const pusherChannel = {
@@ -18,6 +17,5 @@ export const pusherChannel = {
   user,
   privateNotification,
   notification,
-  privateGeneratedImage,
-  privateReport
+  privateGeneratedImage
 } as const;
