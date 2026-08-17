@@ -1,6 +1,6 @@
 import { builderPromptSecond, promptClassifyTopicFirst } from "@api/modules/ai/promt/classify-topic.promt";
 import { LlmProvider } from "@api/modules/ai/provider/llm-provider.interface";
-import { responseFormat } from "@api/modules/ai/schemas/classify-topic.schema";
+import { responseFormat, responseTopicsFormat } from "@api/modules/ai/schemas/classify-topic.schema";
 import { getTopicsByCategory } from "@api/modules/ai/workflows/discussion-summary.workflow";
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
@@ -51,8 +51,8 @@ export class GroqProvider implements LlmProvider {
                 }
             ],
             max_tokens: 100,
-            response_format: responseFormat,
-            temperature: 0.5,
+            response_format: responseTopicsFormat,
+            temperature: 0,
         });
         return topics.choices[0].message?.content ? JSON.parse(topics.choices[0].message.content).categories : [];
     }

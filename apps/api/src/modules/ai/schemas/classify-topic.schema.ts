@@ -51,3 +51,27 @@ export const responseFormat = {
         },
     },
 } as const;
+
+export const responseTopicsFormat = {
+    type: "json_schema",
+    json_schema: {
+        name: "topics",
+        strict: true,
+        schema: {
+            type: "object",
+            properties: {
+                topics: {
+                    type: "array",
+                    items: {
+                        type: "string",
+                    },
+                    minItems: 1,
+                    maxItems: 5,
+                    uniqueItems: true,
+                },
+            },
+            required: ["topics"],
+            additionalProperties: false,
+        },
+    },
+} as const;
