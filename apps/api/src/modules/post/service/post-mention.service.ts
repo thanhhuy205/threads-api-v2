@@ -1,14 +1,14 @@
 import { BadRequestException } from "@/errors/error";
 import { dispatchMentionNotification } from "@/modules/notification-group/events/notification.dispatcher";
 import type { CreatePostPayload } from "@/modules/post/interfaces/create-post-payload";
-import { forwardRef, Inject, Injectable, Logger } from '@nestjs/common';
 import { UserService } from '@/modules/user/service/user.service';
+import { Injectable, Logger } from '@nestjs/common';
 
 @Injectable()
 export class PostMentionService {
   private readonly logger = new Logger(PostMentionService.name, { timestamp: true });
 
-  constructor(@Inject(forwardRef(() => UserService)) private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService) { }
   async validateMentions(
     mentions?: CreatePostPayload["mentions"],
   ): Promise<string[]> {

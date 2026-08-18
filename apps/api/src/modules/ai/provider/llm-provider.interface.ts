@@ -7,7 +7,6 @@ export interface LlmProvider {
     ): Promise<T>;
 
     classifyTopics(
-        prompt: string,
         content: string,
     ): Promise<string[]>;
 }

@@ -1,13 +1,13 @@
 import { redisKey } from "@/constants/resolve-key/redis-key";
 import { RedisVersionService } from '@/shared/redis-version';
+import { Injectable } from '@nestjs/common';
 import { Prisma } from "@prisma/client";
 import { normalizeTopic } from "../helper/nomalize.hepler";
-import { Injectable } from '@nestjs/common';
 import { TopicsPostRepository } from "../repository/topics-post.repository";
 import { PostMentionService } from "./post-mention.service";
 
 export type CreatePostMeta = {
-  topic?: string;
+  topics?: string[];
   mentionIds: string[];
 };
 
@@ -17,7 +17,7 @@ export class PostMetaService {
     private readonly topicsPostRepository: TopicsPostRepository,
     private readonly postMentionService: PostMentionService,
     private readonly redisVersionService: RedisVersionService,
-  ) {}
+  ) { }
   async attachPostMeta(
     tx: Prisma.TransactionClient,
     postId: number,
@@ -33,14 +33,14 @@ export class PostMetaService {
       });
     }
 
-    const normalizedTopic = normalizeTopic(payload.topic);
+    const normalizedTopics = payload.topics?.map(normalizeTopic).filter((v): v is string => !!v);
 
-    if (normalizedTopic) {
-      await this.topicsPostRepository.create(
-        {
+    if (normalizedTopics?.length) {
+      await this.topicsPostRepository.createMany(
+        normalizedTopics.map((topicName) => ({
           postId,
-          topicName: normalizedTopic,
-        },
+          topicName,
+        })),
         tx,
       );
     }

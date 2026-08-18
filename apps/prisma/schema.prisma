@@ -554,8 +554,7 @@ model Topic {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  topicsPosts        TopicsPost[] @relation("TopicPublic")
-  privateTopicsPosts TopicsPost[] @relation("TopicPrivate")
+  topicsPosts TopicsPost[] @relation("TopicPublic")
 
   @@index([name], map: "idx_topics_name")
   @@index([count], map: "idx_topics_count")
@@ -564,23 +563,18 @@ model Topic {
 }
 
 model TopicsPost {
-  id             Int      @id @default(autoincrement())
-  postId         Int      @map("post_id")
-  topicId        Int?     @map("topic_id")
-  privateTopicId Int?     @map("private_topic_id")
-  isPublic       Boolean  @default(true) @map("is_public")
-  createdAt      DateTime @default(now()) @map("created_at")
+  id        Int      @id @default(autoincrement())
+  postId    Int      @map("post_id")
+  topicId   Int?     @map("topic_id")
+  createdAt DateTime @default(now()) @map("created_at")
 
-  post         Post   @relation(fields: [postId], references: [id])
-  topic        Topic? @relation("TopicPublic", fields: [topicId], references: [id])
-  privateTopic Topic? @relation("TopicPrivate", fields: [privateTopicId], references: [id])
+  post  Post   @relation(fields: [postId], references: [id])
+  topic Topic? @relation("TopicPublic", fields: [topicId], references: [id])
 
   @@unique([postId], map: "uq_topics_posts_post_id")
   @@index([postId], map: "idx_topics_posts_post_id")
   @@index([topicId], map: "idx_topics_posts_topic_id")
-  @@index([privateTopicId], map: "idx_topics_posts_private_topic_id")
   @@index([postId, topicId], map: "idx_topics_posts_post_topic")
-  @@index([postId, privateTopicId], map: "idx_topics_posts_post_private_topic")
   @@map("topics_posts")
 }
 

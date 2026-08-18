@@ -6,6 +6,7 @@ import { dispatchReplyNotification } from "@/modules/notification-group/events/n
 import type { CreatePostPayload } from "@/modules/post/interfaces/create-post-payload";
 import { UserService } from "@/modules/user/service/user.service";
 import { TransactionService } from "@/shared/transaction/transaction.service";
+import { AiService } from '@api/modules/ai/service/ai.service';
 import { PostCreationContext } from '@api/modules/post/context/post-creation-context';
 import { POST_CREATION_POLICIES, PostCreationPolicy } from '@api/modules/post/policies/interface/post-creation-policy.interface';
 import { Inject, Injectable, Logger } from "@nestjs/common";
@@ -27,6 +28,7 @@ export class PostService {
     private readonly postMetaService: PostMetaService,
     private readonly accessControlService: AccessControlService,
     private readonly groupTeamService: GroupTeamService,
+    private readonly aiService: AiService,
     @Inject(POST_CREATION_POLICIES)
     private readonly postCreationPolicies: PostCreationPolicy[],
   ) { }
@@ -36,11 +38,13 @@ export class PostService {
     const createPayload = { ...payload, groupTeamId };
 
     const { snapshot, mentionIds } = await this.resolveAuthorAndMentions(payload);
+    const recommendTopics = await this.aiService.classifyTopics(payload.content);
+    const topics = [...(payload.topic ? [payload.topic] : []), ...recommendTopics];
 
     const post = await this.transactionService.doInTransaction(async (tx) => {
       const created = await this.postRepository.create(createPayload, snapshot, tx);
       await this.postMetaService.attachPostMeta(tx, created.id!, {
-        topic: payload.topic,
+        topics,
         mentionIds,
       });
       return created;
@@ -105,7 +109,6 @@ export class PostService {
       this.resolveAuthorAndMentions(payload),
     ]);
     if (!parent) throw new NotFoundException("Origin post not found");
-
     const post = await this.transactionService.doInTransaction(async (tx) => {
       const created = await this.postRepository.createReply(
         payload,
@@ -119,7 +122,7 @@ export class PostService {
         tx,
       );
       await this.postMetaService.attachPostMeta(tx, created.id!, {
-        topic: payload.topic,
+        topics: [...(payload.topic ? [payload.topic] : [])],
         mentionIds: author.mentionIds,
       });
       return created;
@@ -177,7 +180,7 @@ export class PostService {
         tx,
       );
       await this.postMetaService.attachPostMeta(tx, created.id!, {
-        topic: payload.topic,
+        topics: [...(payload.topic ? [payload.topic] : [])],
         mentionIds: author.mentionIds,
       });
       return created;

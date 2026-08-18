@@ -9,6 +9,7 @@ import { AiService } from './service/ai.service';
   providers: [AiService, {
     provide: LLM_PROVIDER,
     useClass: GroqProvider,
-  },],
+  }],
+  exports: [AiService],
 })
 export class AiModule { }

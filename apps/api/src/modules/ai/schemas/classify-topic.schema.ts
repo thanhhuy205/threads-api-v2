@@ -67,7 +67,6 @@ export const responseTopicsFormat = {
                     },
                     minItems: 1,
                     maxItems: 5,
-                    uniqueItems: true,
                 },
             },
             required: ["topics"],

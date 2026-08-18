@@ -9,6 +9,8 @@ export class AiService {
     @Inject(LLM_PROVIDER) private readonly llm: LlmProvider,
   ) { }
 
-
+  async classifyTopics(content: string): Promise<string[]> {
+    return this.llm.classifyTopics(content);
+  }
 }
 

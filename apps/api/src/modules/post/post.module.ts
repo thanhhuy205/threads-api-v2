@@ -1,14 +1,15 @@
 import { AccessControlModule } from '@/modules/access-control/access-control.module';
 import { GroupTeamModule } from '@/modules/group-team/group-team.module';
 import { JwtModule } from '@/modules/jwt/jwt.module';
-import { UserModule } from '@/modules/user/user.module';
 import { RedisVersionModule } from '@/shared/redis-version';
 import { TransactionModule } from '@/shared/transaction/transaction.module';
+import { AiModule } from '@api/modules/ai/ai.module';
 import { AnnouncementPolicy } from '@api/modules/post/policies/announcement.policy';
 import { ExpirationPolicy } from '@api/modules/post/policies/expiration.policy';
 import { POST_CREATION_POLICIES } from '@api/modules/post/policies/interface/post-creation-policy.interface';
 import { PinPolicy } from '@api/modules/post/policies/pin.policy';
-import { forwardRef, Module } from '@nestjs/common';
+import { UserModule } from '@api/modules/user/user.module';
+import { Module } from '@nestjs/common';
 import { PostController } from './controller/post.controller';
 import { LikeRepository } from './repository/like.repository';
 import { PostInteractionRepository } from './repository/post-interaction.repository';
@@ -25,13 +26,13 @@ import { PostService } from './service/post.service';
 
 @Module({
   imports: [
-    forwardRef(() => UserModule),
     JwtModule,
     RedisVersionModule,
     TransactionModule,
     AccessControlModule,
     GroupTeamModule,
-
+    AiModule,
+    UserModule
   ],
   controllers: [PostController],
   providers: [

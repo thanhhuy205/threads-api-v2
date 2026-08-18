@@ -9,22 +9,26 @@ import { Groq } from "groq-sdk/client";
 
 @Injectable()
 export class GroqProvider implements LlmProvider {
+    private static readonly MODEL = "openai/gpt-oss-20b";
+    private static readonly MAX_COMPLETION_TOKENS = 512;
     private groqClient: Groq;
+
     constructor(configService: ConfigService) {
         this.groqClient = new Groq({ apiKey: configService.get<string>("GROQ_CONFIG.GROQ_API_KEY") });
     }
     async classifyTopics(content: string): Promise<string[]> {
         const results = await this.groqClient.chat.completions.create({
-            model: "groq-1.0",
+            model: GroqProvider.MODEL,
             messages: [
                 {
                     role: "user",
                     content: promptClassifyTopicFirst(content)
                 }
             ],
-            max_tokens: 100,
+            max_completion_tokens: GroqProvider.MAX_COMPLETION_TOKENS,
             response_format: responseFormat,
-            temperature: 0.5,
+            reasoning_effort: "low",
+            temperature: 0,
         });
         if (!results.choices || results.choices.length === 0 || !results.choices[0].message || !results.choices[0].message.content) {
             throw new Error("No response from Groq API");
@@ -35,9 +39,15 @@ export class GroqProvider implements LlmProvider {
             categories: string[];
         };
         const categories = firstResult.categories;
+        const allowedTopics = getTopicsByCategory(categories);
+        const allowedTopicSet = new Set<string>(allowedTopics);
+
+        if (allowedTopics.length === 0) {
+            return [];
+        }
 
         const topics = await this.groqClient.chat.completions.create({
-            model: "groq-1.0",
+            model: GroqProvider.MODEL,
             messages: [
                 {
                     role: "user",
@@ -45,16 +55,26 @@ export class GroqProvider implements LlmProvider {
                         {
                             content,
                             categories,
-                            allowedTopics: getTopicsByCategory(categories),
+                            allowedTopics,
                         }
                     ),
                 }
             ],
-            max_tokens: 100,
+            max_completion_tokens: GroqProvider.MAX_COMPLETION_TOKENS,
             response_format: responseTopicsFormat,
+            reasoning_effort: "low",
             temperature: 0,
         });
-        return topics.choices[0].message?.content ? JSON.parse(topics.choices[0].message.content).categories : [];
+        const topicsContent = topics.choices[0]?.message?.content;
+        if (!topicsContent) {
+            throw new Error("No topics response from Groq API");
+        }
+
+        const secondResult = JSON.parse(topicsContent) as { topics: string[] };
+
+        return [...new Set(secondResult.topics)]
+            .filter((topic) => allowedTopicSet.has(topic))
+            .slice(0, 5);
     }
 
     generateStructured<T>(prompt: string, schema: Schema<T>): Promise<T> {
