@@ -16,6 +16,7 @@ import { PostInteractionRepository } from './repository/post-interaction.reposit
 import { PostRepository } from './repository/post.repository';
 import { TopicsPostRepository } from './repository/topics-post.repository';
 import { LikeService } from './service/like-service.service';
+import { OverviewDeclineService } from './service/overview-decline.service';
 import { PostActionService } from './service/post-action.service';
 import { PostFeedService } from './service/post-feed.service';
 import { PostMentionService } from './service/post-mention.service';
@@ -48,6 +49,7 @@ import { PostService } from './service/post.service';
     PostSearchService,
     PostUserService,
     LikeService,
+    OverviewDeclineService,
     AnnouncementPolicy,
     PinPolicy,
     ExpirationPolicy,
@@ -63,6 +65,12 @@ import { PostService } from './service/post.service';
       inject: [AnnouncementPolicy, PinPolicy, ExpirationPolicy],
     },
   ],
-  exports: [PostActionService, PostSearchService, LikeService],
+  exports: [
+    PostActionService,
+    PostSearchService,
+    LikeService,
+    PostFeedService,
+    OverviewDeclineService,
+  ],
 })
 export class PostModule { }

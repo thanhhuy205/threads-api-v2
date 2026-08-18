@@ -133,4 +133,17 @@ export class PostFeedService {
       ...PostMapper.toFeedResponse(post, userId ?? undefined),
     };
   }
+
+
+  findFirstReplyByPostPublicId(count: number, publicId: string) {
+    return this.postRepository.findFirstRepliesByPostPublicId(count, publicId);
+  }
+
+  findLimitReplyInByPostIds(postIds: number[], limit: number) {
+    return this.postRepository.findLimitReplyInByPostIds(postIds, limit);
+  }
+
+  findPostDecideWithinWeek() {
+    return this.postRepository.findManyDecideWithinWeek();
+  }
 }

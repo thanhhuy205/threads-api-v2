@@ -16,6 +16,7 @@ enum UserRoleType {
 enum PostType {
   POST
   ANNOUNCEMENT
+  DECIDE
 }
 
 enum QueueStatus {

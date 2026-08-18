@@ -1,7 +1,7 @@
+import { toTime } from "@/modules/post/helper/conver-date.helper";
 import type {
   CreatePostPayload
 } from "@/modules/post/interfaces/create-post-payload";
-import { toTime } from "@/modules/post/helper/conver-date.helper";
 import {
   postFeedSelect,
   postSelectRepository,
@@ -105,6 +105,42 @@ export class PostRepository {
     };
 
     return select as typeof postFeedSelect;
+  }
+
+  async findManyDecideWithinWeek() {
+    const now = Date.now();
+    const oneHourAgo = new Date(now - 60 * 60 * 1000);
+    const sevenDaysAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
+
+    return this.prisma.post.findMany({
+      where: {
+        isDecline: false,
+        type: PostType.DECIDE,
+        createdAt: {
+          gte: sevenDaysAgo,
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      select: {
+        id: true,
+        userId: true,
+        _count: {
+          select: {
+            children: {
+              where: {
+                deletedAt: null,
+                createdAt: {
+                  gte: oneHourAgo,
+                },
+              },
+            },
+
+          },
+        },
+      }
+    });
   }
 
   findAll({
@@ -467,6 +503,55 @@ export class PostRepository {
             },
           }
           : {}),
+      },
+    });
+  }
+
+  countRepliesByPostPublicId(publicId: string): Promise<number> {
+    return this.prisma.post.count({
+      where: {
+        parentPublicId: publicId,
+        deletedAt: null,
+      },
+    });
+  }
+
+  async findFirstRepliesByPostPublicId(count: number, publicId: string) {
+    if (count <= 0) {
+      return [];
+    }
+
+    return this.prisma.post.findMany({
+      where: {
+        parentPublicId: publicId,
+        deletedAt: null,
+      },
+      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+      take: count,
+      select: {
+        id: true,
+        publicId: true,
+        content: true,
+        userId: true,
+        userSnapshot: true,
+        createdAt: true,
+      },
+    });
+  }
+
+  findLimitReplyInByPostIds(postIds: number[], limit: number) {
+    return this.prisma.post.findMany({
+      where: {
+        parentId: {
+          in: postIds,
+        },
+        deletedAt: null,
+      },
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      take: limit,
+      select: {
+        parentId: true,
+        content: true,
       },
     });
   }

@@ -1,5 +1,5 @@
-import { QUEUE_NAME } from "@/constants/queue";
 import { PERMISSIONS } from '@/common/constants/permission.constant';
+import { QUEUE_NAME } from "@/constants/queue";
 import { redisKey } from "@/constants/resolve-key/redis-key";
 import {
   BadRequestException,
@@ -7,7 +7,6 @@ import {
   NotFoundException,
 } from "@/errors/error";
 import { AccessControlService } from '@/modules/access-control/services/access-control.service';
-import { UserService } from "@/modules/user/service/user.service";
 import { RedisVersionService } from '@/shared/redis-version';
 import { RedisService } from "@libs/cache/redis.service";
 import { Injectable } from '@nestjs/common';
@@ -25,7 +24,6 @@ export class PostActionService {
   constructor(
     private readonly postRepository: PostRepository,
     private readonly postInteractionRepository: PostInteractionRepository,
-    private readonly userService: UserService,
     private readonly redisVersionService: RedisVersionService,
     private readonly redisService: RedisService,
     private readonly accessControlService: AccessControlService,

@@ -1,3 +1,4 @@
+import { CronModule } from '@api/modules/cron/schedule-overview.module';
 import { LikeRepository } from '@api/modules/post/repository/like.repository';
 import { PostRepository } from '@api/modules/post/repository/post.repository';
 import { LikeService } from '@api/modules/post/service/like-service.service';
@@ -49,6 +50,7 @@ import { LikeWorker } from './like.worker';
     DatabaseModule,
     RedisModule,
     CloudflareModule,
+    CronModule,
   ],
   providers: [
     BloomWorker,
