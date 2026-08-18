@@ -39,7 +39,9 @@ export class PostService {
 
     const { snapshot, mentionIds } = await this.resolveAuthorAndMentions(payload);
     const recommendTopics = await this.aiService.classifyTopics(payload.content);
+    this.logger.log(`Recommended topics for post: ${recommendTopics.join(", ")}`);
     const topics = [...(payload.topic ? [payload.topic] : []), ...recommendTopics];
+    this.logger.log(`Final topics for post: ${topics.join(", ")}`);
 
     const post = await this.transactionService.doInTransaction(async (tx) => {
       const created = await this.postRepository.create(createPayload, snapshot, tx);

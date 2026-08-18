@@ -74,13 +74,71 @@ export class TopicsPostRepository {
     });
   }
 
-  async createMany(
+  async findExistingTopicsAndIncreaseCount(
+    topicNames: string[],
+    tx: Prisma.TransactionClient = this.prisma,
+  ): Promise<void> {
+    await tx.topic.updateMany({
+      where: {
+        name: {
+          in: topicNames,
+        },
+      },
+      data: {
+        count: {
+          increment: 1,
+        },
+      },
+    });
+  }
+
+  async createManyAndConnectOrIncreaseCount(
     payloads: CreateTopicsPostInput[],
     tx: Prisma.TransactionClient = this.prisma,
   ): Promise<void> {
-    const result = await this.prisma.topic.createMany({
+
+    await Promise.all([
+      await tx.topic.updateMany({
+        where: {
+          name: {
+            in: payloads.map((payload) => payload.topicName),
+          },
+        },
+        data: {
+          count: {
+            increment: 1,
+          },
+        },
+      }),
+
+      await tx.topic.createMany({
+        data: payloads.map((payload) => ({
+          name: payload.topicName,
+        })),
+        skipDuplicates: true,
+      })
+    ])
+
+    const topics = await tx.topic.findMany({
+      where: {
+        name: {
+          in: payloads.map((payload) => payload.topicName),
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+
+    const topicMap = new Map(
+      topics.map((topic) => [topic.name, topic.id]),
+    );
+
+    await tx.topicsPost.createMany({
       data: payloads.map((payload) => ({
-        name: payload.topicName,
+        postId: payload.postId,
+        topicId: topicMap.get(payload.topicName)!,
       })),
       skipDuplicates: true,
     });

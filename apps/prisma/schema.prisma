@@ -571,7 +571,7 @@ model TopicsPost {
   post  Post   @relation(fields: [postId], references: [id])
   topic Topic? @relation("TopicPublic", fields: [topicId], references: [id])
 
-  @@unique([postId], map: "uq_topics_posts_post_id")
+  @@unique([postId, topicId], map: "uq_topics_posts_post_topic")
   @@index([postId], map: "idx_topics_posts_post_id")
   @@index([topicId], map: "idx_topics_posts_topic_id")
   @@index([postId, topicId], map: "idx_topics_posts_post_topic")

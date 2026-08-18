@@ -36,7 +36,7 @@ export class PostMetaService {
     const normalizedTopics = payload.topics?.map(normalizeTopic).filter((v): v is string => !!v);
 
     if (normalizedTopics?.length) {
-      await this.topicsPostRepository.createMany(
+      await this.topicsPostRepository.createManyAndConnectOrIncreaseCount(
         normalizedTopics.map((topicName) => ({
           postId,
           topicName,
