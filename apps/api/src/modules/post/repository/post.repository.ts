@@ -107,13 +107,57 @@ export class PostRepository {
     return select as typeof postFeedSelect;
   }
 
-  async findManyDecideWithinWeek() {
+  async updateManyDecideStatus(postIds: number[], isDecline: boolean) {
+    return this.prisma.post.updateMany({
+      where: { id: { in: postIds } },
+      data: { isDecline },
+    });
+  }
+
+  async findManyInWeek() {
+    const now = Date.now();
+    const sevenDaysAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
+    return this.prisma.post.findMany({
+      where: {
+        isDecline: false,
+        type: PostType.DECIDE,
+        createdAt: {
+          gte: sevenDaysAgo,
+        },
+      },
+      select: {
+        id: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+  }
+
+
+  async countOverviewDeclineByPostId(postIds: number[]) {
+    return this.prisma.post.findMany({
+      where: { id: { in: postIds } },
+      select: {
+        id: true,
+        _count: {
+          select: {
+            overviewDeclines: true
+          },
+        },
+      },
+    });
+
+  }
+
+  async findPostDecideWithinWeekByIds(postIds: number[]) {
     const now = Date.now();
     const oneHourAgo = new Date(now - 60 * 60 * 1000);
     const sevenDaysAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
 
     return this.prisma.post.findMany({
       where: {
+        id: { in: postIds },
         isDecline: false,
         type: PostType.DECIDE,
         createdAt: {
@@ -517,9 +561,6 @@ export class PostRepository {
   }
 
   async findFirstRepliesByPostPublicId(count: number, publicId: string) {
-    if (count <= 0) {
-      return [];
-    }
 
     return this.prisma.post.findMany({
       where: {

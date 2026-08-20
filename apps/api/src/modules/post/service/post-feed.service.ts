@@ -143,7 +143,19 @@ export class PostFeedService {
     return this.postRepository.findLimitReplyInByPostIds(postIds, limit);
   }
 
-  findPostDecideWithinWeek() {
-    return this.postRepository.findManyDecideWithinWeek();
+  findPostDecideWithinWeekByIds(postIds: number[]) {
+    return this.postRepository.findPostDecideWithinWeekByIds(postIds);
+  }
+
+  findManyInWeek() {
+    return this.postRepository.findManyInWeek();
+  }
+
+  countOverviewDeclineByPostId(postIds: number[]) {
+    return this.postRepository.countOverviewDeclineByPostId(postIds);
+  }
+
+  updateManyDecideStatus(postIds: number[], isDecline: boolean) {
+    return this.postRepository.updateManyDecideStatus(postIds, isDecline);
   }
 }

@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class OverviewDeclineService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   findOneByPostId(postId: number) {
     return this.prisma.overviewDecline.findFirst({
@@ -11,4 +11,6 @@ export class OverviewDeclineService {
       orderBy: { createdAt: 'desc' },
     });
   }
+
+
 }
