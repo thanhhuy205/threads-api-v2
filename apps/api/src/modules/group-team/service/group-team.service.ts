@@ -1,12 +1,12 @@
+import { PERMISSIONS } from '@/common/constants/permission.constant';
 import {
   BadRequestException,
   ConflictException,
   ForbiddenException,
   NotFoundException,
 } from '@/errors/error';
-import { TransactionService } from '@/shared/transaction/transaction.service';
-import { PERMISSIONS } from '@/common/constants/permission.constant';
 import { ABILITY_SERVICE, type AbilityService } from '@/modules/ability/service/ability.service';
+import { TransactionService } from '@/shared/transaction/transaction.service';
 import { Inject, Injectable } from '@nestjs/common';
 import type { Position } from '@prisma/client';
 import { GroupTeamRepository } from '../repository/group-team.repository';
@@ -31,7 +31,7 @@ export class GroupTeamService {
     private readonly userTeamService: UserTeamService,
     private readonly transactionService: TransactionService,
     @Inject(ABILITY_SERVICE) private readonly abilityService: AbilityService,
-  ) {}
+  ) { }
 
   async create(payload: CreateGroupTeamPayload) {
     await this.abilityService.assertCan(
@@ -39,7 +39,7 @@ export class GroupTeamService {
       PERMISSIONS.GROUP_CREATE,
     );
 
-    const name = this.normalizeName(payload.name);
+    const name = payload.name.trim();
 
     if (!name) {
       throw new BadRequestException('Team name is required');
@@ -51,32 +51,24 @@ export class GroupTeamService {
       throw new ConflictException('Team name already exists');
     }
 
-    try {
-      return await this.transactionService.doInTransaction(async (tx) => {
-        const team = await this.groupTeamRepository.create(
-          { name, createdById: payload.createdById },
-          tx,
-        );
+    return await this.transactionService.doInTransaction(async (tx) => {
+      const team = await this.groupTeamRepository.create(
+        { name, createdById: payload.createdById },
+        tx,
+      );
 
-        await this.userTeamService.addUser(
-          { userId: payload.createdById, teamId: team.id },
-          tx,
-        );
+      await this.userTeamService.addUser(
+        { userId: payload.createdById, teamId: team.id },
+        tx,
+      );
 
-        return team;
-      });
-    } catch (error) {
-      if (this.isUniqueConstraintError(error)) {
-        throw new ConflictException('Team name already exists');
-      }
-      throw error;
-    }
+      return team;
+    });
   }
 
   async addMember(payload: AddTeamMemberPayload) {
-    const team = await this.groupTeamRepository.findByPublicId(
-      payload.teamPublicId,
-    );
+
+    const team = await this.groupTeamRepository.findByPublicId(payload.teamPublicId);
 
     if (!team) {
       throw new NotFoundException('Team not found');
@@ -105,18 +97,5 @@ export class GroupTeamService {
     }
 
     return team;
-  }
-
-  private normalizeName(name: string) {
-    return name.trim().replace(/\s+/g, ' ');
-  }
-
-  private isUniqueConstraintError(error: unknown): error is { code: 'P2002' } {
-    return (
-      typeof error === 'object' &&
-      error !== null &&
-      'code' in error &&
-      error.code === 'P2002'
-    );
   }
 }
