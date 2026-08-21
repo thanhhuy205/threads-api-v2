@@ -5,7 +5,7 @@ import { Logger } from '@nestjs/common';
 import configService from '@libs/core/config/config';
 import { EMAIL_JOB_NAME, QUEUE_NAME } from '@libs/core/constants/queue';
 import { ForgotPasswordProducer } from '@api/modules/job/email/dto/forgot-password.dto';
-import { nodemailerService } from '@api/modules/nodemailer/service/nodemailer.service';
+import { sendMail } from '@libs/mailer';
 import { Job } from 'bullmq';
 
 @Processor(QUEUE_NAME.EMAIL_QUEUE)
@@ -37,7 +37,7 @@ export class EmailWorker extends WorkerHost {
                 currentYear: new Date().getFullYear(),
             }
         );
-        await nodemailerService.sendMail(data.email, 'Verify your email', html, {});
+        await sendMail(data.email, 'Verify your email', html);
         this.logger.log(`Sent verification email to: ${data.email}`);
     }
 
@@ -53,7 +53,7 @@ export class EmailWorker extends WorkerHost {
                 currentYear: new Date().getFullYear(),
             }
         );
-        await nodemailerService.sendMail(data.email, 'Reset your password', html, {});
+        await sendMail(data.email, 'Reset your password', html);
         this.logger.log(`Sent forgot password email to: ${data.email}`);
     }
 
@@ -68,7 +68,7 @@ export class EmailWorker extends WorkerHost {
                 currentYear: new Date().getFullYear(),
             }
         );
-        await nodemailerService.sendMail(data.email, 'You are invited to join Threads', html, {});
+        await sendMail(data.email, 'You are invited to join Threads', html);
         this.logger.log(`Sent invitation email to: ${data.email}`);
     }
 }

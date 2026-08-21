@@ -1,4 +1,4 @@
-import { AccessControlModule } from '@/modules/access-control/access-control.module';
+import { AbilityModule } from '@/modules/ability/ability.module';
 import { GroupTeamModule } from '@/modules/group-team/group-team.module';
 import { JwtModule } from '@/modules/jwt/jwt.module';
 import { RedisVersionModule } from '@/shared/redis-version';
@@ -39,7 +39,7 @@ import { POST_USER_SERVICE } from './service/post-user.service';
 import { POST_SERVICE } from './service/post.service';
 
 @Module({
-  imports: [JwtModule, RedisVersionModule, TransactionModule, AccessControlModule, GroupTeamModule, AiModule, UserModule],
+  imports: [JwtModule, RedisVersionModule, TransactionModule, AbilityModule, GroupTeamModule, AiModule, UserModule],
   controllers: [PostController],
   providers: [
     { provide: POST_REPOSITORY, useClass: PostRepositoryImpl },

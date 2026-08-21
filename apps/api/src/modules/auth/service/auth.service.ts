@@ -1,8 +1,8 @@
 import configService from "@/config/config";
 import { redisKey } from "@/constants/resolve-key/redis-key";
 import { NotFoundException } from "@/errors/error";
-import { RoleService } from "@/modules/access-control/role/service/role.service";
-import { UserRoleService } from "@/modules/access-control/role/service/user-role.service";
+import { ROLE_SERVICE, type RoleService } from "@/modules/ability/service/role.service";
+import { USER_ROLE_SERVICE, type UserRoleService } from "@/modules/ability/service/user-role.service";
 import type { SessionMetadata } from "@/modules/auth/interfaces/session-metadata";
 import { VerificationRepository } from "@/modules/auth/repository/verification.repository";
 import {
@@ -16,7 +16,7 @@ import { TokenPairResponse } from "@/modules/jwt/dto/response/token-pair.respons
 import { JwtService } from "@/modules/jwt/service/jwt.service";
 import { UserService } from "@/modules/user/service/user.service";
 import { RedisService } from "@libs/cache/redis.service";
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { UserRoleType, VerificationCodeType } from "@prisma/client";
 import crypto from "crypto";
 import ms, { StringValue } from "ms";
@@ -49,8 +49,8 @@ export class AuthService {
     private readonly authRepository: AuthRepository,
     private readonly verificationRepository: VerificationRepository,
     private readonly jwtService: JwtService,
-    private readonly roleService: RoleService,
-    private readonly userRoleService: UserRoleService,
+    @Inject(ROLE_SERVICE) private readonly roleService: RoleService,
+    @Inject(USER_ROLE_SERVICE) private readonly userRoleService: UserRoleService,
     private readonly userService: UserService,
     private readonly bloomProducer: BloomProducer,
     private readonly emailProducer: EmailProducer,

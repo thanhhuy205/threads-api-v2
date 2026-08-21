@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/shared/database/prisma.service';
+import type { RoleRepository } from '../role.repository';
 
 @Injectable()
-export class RoleRepository {
+export class RoleRepositoryImpl implements RoleRepository {
   constructor(private readonly prismaService: PrismaService) {}
 
   async findAll() {

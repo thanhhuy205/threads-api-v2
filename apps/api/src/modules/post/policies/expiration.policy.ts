@@ -1,13 +1,13 @@
 import { PERMISSIONS } from "@api/common/constants/permission.constant";
-import { AccessControlService } from "@api/modules/access-control/services/access-control.service";
+import { ABILITY_SERVICE, type AbilityService } from "@api/modules/ability/service/ability.service";
 import type { CreatePostCommand } from "@api/modules/post/command/create-post.command";
 import { PostCreationContext } from "@api/modules/post/context/post-creation-context";
 import { PostCreationPolicy } from "@api/modules/post/policies/interface/post-creation-policy.interface";
-import { BadRequestException, Injectable } from "@nestjs/common";
+import { BadRequestException, Inject, Injectable } from "@nestjs/common";
 
 @Injectable()
 export class ExpirationPolicy implements PostCreationPolicy {
-    constructor(private readonly accessControlService: AccessControlService) { }
+    constructor(@Inject(ABILITY_SERVICE) private readonly abilityService: AbilityService) { }
 
     applies(payload: CreatePostCommand): boolean {
         return payload.dateRangeFrom !== undefined && payload.dateRangeTo !== undefined;
@@ -20,7 +20,7 @@ export class ExpirationPolicy implements PostCreationPolicy {
         if (payload.dateRangeFrom!.getTime() < Date.now()) {
             throw new BadRequestException('dateRangeFrom must be in the future');
         }
-        await this.accessControlService.assertPermission(
+        await this.abilityService.assertCan(
             payload.userId,
             PERMISSIONS.POST_EXPIRE,
             ctx.scope,

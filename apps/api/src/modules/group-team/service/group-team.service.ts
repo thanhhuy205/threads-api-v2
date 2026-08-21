@@ -6,8 +6,8 @@ import {
 } from '@/errors/error';
 import { TransactionService } from '@/shared/transaction/transaction.service';
 import { PERMISSIONS } from '@/common/constants/permission.constant';
-import { AccessControlService } from '@/modules/access-control/services/access-control.service';
-import { Injectable } from '@nestjs/common';
+import { ABILITY_SERVICE, type AbilityService } from '@/modules/ability/service/ability.service';
+import { Inject, Injectable } from '@nestjs/common';
 import type { Position } from '@prisma/client';
 import { GroupTeamRepository } from '../repository/group-team.repository';
 import { UserTeamService } from './user-team.service';
@@ -30,11 +30,11 @@ export class GroupTeamService {
     private readonly groupTeamRepository: GroupTeamRepository,
     private readonly userTeamService: UserTeamService,
     private readonly transactionService: TransactionService,
-    private readonly accessControlService: AccessControlService,
+    @Inject(ABILITY_SERVICE) private readonly abilityService: AbilityService,
   ) {}
 
   async create(payload: CreateGroupTeamPayload) {
-    await this.accessControlService.assertPermission(
+    await this.abilityService.assertCan(
       payload.createdById,
       PERMISSIONS.GROUP_CREATE,
     );

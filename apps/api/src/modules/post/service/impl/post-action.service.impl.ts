@@ -6,7 +6,7 @@ import {
   ForbiddenException,
   NotFoundException,
 } from "@/errors/error";
-import { AccessControlService } from '@/modules/access-control/services/access-control.service';
+import { ABILITY_SERVICE, type AbilityService } from '@/modules/ability/service/ability.service';
 import { RedisVersionService } from '@/shared/redis-version';
 import { RedisService } from "@libs/cache/redis.service";
 import { Inject, Injectable } from '@nestjs/common';
@@ -27,7 +27,7 @@ export class PostActionServiceImpl implements PostActionService {
     @Inject(POST_INTERACTION_REPOSITORY) private readonly postInteractionRepository: PostInteractionRepository,
     private readonly redisVersionService: RedisVersionService,
     private readonly redisService: RedisService,
-    private readonly accessControlService: AccessControlService,
+    @Inject(ABILITY_SERVICE) private readonly abilityService: AbilityService,
   ) { }
   async hide(
     publicId: string,
@@ -205,7 +205,7 @@ export class PostActionServiceImpl implements PostActionService {
         : PermissionScope.WORKSPACE;
 
     if (payload.isPinned !== undefined) {
-      await this.accessControlService.assertPermission(
+      await this.abilityService.assertCan(
         userId,
         PERMISSIONS.POST_PIN,
         scope,
@@ -225,7 +225,7 @@ export class PostActionServiceImpl implements PostActionService {
       ) {
         throw new BadRequestException('dateRangeFrom must be in the future');
       }
-      await this.accessControlService.assertPermission(
+      await this.abilityService.assertCan(
         userId,
         PERMISSIONS.POST_EXPIRE,
         scope,

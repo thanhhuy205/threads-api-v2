@@ -1,6 +1,6 @@
 import { RefreshTokenHeaderGuard } from '@/common/guards/refresh-token-header.guard';
 import { Module } from '@nestjs/common';
-import { AccessControlModule } from '../access-control/access-control.module';
+import { AbilityModule } from '../ability/ability.module';
 import { JwtModule } from '../jwt/jwt.module';
 import { UserModule } from '../user/user.module';
 import { AuthController } from './controller/auth.controller';
@@ -9,7 +9,7 @@ import { VerificationRepository } from './repository/verification.repository';
 import { AuthService } from './service/auth.service';
 
 @Module({
-  imports: [JwtModule, AccessControlModule, UserModule],
+  imports: [JwtModule, AbilityModule, UserModule],
   controllers: [AuthController],
   providers: [
     AuthService,

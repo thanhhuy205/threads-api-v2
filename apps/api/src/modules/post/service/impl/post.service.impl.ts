@@ -1,6 +1,6 @@
 import { PERMISSIONS } from '@/common/constants/permission.constant';
 import { BadRequestException, NotFoundException } from "@/errors/error";
-import { AccessControlService } from '@/modules/access-control/services/access-control.service';
+import { ABILITY_SERVICE, type AbilityService } from '@/modules/ability/service/ability.service';
 import { GroupTeamService } from '@/modules/group-team/service/group-team.service';
 import { dispatchReplyNotification } from "@/modules/notification-group/events/notification.dispatcher";
 import type { CreatePostCommand } from "../../command/create-post.command";
@@ -27,7 +27,7 @@ export class PostServiceImpl implements PostService {
     @Inject(POST_REPOSITORY) private readonly postRepository: PostRepository,
     @Inject(POST_MENTION_SERVICE) private readonly postMentionService: PostMentionService,
     @Inject(POST_META_SERVICE) private readonly postMetaService: PostMetaService,
-    private readonly accessControlService: AccessControlService,
+    @Inject(ABILITY_SERVICE) private readonly abilityService: AbilityService,
     private readonly groupTeamService: GroupTeamService,
     private readonly aiService: AiService,
     @Inject(POST_CREATION_POLICIES)
@@ -90,7 +90,7 @@ export class PostServiceImpl implements PostService {
   ): Promise<number | undefined> {
     const ctx = await this.resolveCreationContext(payload);
 
-    await this.accessControlService.assertPermission(
+    await this.abilityService.assertCan(
       payload.userId,
       PERMISSIONS.POST_CREATE,
       ctx.scope,
