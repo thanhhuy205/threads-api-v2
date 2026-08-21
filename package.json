@@ -29,6 +29,7 @@
         "@aws-sdk/lib-storage": "^3.1041.0",
         "@aws-sdk/s3-request-presigner": "^3.1068.0",
         "@casl/ability": "^7.0.1",
+        "@casl/prisma": "^2.0.2",
         "@google/genai": "^2.7.0",
         "@nestjs/bullmq": "^11.0.5",
         "@nestjs/common": "^11.1.28",
