@@ -1,8 +1,29 @@
 import { Logger } from '@nestjs/common';
 import { Post, Prisma, UserStatus } from "@prisma/client";
-import { postFeedSelect } from "../selector/post.selector";
 
-import { PostRecord } from "../repository/post.repository";
+import type { PostRecord } from "../repository/post.repository";
+
+export const postFeedSelect = Prisma.validator<Prisma.PostSelect>()({
+  publicId: true, userId: true, content: true, visibility: true, type: true,
+  isPinned: true, dateRangeFrom: true, dateRangeTo: true,
+  scheduledTimeFrom: true, scheduledTimeTo: true,
+  groupTeam: { select: { publicId: true, name: true } },
+  parentId: true, parentPublicId: true, originPostId: true, rootPostId: true,
+  rootPublicId: true, isQuote: true, origin: true, parent: true,
+  userSnapshot: true, likesCount: true, viewsCount: true, isSurvey: true,
+  createdAt: true,
+  poll: { select: { id: true, expiresAt: true, pollOptions: { select: { id: true, optionText: true, votesCount: true }, orderBy: { id: "asc" } }, voteCount: true, isExpired: true } },
+  media: { select: { id: true, url: true, type: true, width: true, height: true, status: true } },
+  mentions: { select: { userId: true, user: { select: { username: true } } } },
+  topicsPosts: { select: { topic: { select: { name: true } } } },
+});
+
+export const postSelectRepository = {
+  id: true, publicId: true, content: true, contentJson: true, type: true,
+  userId: true, visibility: true, isPinned: true, dateRangeFrom: true,
+  dateRangeTo: true, scheduledTimeFrom: true, scheduledTimeTo: true,
+  groupTeamId: true, createdAt: true, userSnapshot: true,
+} satisfies Prisma.PostSelect;
 
 type PostOriginItem = {
   publicId: string;

@@ -1,7 +1,10 @@
 import { CronModule } from '@api/modules/cron/schedule-overview.module';
-import { LikeRepository } from '@api/modules/post/repository/like.repository';
-import { PostRepository } from '@api/modules/post/repository/post.repository';
-import { LikeService } from '@api/modules/post/service/like-service.service';
+import { LikeRepositoryImpl } from '@api/modules/post/repository/impl/like.repository.impl';
+import { PostRepositoryImpl } from '@api/modules/post/repository/impl/post.repository.impl';
+import { LIKE_REPOSITORY } from '@api/modules/post/repository/like.repository';
+import { POST_REPOSITORY } from '@api/modules/post/repository/post.repository';
+import { LikeServiceImpl } from '@api/modules/post/service/impl/like.service.impl';
+import { LIKE_SERVICE } from '@api/modules/post/service/like.service';
 import { PostMediaRepository } from '@api/modules/upload/repository/post-media.repository';
 import { RedisModule } from '@libs/cache/redis.module';
 import { configurationFactory } from '@libs/core/config/config';
@@ -60,9 +63,9 @@ import { LikeWorker } from './like.worker';
     // NotificationWorker,
     // SurveySyncWorker,
     PostMediaRepository,
-    PostRepository,
-    LikeRepository,
-    LikeService,
+    { provide: POST_REPOSITORY, useClass: PostRepositoryImpl },
+    { provide: LIKE_REPOSITORY, useClass: LikeRepositoryImpl },
+    { provide: LIKE_SERVICE, useClass: LikeServiceImpl },
   ],
 })
 export class AppModule { }

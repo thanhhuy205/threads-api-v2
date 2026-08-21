@@ -1,11 +1,15 @@
-import { PostCreationContext } from "@api/modules/post/context/post-creation-context";
-import { CreatePostPayload } from "@api/modules/post/interfaces/create-post-payload";
+import type { CreatePostCommand } from "@api/modules/post/command/create-post.command";
+
+
+interface PostCreationContext {
+
+}
 
 export interface PostCreationPolicy {
-    applies(payload: CreatePostPayload): boolean;
+    applies(payload: CreatePostCommand): boolean;
 
     enforce(
-        payload: CreatePostPayload,
+        payload: CreatePostCommand,
         ctx: PostCreationContext,
     ): Promise<void>;
 }

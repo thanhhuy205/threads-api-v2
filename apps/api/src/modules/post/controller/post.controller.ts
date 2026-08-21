@@ -16,6 +16,7 @@ import {
   Delete,
   Get,
   HttpStatus,
+  Inject,
   Param,
   Patch,
   Post,
@@ -39,11 +40,11 @@ import {
   UpdatePostDto,
   UsernameParamsDto,
 } from "../dto/request";
-import { PostActionService } from "../service/post-action.service";
-import { PostFeedService } from "../service/post-feed.service";
-import { PostSearchService } from "../service/post-search.service";
-import { PostUserService } from "../service/post-user.service";
-import { PostService } from "../service/post.service";
+import { POST_ACTION_SERVICE, type PostActionService } from "../service/post-action.service";
+import { POST_FEED_SERVICE, type PostFeedService } from "../service/post-feed.service";
+import { POST_SEARCH_SERVICE, type PostSearchService } from "../service/post-search.service";
+import { POST_USER_SERVICE, type PostUserService } from "../service/post-user.service";
+import { POST_SERVICE, type PostService } from "../service/post.service";
 
 type AuthenticatedRequest = {
   headers: { authorization?: string | string[] | undefined };
@@ -56,11 +57,11 @@ export class PostController {
   constructor(
     private readonly jwtService: JwtService,
     private readonly userService: UserService,
-    private readonly postService: PostService,
-    private readonly postActionService: PostActionService,
-    private readonly postFeedService: PostFeedService,
-    private readonly postSearchService: PostSearchService,
-    private readonly postUserService: PostUserService,
+    @Inject(POST_SERVICE) private readonly postService: PostService,
+    @Inject(POST_ACTION_SERVICE) private readonly postActionService: PostActionService,
+    @Inject(POST_FEED_SERVICE) private readonly postFeedService: PostFeedService,
+    @Inject(POST_SEARCH_SERVICE) private readonly postSearchService: PostSearchService,
+    @Inject(POST_USER_SERVICE) private readonly postUserService: PostUserService,
   ) {}
 
   @Get("news-feed")

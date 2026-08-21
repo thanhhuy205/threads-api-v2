@@ -1,7 +1,7 @@
 import { AiService } from '@api/modules/ai/service/ai.service';
-import { OverviewDeclineService } from '@api/modules/post/service/overview-decline.service';
-import { PostFeedService } from '@api/modules/post/service/post-feed.service';
-import { Injectable, Logger } from '@nestjs/common';
+import { OVERVIEW_DECLINE_SERVICE, type OverviewDeclineService } from '@api/modules/post/service/overview-decline.service';
+import { POST_FEED_SERVICE, type PostFeedService } from '@api/modules/post/service/post-feed.service';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
@@ -11,8 +11,8 @@ export class ScheduleOverviewCron {
   private static readonly CRON_EXPRESSION = CronExpression.EVERY_HOUR;
   private static readonly COUNT_REPLY_LIMIT_HOUR = 50;
 
-  constructor(private readonly overviewDeclineService: OverviewDeclineService,
-    private readonly postFeedService: PostFeedService,
+  constructor(@Inject(OVERVIEW_DECLINE_SERVICE) private readonly overviewDeclineService: OverviewDeclineService,
+    @Inject(POST_FEED_SERVICE) private readonly postFeedService: PostFeedService,
     private readonly aiService: AiService
   ) { }
 

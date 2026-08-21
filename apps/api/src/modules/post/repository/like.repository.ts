@@ -1,85 +1,15 @@
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@/shared/database/prisma.service';
-import { Prisma } from "@prisma/client";
+import type { Prisma } from '@prisma/client';
 
-type LikeDbClient = Prisma.TransactionClient | PrismaService;
+export const LIKE_REPOSITORY = Symbol('LIKE_REPOSITORY');
 
-@Injectable()
-export class LikeRepository {
-  constructor(private readonly prismaService: PrismaService) {}
+export type LikePayload = { userId: string; postId: string };
+export type CreateLikePayload = LikePayload & { isLike: boolean };
 
-  async createMany(payloads: { userId: string; postId: string }[]) {
-    return this.prismaService.like.createMany({
-      data: payloads,
-      skipDuplicates: true,
-    });
-  }
-
-  async create(payload: { userId: string; postId: string; isLike: boolean }) {
-    return this.prismaService.like.create({
-      data: payload,
-    });
-  }
-
-
-  async deleteMany(payloads: { userId: string; postId: string; }[]) {
-    if (payloads.length === 0) {
-      return { count: 0 };
-    }
-    return this.prismaService.like.deleteMany({
-      where: {
-        OR: payloads.map((item) => ({
-          userId: item.userId,
-          postId: item.postId,
-        })),
-      },
-    });
-  }
-  async updateMany(payloads: { userId: string; postId: string; }[]) {
-    if (payloads.length === 0) {
-      return { count: 0 };
-    }
-
-    return this.prismaService.like.updateMany({
-      where: {
-        OR: payloads.map((item) => ({
-          userId: item.userId,
-          postId: item.postId,
-        })),
-
-      },
-      data: {
-        isLike: false,
-      },
-    });
-  }
-
-  createIfAbsent(payload: {
-    userId: string;
-    postId: string;
-  }, tx: LikeDbClient = this.prismaService) {
-    return tx.like.createMany({
-      data: [{
-        ...payload,
-        isLike: true,
-      }],
-      skipDuplicates: true,
-    });
-  }
-
-  deleteByUserAndPost(
-    payload: {
-      userId: string;
-      postId: string;
-    },
-    tx: LikeDbClient = this.prismaService,
-  ) {
-    return tx.like.deleteMany({
-      where: {
-        userId: payload.userId,
-        postId: payload.postId,
-      },
-    });
-  }
-
+export interface LikeRepository {
+  createMany(payloads: LikePayload[]): Promise<unknown>;
+  create(payload: CreateLikePayload): Promise<unknown>;
+  deleteMany(payloads: LikePayload[]): Promise<{ count: number }>;
+  updateMany(payloads: LikePayload[]): Promise<{ count: number }>;
+  createIfAbsent(payload: LikePayload, tx?: Prisma.TransactionClient): Promise<{ count: number }>;
+  deleteByUserAndPost(payload: LikePayload, tx?: Prisma.TransactionClient): Promise<{ count: number }>;
 }

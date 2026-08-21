@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
-import { LikeRepository } from '@/modules/post/repository/like.repository';
+import { Inject, Injectable } from '@nestjs/common';
+import { LIKE_REPOSITORY, type LikeRepository } from '../../repository/like.repository';
+import type { LikeService } from '../like.service';
 
 @Injectable()
-export class LikeService {
-    constructor(private readonly likeRepository: LikeRepository) {}
+export class LikeServiceImpl implements LikeService {
+    constructor(@Inject(LIKE_REPOSITORY) private readonly likeRepository: LikeRepository) { }
 
     async createMany(payload: {
         userId: string, postId: string

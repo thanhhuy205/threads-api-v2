@@ -1,9 +1,9 @@
-import { PostRepository } from "@api/modules/post/repository/post.repository";
-import { LikeService } from "@api/modules/post/service/like-service.service";
+import { POST_REPOSITORY, type PostRepository } from "@api/modules/post/repository/post.repository";
+import { LIKE_SERVICE, type LikeService } from "@api/modules/post/service/like.service";
 import { RedisService } from "@libs/cache/redis.service";
 import { LIKE_JOB_NAME, QUEUE_NAME } from "@libs/core/constants/queue";
 import { Processor, WorkerHost } from '@nestjs/bullmq';
-import { Logger } from '@nestjs/common';
+import { Inject, Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
 
 type LikeEvent = {
@@ -18,8 +18,8 @@ export class LikeWorker extends WorkerHost {
   private readonly logger = new Logger(LikeWorker.name, { timestamp: true });
 
   constructor(
-    private readonly postRepository: PostRepository,
-    private readonly likeService: LikeService,
+    @Inject(POST_REPOSITORY) private readonly postRepository: PostRepository,
+    @Inject(LIKE_SERVICE) private readonly likeService: LikeService,
     private readonly redisService: RedisService,
   ) {
     super();

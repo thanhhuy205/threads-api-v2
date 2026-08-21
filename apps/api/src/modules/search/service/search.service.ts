@@ -1,7 +1,7 @@
-import { PostSearchService } from "@/modules/post/service/post-search.service";
+import { POST_SEARCH_SERVICE, type PostSearchService } from "@/modules/post/service/post-search.service";
 import { TopicService } from "@/modules/topic/service/topic.service";
 import { buildCursorPagination } from '@/common/helpers/cursor-pagination.helper';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 
 type SerpType = "default";
 
@@ -17,7 +17,7 @@ type SearchPostInput = {
 export class SearchService {
   constructor(
     private readonly topicService: TopicService,
-    private readonly postSearchService: PostSearchService,
+    @Inject(POST_SEARCH_SERVICE) private readonly postSearchService: PostSearchService,
   ) { }
 
   async searchPost({

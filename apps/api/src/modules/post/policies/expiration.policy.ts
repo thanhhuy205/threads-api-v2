@@ -1,7 +1,7 @@
 import { PERMISSIONS } from "@api/common/constants/permission.constant";
 import { AccessControlService } from "@api/modules/access-control/services/access-control.service";
+import type { CreatePostCommand } from "@api/modules/post/command/create-post.command";
 import { PostCreationContext } from "@api/modules/post/context/post-creation-context";
-import { CreatePostPayload } from "@api/modules/post/interfaces/create-post-payload";
 import { PostCreationPolicy } from "@api/modules/post/policies/interface/post-creation-policy.interface";
 import { BadRequestException, Injectable } from "@nestjs/common";
 
@@ -9,12 +9,12 @@ import { BadRequestException, Injectable } from "@nestjs/common";
 export class ExpirationPolicy implements PostCreationPolicy {
     constructor(private readonly accessControlService: AccessControlService) { }
 
-    applies(payload: CreatePostPayload): boolean {
+    applies(payload: CreatePostCommand): boolean {
         return payload.dateRangeFrom !== undefined && payload.dateRangeTo !== undefined;
     }
 
     async enforce(
-        payload: CreatePostPayload,
+        payload: CreatePostCommand,
         ctx: PostCreationContext,
     ): Promise<void> {
         if (payload.dateRangeFrom!.getTime() < Date.now()) {
