@@ -14,7 +14,7 @@ import {
 } from "@/modules/auth/util/hasher-password";
 import { hasherToken } from "@/modules/auth/util/hasher-token";
 import { BloomProducer } from "@/modules/job/bloom/producer/bloom.producer";
-import { EmailProducer } from "@/modules/job/email/producer/email.producer";
+import { EmailProducer } from "@notification-service/jobs/email/producer/email.producer";
 import { USER_SERVICE, type UserService } from "@/modules/user/service/user.service";
 import { TokenPairResponse } from "@api/shared/jwt/dto/response/token-pair.response";
 import { JwtService } from "@api/shared/jwt/service/jwt.service";

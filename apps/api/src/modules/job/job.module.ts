@@ -2,7 +2,7 @@ import { QUEUE_NAME } from '@/constants/queue';
 import { BullModule } from '@nestjs/bullmq';
 import { Global, Module } from '@nestjs/common';
 import { BloomProducer } from './bloom/producer/bloom.producer';
-import { EmailProducer } from './email/producer/email.producer';
+import { EmailProducer } from '@notification-service/jobs/email/producer/email.producer';
 import { LikeProducer } from './like-job/producer/like.producer';
 import { NotificationProducer } from './notification-job/producer/notification.producer';
 import { SurveySyncProducer } from './survey-sync/producer/survey-sync.producer';

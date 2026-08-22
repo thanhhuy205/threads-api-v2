@@ -1,5 +1,5 @@
 import { pusher } from "@/providers/pusher.provider";
-import { IsPublic } from "@api/common/decorators/is-public.decorator";
+import { IsPublic } from "@/common/decorators/is-public.decorator";
 import { Injectable } from '@nestjs/common';
 
 @Injectable()

@@ -1,4 +1,4 @@
-import type { NotificationType } from "@/modules/notification-group/model/notification.model";
+import type { NotificationType } from "@notification/model/notification.model";
 
 const PRIVATE_USER_PREFIX = "private-user-";
 

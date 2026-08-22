@@ -1,7 +1,7 @@
 import { buildCursorPagination, type CursorPaginationMeta } from '@/common/helpers/cursor-pagination.helper';
-import { NOTIFICATION_JOB_KEY } from "@/constants/queue";
-import { registerNotificationHandlers } from '@/modules/notification-group/events/notification.dispatcher';
-import { MentionNotification, ReplyNotification } from "@/modules/notification-group/events/notification.events";
+import { NOTIFICATION_JOB_KEY } from "@libs/core/constants/queue";
+import { registerNotificationHandlers } from '../../events/notification.dispatcher';
+import { MentionNotification, ReplyNotification } from "../../events/notification.events";
 import type {
   CreateNotificationGroupInput,
   EnqueuePendingNotificationInput,
@@ -9,11 +9,11 @@ import type {
   PendingCommentNotificationGroupKey,
   PendingCommentNotificationRedisKey,
   PendingCommentNotificationRedisPayload,
-} from "@/modules/notification-group/interface/notification.types";
+} from "../../interface/notification.types";
 import {
   NOTIFICATION_REPOSITORY,
   type NotificationRepository,
-} from "@/modules/notification-group/repository/notification.repository";
+} from "../../repository/notification.repository";
 import { PusherService } from "@/modules/pusher/service/pusher.service";
 import { USER_SERVICE, type UserService } from "@/modules/user/service/user.service";
 import { RedisService } from "@libs/cache/redis.service";

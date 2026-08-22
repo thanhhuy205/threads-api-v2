@@ -1,6 +1,6 @@
 import type { PermissionCode } from '@/common/constants/permission.constant';
 import { ForbiddenException } from '@/errors/error';
-import { RedisService } from '@libs/cache/redis.service';
+import type { RedisService } from '@libs/cache/redis.service';
 import { Inject, Injectable } from '@nestjs/common';
 import { PermissionScope } from '@prisma/client';
 import {
@@ -34,7 +34,15 @@ export class AbilityServiceImpl implements AbilityService {
 
     const cachedAbility = await this.redisService.redis.get(`ability:${userId}:${scope}`);
     if (cachedAbility) {
-      return JSON.parse(cachedAbility);
+      const cachedPermissionCodes = JSON.parse(cachedAbility) as unknown;
+      if (Array.isArray(cachedPermissionCodes)) {
+        return createPrismaAbility(
+          (cachedPermissionCodes as PermissionCode[]).map((permissionCode) => ({
+            action: permissionCode,
+            subject: 'all' as const,
+          })),
+        );
+      }
     }
 
     const allowedScopes =
@@ -55,7 +63,11 @@ export class AbilityServiceImpl implements AbilityService {
 
     const result = createPrismaAbility(rules);
 
-    await this.redisService.redis.setEx(`ability:${userId}:${scope}`, 3600, JSON.stringify(result));
+    await this.redisService.redis.setEx(
+      `ability:${userId}:${scope}`,
+      3600,
+      JSON.stringify(permissionCodes),
+    );
 
     return result;
   }

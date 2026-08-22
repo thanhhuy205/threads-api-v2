@@ -1,6 +1,6 @@
 import { UserModule } from '@api/modules/user/user.module';
 import { Module } from '@nestjs/common';
-import { PusherModule } from '../pusher/pusher.module';
+import { PusherModule } from '@api/modules/pusher/pusher.module';
 import { NotificationController } from './controller/notification.controller';
 import { NotificationRepositoryImpl } from './repository/impl/notification.repository.impl';
 import { NOTIFICATION_REPOSITORY } from './repository/notification.repository';

@@ -1,4 +1,4 @@
-import { PERMISSIONS } from "@api/common/constants/permission.constant";
+import { PERMISSIONS } from "@/common/constants/permission.constant";
 import { ABILITY_SERVICE, type AbilityService } from "@api/modules/ability/service/ability.service";
 import type { CreatePostCommand } from "@api/modules/post/command/create-post.command";
 import { PostCreationContext } from "@api/modules/post/context/post-creation-context";

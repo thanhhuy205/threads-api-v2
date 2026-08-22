@@ -1,6 +1,6 @@
 import { EMAIL_JOB_NAME, QUEUE_NAME } from '@/constants/queue';
-import { ForgotPasswordProducer } from '@/modules/job/email/dto/forgot-password.dto';
-import { CreateVerifyEmailProducer } from '@/modules/job/email/dto/verify-email.dto';
+import { ForgotPasswordProducer } from '../dto/forgot-password.dto';
+import { CreateVerifyEmailProducer } from '../dto/verify-email.dto';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable } from '@nestjs/common';
 import { Queue } from 'bullmq';

@@ -1,8 +1,8 @@
 allowBuilds:
-  '@google/genai': true
-  '@openrouter/sdk': true
-  '@prisma/engines': true
-  '@scarf/scarf': true
+  "@google/genai": true
+  "@openrouter/sdk": true
+  "@prisma/engines": true
+  "@scarf/scarf": true
   bcrypt: true
   esbuild: true
   ffmpeg-ffprobe-static: true
@@ -11,3 +11,8 @@ allowBuilds:
   prisma: true
   protobufjs: true
   sharp: true
+  unrs-resolver: true
+
+packages:
+  - apps/*
+  - libs/*

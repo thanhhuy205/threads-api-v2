@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PostMediaStatus, PostMediaType } from '@prisma/client';
-import { PrismaService } from '@/shared/database/prisma.service';
+import { PrismaService } from '@libs/database';
 
 export type PostMediaItemData = {
     id: number;

@@ -2,13 +2,21 @@
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "rootDir": ".",
-    "outDir": "dist"
+    "outDir": "dist",
+    "baseUrl": "./"
   },
   "include": [
     "apps/api/src/**/*.ts",
+    "apps/notification-service/src/**/*.ts",
+    "apps/upload-service/src/**/*.ts",
     "apps/workers/src/**/*.ts",
     "apps/libs/**/*.ts",
     "apps/prisma/**/*.ts"
   ],
-  "exclude": ["node_modules", "dist", "apps/workers/test", "**/*.spec.ts"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "apps/workers/test",
+    "**/*.spec.ts"
+  ]
 }

@@ -1,4 +1,4 @@
-import { PERMISSIONS } from "@api/common/constants/permission.constant";
+import { PERMISSIONS } from "@/common/constants/permission.constant";
 import { ABILITY_SERVICE, type AbilityService } from "@api/modules/ability/service/ability.service";
 import type { CreatePostCommand } from "@api/modules/post/command/create-post.command";
 import { PostCreationContext } from "@api/modules/post/context/post-creation-context";
@@ -10,14 +10,23 @@ export class ExpirationPolicy implements PostCreationPolicy {
     constructor(@Inject(ABILITY_SERVICE) private readonly abilityService: AbilityService) { }
 
     applies(payload: CreatePostCommand): boolean {
-        return payload.dateRangeFrom !== undefined && payload.dateRangeTo !== undefined;
+        return (
+            payload.dateRangeFrom !== undefined ||
+            payload.dateRangeTo !== undefined ||
+            payload.scheduledTimeFrom !== undefined ||
+            payload.scheduledTimeTo !== undefined
+        );
     }
 
     async enforce(
         payload: CreatePostCommand,
         ctx: PostCreationContext,
     ): Promise<void> {
-        if (payload.dateRangeFrom!.getTime() < Date.now()) {
+        if (
+            payload.dateRangeFrom !== undefined &&
+            payload.dateRangeFrom !== null &&
+            payload.dateRangeFrom.getTime() < Date.now()
+        ) {
             throw new BadRequestException('dateRangeFrom must be in the future');
         }
         await this.abilityService.assertCan(

@@ -5,8 +5,8 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import { AppModule } from './app.module';
-import { HttpExceptionFilter } from './common/filters/http-exception.filter';
-import { TransformInterceptor } from './common/interceptors/transform.interceptor';
+import { HttpExceptionFilter } from '@/common/filters/http-exception.filter';
+import { TransformInterceptor } from '@/common/interceptors/transform.interceptor';
 
 const corsOrigin =
   CONFIGURATION.APP_CONFIG.CORS_ORIGIN === '*'

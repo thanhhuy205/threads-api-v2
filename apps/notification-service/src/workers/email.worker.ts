@@ -1,12 +1,18 @@
 import ejs from 'ejs';
+import { existsSync } from 'fs';
 import path from 'path';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import configService from '@libs/core/config/config';
 import { EMAIL_JOB_NAME, QUEUE_NAME } from '@libs/core/constants/queue';
-import { ForgotPasswordProducer } from '@api/modules/job/email/dto/forgot-password.dto';
-import { sendMail } from '@libs/mailer';
+import { ForgotPasswordProducer } from '../jobs/email/dto/forgot-password.dto';
+import { sendMail } from '../mailer';
 import { Job } from 'bullmq';
+
+const workspaceTemplateDirectory = path.resolve(process.cwd(), 'apps/notification-service/template');
+const templateDirectory = existsSync(workspaceTemplateDirectory)
+    ? workspaceTemplateDirectory
+    : path.resolve(process.cwd(), 'template');
 
 @Processor(QUEUE_NAME.EMAIL_QUEUE)
 export class EmailWorker extends WorkerHost {
@@ -29,7 +35,7 @@ export class EmailWorker extends WorkerHost {
     async sendVerificationEmail(data: { email: string; token: string, originUrl: string }) {
         const verifyLink = `${data.originUrl}/verify-email?token=${data.token}`;
         const html = await ejs.renderFile(
-            path.join(process.cwd(), './template/verify-email.ejs'),
+            path.join(templateDirectory, 'verify-email.ejs'),
             {
                 appName: 'Threads',
                 verifyUrl: verifyLink,
@@ -45,7 +51,7 @@ export class EmailWorker extends WorkerHost {
     async sendForgotPasswordEmail(data: ForgotPasswordProducer) {
         const resetLink = `${configService.APP_CONFIG.FRONTEND_URL}/reset-password?token=${data.token}`;
         const html = await ejs.renderFile(
-            path.join(process.cwd(), './template/forgot-password.ejs'),
+            path.join(templateDirectory, 'forgot-password.ejs'),
             {
                 appName: 'Threads',
                 resetUrl: resetLink,
@@ -60,7 +66,7 @@ export class EmailWorker extends WorkerHost {
     async sendInvitationEmail(data: { email: string; token: string, username: string }) {
         const invitationLink = `${configService.APP_CONFIG.FRONTEND_URL}/join-group?token=${data.token}`;
         const html = await ejs.renderFile(
-            path.join(process.cwd(), './template/invitation-email.ejs'),
+            path.join(templateDirectory, 'invitation-email.ejs'),
             {
                 appName: 'Threads',
                 invitationUrl: invitationLink,

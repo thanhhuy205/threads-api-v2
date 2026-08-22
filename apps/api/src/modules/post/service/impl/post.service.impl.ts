@@ -2,7 +2,7 @@ import { PERMISSIONS } from '@/common/constants/permission.constant';
 import { BadRequestException, NotFoundException } from "@/errors/error";
 import { ABILITY_SERVICE, type AbilityService } from '@/modules/ability/service/ability.service';
 import { GROUP_TEAM_SERVICE, type GroupTeamService } from '@/modules/group-team/service/group-team.service';
-import { dispatchReplyNotification } from "@/modules/notification-group/events/notification.dispatcher";
+import { dispatchReplyNotification } from "@notification/events/notification.dispatcher";
 import type { CreatePostCommand } from "../../command/create-post.command";
 import { USER_SERVICE, type UserService } from "@/modules/user/service/user.service";
 import { TransactionService } from "@/shared/transaction/transaction.service";

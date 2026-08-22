@@ -1,0 +1,38 @@
+{
+  "monorepo": true,
+  "root": "apps/threads-api-v2",
+  "sourceRoot": "apps/threads-api-v2/src",
+  "compilerOptions": {
+    "webpack": true,
+    "tsConfigPath": "apps/threads-api-v2/tsconfig.app.json"
+  },
+  "projects": {
+    "notification-service": {
+      "type": "application",
+      "root": "apps/notification-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/notification-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/notification-service/tsconfig.app.json"
+      }
+    },
+    "threads-api-v2": {
+      "type": "application",
+      "root": "apps/threads-api-v2",
+      "entryFile": "main",
+      "sourceRoot": "apps/threads-api-v2/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/threads-api-v2/tsconfig.app.json"
+      }
+    },
+    "upload-service": {
+      "type": "application",
+      "root": "apps/upload-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/upload-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/upload-service/tsconfig.app.json"
+      }
+    }
+  }
+}

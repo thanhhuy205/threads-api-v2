@@ -1,6 +1,6 @@
 import 'dotenv/config';
 
-import { PERMISSIONS } from '../../api/src/common/constants/permission.constant';
+import { PERMISSIONS } from '@/common/constants/permission.constant';
 import { PrismaMariaDb } from '@prisma/adapter-mariadb';
 import {
   PermissionScope,
@@ -101,10 +101,10 @@ const permissionMatrix = [
     { position, code: PERMISSIONS.POST_EXPIRE, scope: PermissionScope.WORKSPACE },
     { position, code: PERMISSIONS.ANNOUNCEMENT_CREATE, scope: PermissionScope.WORKSPACE },
   ]),
-  { position: Position.CTO, code: PERMISSIONS.POST_CREATE, scope: PermissionScope.WORKSPACE },
-  { position: Position.TECH_LEAD, code: PERMISSIONS.POST_CREATE, scope: PermissionScope.WORKSPACE },
   { position: Position.TECH_LEAD, code: PERMISSIONS.GROUP_CREATE, scope: PermissionScope.WORKSPACE },
   ...[
+    Position.CTO,
+    Position.TECH_LEAD,
     Position.SENIOR_SOFTWARE_ENGINEER,
     Position.SOFTWARE_ENGINEER,
     Position.INTERN_SOFTWARE_ENGINEER,
@@ -144,6 +144,22 @@ async function seedPermissions() {
     });
     permissions.set(definition.code, permission);
   }
+
+  const postCreatePermission = permissions.get(PERMISSIONS.POST_CREATE);
+  if (!postCreatePermission) {
+    throw new Error(`Permission not seeded: ${PERMISSIONS.POST_CREATE}`);
+  }
+
+  // Preserve existing UserPosition links while moving these positions from
+  // workspace-only posting to group-only posting.
+  await prisma.positionPermission.updateMany({
+    where: {
+      position: { in: [Position.CTO, Position.TECH_LEAD] },
+      permissionId: postCreatePermission.id,
+      scope: PermissionScope.WORKSPACE,
+    },
+    data: { scope: PermissionScope.GROUP },
+  });
 
   for (const entry of permissionMatrix) {
     const permission = permissions.get(entry.code);

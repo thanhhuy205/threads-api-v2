@@ -1,0 +1,38 @@
+import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { BullModule } from '@nestjs/bullmq';
+import { configurationFactory } from '@libs/core/config/configuration';
+import { QUEUE_NAME } from '@libs/core/constants/queue';
+import { RedisModule } from '@libs/cache/redis.module';
+import { DatabaseModule } from '@libs/database';
+import { NotificationGroupModule } from './notification-group/notification-group.module';
+import { EmailWorker } from './workers/email.worker';
+
+@Module({
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      cache: true,
+      load: [configurationFactory],
+    }),
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        connection: {
+          host: configService.get<string>('REDIS_CONFIG.REDIS_HOST'),
+          port: configService.get<number>('REDIS_CONFIG.REDIS_PORT'),
+        },
+      }),
+    }),
+    BullModule.registerQueue(
+      { name: QUEUE_NAME.EMAIL_QUEUE },
+      { name: QUEUE_NAME.NOTIFICATION_QUEUE },
+    ),
+    DatabaseModule,
+    RedisModule,
+    NotificationGroupModule,
+  ],
+  providers: [EmailWorker],
+})
+export class NotificationServiceModule {}

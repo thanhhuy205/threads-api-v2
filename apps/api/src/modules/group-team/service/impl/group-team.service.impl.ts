@@ -73,6 +73,11 @@ export class GroupTeamServiceImpl implements GroupTeamService {
 
   async addMember(payload: AddTeamMemberPayload) {
 
+    await this.abilityService.assertCan(
+      payload.requestedById,
+      PERMISSIONS.GROUP_CREATE,
+    );
+
     const team = await this.groupTeamRepository.findByPublicId(payload.teamPublicId);
 
     if (!team) {

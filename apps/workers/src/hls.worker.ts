@@ -3,7 +3,7 @@ import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import { HLS_JOB_NAME, QUEUE_NAME } from "@libs/core/constants/queue";
 import type { HlsQueueDto } from "@api/modules/job/video/dto/hls-queue.dto";
-import { PostMediaRepository } from "@api/modules/upload/repository/post-media.repository";
+import { PostMediaRepository } from "@upload/repository/post-media.repository";
 import { PostMediaStatus } from "@prisma/client";
 import configService from '@libs/core/config/config';
 import { CloudflareService } from '@libs/storage/cloudflare.service';

@@ -3,8 +3,8 @@
 //   PendingCommentNotificationBatchItem,
 //   PendingCommentNotificationRedisKey,
 //   PendingCommentNotificationRedisMeta,
-// } from "@api/modules/notification-group/interface/notification.types";
-// import type { NotificationType } from "@api/modules/notification-group/model/notification.model";
+// } from "@notification/interface/notification.types";
+// import type { NotificationType } from "@notification/model/notification.model";
 // import { pusherChannel } from "@api/modules/pusher/channel/pusher-channel";
 // import { RedisService } from "@libs/cache/redis.service";
 // import { NOTIFICATION_JOB_KEY, NOTIFICATION_JOB_NAME, QUEUE_NAME } from "@libs/core/constants/queue";

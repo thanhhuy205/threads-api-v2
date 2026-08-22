@@ -1,6 +1,6 @@
-import type { NotificationType } from "@/modules/notification-group/model/notification.model";
+import type { NotificationType } from "../../model/notification.model";
 import { collections } from "@/providers/mongodb.provider";
-import { PrismaService } from '@/shared/database/prisma.service';
+import { PrismaService } from '@libs/database';
 import { normalizeCursorPagination } from '@/common/helpers/cursor-pagination.helper';
 import { Injectable } from '@nestjs/common';
 import { Sort } from "mongodb";
