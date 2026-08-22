@@ -1,5 +1,5 @@
-import { JwtModule } from '@/modules/jwt/jwt.module';
 import { PostModule } from '@/modules/post/post.module';
+import { JwtModule } from '@api/shared/jwt/jwt.module';
 import { Module } from '@nestjs/common';
 import { AdminRoleGuard } from './guards/admin-role.guard';
 import { HashtagTrendingController } from './hashtag-trending/hashtag-trending.controller';

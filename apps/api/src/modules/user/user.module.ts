@@ -1,5 +1,5 @@
+import { JwtModule } from '@api/shared/jwt/jwt.module';
 import { Module } from '@nestjs/common';
-import { JwtModule } from '../jwt/jwt.module';
 import { UserController } from './controller/user.controller';
 import { UsersController } from './controller/users.controller';
 import { UserRepositoryImpl } from './repository/impl/user.repository.impl';

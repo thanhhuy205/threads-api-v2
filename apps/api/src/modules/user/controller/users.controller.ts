@@ -1,12 +1,12 @@
-import { Controller, Get, Inject, Param, Query, Req } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import type { HttpRequest as Request } from '@/common/types/http.type';
-import { Message } from '@/common/decorators/message.decorator';
 import { GetUserId } from '@/common/decorators/get-user-id.decorator';
 import { IsPublic } from '@/common/decorators/is-public.decorator';
+import { Message } from '@/common/decorators/message.decorator';
+import type { HttpRequest as Request } from '@/common/types/http.type';
 import { USER_MESSAGE } from '@/constants/message';
 import { NotFoundException } from '@/errors/error';
-import { JwtService } from '@/modules/jwt/service/jwt.service';
+import { JwtService } from '@api/shared/jwt/service/jwt.service';
+import { Controller, Get, Inject, Param, Query, Req } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UserNameMentionQueryDto, UsernameParamsDto } from '../dto/request';
 import { USER_SERVICE, type UserService } from '../service/user.service';
 
@@ -16,7 +16,7 @@ export class UsersController {
   constructor(
     @Inject(USER_SERVICE) private readonly userService: UserService,
     private readonly jwtService: JwtService,
-  ) {}
+  ) { }
 
   @Get('mention')
   @IsPublic()

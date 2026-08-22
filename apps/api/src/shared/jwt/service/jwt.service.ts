@@ -1,10 +1,7 @@
 import configService from '@/config/config';
-import {
-  PayloadSignTokenDto,
-  SignTokenDto,
-  VerifyTokenDto,
-} from '@/modules/jwt/dto';
-import { TokenPairResponse } from '@/modules/jwt/dto/response/token-pair.response';
+import { PayloadSignTokenDto, SignTokenDto, VerifyTokenDto } from '@api/shared/jwt/dto';
+import { TokenPairResponse } from '@api/shared/jwt/dto/response/token-pair.response';
+
 import { Injectable } from '@nestjs/common';
 import { JwtService as NestJwtService } from '@nestjs/jwt';
 import crypto from 'crypto';

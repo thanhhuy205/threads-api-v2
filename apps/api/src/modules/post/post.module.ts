@@ -1,10 +1,10 @@
 import { AbilityModule } from '@/modules/ability/ability.module';
 import { GroupTeamModule } from '@/modules/group-team/group-team.module';
-import { JwtModule } from '@/modules/jwt/jwt.module';
 import { RedisVersionModule } from '@/shared/redis-version';
 import { TransactionModule } from '@/shared/transaction/transaction.module';
 import { AiModule } from '@api/modules/ai/ai.module';
 import { UserModule } from '@api/modules/user/user.module';
+import { JwtModule } from '@api/shared/jwt/jwt.module';
 import { Module } from '@nestjs/common';
 import { PostController } from './controller/post.controller';
 import { AnnouncementPolicy } from './policies/announcement.policy';
@@ -26,8 +26,8 @@ import { PostFeedServiceImpl } from './service/impl/post-feed.service.impl';
 import { PostMentionServiceImpl } from './service/impl/post-mention.service.impl';
 import { PostMetaServiceImpl } from './service/impl/post-meta.service.impl';
 import { PostSearchServiceImpl } from './service/impl/post-search.service.impl';
-import { PostServiceImpl } from './service/impl/post.service.impl';
 import { PostUserServiceImpl } from './service/impl/post-user.service.impl';
+import { PostServiceImpl } from './service/impl/post.service.impl';
 import { LIKE_SERVICE } from './service/like.service';
 import { OVERVIEW_DECLINE_SERVICE } from './service/overview-decline.service';
 import { POST_ACTION_SERVICE } from './service/post-action.service';
@@ -66,4 +66,4 @@ import { POST_SERVICE } from './service/post.service';
   ],
   exports: [POST_ACTION_SERVICE, POST_SEARCH_SERVICE, LIKE_SERVICE, POST_FEED_SERVICE, OVERVIEW_DECLINE_SERVICE],
 })
-export class PostModule {}
+export class PostModule { }

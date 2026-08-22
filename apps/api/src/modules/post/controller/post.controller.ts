@@ -7,8 +7,8 @@ import { ApiCursorPaginatedResponse } from "@/common/decorators/swagger-response
 import type { CursorPagination as CursorPaginationParams } from "@/common/helpers/cursor-pagination.helper";
 import { POST_MESSAGE } from "@/constants/message";
 import { NotFoundException } from "@/errors/error";
-import { JwtService } from "@/modules/jwt/service/jwt.service";
 import { USER_SERVICE, type UserService } from "@/modules/user/service/user.service";
+import { JwtService } from "@api/shared/jwt/service/jwt.service";
 import {
   BadRequestException,
   Body,
@@ -62,7 +62,7 @@ export class PostController {
     @Inject(POST_FEED_SERVICE) private readonly postFeedService: PostFeedService,
     @Inject(POST_SEARCH_SERVICE) private readonly postSearchService: PostSearchService,
     @Inject(POST_USER_SERVICE) private readonly postUserService: PostUserService,
-  ) {}
+  ) { }
 
   @Get("news-feed")
   @IsPublic()

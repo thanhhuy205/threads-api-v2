@@ -14,7 +14,6 @@ import { GroupTeamModule } from './modules/group-team/group-team.module';
 import { HealthModule } from './modules/health/health.module';
 import { HistoryPositionModule } from './modules/history-position/history-position.module';
 import { JobModule } from './modules/job/job.module';
-import { JwtModule } from './modules/jwt/jwt.module';
 import { NotificationGroupModule } from './modules/notification-group/notification-group.module';
 import { PollModule } from './modules/poll/poll.module';
 import { PostModule } from './modules/post/post.module';
@@ -23,6 +22,7 @@ import { SearchModule } from './modules/search/search.module';
 import { TopicModule } from './modules/topic/topic.module';
 import { UploadModule } from './modules/upload/upload.module';
 import { UserModule } from './modules/user/user.module';
+import { JwtModule } from './shared/jwt/jwt.module';
 
 @Module({
   imports: [
