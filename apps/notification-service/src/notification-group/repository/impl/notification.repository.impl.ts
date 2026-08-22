@@ -69,21 +69,21 @@ export class NotificationRepositoryImpl implements NotificationRepository {
     return this.findAll({ after, take, where: { recipientId } });
   }
 
-  findPostTargetsByPublicIds(publicIds: string[]) {
-    if (!publicIds.length) return Promise.resolve([]);
+  // findPostTargetsByPublicIds(publicIds: string[]) {
+  //   if (!publicIds.length) return Promise.resolve([]);
 
-    return this.apiPrisma.post.findMany({
-      where: { publicId: { in: publicIds } },
-      select: {
-        publicId: true,
-        content: true,
-        likesCount: true,
-        repliesCount: true,
-        repostsCountAndQuoteCount: true,
-        replyPermission: true,
-      },
-    });
-  }
+  //   return this.apiPrisma.post.findMany({
+  //     where: { publicId: { in: publicIds } },
+  //     select: {
+  //       publicId: true,
+  //       content: true,
+  //       likesCount: true,
+  //       repliesCount: true,
+  //       repostsCountAndQuoteCount: true,
+  //       replyPermission: true,
+  //     },
+  //   });
+  // }
 
   findUnreadByRecipientId(recipientId: string) {
     return this.notificationPrisma.notification.findFirst({

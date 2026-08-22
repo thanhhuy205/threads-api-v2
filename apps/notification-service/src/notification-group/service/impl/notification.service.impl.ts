@@ -1,5 +1,9 @@
 import { buildCursorPagination, type CursorPaginationMeta } from '@/common/helpers/cursor-pagination.helper';
+import { PusherService } from "@/modules/pusher/service/pusher.service";
+import { USER_SERVICE, type UserService } from "@/modules/user/service/user.service";
+import { RedisService } from "@libs/cache/redis.service";
 import { NOTIFICATION_JOB_KEY } from "@libs/core/constants/queue";
+import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { registerNotificationHandlers } from '../../events/notification.dispatcher';
 import { MentionNotification, ReplyNotification } from "../../events/notification.events";
 import type {
@@ -14,19 +18,15 @@ import {
   NOTIFICATION_REPOSITORY,
   type NotificationRepository,
 } from "../../repository/notification.repository";
-import { PusherService } from "@/modules/pusher/service/pusher.service";
-import { USER_SERVICE, type UserService } from "@/modules/user/service/user.service";
-import { RedisService } from "@libs/cache/redis.service";
-import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import type { NotificationService } from '../notification.service';
 
 type NotificationGroupListRow = Awaited<
   ReturnType<NotificationRepository['findByRecipientId']>
 >[number];
 
-type NotificationTargetPost = Awaited<
-  ReturnType<NotificationRepository['findPostTargetsByPublicIds']>
->[number];
+// type NotificationTargetPost = Awaited<
+//   ReturnType<NotificationRepository['findPostTargetsByPublicIds']>
+// >[number];
 
 @Injectable()
 export class NotificationServiceImpl implements NotificationService, OnModuleInit {
@@ -68,7 +68,7 @@ export class NotificationServiceImpl implements NotificationService, OnModuleIni
     after,
     take,
   }: FindAllNotificationGroupsInput): Promise<{
-    rows: Array<NotificationGroupListRow & { targetPost: NotificationTargetPost | null }>;
+    rows: Array<NotificationGroupListRow & { targetPost: null }>; // NotificationTargetPost
     pagination: CursorPaginationMeta;
   }> {
     const notifications = await this.notificationRepository.findByRecipientId({
@@ -87,9 +87,9 @@ export class NotificationServiceImpl implements NotificationService, OnModuleIni
 
     const posts =
       postTargetIds.length > 0
-        ? await this.notificationRepository.findPostTargetsByPublicIds(postTargetIds)
+        ? [] // await this.notificationRepository.findPostTargetsByPublicIds(postTargetIds)
         : [];
-    const postMap = new Map(posts.map((post) => [post.publicId, post]));
+    const postMap = new Map(posts.map((post) => ['', post])); // '' replace post.publicId
 
     const rows = notifications.map((item) => ({
       ...item,

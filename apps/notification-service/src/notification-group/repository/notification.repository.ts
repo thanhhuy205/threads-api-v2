@@ -1,5 +1,5 @@
-import type { NotificationType } from '../model/notification.model';
 import type { Prisma } from '@threads/notification-prisma-client';
+import type { NotificationType } from '../model/notification.model';
 
 export const NOTIFICATION_REPOSITORY = Symbol('NOTIFICATION_REPOSITORY');
 
@@ -33,7 +33,6 @@ export interface NotificationRepository {
     after?: string;
     take: number;
   }): Promise<any[]>;
-  findPostTargetsByPublicIds(publicIds: string[]): Promise<any[]>;
   findUnreadByRecipientId(recipientId: string): Promise<any>;
   createMany(data: CreateManyNotificationsInput[]): Promise<any>;
   markGroupAsRead(userId: string): Promise<any>;
