@@ -1,15 +1,15 @@
 import { RefreshTokenHeaderGuard } from '@/common/guards/refresh-token-header.guard';
+import { JwtModule } from '@api/shared/jwt/jwt.module';
 import { Module } from '@nestjs/common';
 import { AbilityModule } from '../ability/ability.module';
-import { JwtModule } from '../jwt/jwt.module';
 import { UserModule } from '../user/user.module';
 import { AuthController } from './controller/auth.controller';
+import { AUTH_REPOSITORY } from './repository/auth.repository';
 import { AuthRepositoryImpl } from './repository/impl/auth.repository.impl';
 import { VerificationRepositoryImpl } from './repository/impl/verification.repository.impl';
-import { AUTH_REPOSITORY } from './repository/auth.repository';
 import { VERIFICATION_REPOSITORY } from './repository/verification.repository';
-import { AuthServiceImpl } from './service/impl/auth.service.impl';
 import { AUTH_SERVICE } from './service/auth.service';
+import { AuthServiceImpl } from './service/impl/auth.service.impl';
 
 @Module({
   imports: [JwtModule, AbilityModule, UserModule],

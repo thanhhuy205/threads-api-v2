@@ -1,5 +1,5 @@
-import type { TokenPairResponse } from '@/modules/jwt/dto/response/token-pair.response';
 import type { UserProfile } from '@/modules/user/repository/user.repository';
+import { TokenPairResponse } from '@api/shared/jwt/dto/response/token-pair.response';
 import type { AuthSessionUser } from '../../repository/auth.repository';
 
 export type AuthSessionResponseDto = {

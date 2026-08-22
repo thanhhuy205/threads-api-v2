@@ -15,9 +15,9 @@ import {
 import { hasherToken } from "@/modules/auth/util/hasher-token";
 import { BloomProducer } from "@/modules/job/bloom/producer/bloom.producer";
 import { EmailProducer } from "@/modules/job/email/producer/email.producer";
-import { TokenPairResponse } from "@/modules/jwt/dto/response/token-pair.response";
-import { JwtService } from "@/modules/jwt/service/jwt.service";
 import { USER_SERVICE, type UserService } from "@/modules/user/service/user.service";
+import { TokenPairResponse } from "@api/shared/jwt/dto/response/token-pair.response";
+import { JwtService } from "@api/shared/jwt/service/jwt.service";
 import { RedisService } from "@libs/cache/redis.service";
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { UserRoleType, VerificationCodeType } from "@prisma/client";
