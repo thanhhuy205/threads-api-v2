@@ -1,4 +1,4 @@
-import type { Prisma } from '@prisma/client';
+import type { Prisma } from '../../../../generated/prisma';
 import type { PollVoteCountUpdate } from '../repository/poll.repository';
 import type { PollOptionInput } from './poll-options.services';
 

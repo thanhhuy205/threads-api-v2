@@ -4,7 +4,7 @@ import type { AbilityRepository } from '@/modules/ability/repository/ability.rep
 import { AbilityServiceImpl } from '@/modules/ability/service/impl/ability.service.impl';
 import { ExpirationPolicy } from '@/modules/post/policies/expiration.policy';
 import { PinPolicy } from '@/modules/post/policies/pin.policy';
-import { PermissionScope, Position, VisibilityPost } from '@prisma/client';
+import { PermissionScope, Position, VisibilityPost } from '../../generated/prisma';
 
 jest.mock('@nestjs/common', () => ({
   BadRequestException: class BadRequestException extends Error {},

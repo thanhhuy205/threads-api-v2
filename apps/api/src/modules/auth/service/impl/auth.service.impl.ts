@@ -20,7 +20,7 @@ import { TokenPairResponse } from "@api/shared/jwt/dto/response/token-pair.respo
 import { JwtService } from "@api/shared/jwt/service/jwt.service";
 import { RedisService } from "@libs/cache/redis.service";
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { UserRoleType, VerificationCodeType } from "@prisma/client";
+import { UserRoleType, VerificationCodeType } from "../../../../../generated/prisma";
 import crypto from "crypto";
 import ms, { StringValue } from "ms";
 import type { ForgotPasswordDto } from "../../dto/request/forgot-password.request.dto";

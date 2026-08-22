@@ -9,7 +9,7 @@ import { PostMediaRepository } from '@upload/repository/post-media.repository';
 import { RedisModule } from '@libs/cache/redis.module';
 import { configurationFactory } from '@libs/core/config/config';
 import { QUEUE_NAME } from '@libs/core/constants/queue';
-import { DatabaseModule } from '@libs/database';
+import { DatabaseModule } from '@api/shared/database';
 import { UploadDatabaseModule } from '@upload-service/database/database.module';
 import { CloudflareModule } from '@upload-service/storage/cloudflare.module';
 import { BullModule } from '@nestjs/bullmq';

@@ -2,7 +2,7 @@ import { buildCursorPagination, normalizeCursorPagination } from '@/common/helpe
 import { redisKey } from "@/constants/resolve-key/redis-key";
 import { PostMapper } from "@/modules/post/mapper/post.mapper";
 import { RedisService } from "@libs/cache/redis.service";
-import { Prisma } from "@prisma/client";
+import { Prisma } from "../../../../generated/prisma";
 import { PostRepository } from "../repository/post.repository";
 
 export const postListCacheTtlSeconds = 60;

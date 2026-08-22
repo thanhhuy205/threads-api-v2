@@ -1,4 +1,4 @@
-import { PermissionScope } from "@prisma/client";
+import { PermissionScope } from "../../../../generated/prisma";
 
 export interface PostCreationContext {
     scope: PermissionScope;

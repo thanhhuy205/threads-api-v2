@@ -1,5 +1,5 @@
 import { normalizeCursorPagination } from '@/common/helpers/cursor-pagination.helper';
-import { PrismaService } from '@libs/database';
+import { PrismaService } from '@api/shared/database';
 import { Injectable } from '@nestjs/common';
 import type { Prisma } from '@threads/notification-prisma-client';
 import { NotificationPrismaService } from '../../../database/prisma.service';

@@ -8,7 +8,7 @@ import {
   Prisma,
   ReplyPermission,
   VisibilityPost
-} from "@prisma/client";
+} from "../../../../../generated/prisma";
 import { primaryPostTypes } from "../../constants/post-type";
 import { UpdatePostDto } from '../../dto/request';
 import { postFeedSelect, postSelectRepository, UserSnapshot } from "../../mapper/post.mapper";

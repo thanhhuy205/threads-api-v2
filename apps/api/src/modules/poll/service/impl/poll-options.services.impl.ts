@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client";
+import type { Prisma } from "../../../../../generated/prisma";
 import { Inject, Injectable } from '@nestjs/common';
 import {
   POLL_OPTIONS_REPOSITORY,

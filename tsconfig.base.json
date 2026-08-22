@@ -18,6 +18,7 @@
       "@notification/*": ["apps/notification-service/src/notification-group/*"],
       "@notification-service/*": ["apps/notification-service/src/*"],
       "@upload/*": ["apps/upload-service/src/upload/*"],
+      "@upload-service/*": ["apps/upload-service/src/*"],
       "@libs/*": ["apps/libs/*"],
       "@/common/*": ["apps/libs/common/*"],
       "@/errors/*": ["apps/libs/errors/*"],
@@ -27,7 +28,7 @@
       "@/util/*": ["apps/libs/core/util/*"],
       "@/constants/queue": ["apps/libs/core/constants/queue.ts"],
       "@/constants/resolve-key/*": ["apps/libs/core/constants/resolve-key/*"],
-      "@/shared/database/*": ["apps/libs/database/*"],
+      "@/shared/database/*": ["apps/api/src/shared/database/*"],
       "@/shared/redis-version": ["apps/libs/redis-version/index.ts"],
       "@/*": ["apps/api/src/*"]
     }

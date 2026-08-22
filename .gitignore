@@ -14,3 +14,4 @@ docker
 .docs-html
 .env.prod
 temp
+apps/*/generated

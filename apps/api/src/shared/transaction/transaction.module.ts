@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { DatabaseModule } from '@libs/database';
+import { DatabaseModule } from '@/shared/database';
 import { TransactionService } from './transaction.service';
 
 @Module({

@@ -1,6 +1,6 @@
 import { PrismaService } from '@/shared/database/prisma.service';
 import { Injectable } from '@nestjs/common';
-import { Position, type Prisma } from '@prisma/client';
+import { Position, type Prisma } from '../../../../../generated/prisma';
 import type { UserTeamRepository } from '../user-team.repository';
 
 export type CreateUserTeamPayload = {

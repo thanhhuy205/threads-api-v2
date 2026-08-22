@@ -3,6 +3,7 @@ module.exports = {
   moduleNameMapper: {
     '^@api/(.*)$': '<rootDir>/apps/api/src/$1',
     '^@notification-service/(.*)$': '<rootDir>/apps/notification-service/src/$1',
+    '^@upload-service/(.*)$': '<rootDir>/apps/upload-service/src/$1',
     '^@notification/(.*)$': '<rootDir>/apps/notification-service/src/notification-group/$1',
     '^@upload/(.*)$': '<rootDir>/apps/upload-service/src/upload/$1',
     '^@libs/(.*)$': '<rootDir>/apps/libs/$1',

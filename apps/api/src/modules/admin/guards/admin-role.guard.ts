@@ -1,6 +1,6 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
-import { UserRoleType } from '@prisma/client';
 import { ForbiddenException, UnauthorizedException } from '@/errors/error';
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import { UserRoleType } from '../../../../generated/prisma';
 
 type AuthenticatedRequest = {
   user?: {

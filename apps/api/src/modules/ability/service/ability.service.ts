@@ -1,5 +1,5 @@
 import type { PermissionCode } from '@/common/constants/permission.constant';
-import type { PermissionScope } from '@prisma/client';
+import type { PermissionScope } from '../../../../generated/prisma';
 
 export const ABILITY_SERVICE = Symbol('ABILITY_SERVICE');
 

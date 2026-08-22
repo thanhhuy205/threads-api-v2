@@ -2,7 +2,7 @@ import type { PermissionCode } from '@/common/constants/permission.constant';
 import { ForbiddenException } from '@/errors/error';
 import type { RedisService } from '@libs/cache/redis.service';
 import { Inject, Injectable } from '@nestjs/common';
-import { PermissionScope } from '@prisma/client';
+import { PermissionScope } from '../../../../../generated/prisma';
 import {
   ABILITY_REPOSITORY,
   type AbilityRepository,

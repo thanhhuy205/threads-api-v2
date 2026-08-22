@@ -1,4 +1,4 @@
-import type { Prisma } from '@prisma/client';
+import type { Prisma } from '../../../../generated/prisma';
 
 export const HISTORY_POSITION_REPOSITORY = Symbol(
   'HISTORY_POSITION_REPOSITORY',

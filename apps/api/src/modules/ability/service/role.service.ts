@@ -1,4 +1,4 @@
-import type { Role } from '@prisma/client';
+import type { Role } from '../../../../generated/prisma';
 
 export const ROLE_SERVICE = Symbol('ROLE_SERVICE');
 

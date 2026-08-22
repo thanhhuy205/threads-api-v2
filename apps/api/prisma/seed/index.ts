@@ -10,7 +10,7 @@ import {
   UserRoleType,
   UserStatus,
   VisibilityPost,
-} from '@prisma/client';
+} from '../../generated/prisma';
 import bcrypt from 'bcrypt';
 
 const databaseUrl = process.env.DATABASE_URL;

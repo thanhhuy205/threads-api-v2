@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { normalizeOffsetPagination } from '@/common/helpers/offset-pagination.helper';
-import { Prisma, UserStatus } from "@prisma/client";
+import { Prisma, UserStatus } from "../../../../generated/prisma";
 import { PrismaService } from '@/shared/database/prisma.service';
 import type { GetAdminUsersInput } from "./interfaces/get-admin-users.input";
 

@@ -2,7 +2,7 @@
 // import { RedisService } from "@libs/cache/redis.service";
 // import { QUEUE_NAME, SURVEY_SYNC_JOB_NAME } from "@libs/core/constants/queue";
 // import { redisKey } from "@libs/core/constants/resolve-key/redis-key";
-// import { PrismaService } from '@libs/database';
+// import { PrismaService } from '@api/shared/database';
 // import { Processor, WorkerHost } from '@nestjs/bullmq';
 // import { Logger } from '@nestjs/common';
 // import { Prisma } from '@prisma/client';

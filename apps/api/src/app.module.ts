@@ -1,7 +1,7 @@
 import { AccessTokenGuard } from '@/common/guards/access-token.guard';
 import { configurationFactory } from '@/config/configuration';
 import { RedisModule } from '@libs/cache/redis.module';
-import { DatabaseModule } from '@libs/database';
+import { DatabaseModule } from '@/shared/database';
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';

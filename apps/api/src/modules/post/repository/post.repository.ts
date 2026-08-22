@@ -1,4 +1,4 @@
-import type { PostType, Prisma, VisibilityPost } from '@prisma/client';
+import type { PostType, Prisma, VisibilityPost } from '../../../../generated/prisma';
 import type { CreatePostCommand } from '../command/create-post.command';
 import type { UpdatePostDto } from '../dto/request';
 import type { UserSnapshot } from '../mapper/post.mapper';

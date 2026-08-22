@@ -1,4 +1,4 @@
-import type { Position, Prisma } from '@prisma/client';
+import type { Position, Prisma } from '../../../../generated/prisma';
 
 export const USER_TEAM_REPOSITORY = Symbol('USER_TEAM_REPOSITORY');
 export type CreateUserTeamPayload = { userId: string; teamId: number; position?: Position };

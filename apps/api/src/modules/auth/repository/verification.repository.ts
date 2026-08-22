@@ -1,4 +1,4 @@
-import type { Prisma, VerificationCodeType } from '@prisma/client';
+import type { Prisma, VerificationCodeType } from '../../../../generated/prisma';
 
 export const VERIFICATION_REPOSITORY = Symbol('VERIFICATION_REPOSITORY');
 

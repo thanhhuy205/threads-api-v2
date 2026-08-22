@@ -1,4 +1,4 @@
-import type { Prisma } from '@prisma/client';
+import type { Prisma } from '../../../../generated/prisma';
 import type { UpdateProfileDto } from '../dto/request/update-profile.request.dto';
 
 export const USER_SERVICE = Symbol('USER_SERVICE');

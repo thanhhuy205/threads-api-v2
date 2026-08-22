@@ -3,7 +3,7 @@ import { ABILITY_SERVICE, type AbilityService } from "@api/modules/ability/servi
 import type { CreatePostCommand } from "@api/modules/post/command/create-post.command";
 import { PostCreationPolicy } from "@api/modules/post/policies/interface/post-creation-policy.interface";
 import { BadRequestException, Inject, Injectable } from "@nestjs/common";
-import { PostType, VisibilityPost } from "@prisma/client";
+import { PostType, VisibilityPost } from "../../../../generated/prisma";
 
 @Injectable()
 export class AnnouncementPolicy implements PostCreationPolicy {

@@ -1,5 +1,5 @@
 import { Logger } from '@nestjs/common';
-import { Post, Prisma, UserStatus } from "@prisma/client";
+import { Post, Prisma, UserStatus } from "../../../../generated/prisma";
 
 import type { PostRecord } from "../repository/post.repository";
 

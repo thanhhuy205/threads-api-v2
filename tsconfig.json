@@ -11,12 +11,7 @@
     "apps/upload-service/src/**/*.ts",
     "apps/workers/src/**/*.ts",
     "apps/libs/**/*.ts",
-    "apps/prisma/**/*.ts"
+    "apps/api/prisma/**/*.ts"
   ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "apps/workers/test",
-    "**/*.spec.ts"
-  ]
+  "exclude": ["node_modules", "dist", "apps/workers/test", "**/*.spec.ts"]
 }

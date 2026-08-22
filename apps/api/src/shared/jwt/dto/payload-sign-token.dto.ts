@@ -1,4 +1,4 @@
-import type { UserRoleType, UserStatus } from "@prisma/client";
+import type { UserRoleType, UserStatus } from "../../../../generated/prisma";
 
 export interface PayloadSignTokenDto {
   userId: string;

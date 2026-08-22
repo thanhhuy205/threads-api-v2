@@ -1,4 +1,4 @@
-import type { Prisma } from '@prisma/client';
+import type { Prisma } from '../../../../generated/prisma';
 import type { HistoryPositionSkillWithSkill } from '../repository/history-position-skill.repository';
 
 export const HISTORY_POSITION_SKILL_SERVICE = Symbol(

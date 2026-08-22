@@ -10,7 +10,7 @@ import { AiService } from '@api/modules/ai/service/ai.service';
 import { PostCreationContext } from '@api/modules/post/context/post-creation-context';
 import { POST_CREATION_POLICIES, PostCreationPolicy } from '@api/modules/post/policies/interface/post-creation-policy.interface';
 import { Inject, Injectable, Logger } from "@nestjs/common";
-import { PermissionScope, VisibilityPost } from '@prisma/client';
+import { PermissionScope, VisibilityPost } from '../../../../../generated/prisma';
 import { PostMapper } from "../../mapper/post.mapper";
 import { POST_REPOSITORY, type PostRepository } from "../../repository/post.repository";
 import { POST_MENTION_SERVICE, type PostMentionService } from "../post-mention.service";

@@ -1,6 +1,6 @@
 import type { BanUserUnlimitedInput } from "@/modules/admin/user-management/interfaces/ban-unlimited.input";
 import { buildOffsetPaginationResponse } from '@/common/helpers/offset-pagination.helper';
-import { UserStatus } from "@prisma/client";
+import { UserStatus } from "../../../../generated/prisma";
 import type { GetAdminUsersInput } from "./interfaces/get-admin-users.input";
 import { Injectable } from '@nestjs/common';
 import { UserManagementRepository } from "./user-management.repository";

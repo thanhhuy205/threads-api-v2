@@ -1,7 +1,7 @@
 import { redisKey } from "@/constants/resolve-key/redis-key";
 import { RedisVersionService } from '@/shared/redis-version';
 import { Inject, Injectable } from '@nestjs/common';
-import { Prisma } from "@prisma/client";
+import { Prisma } from "../../../../../generated/prisma";
 import { normalizeTopic } from "../../helper/nomalize.hepler";
 import { TOPICS_POST_REPOSITORY, type TopicsPostRepository } from "../../repository/topics-post.repository";
 import { POST_MENTION_SERVICE, type PostMentionService } from "../post-mention.service";

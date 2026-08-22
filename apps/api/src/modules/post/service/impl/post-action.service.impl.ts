@@ -14,7 +14,7 @@ import {
   InteractionType,
   PermissionScope,
   VisibilityPost,
-} from "@prisma/client";
+} from "../../../../../generated/prisma";
 import { UpdatePostDto } from '../../dto/request';
 import { POST_INTERACTION_REPOSITORY, type PostInteractionRepository } from "../../repository/post-interaction.repository";
 import { POST_REPOSITORY, type PostRecord, type PostRepository } from "../../repository/post.repository";

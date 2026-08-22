@@ -1,4 +1,4 @@
-import type { InteractionType, Prisma } from '@prisma/client';
+import type { InteractionType, Prisma } from '../../../../generated/prisma';
 
 export const POST_INTERACTION_REPOSITORY = Symbol('POST_INTERACTION_REPOSITORY');
 

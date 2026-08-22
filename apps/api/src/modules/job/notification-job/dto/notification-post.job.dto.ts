@@ -1,4 +1,4 @@
-import { PostType } from "@prisma/client";
+import { PostType } from "../../../../../generated/prisma";
 
 export interface NotificationPostJobDto {
     postPublicId: string,

@@ -1,4 +1,4 @@
-import type { Prisma, Skill } from '@prisma/client';
+import type { Prisma, Skill } from '../../../../generated/prisma';
 
 export const SKILL_REPOSITORY = Symbol('SKILL_REPOSITORY');
 

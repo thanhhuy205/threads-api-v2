@@ -1,4 +1,5 @@
 allowBuilds:
+  "@prisma/client": true
   "@google/genai": true
   "@openrouter/sdk": true
   "@prisma/engines": true

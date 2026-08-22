@@ -1,4 +1,4 @@
-import type { Prisma } from '@prisma/client';
+import type { Prisma } from '../../../../generated/prisma';
 import type { RegisterDto } from '../dto/request/register.request.dto';
 
 export const AUTH_REPOSITORY = Symbol('AUTH_REPOSITORY');
