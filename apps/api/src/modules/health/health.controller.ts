@@ -1,6 +1,6 @@
-import { Message } from '@/common/decorators/message.decorator';
 import { IsPublic } from '@/common/decorators/is-public.decorator';
-import { HEALTH_MESSAGE } from '@/constants/message';
+import { Message } from '@/common/decorators/message.decorator';
+import { HEALTH_MESSAGE } from '@libs/core/constants/message';
 import { Controller, Get } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { HealthService } from './health.service';

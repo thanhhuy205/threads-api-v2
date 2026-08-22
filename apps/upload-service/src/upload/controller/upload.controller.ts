@@ -1,16 +1,16 @@
-import { UPLOAD_MESSAGE } from '@/constants/message';
 import { IsPublic } from '@/common/decorators/is-public.decorator';
 import { Message } from '@/common/decorators/message.decorator';
 import { ResizeUploadInterceptor } from '@/common/interceptors/resize-upload.interceptor';
 import type { UploadedFile as UploadedFileData } from '@/common/types/http.type';
+import { UPLOAD_MESSAGE } from '@libs/core/constants/message';
 import {
-  Controller,
-  HttpCode,
-  HttpStatus,
-  Post,
-  UploadedFile,
-  UploadedFiles,
-  UseInterceptors,
+    Controller,
+    HttpCode,
+    HttpStatus,
+    Post,
+    UploadedFile,
+    UploadedFiles,
+    UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -19,7 +19,7 @@ import { UploadService } from '../service/upload.service';
 @ApiTags('Upload')
 @Controller('upload')
 export class UploadController {
-    constructor(private readonly uploadService: UploadService) {}
+    constructor(private readonly uploadService: UploadService) { }
 
     @Post('avatar')
     @IsPublic()

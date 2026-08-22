@@ -1,8 +1,8 @@
 import { IS_PUBLIC_KEY } from '@/common/decorators/is-public.decorator';
 import type { HttpRequest } from '@/common/types/http.type';
-import { AUTH_MESSAGE } from '@/constants/message';
 import { UnauthorizedException } from '@/errors/error';
 import { JwtService } from '@api/shared/jwt/service/jwt.service';
+import { AUTH_MESSAGE } from '@libs/core/constants/message';
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 

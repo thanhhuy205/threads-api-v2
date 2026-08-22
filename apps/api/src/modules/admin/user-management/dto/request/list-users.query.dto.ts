@@ -1,7 +1,7 @@
+import { MAX_LIMIT } from '@libs/core/constants/pagination';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsInt, IsOptional, Max, Min } from 'class-validator';
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { MAX_LIMIT } from '@/constants/pagination';
 
 export class ListUsersQueryDto {
   @ApiPropertyOptional({ default: 1, minimum: 1 })

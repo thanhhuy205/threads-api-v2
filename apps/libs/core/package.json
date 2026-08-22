@@ -1,0 +1,15 @@
+{
+  "name": "@workspace/core",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@nestjs/common": "^11.1.28",
+    "@nestjs/config": "^4.0.4",
+    "@openrouter/sdk": "^0.12.79",
+    "@workspace/common": "workspace:*",
+    "bullmq": "^5.81.3",
+    "groq-sdk": "^1.5.0",
+    "pusher": "^5.3.4",
+    "redis": "^5.12.1"
+  }
+}

@@ -1,4 +1,3 @@
-import { PERMISSIONS } from '@/common/constants/permission.constant';
 import {
   BadRequestException,
   ConflictException,
@@ -7,14 +6,15 @@ import {
 } from '@/errors/error';
 import { ABILITY_SERVICE, type AbilityService } from '@/modules/ability/service/ability.service';
 import { TransactionService } from '@/shared/transaction/transaction.service';
+import { PERMISSIONS } from '@libs/common/src/constants/permission.constant';
 import { Inject, Injectable } from '@nestjs/common';
 import type { Position } from '../../../../../generated/prisma';
 import {
   GROUP_TEAM_REPOSITORY,
   type GroupTeamRepository,
 } from '../../repository/group-team.repository';
-import { USER_TEAM_SERVICE, type UserTeamService } from '../user-team.service';
 import type { GroupTeamService } from '../group-team.service';
+import { USER_TEAM_SERVICE, type UserTeamService } from '../user-team.service';
 
 type CreateGroupTeamPayload = {
   name: string;

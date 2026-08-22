@@ -5,10 +5,10 @@ import { IsPublic } from "@/common/decorators/is-public.decorator";
 import { Message } from "@/common/decorators/message.decorator";
 import { ApiCursorPaginatedResponse } from "@/common/decorators/swagger-response.decorator";
 import type { CursorPagination as CursorPaginationParams } from "@/common/helpers/cursor-pagination.helper";
-import { POST_MESSAGE } from "@/constants/message";
 import { NotFoundException } from "@/errors/error";
 import { USER_SERVICE, type UserService } from "@/modules/user/service/user.service";
 import { JwtService } from "@api/shared/jwt/service/jwt.service";
+import { POST_MESSAGE } from "@libs/core/constants/message";
 import {
   BadRequestException,
   Body,

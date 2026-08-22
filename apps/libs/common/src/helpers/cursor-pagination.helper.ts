@@ -1,4 +1,4 @@
-import { MAX_LIMIT, PER_PAGE } from '@/constants/pagination';
+import { MAX_LIMIT, PER_PAGE } from '@libs/core/constants/pagination';
 
 export type CursorPagination = {
   after: string | null;

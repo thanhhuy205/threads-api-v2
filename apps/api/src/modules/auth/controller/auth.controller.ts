@@ -4,10 +4,10 @@ import { Message } from '@/common/decorators/message.decorator';
 import { RefreshTokenHeaderGuard } from '@/common/guards/refresh-token-header.guard';
 import type { HttpRequest as Request } from '@/common/types/http.type';
 import configService from '@/config/config';
-import { AUTH_MESSAGE } from '@/constants/message';
 import {
   UnauthorizedException
 } from '@/errors/error';
+import { AUTH_MESSAGE } from '@libs/core/constants/message';
 import {
   Body,
   Controller,

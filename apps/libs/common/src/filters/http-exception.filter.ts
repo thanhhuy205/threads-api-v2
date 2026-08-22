@@ -1,6 +1,6 @@
 import type { HttpResponse } from '@/common/types/http.type';
-import { COMMON_MESSAGE } from '@/constants/message';
 import { HttpException } from '@/errors/error';
+import { COMMON_MESSAGE } from '@libs/core/constants/message';
 import {
   ArgumentsHost,
   Catch,
@@ -9,7 +9,6 @@ import {
   BadRequestException as NestBadRequestException,
   HttpException as NestHttpException,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
 
 type ValidationErrorResponse = {
   message?: string;
@@ -42,26 +41,26 @@ export class HttpExceptionFilter implements ExceptionFilter {
       return;
     }
 
-    if (exception instanceof Prisma.PrismaClientKnownRequestError) {
-      const prismaErrors: Record<string, { status: number; message: string }> = {
-        P2002: { status: 409, message: COMMON_MESSAGE.RESOURCE_ALREADY_EXISTS },
-        P2025: { status: 404, message: COMMON_MESSAGE.RESOURCE_NOT_FOUND },
-        P2003: { status: 400, message: COMMON_MESSAGE.INVALID_RELATION_REFERENCE },
-        P2011: { status: 400, message: COMMON_MESSAGE.MISSING_REQUIRED_DATA },
-        P2012: { status: 400, message: COMMON_MESSAGE.MISSING_REQUIRED_DATA },
-        P2013: { status: 400, message: COMMON_MESSAGE.MISSING_REQUIRED_DATA },
-      };
-      const mapped = prismaErrors[exception.code] ?? {
-        status: 400,
-        message: COMMON_MESSAGE.DATABASE_REQUEST_ERROR,
-      };
-      response.status(mapped.status).json({
-        success: false,
-        message: mapped.message,
-        ...(exception.meta?.target ? { field: exception.meta.target } : {}),
-      });
-      return;
-    }
+    // if (exception instanceof Prisma.PrismaClientKnownRequestError) {
+    //   const prismaErrors: Record<string, { status: number; message: string }> = {
+    //     P2002: { status: 409, message: COMMON_MESSAGE.RESOURCE_ALREADY_EXISTS },
+    //     P2025: { status: 404, message: COMMON_MESSAGE.RESOURCE_NOT_FOUND },
+    //     P2003: { status: 400, message: COMMON_MESSAGE.INVALID_RELATION_REFERENCE },
+    //     P2011: { status: 400, message: COMMON_MESSAGE.MISSING_REQUIRED_DATA },
+    //     P2012: { status: 400, message: COMMON_MESSAGE.MISSING_REQUIRED_DATA },
+    //     P2013: { status: 400, message: COMMON_MESSAGE.MISSING_REQUIRED_DATA },
+    //   };
+    //   const mapped = prismaErrors[exception.code] ?? {
+    //     status: 400,
+    //     message: COMMON_MESSAGE.DATABASE_REQUEST_ERROR,
+    //   };
+    //   response.status(mapped.status).json({
+    //     success: false,
+    //     message: mapped.message,
+    //     ...(exception.meta?.target ? { field: exception.meta.target } : {}),
+    //   });
+    //   return;
+    // }
 
     if (exception instanceof NestHttpException) {
       const payload = exception.getResponse();

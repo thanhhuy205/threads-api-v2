@@ -1,4 +1,4 @@
-import type { PermissionCode } from '@/common/constants/permission.constant';
+import type { PermissionCode } from '@libs/common/src/constants/permission.constant';
 import type { PermissionScope } from '../../../../generated/prisma';
 
 export const ABILITY_SERVICE = Symbol('ABILITY_SERVICE');

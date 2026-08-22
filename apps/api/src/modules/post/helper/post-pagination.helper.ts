@@ -1,7 +1,7 @@
 import { buildCursorPagination, normalizeCursorPagination } from '@/common/helpers/cursor-pagination.helper';
-import { redisKey } from "@/constants/resolve-key/redis-key";
 import { PostMapper } from "@/modules/post/mapper/post.mapper";
 import { RedisService } from "@libs/cache/redis.service";
+import { redisKey } from "@libs/core/constants/redis-key";
 import { Prisma } from "../../../../generated/prisma";
 import { PostRepository } from "../repository/post.repository";
 

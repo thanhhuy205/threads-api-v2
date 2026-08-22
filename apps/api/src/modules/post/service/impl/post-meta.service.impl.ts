@@ -1,5 +1,5 @@
-import { redisKey } from "@/constants/resolve-key/redis-key";
 import { RedisVersionService } from '@/shared/redis-version';
+import { redisKey } from "@libs/core/constants/redis-key";
 import { Inject, Injectable } from '@nestjs/common';
 import { Prisma } from "../../../../../generated/prisma";
 import { normalizeTopic } from "../../helper/nomalize.hepler";

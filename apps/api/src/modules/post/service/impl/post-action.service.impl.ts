@@ -1,6 +1,4 @@
-import { PERMISSIONS } from '@/common/constants/permission.constant';
 import { QUEUE_NAME } from "@/constants/queue";
-import { redisKey } from "@/constants/resolve-key/redis-key";
 import {
   BadRequestException,
   ForbiddenException,
@@ -9,6 +7,8 @@ import {
 import { ABILITY_SERVICE, type AbilityService } from '@/modules/ability/service/ability.service';
 import { RedisVersionService } from '@/shared/redis-version';
 import { RedisService } from "@libs/cache/redis.service";
+import { PERMISSIONS } from '@libs/common/src/constants/permission.constant';
+import { redisKey } from "@libs/core/constants/redis-key";
 import { Inject, Injectable } from '@nestjs/common';
 import {
   InteractionType,

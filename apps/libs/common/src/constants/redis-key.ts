@@ -1,4 +1,3 @@
-import type { PostType } from "@prisma/client";
 
 const BLOOM_FILTER = {
   USERNAMES: "filter:usernames",
@@ -16,7 +15,7 @@ const USER_POST_INTERACTION_PREFIX = "user:";
 const USER_POST_INTERACTION_POST_SEGMENT = ":post:";
 const TOPIC_LIST_CACHE_KEY = "topic:list:names";
 
-export type RedisPostInteractionType = Lowercase<Exclude<PostType, "POST">>;
+export type RedisPostInteractionType = 'POST' | 'ANNOUNCEMENT' | 'DECISION'
 export type RedisInteractionType = "like" | "reply" | "quote" | "repost" | RedisPostInteractionType;
 
 const buildUserPostInteractionKey = (

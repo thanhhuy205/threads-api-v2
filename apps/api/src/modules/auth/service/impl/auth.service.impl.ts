@@ -1,5 +1,4 @@
 import configService from "@/config/config";
-import { redisKey } from "@/constants/resolve-key/redis-key";
 import { NotFoundException } from "@/errors/error";
 import { ROLE_SERVICE, type RoleService } from "@/modules/ability/service/role.service";
 import { USER_ROLE_SERVICE, type UserRoleService } from "@/modules/ability/service/user-role.service";
@@ -14,15 +13,16 @@ import {
 } from "@/modules/auth/util/hasher-password";
 import { hasherToken } from "@/modules/auth/util/hasher-token";
 import { BloomProducer } from "@/modules/job/bloom/producer/bloom.producer";
-import { EmailProducer } from "@notification-service/jobs/email/producer/email.producer";
 import { USER_SERVICE, type UserService } from "@/modules/user/service/user.service";
 import { TokenPairResponse } from "@api/shared/jwt/dto/response/token-pair.response";
 import { JwtService } from "@api/shared/jwt/service/jwt.service";
 import { RedisService } from "@libs/cache/redis.service";
+import { redisKey } from "@libs/core/constants/redis-key";
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { UserRoleType, VerificationCodeType } from "../../../../../generated/prisma";
+import { EmailProducer } from "@notification-service/jobs/email/producer/email.producer";
 import crypto from "crypto";
 import ms, { StringValue } from "ms";
+import { UserRoleType, VerificationCodeType } from "../../../../../generated/prisma";
 import type { ForgotPasswordDto } from "../../dto/request/forgot-password.request.dto";
 import type { LoginDto } from "../../dto/request/login.request.dto";
 import type { LogoutDto } from "../../dto/request/logout.request.dto";

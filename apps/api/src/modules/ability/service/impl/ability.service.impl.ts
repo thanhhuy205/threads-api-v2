@@ -1,6 +1,6 @@
-import type { PermissionCode } from '@/common/constants/permission.constant';
 import { ForbiddenException } from '@/errors/error';
 import type { RedisService } from '@libs/cache/redis.service';
+import type { PermissionCode } from '@libs/common/src/constants/permission.constant';
 import { Inject, Injectable } from '@nestjs/common';
 import { PermissionScope } from '../../../../../generated/prisma';
 import {

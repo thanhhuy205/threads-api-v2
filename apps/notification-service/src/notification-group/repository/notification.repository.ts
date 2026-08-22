@@ -1,4 +1,4 @@
-import type { Prisma } from '@threads/notification-prisma-client';
+import { Prisma } from 'apps/notification-service/generated/prisma';
 import type { NotificationType } from '../model/notification.model';
 
 export const NOTIFICATION_REPOSITORY = Symbol('NOTIFICATION_REPOSITORY');

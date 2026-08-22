@@ -1,7 +1,8 @@
 import 'dotenv/config';
 
-import { PERMISSIONS } from '@/common/constants/permission.constant';
+import { PERMISSIONS } from '@libs/common/src/constants/permission.constant';
 import { PrismaMariaDb } from '@prisma/adapter-mariadb';
+import bcrypt from 'bcrypt';
 import {
   PermissionScope,
   Position,
@@ -11,7 +12,6 @@ import {
   UserStatus,
   VisibilityPost,
 } from '../../generated/prisma';
-import bcrypt from 'bcrypt';
 
 const databaseUrl = process.env.DATABASE_URL;
 

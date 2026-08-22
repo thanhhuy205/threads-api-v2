@@ -214,6 +214,66 @@ importers:
         specifier: ^5.8.0
         version: 5.9.3
 
+  apps/libs/common:
+    dependencies:
+      '@nestjs/common':
+        specifier: ^11.1.28
+        version: 11.1.28(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/core':
+        specifier: ^11.1.28
+        version: 11.1.28(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@11.1.28)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/swagger':
+        specifier: ^11.4.6
+        version: 11.4.6(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.28)(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)
+      '@prisma/client':
+        specifier: 7.8.0
+        version: 7.8.0(prisma@7.8.0(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@5.9.3))(typescript@5.9.3)
+      class-transformer:
+        specifier: ^0.5.1
+        version: 0.5.1
+      class-validator:
+        specifier: ^0.14.4
+        version: 0.14.4
+      http-status-codes:
+        specifier: ^2.3.0
+        version: 2.3.0
+      jsonwebtoken:
+        specifier: ^9.0.3
+        version: 9.0.3
+      rxjs:
+        specifier: ^7.8.2
+        version: 7.8.2
+      sharp:
+        specifier: ^0.34.5
+        version: 0.34.5
+
+  apps/libs/core:
+    dependencies:
+      '@nestjs/common':
+        specifier: ^11.1.28
+        version: 11.1.28(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/config':
+        specifier: ^4.0.4
+        version: 4.0.4(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2))(rxjs@7.8.2)
+      '@openrouter/sdk':
+        specifier: ^0.12.79
+        version: 0.12.79
+      '@workspace/common':
+        specifier: workspace:*
+        version: link:../common
+      bullmq:
+        specifier: ^5.81.3
+        version: 5.81.3(redis@5.12.1(@opentelemetry/api@1.9.1))
+      groq-sdk:
+        specifier: ^1.5.0
+        version: 1.5.0
+      pusher:
+        specifier: ^5.3.4
+        version: 5.3.4
+      redis:
+        specifier: ^5.12.1
+        version: 5.12.1(@opentelemetry/api@1.9.1)
+
   apps/notification-service:
     dependencies:
       '@nestjs/bullmq':
@@ -367,6 +427,9 @@ importers:
       uuid:
         specifier: ^14.0.0
         version: 14.0.1
+      zod:
+        specifier: ^3.25.76
+        version: 3.25.76
     devDependencies:
       '@types/fluent-ffmpeg':
         specifier: ^2.1.28
