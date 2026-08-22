@@ -1,15 +1,15 @@
 import { GetUserId } from '@/common/decorators/get-user-id.decorator';
 import { Message } from '@/common/decorators/message.decorator';
-import { Body, Controller, HttpCode, HttpStatus, Param, Post } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Inject, Param, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CreateVoteDto, VoteParamsDto } from '../dto/request';
-import { VoteService } from '../service/vote.service';
+import { VOTE_SERVICE, type VoteService } from '../service/vote.service';
 
 @ApiTags('Poll')
 @ApiBearerAuth('bearer')
 @Controller('polls')
 export class PollController {
-  constructor(private readonly voteService: VoteService) {}
+  constructor(@Inject(VOTE_SERVICE) private readonly voteService: VoteService) {}
 
   @Post(':pollId/vote')
   @HttpCode(HttpStatus.OK)

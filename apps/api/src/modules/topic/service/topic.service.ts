@@ -1,40 +1,7 @@
-import { redisKey } from "@/constants/resolve-key/redis-key";
-import { RedisService } from "@libs/cache/redis.service";
-import { Injectable } from '@nestjs/common';
-import { TopicRepository } from "../repository/topic.repository";
+export const TOPIC_SERVICE = Symbol('TOPIC_SERVICE');
 
-@Injectable()
-export class TopicService {
-  private readonly topicListCacheTtlSeconds = 60 * 5;
-
-  constructor(
-    private readonly topicRepository: TopicRepository,
-    private readonly redisService: RedisService,
-  ) { }
-
-  private normalizeTopicName(name: string): string {
-    return name.trim().replace(/\s+/g, " ").toLowerCase();
-  }
-
-  async searchByName(query: string) {
-    const normalizedName = this.normalizeTopicName(query);
-    const results = await this.topicRepository.searchTopic({
-      q: normalizedName,
-    });
-
-    return results;
-  }
-
-  async listNames(topicNames: string[]) {
-    const topics = await this.topicRepository.listNames(topicNames);
-    return topics;
-  }
-
-  async createOrIncrement(name: string) {
-    const normalizedName = this.normalizeTopicName(name);
-    const topic = await this.topicRepository.upsertByName(normalizedName);
-    await this.redisService.redis.del(redisKey.topic.listNames());
-    return topic;
-  }
+export interface TopicService {
+  searchByName(query: string): Promise<any[]>;
+  listNames(topicNames: string[]): Promise<any[]>;
+  createOrIncrement(name: string): Promise<any>;
 }
-

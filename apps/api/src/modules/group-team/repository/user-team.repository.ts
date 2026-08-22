@@ -1,46 +1,13 @@
-import { PrismaService } from '@/shared/database/prisma.service';
-import { Injectable } from '@nestjs/common';
-import { Position, type Prisma } from '@prisma/client';
+import type { Position, Prisma } from '@prisma/client';
 
-export type CreateUserTeamPayload = {
-  userId: string;
-  teamId: number;
-  position?: Position;
-};
+export const USER_TEAM_REPOSITORY = Symbol('USER_TEAM_REPOSITORY');
+export type CreateUserTeamPayload = { userId: string; teamId: number; position?: Position };
 
-const userTeamSelect = {
-  id: true,
-  userId: true,
-  teamId: true,
-  position: true,
-  createdAt: true,
-  updatedAt: true,
-} as const;
-
-@Injectable()
-export class UserTeamRepository {
-  constructor(private readonly prisma: PrismaService) {}
-
-  create(payload: CreateUserTeamPayload, tx?: Prisma.TransactionClient) {
-    return (tx ?? this.prisma).userTeam.create({
-      data: {
-        ...payload,
-        position: payload.position ?? Position.OTHER,
-      },
-      select: userTeamSelect,
-    });
-  }
-
+export interface UserTeamRepository {
+  create(payload: CreateUserTeamPayload, tx?: Prisma.TransactionClient): Promise<any>;
   findByUserAndTeam(
     userId: string,
     teamId: number,
     tx?: Prisma.TransactionClient,
-  ) {
-    return (tx ?? this.prisma).userTeam.findUnique({
-      where: {
-        userId_teamId: { userId, teamId },
-      },
-      select: userTeamSelect,
-    });
-  }
+  ): Promise<any>;
 }

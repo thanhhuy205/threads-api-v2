@@ -8,7 +8,7 @@ import type { CursorPagination as CursorPaginationParams } from "@/common/helper
 import { POST_MESSAGE } from "@/constants/message";
 import { NotFoundException } from "@/errors/error";
 import { JwtService } from "@/modules/jwt/service/jwt.service";
-import { UserService } from "@/modules/user/service/user.service";
+import { USER_SERVICE, type UserService } from "@/modules/user/service/user.service";
 import {
   BadRequestException,
   Body,
@@ -56,7 +56,7 @@ type AuthenticatedRequest = {
 export class PostController {
   constructor(
     private readonly jwtService: JwtService,
-    private readonly userService: UserService,
+    @Inject(USER_SERVICE) private readonly userService: UserService,
     @Inject(POST_SERVICE) private readonly postService: PostService,
     @Inject(POST_ACTION_SERVICE) private readonly postActionService: PostActionService,
     @Inject(POST_FEED_SERVICE) private readonly postFeedService: PostFeedService,

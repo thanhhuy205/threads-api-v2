@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query, Req } from '@nestjs/common';
+import { Controller, Get, Inject, Param, Query, Req } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { HttpRequest as Request } from '@/common/types/http.type';
 import { Message } from '@/common/decorators/message.decorator';
@@ -8,13 +8,13 @@ import { USER_MESSAGE } from '@/constants/message';
 import { NotFoundException } from '@/errors/error';
 import { JwtService } from '@/modules/jwt/service/jwt.service';
 import { UserNameMentionQueryDto, UsernameParamsDto } from '../dto/request';
-import { UserService } from '../service/user.service';
+import { USER_SERVICE, type UserService } from '../service/user.service';
 
 @ApiTags('User')
 @Controller('users')
 export class UsersController {
   constructor(
-    private readonly userService: UserService,
+    @Inject(USER_SERVICE) private readonly userService: UserService,
     private readonly jwtService: JwtService,
   ) {}
 

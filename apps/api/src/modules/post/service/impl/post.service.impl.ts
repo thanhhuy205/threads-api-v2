@@ -1,10 +1,10 @@
 import { PERMISSIONS } from '@/common/constants/permission.constant';
 import { BadRequestException, NotFoundException } from "@/errors/error";
 import { ABILITY_SERVICE, type AbilityService } from '@/modules/ability/service/ability.service';
-import { GroupTeamService } from '@/modules/group-team/service/group-team.service';
+import { GROUP_TEAM_SERVICE, type GroupTeamService } from '@/modules/group-team/service/group-team.service';
 import { dispatchReplyNotification } from "@/modules/notification-group/events/notification.dispatcher";
 import type { CreatePostCommand } from "../../command/create-post.command";
-import { UserService } from "@/modules/user/service/user.service";
+import { USER_SERVICE, type UserService } from "@/modules/user/service/user.service";
 import { TransactionService } from "@/shared/transaction/transaction.service";
 import { AiService } from '@api/modules/ai/service/ai.service';
 import { PostCreationContext } from '@api/modules/post/context/post-creation-context';
@@ -23,12 +23,12 @@ export class PostServiceImpl implements PostService {
 
   constructor(
     private readonly transactionService: TransactionService,
-    private readonly userService: UserService,
+    @Inject(USER_SERVICE) private readonly userService: UserService,
     @Inject(POST_REPOSITORY) private readonly postRepository: PostRepository,
     @Inject(POST_MENTION_SERVICE) private readonly postMentionService: PostMentionService,
     @Inject(POST_META_SERVICE) private readonly postMetaService: PostMetaService,
     @Inject(ABILITY_SERVICE) private readonly abilityService: AbilityService,
-    private readonly groupTeamService: GroupTeamService,
+    @Inject(GROUP_TEAM_SERVICE) private readonly groupTeamService: GroupTeamService,
     private readonly aiService: AiService,
     @Inject(POST_CREATION_POLICIES)
     private readonly postCreationPolicies: PostCreationPolicy[],

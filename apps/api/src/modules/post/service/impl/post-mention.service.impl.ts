@@ -1,15 +1,15 @@
 import { BadRequestException } from "@/errors/error";
 import { dispatchMentionNotification } from "@/modules/notification-group/events/notification.dispatcher";
 import type { CreatePostCommand } from "../../command/create-post.command";
-import { UserService } from '@/modules/user/service/user.service';
-import { Injectable, Logger } from '@nestjs/common';
+import { USER_SERVICE, type UserService } from '@/modules/user/service/user.service';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import type { PostMentionService } from '../post-mention.service';
 
 @Injectable()
 export class PostMentionServiceImpl implements PostMentionService {
   private readonly logger = new Logger(PostMentionServiceImpl.name, { timestamp: true });
 
-  constructor(private readonly userService: UserService) { }
+  constructor(@Inject(USER_SERVICE) private readonly userService: UserService) { }
   async validateMentions(
     mentions?: CreatePostCommand["mentions"],
   ): Promise<string[]> {

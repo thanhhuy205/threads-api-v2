@@ -15,6 +15,7 @@ import {
   Headers,
   HttpCode,
   HttpStatus,
+  Inject,
   Logger,
   Post,
   Query,
@@ -36,13 +37,13 @@ import { UpdateProfileDto } from '../dto/request/update-profile.request.dto';
 import { ValidateEmailDto } from '../dto/request/validate-email.request.dto';
 import { ValidateTokenDto } from '../dto/request/validate-token.request.dto';
 import { ValidateUsernameDto } from '../dto/request/validate-username.request.dto';
-import { AuthService } from '../service/auth.service';
+import { AUTH_SERVICE, type AuthService } from '../service/auth.service';
 
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   private readonly logger = new Logger(AuthController.name);
-  constructor(private readonly authService: AuthService) { }
+  constructor(@Inject(AUTH_SERVICE) private readonly authService: AuthService) { }
 
   @Post('register')
   @IsPublic()

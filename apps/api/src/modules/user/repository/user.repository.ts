@@ -1,6 +1,6 @@
-import { PrismaService } from '@/shared/database/prisma.service';
-import { Injectable } from '@nestjs/common';
-import { Prisma } from "@prisma/client";
+import type { Prisma } from '@prisma/client';
+
+export const USER_REPOSITORY = Symbol('USER_REPOSITORY');
 
 const userProfileSelect = {
   id: true,
@@ -16,33 +16,10 @@ const userProfileSelect = {
   labelWebsite: true,
   createdAt: true,
 } as const;
+const userBasicIdentitySelect = { id: true, username: true } as const;
+const userStatusProfileSelect = { id: true, bio: true, avatar: true } as const;
 
-const userByUsernameSelect = {
-  id: true,
-  username: true,
-  name: true,
-  bio: true,
-  avatar: true,
-  verifiedAt: true,
-  location: true,
-  website: true,
-  labelWebsite: true,
-} as const;
-
-const userBasicIdentitySelect = {
-  id: true,
-  username: true,
-} as const;
-
-const userStatusProfileSelect = {
-  id: true,
-  bio: true,
-  avatar: true,
-} as const;
-
-export type UserProfile = Prisma.UserGetPayload<{
-  select: typeof userProfileSelect;
-}>;
+export type UserProfile = Prisma.UserGetPayload<{ select: typeof userProfileSelect }>;
 export type UserBasicIdentity = Prisma.UserGetPayload<{
   select: typeof userBasicIdentitySelect;
 }>;
@@ -57,203 +34,21 @@ export type UserUsernameItem = {
   verifiedAt: Date | null;
 };
 
-@Injectable()
-export class UserRepository {
-  constructor(private readonly prisma: PrismaService) { }
-
-  async findById(id: string): Promise<UserProfile | null> {
-    return this.prisma.user.findUnique({
-      where: {
-        id,
-      },
-      select: {
-        ...userProfileSelect,
-      },
-    });
-  }
-
-  async getPermissionPositionByUserId(userId: string) {
-    return await this.prisma.user.findUnique({
-      where: {
-        id: userId,
-      },
-      select: {
-        userPositions: {
-          select: {
-            positionPermission: {
-              select: {
-                permission: {
-                  select: {
-                    code: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    });
-  }
-
-  async findStatusProfileById(id: string): Promise<UserStatusProfile | null> {
-    return this.prisma.user.findUnique({
-      where: {
-        id,
-      },
-      select: userStatusProfileSelect,
-    });
-  }
-
-  async findByUsername(
-    username: string,
-    tx?: Prisma.TransactionClient,
-  ) {
-    return (tx ?? this.prisma).user.findUnique({
-      where: {
-        username,
-      },
-      select: userByUsernameSelect,
-    });
-  }
-
-  async updateProfile(
-    id: string,
-    data: Prisma.UserUpdateInput,
-  ): Promise<UserProfile> {
-    return this.prisma.user.update({
-      where: {
-        id,
-      },
-      data,
-      select: userProfileSelect,
-    });
-  }
-
-  async findByUsernames(
-    usernames: string[],
-    tx?: Prisma.TransactionClient,
-  ): Promise<UserBasicIdentity[]> {
-    if (!usernames.length) {
-      return [];
-    }
-
-    return (tx ?? this.prisma).user.findMany({
-      where: {
-        username: {
-          in: usernames,
-        },
-      },
-      select: userBasicIdentitySelect,
-    });
-  }
-
-  async findNetworkUsernames({
-    userId,
-    query,
-    after,
-    take = 10,
-  }: {
+export interface UserRepository {
+  findById(id: string): Promise<any>;
+  getPermissionPositionByUserId(userId: string): Promise<any>;
+  findStatusProfileById(id: string): Promise<UserStatusProfile | null>;
+  findByUsername(username: string, tx?: Prisma.TransactionClient): Promise<any>;
+  updateProfile(id: string, data: Prisma.UserUpdateInput): Promise<any>;
+  findByUsernames(usernames: string[], tx?: Prisma.TransactionClient): Promise<UserBasicIdentity[]>;
+  findNetworkUsernames(input: {
     userId: string;
     query: string;
     after?: string;
     take?: number;
-  }): Promise<UserUsernameItem[]> {
-    return this.prisma.user.findMany({
-      where: {
-        id: {
-          not: userId,
-        },
-        username: {
-          contains: query,
-        },
-      },
-      orderBy: {
-        username: "asc",
-      },
-      take: take + 1,
-      skip: after ? 1 : 0,
-      cursor: after
-        ? {
-          username: after,
-        }
-        : undefined,
-      select: {
-        avatar: true,
-        id: true,
-        username: true,
-        name: true,
-        verifiedAt: true,
-      },
-    });
-  }
-
-
-  async findExistingIds(userIds: string[]) {
-    if (!userIds.length) {
-      return [];
-    }
-
-    const users = await this.prisma.user.findMany({
-      where: {
-        id: {
-          in: userIds,
-        },
-      },
-      select: {
-        id: true,
-      },
-    });
-
-    return users.map((user) => user.id);
-  }
-
-
-  async searchUsernameOneQuery(query: string) {
-    return this.prisma.user.findMany({
-      where: {
-        username: {
-          startsWith: query,
-        },
-      },
-      orderBy: {
-        username: "asc",
-      },
-      take: 40,
-      select: {
-        id: true,
-        username: true,
-        name: true,
-        verifiedAt: true,
-      },
-    });
-  }
-
-  async searchUsername(query: string) {
-    const rows = await this.prisma.$queryRaw<UserUsernameItem[]>`
-      SELECT username, id, avatar, name, verified_at as verifiedAt
-      FROM users
-      WHERE MATCH(username , name) AGAINST (${query} IN BOOLEAN MODE)
-        AND deleted_at IS NULL
-      ORDER BY MATCH(username, name) AGAINST (${query} IN BOOLEAN MODE) DESC, username ASC
-      LIMIT 40
-    `;
-
-    return rows;
-  }
-  async findByEmail(email: string) {
-    return this.prisma.user.findUnique({
-      where: {
-        email,
-      },
-      select: {
-        id: true,
-        email: true,
-        username: true,
-        name: true,
-        avatar: true,
-        verifiedAt: true,
-      },
-    });
-  }
+  }): Promise<UserUsernameItem[]>;
+  findExistingIds(userIds: string[]): Promise<string[]>;
+  searchUsernameOneQuery(query: string): Promise<any[]>;
+  searchUsername(query: string): Promise<UserUsernameItem[]>;
+  findByEmail(email: string): Promise<any>;
 }
-

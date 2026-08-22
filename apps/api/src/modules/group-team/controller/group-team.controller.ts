@@ -5,6 +5,7 @@ import {
   Controller,
   HttpCode,
   HttpStatus,
+  Inject,
   Param,
   Post,
 } from '@nestjs/common';
@@ -19,13 +20,15 @@ import {
   CreateGroupTeamDto,
   GroupTeamParamsDto,
 } from '../dto/request';
-import { GroupTeamService } from '../service/group-team.service';
+import { GROUP_TEAM_SERVICE, type GroupTeamService } from '../service/group-team.service';
 
 @ApiTags('Group Team')
 @ApiBearerAuth('bearer')
 @Controller('group-teams')
 export class GroupTeamController {
-  constructor(private readonly groupTeamService: GroupTeamService) {}
+  constructor(
+    @Inject(GROUP_TEAM_SERVICE) private readonly groupTeamService: GroupTeamService,
+  ) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)

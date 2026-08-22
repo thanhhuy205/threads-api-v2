@@ -3,11 +3,12 @@ import { TopicModule } from '../topic/topic.module';
 import { UserModule } from '../user/user.module';
 import { PostModule } from '../post/post.module';
 import { SearchController } from './controller/search.controller';
-import { SearchService } from './service/search.service';
+import { SearchServiceImpl } from './service/impl/search.service.impl';
+import { SEARCH_SERVICE } from './service/search.service';
 
 @Module({
   imports: [TopicModule, UserModule, PostModule],
   controllers: [SearchController],
-  providers: [SearchService],
+  providers: [{ provide: SEARCH_SERVICE, useClass: SearchServiceImpl }],
 })
 export class SearchModule { }

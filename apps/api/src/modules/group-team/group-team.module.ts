@@ -3,20 +3,24 @@ import { Module } from '@nestjs/common';
 import { UserModule } from '../user/user.module';
 import { AbilityModule } from '../ability/ability.module';
 import { GroupTeamController } from './controller/group-team.controller';
-import { GroupTeamRepository } from './repository/group-team.repository';
-import { UserTeamRepository } from './repository/user-team.repository';
-import { GroupTeamService } from './service/group-team.service';
-import { UserTeamService } from './service/user-team.service';
+import { GroupTeamRepositoryImpl } from './repository/impl/group-team.repository.impl';
+import { UserTeamRepositoryImpl } from './repository/impl/user-team.repository.impl';
+import { GROUP_TEAM_REPOSITORY } from './repository/group-team.repository';
+import { USER_TEAM_REPOSITORY } from './repository/user-team.repository';
+import { GroupTeamServiceImpl } from './service/impl/group-team.service.impl';
+import { UserTeamServiceImpl } from './service/impl/user-team.service.impl';
+import { GROUP_TEAM_SERVICE } from './service/group-team.service';
+import { USER_TEAM_SERVICE } from './service/user-team.service';
 
 @Module({
   imports: [TransactionModule, UserModule, AbilityModule],
   controllers: [GroupTeamController],
   providers: [
-    GroupTeamService,
-    UserTeamService,
-    GroupTeamRepository,
-    UserTeamRepository,
+    { provide: GROUP_TEAM_REPOSITORY, useClass: GroupTeamRepositoryImpl },
+    { provide: USER_TEAM_REPOSITORY, useClass: UserTeamRepositoryImpl },
+    { provide: GROUP_TEAM_SERVICE, useClass: GroupTeamServiceImpl },
+    { provide: USER_TEAM_SERVICE, useClass: UserTeamServiceImpl },
   ],
-  exports: [GroupTeamService, UserTeamService],
+  exports: [GROUP_TEAM_SERVICE, USER_TEAM_SERVICE],
 })
 export class GroupTeamModule {}

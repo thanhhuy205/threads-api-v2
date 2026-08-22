@@ -3,19 +3,19 @@ import { Message } from '@/common/decorators/message.decorator';
 import { CursorPagination } from '@/common/decorators/cursor-pagination.decorator';
 import { ApiCursorPaginatedResponse } from '@/common/decorators/swagger-response.decorator';
 import type { CursorPagination as CursorPaginationParams } from '@/common/helpers/cursor-pagination.helper';
-import { Controller, Get, HttpStatus, Query } from '@nestjs/common';
+import { Controller, Get, HttpStatus, Inject, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SearchPostsQueryDto, SearchTopicQueryDto, SearchUsernameQueryDto } from '../dto/search.dto';
-import { SearchService } from '../service/search.service';
-import { UserService } from '@/modules/user/service/user.service';
+import { SEARCH_SERVICE, type SearchService } from '../service/search.service';
+import { USER_SERVICE, type UserService } from '@/modules/user/service/user.service';
 
 @ApiTags('Search')
 @ApiBearerAuth('bearer')
 @Controller('search')
 export class SearchController {
   constructor(
-    private readonly searchService: SearchService,
-    private readonly userService: UserService,
+    @Inject(SEARCH_SERVICE) private readonly searchService: SearchService,
+    @Inject(USER_SERVICE) private readonly userService: UserService,
   ) {}
 
   @Get('posts')

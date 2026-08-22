@@ -1,15 +1,15 @@
-import { Body, Controller, HttpStatus, Patch } from '@nestjs/common';
+import { Body, Controller, HttpStatus, Inject, Patch } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { GetUserId } from '@/common/decorators/get-user-id.decorator';
 import { Message } from '@/common/decorators/message.decorator';
 import { UpdateProfileDto } from '../dto/request/update-profile.request.dto';
-import { UserService } from '../service/user.service';
+import { USER_SERVICE, type UserService } from '../service/user.service';
 
 @ApiTags('User')
 @ApiBearerAuth('bearer')
 @Controller('me')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(@Inject(USER_SERVICE) private readonly userService: UserService) {}
 
   @Patch('profile')
   @Message('Profile updated successfully')

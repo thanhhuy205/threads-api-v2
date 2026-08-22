@@ -1,14 +1,14 @@
 import { Message } from '@/common/decorators/message.decorator';
 import { IsPublic } from '@/common/decorators/is-public.decorator';
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Inject, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CreateTopicDto, SearchTopicQueryDto } from '../dto/request';
-import { TopicService } from '../service/topic.service';
+import { TOPIC_SERVICE, type TopicService } from '../service/topic.service';
 
 @ApiTags('Topic')
 @Controller('topic')
 export class TopicController {
-  constructor(private readonly topicService: TopicService) {}
+  constructor(@Inject(TOPIC_SERVICE) private readonly topicService: TopicService) {}
 
   @Get()
   @IsPublic()
