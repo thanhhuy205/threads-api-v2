@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { PostMediaStatus, PostMediaType } from '@prisma/client';
-import { PrismaService } from '@libs/database';
+import { UploadPrismaService } from '../../database/prisma.service';
+import { PostMediaStatus, PostMediaType } from '@threads/upload-prisma-client';
 
 export type PostMediaItemData = {
     id: number;
@@ -23,7 +23,7 @@ type CreatePostMediaInput = {
 
 @Injectable()
 export class PostMediaRepository {
-    constructor(private readonly prisma: PrismaService) {}
+    constructor(private readonly prisma: UploadPrismaService) {}
 
     async createMedia(mediaList: CreatePostMediaInput[]): Promise<PostMediaItemData[]> {
         const createdMedias = await this.prisma.$transaction(

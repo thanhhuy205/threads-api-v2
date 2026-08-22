@@ -10,7 +10,6 @@ import { DatabaseConfiguration } from './database.config';
 import { GroqConfiguration } from './groq.config';
 import { JwtConfiguration } from './jwt.config';
 import { LeonardoConfiguration } from './leonardo.config';
-import { MongoConfiguration } from './mongodb.config';
 import { NodemailerConfiguration } from './nodemailer.config';
 import { OpenRouterConfiguration } from './openrouter.config';
 import { PusherConfiguration } from './pusher.config';
@@ -59,10 +58,6 @@ export class Configuration extends BaseConfiguration {
   @ValidateNested()
   @Type(() => GroqConfiguration)
   GROQ_CONFIG = new GroqConfiguration();
-
-  @ValidateNested()
-  @Type(() => MongoConfiguration)
-  MONGODB_CONFIG = new MongoConfiguration();
 
   validate(): this {
     const errors = validateSync(this, { validationError: { target: false } });

@@ -1,4 +1,4 @@
-import { PostMediaStatus, PostMediaType } from '@prisma/client';
+import { PostMediaStatus, PostMediaType } from '@threads/upload-prisma-client';
 
 export type UploadMediaItemDataDto = {
     id: number;

@@ -100,7 +100,7 @@ export class NotificationServiceImpl implements NotificationService, OnModuleIni
     return buildCursorPagination({
       rows,
       take,
-      getAfter: (item) => item?.targetPost?.publicId ?? null,
+      getAfter: (item) => item.publicId,
     });
   }
 

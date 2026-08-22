@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MulterModule } from '@nestjs/platform-express';
 import { ResizeUploadInterceptor } from '@/common/interceptors/resize-upload.interceptor';
-import { CloudflareModule } from '@libs/storage/cloudflare.module';
+import { CloudflareModule } from '../storage/cloudflare.module';
 import { UploadController } from './controller/upload.controller';
 import { PostMediaRepository } from './repository/post-media.repository';
 import { UploadService } from './service/upload.service';

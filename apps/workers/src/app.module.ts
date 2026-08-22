@@ -10,7 +10,8 @@ import { RedisModule } from '@libs/cache/redis.module';
 import { configurationFactory } from '@libs/core/config/config';
 import { QUEUE_NAME } from '@libs/core/constants/queue';
 import { DatabaseModule } from '@libs/database';
-import { CloudflareModule } from '@libs/storage/cloudflare.module';
+import { UploadDatabaseModule } from '@upload-service/database/database.module';
+import { CloudflareModule } from '@upload-service/storage/cloudflare.module';
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -47,6 +48,7 @@ import { LikeWorker } from './like.worker';
       // { name: QUEUE_NAME.SURVEY_SYNC_QUEUE },
     ),
     DatabaseModule,
+    UploadDatabaseModule,
     RedisModule,
     CloudflareModule,
     CronModule,

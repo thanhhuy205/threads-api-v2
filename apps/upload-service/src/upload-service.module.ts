@@ -2,8 +2,8 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { BullModule } from '@nestjs/bullmq';
 import { configurationFactory } from '@libs/core/config/configuration';
-import { DatabaseModule } from '@libs/database';
 import { JobModule } from '@api/modules/job/job.module';
+import { UploadDatabaseModule } from './database/database.module';
 import { UploadModule } from './upload/upload.module';
 
 @Module({
@@ -23,7 +23,7 @@ import { UploadModule } from './upload/upload.module';
         },
       }),
     }),
-    DatabaseModule,
+    UploadDatabaseModule,
     JobModule,
     UploadModule,
   ],

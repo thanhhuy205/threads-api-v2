@@ -1,4 +1,4 @@
-import { CloudflareService } from "@libs/storage/cloudflare.service";
+import { CloudflareService } from './cloudflare.service';
 import { Module } from "@nestjs/common";
 
 @Module({

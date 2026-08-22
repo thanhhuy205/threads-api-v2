@@ -8,7 +8,6 @@
 // import { pusherChannel } from "@api/modules/pusher/channel/pusher-channel";
 // import { RedisService } from "@libs/cache/redis.service";
 // import { NOTIFICATION_JOB_KEY, NOTIFICATION_JOB_NAME, QUEUE_NAME } from "@libs/core/constants/queue";
-// import { collections } from "@libs/core/providers/mongodb.provider";
 // import { pusher } from "@libs/core/providers/pusher.provider";
 // import { Processor, WorkerHost } from '@nestjs/bullmq';
 // import { Logger } from '@nestjs/common';
@@ -170,22 +169,6 @@
 
 //       await this.redisService.redis.del([redisKey, `${redisKey}:actors`]);
 //       await this.redisService.redis.zRem(NOTIFICATION_JOB_KEY.BATCH_SYNC_NOTIFICATION, redisKey);
-//     }
-//     if (notificationSave.length) {
-//       await collections('notifications').insertMany(
-//         notificationSave.map((item) => ({
-//           recipientId: item.recipientId,
-//           type: item.meta.type as NotificationType,
-//           targetType: item.meta.targetType,
-//           targetId: item.meta.targetPostId,
-//           originPostId: item.meta.originPostId,
-//           actorIds: item.actors,
-//           lastActorId: item.meta.lastActorId,
-//           lastEventAt: new Date(),
-//           count: Number(item.meta.count ?? 0),
-//         })),
-//         { ordered: false },
-//       );
 //     }
 //   }
 

@@ -1,0 +1,42 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+enum PostMediaType {
+  IMAGE
+  VIDEO
+  HLS
+  VOICE
+  GIF
+  OTHER
+}
+
+enum PostMediaStatus {
+  TEMPORARY
+  UPLOADING
+  UPLOADED
+  FAILED
+  DELETED
+}
+
+model PostMedia {
+  id        Int              @id @default(autoincrement())
+  postId    Int?             @map("post_id")
+  url       String           @db.VarChar(2048)
+  uploadUrl String?          @map("upload_url") @db.VarChar(2048)
+  assetId   String?          @map("asset_id") @db.VarChar(255)
+  type      PostMediaType?   @map("type_enum")
+  width     Int?
+  height    Int?
+  createdAt DateTime         @default(now()) @map("created_at")
+  key       String           @unique @db.VarChar(255)
+  status    PostMediaStatus? @default(TEMPORARY) @map("status_enum")
+
+  @@index([postId], map: "idx_post_media_post_id")
+  @@map("post_media")
+}

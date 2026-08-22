@@ -1,5 +1,5 @@
 
-import { CloudflareService } from '@libs/storage/cloudflare.service';
+import { CloudflareService } from '../storage/cloudflare.service';
 import { ffprobePath } from 'ffmpeg-ffprobe-static';
 import ffmpegPath from 'ffmpeg-static';
 import ffmpeg from 'fluent-ffmpeg';

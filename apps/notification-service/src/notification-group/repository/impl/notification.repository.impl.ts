@@ -1,140 +1,122 @@
-import type { NotificationType } from "../../model/notification.model";
-import { collections } from "@/providers/mongodb.provider";
-import { PrismaService } from '@libs/database';
 import { normalizeCursorPagination } from '@/common/helpers/cursor-pagination.helper';
+import { PrismaService } from '@libs/database';
 import { Injectable } from '@nestjs/common';
-import { Sort } from "mongodb";
+import type { Prisma } from '@threads/notification-prisma-client';
+import { NotificationPrismaService } from '../../../database/prisma.service';
+import type { NotificationType } from '../../model/notification.model';
 import type { NotificationRepository } from '../notification.repository';
 
 @Injectable()
 export class NotificationRepositoryImpl implements NotificationRepository {
-    constructor(private readonly prisma: PrismaService) {}
-    findAll({
-        after,
-        take,
-        where,
-        orderBy,
-    }: {
-        after?: string;
-        take?: number;
-        where?: Record<string, any>;
-        orderBy?: Sort;
-    }) {
-        const { after: currentAfter, take: currentLimit } = normalizeCursorPagination({ after, take });
-        const defaultOrderBy = { lastEventAt: -1, publicId: -1 } as Sort;
-        return collections('notifications')
-            .find(where ?? {})
-            .sort(orderBy as Sort ?? defaultOrderBy)
-            .skip(currentAfter ? 1 : 0)
-            .limit(currentLimit + 1)
-            .toArray();
-    }
+  constructor(
+    private readonly notificationPrisma: NotificationPrismaService,
+    private readonly apiPrisma: PrismaService,
+  ) { }
 
-    create(data: {
-        recipientId: string;
-        type: NotificationType;
-        targetType: string;
-        targetId: string;
-        actorIds: any;
-        lastActorId: string;
-        lastActor?: {
-            id: string,
-            username: string,
-            avatar: string,
-        };
-        lastEventAt: Date;
-        count?: number;
-        isRead?: boolean;
-    }) {
-        return collections('notifications').insertOne({
-            recipientId: data.recipientId,
-            type: data.type,
-            targetType: data.targetType,
-            targetId: data.targetId,
-            actorIds: data.actorIds,
-            count: data.count ?? 1,
-            isRead: data.isRead ?? false,
-            lastActorId: data.lastActorId,
-            lastActor: data.lastActor,
-            lastEventAt: data.lastEventAt,
-        });
-    }
+  findAll({
+    after,
+    take,
+    where,
+    orderBy,
+  }: {
+    after?: string;
+    take?: number;
+    where?: Prisma.NotificationWhereInput;
+    orderBy?: Prisma.NotificationOrderByWithRelationInput;
+  }) {
+    const { after: currentAfter, take: currentLimit } = normalizeCursorPagination({ after, take });
 
-    findByRecipientId({
-        recipientId,
-        after,
-        take,
-    }: {
-        recipientId: string;
-        after?: string;
-        take: number;
-    }) {
-        return this.findAll({
-            after,
-            take,
-            where: { recipientId },
-        });
-    }
+    return this.notificationPrisma.notification.findMany({
+      where,
+      orderBy: orderBy ?? [{ lastEventAt: 'desc' }, { publicId: 'desc' }],
+      cursor: currentAfter ? { publicId: currentAfter } : undefined,
+      skip: currentAfter ? 1 : 0,
+      take: currentLimit + 1,
+    });
+  }
 
-    findPostTargetsByPublicIds(publicIds: string[]) {
-        if (!publicIds.length) return Promise.resolve([]);
+  create(data: {
+    recipientId: string;
+    type: NotificationType;
+    targetType: string;
+    targetId: string;
+    actorIds: string[];
+    lastActorId: string;
+    lastActor?: { id: string; username: string; avatar: string };
+    lastEventAt: Date;
+    count?: number;
+    isRead?: boolean;
+  }) {
+    return this.notificationPrisma.notification.create({
+      data: {
+        ...data,
+        targetType: data.targetType as Prisma.NotificationCreateInput['targetType'],
+        count: data.count ?? 1,
+        isRead: data.isRead ?? false,
+      },
+    });
+  }
 
-        return this.prisma.post.findMany({
-            where: {
-                publicId: { in: publicIds },
-            },
-            select: {
-                publicId: true,
-                content: true,
-                likesCount: true,
-                repliesCount: true,
-                repostsCountAndQuoteCount: true,
-                replyPermission: true,
-            },
-        });
-    }
+  findByRecipientId({
+    recipientId,
+    after,
+    take,
+  }: {
+    recipientId: string;
+    after?: string;
+    take: number;
+  }) {
+    return this.findAll({ after, take, where: { recipientId } });
+  }
 
-    findUnreadByRecipientId(recipientId: string) {
-        return collections('notifications').findOne({
-            recipientId,
-            isRead: false,
-        });
-    }
+  findPostTargetsByPublicIds(publicIds: string[]) {
+    if (!publicIds.length) return Promise.resolve([]);
 
-    createMany(data: {
-        recipientId: string;
-        type: NotificationType;
-        targetType: string;
-        targetId: string;
-        originPostId: string;
-        actorIds: any;
-        lastActorId: string;
-        lastEventAt: Date;
-        count?: number;
-        isRead?: boolean;
-    }[]) {
-        return collections('notifications').insertMany(
-            data.map((item) => ({
-                recipientId: item.recipientId,
-                type: item.type,
-                targetType: item.targetType,
-                targetId: item.targetId,
-                actorIds: item.actorIds,
-                count: item.count ?? 1,
-                isRead: item.isRead ?? false,
-                lastActorId: item.lastActorId,
-                lastEventAt: item.lastEventAt,
-                originPostId: item.originPostId,
-            })),
-            { ordered: false }, // tương đương skipDuplicates
-        );
-    }
+    return this.apiPrisma.post.findMany({
+      where: { publicId: { in: publicIds } },
+      select: {
+        publicId: true,
+        content: true,
+        likesCount: true,
+        repliesCount: true,
+        repostsCountAndQuoteCount: true,
+        replyPermission: true,
+      },
+    });
+  }
 
-    markGroupAsRead(userId: string) {
-        return collections('notifications').updateMany(
-            { recipientId: userId, isRead: false },
-            { $set: { isRead: true } },
-        );
-    }
+  findUnreadByRecipientId(recipientId: string) {
+    return this.notificationPrisma.notification.findFirst({
+      where: { recipientId, isRead: false },
+    });
+  }
+
+  createMany(data: Array<{
+    recipientId: string;
+    type: NotificationType;
+    targetType: string;
+    targetId: string;
+    originPostId: string;
+    actorIds: string[];
+    lastActorId: string;
+    lastEventAt: Date;
+    count?: number;
+    isRead?: boolean;
+  }>) {
+    return this.notificationPrisma.notification.createMany({
+      data: data.map((item) => ({
+        ...item,
+        targetType: item.targetType as Prisma.NotificationCreateManyInput['targetType'],
+        count: item.count ?? 1,
+        isRead: item.isRead ?? false,
+      })),
+    });
+  }
+
+  markGroupAsRead(userId: string) {
+    return this.notificationPrisma.notification.updateMany({
+      where: { recipientId: userId, isRead: false },
+      data: { isRead: true },
+    });
+  }
 }
-

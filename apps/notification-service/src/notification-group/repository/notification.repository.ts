@@ -1,5 +1,5 @@
 import type { NotificationType } from '../model/notification.model';
-import type { Sort } from 'mongodb';
+import type { Prisma } from '@threads/notification-prisma-client';
 
 export const NOTIFICATION_REPOSITORY = Symbol('NOTIFICATION_REPOSITORY');
 
@@ -25,7 +25,7 @@ export interface NotificationRepository {
     after?: string;
     take?: number;
     where?: Record<string, any>;
-    orderBy?: Sort;
+    orderBy?: Prisma.NotificationOrderByWithRelationInput;
   }): Promise<any[]>;
   create(data: CreateNotificationInput): Promise<any>;
   findByRecipientId(input: {

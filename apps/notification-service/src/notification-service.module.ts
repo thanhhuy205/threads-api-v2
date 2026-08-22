@@ -5,6 +5,7 @@ import { configurationFactory } from '@libs/core/config/configuration';
 import { QUEUE_NAME } from '@libs/core/constants/queue';
 import { RedisModule } from '@libs/cache/redis.module';
 import { DatabaseModule } from '@libs/database';
+import { NotificationDatabaseModule } from './database/database.module';
 import { NotificationGroupModule } from './notification-group/notification-group.module';
 import { EmailWorker } from './workers/email.worker';
 
@@ -30,6 +31,7 @@ import { EmailWorker } from './workers/email.worker';
       { name: QUEUE_NAME.NOTIFICATION_QUEUE },
     ),
     DatabaseModule,
+    NotificationDatabaseModule,
     RedisModule,
     NotificationGroupModule,
   ],

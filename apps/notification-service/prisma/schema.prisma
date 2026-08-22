@@ -1,0 +1,54 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum NotificationType {
+  POST
+  LIKE
+  FOLLOW
+  QUOTE
+  SHARE
+  REPLY
+  MENTION
+  INVITATION
+}
+
+enum NotificationTargetType {
+  POST
+  RESENT_INVITATION
+  ADMIN_INVITATION
+}
+
+type NotificationActor {
+  id       String
+  username String
+  avatar   String?
+}
+
+model Notification {
+  id           String                 @id @default(auto()) @map("_id") @db.ObjectId
+  publicId     String                 @unique @default(cuid())
+  recipientId  String
+  type         NotificationType
+  targetType   NotificationTargetType
+  targetId     String
+  actorIds     String[]
+  count        Int                    @default(1)
+  isRead       Boolean                @default(false)
+  lastActorId  String
+  lastActor    NotificationActor?
+  lastEventAt  DateTime               @default(now())
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+  originPostId String?
+
+  @@index([recipientId, isRead])
+  @@index([recipientId, lastEventAt])
+  @@map("notifications")
+}

@@ -1,12 +1,12 @@
-import { generateVideoSegments } from "@libs/core/util/ffmpeg.util";
+import { generateVideoSegments } from '@upload-service/utils/ffmpeg.util';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import { HLS_JOB_NAME, QUEUE_NAME } from "@libs/core/constants/queue";
 import type { HlsQueueDto } from "@api/modules/job/video/dto/hls-queue.dto";
 import { PostMediaRepository } from "@upload/repository/post-media.repository";
-import { PostMediaStatus } from "@prisma/client";
+import { PostMediaStatus } from '@upload-service/database/prisma-client';
 import configService from '@libs/core/config/config';
-import { CloudflareService } from '@libs/storage/cloudflare.service';
+import { CloudflareService } from '@upload-service/storage/cloudflare.service';
 import { Job } from 'bullmq';
 
 @Processor(QUEUE_NAME.VIDEO_QUEUE, { concurrency: 1 })
