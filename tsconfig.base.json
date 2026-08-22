@@ -12,7 +12,6 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "types": ["node", "multer"],
-    "baseUrl": ".",
     "paths": {
       "@api/*": ["apps/api/src/*"],
       "@libs/*": ["apps/libs/*"],
