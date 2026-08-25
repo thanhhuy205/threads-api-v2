@@ -13,7 +13,7 @@
     "start": "node dist/apps/api/src/main.js",
     "pretypecheck": "pnpm run prisma:generate:services",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "prisma:generate:services": "pnpm --filter @threads/upload-service prisma:generate && pnpm --filter @threads/notification-service prisma:generate",
+    "prisma:generate:services": "pnpm --filter @purse/upload-service prisma:generate && pnpm --filter @purse/notification-service prisma:generate",
     "db:generate": "prisma generate --config apps/api/prisma.config.ts",
     "db:migrate": "prisma migrate dev --config apps/api/prisma.config.ts",
     "db:push": "prisma db push --config apps/api/prisma.config.ts",

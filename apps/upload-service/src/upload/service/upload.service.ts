@@ -4,7 +4,7 @@ import { VideoProcedure } from '@/modules/job/video/producer/video.procedure';
 import { CloudflareService } from '../../storage/cloudflare.service';
 import { generateKeyImage } from '../../utils/upload.util';
 import { Injectable, Logger } from '@nestjs/common';
-import { PostMediaStatus } from '@threads/upload-prisma-client';
+import { PostMediaStatus } from '@purse/upload-prisma-client';
 import { mkdir, writeFile } from 'fs/promises';
 import path from 'path';
 import { v4 as uuid } from 'uuid';

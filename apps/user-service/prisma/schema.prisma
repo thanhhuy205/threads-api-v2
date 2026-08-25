@@ -1,0 +1,124 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db { provider = "mysql" }
+
+enum UserStatus { ACTIVE SUSPENDED BANNED DEACTIVATED }
+enum Position { SOFTWARE_ENGINEER SENIOR_SOFTWARE_ENGINEER INTERN_SOFTWARE_ENGINEER TECH_LEAD DATA_SCIENTIST PRODUCT_MANAGER DESIGNER HR MARKETING_SPECIALIST SALES_REPRESENTATIVE CUSTOMER_SUPPORT CONTENT_CREATOR BUSINESS_ANALYST CTO CEO FOUNDER OTHER }
+enum PermissionScope { WORKSPACE GROUP }
+
+model User {
+  id String @id @default(nanoid())
+  email String @unique @db.VarChar(255)
+  username String @unique @db.VarChar(100)
+  password String @db.VarChar(255)
+  name String? @db.VarChar(100)
+  bio String? @db.Text
+  avatar String? @db.VarChar(255)
+  verifiedAt DateTime? @map("verified_at")
+  status UserStatus @default(ACTIVE)
+  location String? @db.VarChar(255)
+  website String? @db.VarChar(255)
+  labelWebsite String? @map("label_website") @db.VarChar(255)
+  deletedAt DateTime? @map("deleted_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  @@index([email], map: "idx_users_email")
+  @@index([name], map: "idx_users_name")
+  @@index([username], map: "idx_users_username")
+  @@index([deletedAt], map: "idx_users_deleted_at")
+  @@fulltext([username, name], map: "idx_users_username_name_fulltext")
+  @@map("users")
+}
+
+model UserPosition {
+  id Int @id @default(autoincrement())
+  userId String @map("user_id")
+  positionPermissionId Int @map("position_permission_id")
+  position Position @default(OTHER)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  @@unique([userId, positionPermissionId], map: "uq_user_positions_user_id_position_permission_id")
+  @@index([userId], map: "idx_user_positions_user_id")
+  @@index([positionPermissionId], map: "idx_user_positions_position_permission_id")
+  @@map("user_positions")
+}
+
+model PositionPermission {
+  id Int @id @default(autoincrement())
+  position Position
+  permissionId String @map("permission_id")
+  scope PermissionScope @default(WORKSPACE)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  @@unique([position, permissionId, scope], map: "uq_position_permissions_position_permission_scope")
+  @@index([permissionId], map: "idx_position_permissions_permission_id")
+  @@index([position, scope], map: "idx_position_permissions_position_scope")
+  @@map("position_permissions")
+}
+
+model HistoryPosition {
+  id Int @id @default(autoincrement())
+  userId String @map("user_id")
+  title String @db.VarChar(255)
+  timeStart DateTime @map("time_start")
+  details String? @db.Text
+  verifyByUserId String? @map("verify_by_user_id")
+  verifiedAt DateTime? @map("verified_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  @@index([userId], map: "idx_history_positions_user_id")
+  @@map("history_positions")
+}
+
+model HistoryPositionSkill {
+  historyPositionId Int @map("history_position_id")
+  skillId Int @map("skill_id")
+  @@id([historyPositionId, skillId])
+  @@index([skillId], map: "idx_history_position_skills_skill_id")
+  @@map("history_position_skills")
+}
+
+model Skill {
+  id Int @id @default(autoincrement())
+  name String @unique @db.VarChar(100)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  @@index([name], map: "idx_skills_name")
+  @@map("skills")
+}
+
+model Professional {
+  id Int @id @default(autoincrement())
+  userId String @map("user_id")
+  countAnswers Int @default(0) @map("count_answers")
+  timeAverageAnswer Float @default(0) @map("time_average_answer")
+  createdAt DateTime @default(now()) @map("created_at")
+  @@index([userId], map: "idx_professionals_user_id")
+  @@map("professionals")
+}
+
+model GroupTeam {
+  id Int @id @default(autoincrement())
+  publicId String @unique @default(nanoid()) @map("public_id")
+  name String @unique @db.VarChar(255)
+  createdById String @map("created_by_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  @@index([name], map: "idx_group_teams_name")
+  @@map("group_teams")
+}
+
+model UserTeam {
+  id Int @id @default(autoincrement())
+  userId String @map("user_id")
+  teamId Int @map("team_id")
+  position Position? @default(OTHER)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  @@unique([userId, teamId], map: "uq_user_teams_user_id_team_id")
+  @@index([userId], map: "idx_user_teams_user_id")
+  @@index([teamId], map: "idx_user_teams_team_id")
+  @@map("user_teams")
+}
