@@ -7,9 +7,13 @@
   },
   "include": [
     "apps/api/src/**/*.ts",
+    "apps/auth-service/src/**/*.ts",
     "apps/notification-service/src/**/*.ts",
+    "apps/post-service/src/**/*.ts",
+    "apps/search-service/src/**/*.ts",
     "apps/upload-service/src/**/*.ts",
-    "apps/workers/src/**/*.ts",
+    "apps/user-service/src/**/*.ts",
+    "apps/work-service/src/**/*.ts",
     "apps/libs/**/*.ts",
     "apps/api/prisma/**/*.ts"
   ],

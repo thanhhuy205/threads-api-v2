@@ -5,9 +5,11 @@ import { configurationFactory } from '@libs/core/config/configuration';
 import { QUEUE_NAME } from '@libs/core/constants/queue';
 import { RedisModule } from '@libs/cache/redis.module';
 import { DatabaseModule } from '@api/shared/database';
+import { JwtModule } from '@api/shared/jwt/jwt.module';
 import { NotificationDatabaseModule } from './database/database.module';
 import { NotificationGroupModule } from './notification-group/notification-group.module';
 import { EmailWorker } from './workers/email.worker';
+import { PusherModule } from './pusher/pusher.module';
 
 @Module({
   imports: [
@@ -31,9 +33,11 @@ import { EmailWorker } from './workers/email.worker';
       { name: QUEUE_NAME.NOTIFICATION_QUEUE },
     ),
     DatabaseModule,
+    JwtModule,
     NotificationDatabaseModule,
     RedisModule,
     NotificationGroupModule,
+    PusherModule,
   ],
   providers: [EmailWorker],
 })

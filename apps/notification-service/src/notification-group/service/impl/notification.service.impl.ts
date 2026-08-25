@@ -1,6 +1,6 @@
 import { buildCursorPagination, type CursorPaginationMeta } from '@/common/helpers/cursor-pagination.helper';
-import { PusherService } from "@/modules/pusher/service/pusher.service";
-import { USER_SERVICE, type UserService } from "@/modules/user/service/user.service";
+import { PusherService } from '@notification-service/pusher/service/pusher.service';
+import { USER_SERVICE, type UserService } from '@user-service/modules/user/service/user.service';
 import { RedisService } from "@libs/cache/redis.service";
 import { NOTIFICATION_JOB_KEY } from "@libs/core/constants/queue";
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
