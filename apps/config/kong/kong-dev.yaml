@@ -5,8 +5,8 @@ consumers:
     username: auth-service
     jwt_secrets:
       - algorithm: HS256
-        key: auth-service # phải khớp claim "iss" trong token do auth-service ký
-        secret: ${JWT_SECRET}
+      - key: auth-service
+      - secret: ${JWT_SECRET}
   - custom_id: anonymousConsumer
     username: anonymousConsumer
 
@@ -17,12 +17,12 @@ plugins:
     protocols: [grpc, grpcs, http, https]
     config:
       claims_to_verify: [exp]
-      header_names: [authorization]
+      header_names: [authorization] # header must check if unauthenticated, otherwise will return 401
       key_claim_name: iss
-      maximum_expiration: 0
-      run_on_preflight: true
-      secret_is_base64: false
-      uri_param_names: [jwt]
+      maximum_expiration: 0 # max time kong will accept for exp claim, 0 = no limit
+      run_on_preflight: true # run on preflight request (OPTIONS) or not
+      secret_is_base64: false # secret is base64 encoded or not
+      uri_param_names: [jwt] # accept jwt in query string, e.g. /path?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
   - name: request-transformer
     instance_name: transform_jwt_claims
@@ -49,6 +49,7 @@ services:
         paths: [/auth-service/swagger]
         strip_path: false
         regex_priority: 100
+        tags: [auth]
         plugins:
           - name: jwt
             config:
@@ -66,6 +67,7 @@ services:
         paths: [/auth-service/api/auth/login]
         strip_path: false
         regex_priority: 100
+        tags: [auth]
         plugins:
           - name: jwt
             config:
@@ -78,11 +80,17 @@ services:
               }
           - name: request-transformer
             config: { replace: { uri: /api/auth/login } }
+          - name: rate-limiting
+            consumer: anonymousConsumer
+            config:
+              minute: 5
+              policy: local
 
-      - name: auth-sign-up
-        paths: [/auth-service/api/auth/sign-up]
+      - name: auth-register
+        paths: [/auth-service/api/auth/register]
         strip_path: false
         regex_priority: 100
+        tags: [auth]
         plugins:
           - name: jwt
             config:
@@ -94,29 +102,29 @@ services:
                 uri_param_names: [jwt],
               }
           - name: request-transformer
-            config: { replace: { uri: /api/auth/sign-up } }
+            config: { replace: { uri: /api/auth/register } }
 
       - name: auth-service-catchall
         paths: [/auth-service]
         strip_path: true
         regex_priority: 1
         tags: [auth]
-        # không gắn plugin riêng -> dùng plugin jwt global -> bắt buộc JWT hợp lệ
+        # not set plugins because use jwt global
 
   - name: user-service
-    enabled: true
+    enabled: true # jwt
     host: user-service # đổi đúng tên container/host thật
     port: 3301
     path: /
     protocol: http
     connect_timeout: 60000
-    read_timeout: 60000
+    read_timeout: 60000 # max 60s, if > 60s -> 504 Gateway Timeout
     write_timeout: 60000
-    retries: 5
+    retries: 5 # retry 5 if request failed
     routes:
       - name: user-service-catchall
         paths: [/user-service]
         strip_path: true
         regex_priority: 0
         tags: [user-service]
-        # không gắn plugin riêng -> dùng plugin jwt global -> bắt buộc JWT hợp lệ
+        # not set plugins because use jwt global
