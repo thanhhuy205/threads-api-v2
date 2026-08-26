@@ -1,7 +1,7 @@
 import { ConflictException, NotFoundException } from '@/errors/error';
 import { USER_SERVICE, type UserService } from '@user-service/modules/user/service/user.service';
 import { Inject, Injectable } from '@nestjs/common';
-import type { Position, Prisma } from '../../../../../generated/prisma';
+import type { Position, Prisma } from 'apps/user-service/generated/prisma';
 import {
   USER_TEAM_REPOSITORY,
   type UserTeamRepository,

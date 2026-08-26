@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Position } from '../../../../../generated/prisma';
+import { Position } from 'apps/user-service/generated/prisma';
 import { IsEnum, IsOptional, IsString, MinLength } from 'class-validator';
 
 export class AddUserTeamDto {

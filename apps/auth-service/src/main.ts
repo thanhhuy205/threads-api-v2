@@ -1,9 +1,19 @@
+import { APP_CONFIG } from '@auth-service/config/app.config';
 import { NestFactory } from '@nestjs/core';
-import { AuthServiceModule } from './auth-service.module';
+import requestId from 'express-request-id';
+import helmet from 'helmet';
+import { AppModule } from './auth-service.module';
+async function bootstrap() {
+  // const logger = WinstonModule.createLogger(getWinstonConfig(appName, nodeEnv));
+  const app = await NestFactory.create(AppModule);
 
-async function main() {
-  const app = await NestFactory.create(AuthServiceModule);
-  await app.listen(process.env.AUTH_SERVICE_PORT ?? 3003);
+  app.use(helmet());
+  app.enableCors();
+  app.use(requestId());
+
+
+  await app.init();
+  await app.listen(APP_CONFIG.AUTH_SERVICE_PORT);
 }
 
-void main();
+void bootstrap();

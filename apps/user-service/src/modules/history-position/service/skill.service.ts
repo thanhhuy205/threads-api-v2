@@ -1,4 +1,4 @@
-import type { Prisma, Skill } from '../../../../generated/prisma';
+import type { Prisma, Skill } from 'apps/user-service/generated/prisma';
 
 export const SKILL_SERVICE = Symbol('SKILL_SERVICE');
 

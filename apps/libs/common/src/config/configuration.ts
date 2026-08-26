@@ -9,12 +9,15 @@ import { BaseConfiguration } from './base.config';
 import { DatabaseConfiguration } from './database.config';
 import { GroqConfiguration } from './groq.config';
 import { JwtConfiguration } from './jwt.config';
+import { KafkaConfiguration } from './kafka.config';
 import { LeonardoConfiguration } from './leonardo.config';
 import { NodemailerConfiguration } from './nodemailer.config';
 import { OpenRouterConfiguration } from './openrouter.config';
 import { PusherConfiguration } from './pusher.config';
 import { R2Configuration } from './r2.config';
+import { RabbitMqConfiguration } from './rabbitmq.config';
 import { RedisConfiguration } from './redis.config';
+import { TcpConfiguration } from './tcp.config';
 
 export class Configuration extends BaseConfiguration {
   private readonly logger = new Logger(Configuration.name, { timestamp: true });
@@ -58,6 +61,18 @@ export class Configuration extends BaseConfiguration {
   @ValidateNested()
   @Type(() => GroqConfiguration)
   GROQ_CONFIG = new GroqConfiguration();
+
+  @ValidateNested()
+  @Type(() => RabbitMqConfiguration)
+  RABBITMQ_CONFIG = new RabbitMqConfiguration();
+
+  @ValidateNested()
+  @Type(() => TcpConfiguration)
+  TCP_CONFIG = new TcpConfiguration();
+
+  @ValidateNested()
+  @Type(() => KafkaConfiguration)
+  KAFKA_CONFIG = new KafkaConfiguration();
 
   validate(): this {
     const errors = validateSync(this, { validationError: { target: false } });

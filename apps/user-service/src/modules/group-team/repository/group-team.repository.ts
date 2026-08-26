@@ -1,4 +1,4 @@
-import type { Prisma } from '../../../../generated/prisma';
+import type { Prisma } from 'apps/user-service/generated/prisma';
 
 export const GROUP_TEAM_REPOSITORY = Symbol('GROUP_TEAM_REPOSITORY');
 export type CreateGroupTeamPayload = { name: string; createdById: string };

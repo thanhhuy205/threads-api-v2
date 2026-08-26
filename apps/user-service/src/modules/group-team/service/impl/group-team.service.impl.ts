@@ -8,7 +8,7 @@ import { ABILITY_SERVICE, type AbilityService } from '@auth-service/modules/abil
 import { TransactionService } from '@user-service/transaction/transaction.service';
 import { PERMISSIONS } from '@libs/common/src/constants/permission.constant';
 import { Inject, Injectable } from '@nestjs/common';
-import type { Position } from '../../../../../generated/prisma';
+import type { Position } from 'apps/user-service/generated/prisma';
 import {
   GROUP_TEAM_REPOSITORY,
   type GroupTeamRepository,

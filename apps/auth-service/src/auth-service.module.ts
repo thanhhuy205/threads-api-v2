@@ -1,20 +1,25 @@
 import { AccessTokenGuard } from '@/common/guards/access-token.guard';
 import { configurationFactory } from '@/config/configuration';
-import { RedisModule } from '@libs/cache/redis.module';
+import { JobModule } from '@api/modules/job/job.module';
 import { DatabaseModule } from '@api/shared/database';
 import { JwtModule } from '@api/shared/jwt/jwt.module';
+import { RedisModule } from '@libs/cache/redis.module';
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
-import { AdminModule } from './modules/admin/admin.module';
+import { validate } from './config/app.config';
 import { AbilityModule } from './modules/ability/ability.module';
+import { AdminModule } from './modules/admin/admin.module';
 import { AuthModule } from './modules/auth/auth.module';
-import { JobModule } from '@api/modules/job/job.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true, cache: true, load: [configurationFactory] }),
+    ConfigModule.forRoot({
+      isGlobal: true, cache: true,
+      validate,
+      load: [configurationFactory]
+    }),
     BullModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -35,4 +40,4 @@ import { JobModule } from '@api/modules/job/job.module';
   ],
   providers: [{ provide: APP_GUARD, useClass: AccessTokenGuard }],
 })
-export class AuthServiceModule {}
+export class AppModule { }

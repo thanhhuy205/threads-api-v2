@@ -1,8 +1,7 @@
 import { AccessTokenGuard } from '@/common/guards/access-token.guard';
 import { configurationFactory } from '@/config/configuration';
-import { RedisModule } from '@libs/cache/redis.module';
-import { PrismaModule } from './prisma/prisma.module';
 import { JwtModule } from '@api/shared/jwt/jwt.module';
+import { RedisModule } from '@libs/cache/redis.module';
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -10,6 +9,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { GroupTeamModule } from './modules/group-team/group-team.module';
 import { HistoryPositionModule } from './modules/history-position/history-position.module';
 import { UserModule } from './modules/user/user.module';
+import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
   imports: [
@@ -33,4 +33,4 @@ import { UserModule } from './modules/user/user.module';
   ],
   providers: [{ provide: APP_GUARD, useClass: AccessTokenGuard }],
 })
-export class UserServiceModule {}
+export class AppModule { }

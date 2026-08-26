@@ -1,6 +1,6 @@
 import { PrismaService } from '@user-service/prisma/prisma.service';
 import { Injectable } from '@nestjs/common';
-import type { Prisma } from '../../../../../generated/prisma';
+import type { Prisma } from 'apps/user-service/generated/prisma';
 import {
   type CreateHistoryPositionPayload,
   type HistoryPositionRepository,

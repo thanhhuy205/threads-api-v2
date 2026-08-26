@@ -1,4 +1,4 @@
-import type { Position, Prisma } from '../../../../generated/prisma';
+import type { Position, Prisma } from 'apps/user-service/generated/prisma';
 
 export const USER_TEAM_SERVICE = Symbol('USER_TEAM_SERVICE');
 

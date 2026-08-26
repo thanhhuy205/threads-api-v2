@@ -13,6 +13,7 @@
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.1.28",
     "@nestjs/jwt": "^11.0.2",
+    "@nestjs/microservices": "^11.2.3",
     "@nestjs/platform-express": "^11.1.28",
     "@nestjs/swagger": "^11.4.6",
     "@prisma/adapter-mariadb": "7.8.0",
