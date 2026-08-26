@@ -1,7 +1,7 @@
 import configService from '@/config/config';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '@/shared/database/prisma.service';
-import type { Prisma, VerificationCodeType } from '../../../../../generated/prisma';
+import type { Prisma, VerificationCodeType } from "apps/auth-service/generated/prisma";
 import ms, { StringValue } from 'ms';
 import type { VerificationRepository } from '../verification.repository';
 

@@ -1,6 +1,6 @@
 import { PrismaService } from '@/shared/database/prisma.service';
 import { Injectable } from '@nestjs/common';
-import type { PermissionScope } from '../../../../../generated/prisma';
+import type { PermissionScope } from "apps/auth-service/generated/prisma";
 import type { AbilityRepository } from '../ability.repository';
 
 @Injectable()

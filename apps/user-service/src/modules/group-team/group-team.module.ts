@@ -1,4 +1,4 @@
-import { TransactionModule } from '@/shared/transaction/transaction.module';
+import { TransactionModule } from '@user-service/transaction/transaction.module';
 import { Module } from '@nestjs/common';
 import { UserModule } from '@user-service/modules/user/user.module';
 import { AbilityModule } from '@auth-service/modules/ability/ability.module';

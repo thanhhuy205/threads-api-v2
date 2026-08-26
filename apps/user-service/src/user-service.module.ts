@@ -1,7 +1,7 @@
 import { AccessTokenGuard } from '@/common/guards/access-token.guard';
 import { configurationFactory } from '@/config/configuration';
 import { RedisModule } from '@libs/cache/redis.module';
-import { DatabaseModule } from '@api/shared/database';
+import { PrismaModule } from './prisma/prisma.module';
 import { JwtModule } from '@api/shared/jwt/jwt.module';
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
@@ -24,7 +24,7 @@ import { UserModule } from './modules/user/user.module';
         },
       }),
     }),
-    DatabaseModule,
+    PrismaModule,
     RedisModule,
     JwtModule,
     UserModule,

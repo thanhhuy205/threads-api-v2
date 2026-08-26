@@ -4,7 +4,7 @@ import { ResponseOperation } from "@/common/decorators/http-message-operration.d
 import { IsPublic } from "@/common/decorators/is-public.decorator";
 import { Message } from "@/common/decorators/message.decorator";
 import { ApiCursorPaginatedResponse } from "@/common/decorators/swagger-response.decorator";
-import type { CursorPagination as CursorPaginationParams } from "@/common/helpers/cursor-pagination.helper";
+import type { CursorPagination as CursorPaginationParams } from "@/common/dto/pagination.dto";
 import { NotFoundException } from "@/errors/error";
 import { USER_SERVICE, type UserService } from "@user-service/modules/user/service/user.service";
 import { JwtService } from "@api/shared/jwt/service/jwt.service";

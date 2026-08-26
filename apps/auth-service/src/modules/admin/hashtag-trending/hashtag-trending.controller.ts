@@ -3,7 +3,7 @@ import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagg
 import { Message } from '@/common/decorators/message.decorator';
 import { Pagination } from '@/common/decorators/pagination.decorator';
 import { ApiOffsetPaginatedResponse } from '@/common/decorators/swagger-response.decorator';
-import type { OffsetPagination } from '@/common/helpers/offset-pagination.helper';
+import type { OffsetPagination } from '@/common/dto/pagination.dto';
 import { AdminRoleGuard } from '../guards/admin-role.guard';
 import { TrendingHashtagQueryDto } from "./dto/request/trending-hashtag.query.dto";
 import { HashtagTrendingService } from "./hashtag-trending.service";

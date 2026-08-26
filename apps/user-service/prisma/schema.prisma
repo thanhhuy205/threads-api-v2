@@ -3,11 +3,39 @@ generator client {
   output   = "../generated/prisma"
 }
 
-datasource db { provider = "mysql" }
+datasource db {
+  provider = "mysql"
+}
 
-enum UserStatus { ACTIVE SUSPENDED BANNED DEACTIVATED }
-enum Position { SOFTWARE_ENGINEER SENIOR_SOFTWARE_ENGINEER INTERN_SOFTWARE_ENGINEER TECH_LEAD DATA_SCIENTIST PRODUCT_MANAGER DESIGNER HR MARKETING_SPECIALIST SALES_REPRESENTATIVE CUSTOMER_SUPPORT CONTENT_CREATOR BUSINESS_ANALYST CTO CEO FOUNDER OTHER }
-enum PermissionScope { WORKSPACE GROUP }
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  BANNED
+  DEACTIVATED
+}
+enum Position {
+  SOFTWARE_ENGINEER
+  SENIOR_SOFTWARE_ENGINEER
+  INTERN_SOFTWARE_ENGINEER
+  TECH_LEAD
+  DATA_SCIENTIST
+  PRODUCT_MANAGER
+  DESIGNER
+  HR
+  MARKETING_SPECIALIST
+  SALES_REPRESENTATIVE
+  CUSTOMER_SUPPORT
+  CONTENT_CREATOR
+  BUSINESS_ANALYST
+  CTO
+  CEO
+  FOUNDER
+  OTHER
+}
+enum PermissionScope {
+  WORKSPACE
+  GROUP
+}
 
 model User {
   id String @id @default(nanoid())
@@ -25,6 +53,7 @@ model User {
   deletedAt DateTime? @map("deleted_at")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+  userPositions UserPosition[]
   @@index([email], map: "idx_users_email")
   @@index([name], map: "idx_users_name")
   @@index([username], map: "idx_users_username")
@@ -38,6 +67,8 @@ model UserPosition {
   userId String @map("user_id")
   positionPermissionId Int @map("position_permission_id")
   position Position @default(OTHER)
+  user User @relation(fields: [userId], references: [id])
+  positionPermission PositionPermission @relation(fields: [positionPermissionId], references: [id])
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
   @@unique([userId, positionPermissionId], map: "uq_user_positions_user_id_position_permission_id")
@@ -51,12 +82,21 @@ model PositionPermission {
   position Position
   permissionId String @map("permission_id")
   scope PermissionScope @default(WORKSPACE)
+  permission Permission @relation(fields: [permissionId], references: [id])
+  userPositions UserPosition[]
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
   @@unique([position, permissionId, scope], map: "uq_position_permissions_position_permission_scope")
   @@index([permissionId], map: "idx_position_permissions_permission_id")
   @@index([position, scope], map: "idx_position_permissions_position_scope")
   @@map("position_permissions")
+}
+
+model Permission {
+  id String @id
+  code String @unique @db.VarChar(100)
+  positionPermissions PositionPermission[]
+  @@map("permissions")
 }
 
 model HistoryPosition {
@@ -67,6 +107,7 @@ model HistoryPosition {
   details String? @db.Text
   verifyByUserId String? @map("verify_by_user_id")
   verifiedAt DateTime? @map("verified_at")
+  historyPositionSkills HistoryPositionSkill[]
   createdAt DateTime @default(now()) @map("created_at")
   @@index([userId], map: "idx_history_positions_user_id")
   @@map("history_positions")
@@ -75,6 +116,8 @@ model HistoryPosition {
 model HistoryPositionSkill {
   historyPositionId Int @map("history_position_id")
   skillId Int @map("skill_id")
+  historyPosition HistoryPosition @relation(fields: [historyPositionId], references: [id])
+  skill Skill @relation(fields: [skillId], references: [id])
   @@id([historyPositionId, skillId])
   @@index([skillId], map: "idx_history_position_skills_skill_id")
   @@map("history_position_skills")
@@ -85,6 +128,7 @@ model Skill {
   name String @unique @db.VarChar(100)
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+  historyPositionSkills HistoryPositionSkill[]
   @@index([name], map: "idx_skills_name")
   @@map("skills")
 }

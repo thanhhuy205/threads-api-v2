@@ -1,15 +1,5 @@
 import { MAX_LIMIT, PER_PAGE } from '@libs/core/constants/pagination';
-
-export type CursorPagination = {
-  after: string | null;
-  take: number;
-};
-
-export type CursorPaginationMeta = {
-  after: string | null;
-  take: number;
-  hasMore: boolean;
-};
+import type { CursorPagination } from '../dto/pagination.dto';
 
 export function normalizeCursorPagination(input: {
   after?: string | number;

@@ -1,4 +1,4 @@
-import type { Prisma, UserRole } from '../../../../generated/prisma';
+import type { Prisma, UserRole } from "apps/auth-service/generated/prisma";
 
 export const USER_ROLE_REPOSITORY = Symbol('USER_ROLE_REPOSITORY');
 

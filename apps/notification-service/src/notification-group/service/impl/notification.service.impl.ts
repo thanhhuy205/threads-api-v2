@@ -1,4 +1,5 @@
-import { buildCursorPagination, type CursorPaginationMeta } from '@/common/helpers/cursor-pagination.helper';
+import { buildCursorPagination } from '@/common/helpers/cursor-pagination.helper';
+import type { CursorPaginationMeta } from '@/common/dto/pagination.dto';
 import { PusherService } from '@notification-service/pusher/service/pusher.service';
 import { USER_SERVICE, type UserService } from '@user-service/modules/user/service/user.service';
 import { RedisService } from "@libs/cache/redis.service";

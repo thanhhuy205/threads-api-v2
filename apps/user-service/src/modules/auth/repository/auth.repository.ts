@@ -1,9 +1,8 @@
-import type { Prisma } from '../../../../generated/prisma';
-import type { RegisterDto } from '../dto/request/register.request.dto';
+import type { Prisma } from 'apps/api/generated/prisma';
 
 export const AUTH_REPOSITORY = Symbol('AUTH_REPOSITORY');
 
-const authSessionUserSelect = {
+export const authSessionUserSelect = {
   id: true,
   email: true,
   username: true,
@@ -15,7 +14,8 @@ const authSessionUserSelect = {
   createdAt: true,
   password: true,
 } as const;
-const refreshTokenSelect = {
+
+export const refreshTokenSelect = {
   id: true,
   userId: true,
   token: true,
@@ -29,9 +29,17 @@ const refreshTokenSelect = {
 export type AuthSessionUser = Prisma.UserGetPayload<{
   select: typeof authSessionUserSelect;
 }>;
+
 export type RefreshTokenRecord = Prisma.RefreshTokenGetPayload<{
   select: typeof refreshTokenSelect;
 }>;
+
+export type CreateAuthUserPayload = {
+  email: string;
+  username: string;
+  password: string;
+};
+
 export type CreateRefreshTokenPayload = {
   userId: string;
   token: string;
@@ -42,7 +50,7 @@ export type CreateRefreshTokenPayload = {
 };
 
 export interface AuthRepository {
-  createUser(payload: RegisterDto): Promise<AuthSessionUser>;
+  createUser(payload: CreateAuthUserPayload): Promise<AuthSessionUser>;
   findUserByLogin(login: string): Promise<AuthSessionUser | null>;
   createRefreshToken(payload: CreateRefreshTokenPayload): Promise<void>;
   findRefreshTokenByToken(token: string): Promise<RefreshTokenRecord | null>;

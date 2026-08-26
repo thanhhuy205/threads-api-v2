@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { normalizeOffsetPagination } from '@/common/helpers/offset-pagination.helper';
-import { Prisma } from "../../../../generated/prisma";
+import { Prisma } from "apps/auth-service/generated/prisma";
 import { PrismaService } from '@/shared/database/prisma.service';
 import type { GetTrendingHashtagsInput } from "./interfaces/get-trending-hashtags.input";
 

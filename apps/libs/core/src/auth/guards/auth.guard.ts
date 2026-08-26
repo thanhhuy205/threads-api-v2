@@ -22,11 +22,11 @@ export class AppAuthGuard extends AuthGuard('gateway-auth') {
         const isGrand = await super.canActivate(context);
         return !!isGrand;
     }
-    // override handleRequest(err: any, user: any, info: any) {
-    //     if (err || !user) {
-    //         throw err || new ServerException(ERROR_RESPONSE.UNAUTHORIZED);
-    //     }
+    override handleRequest(err: any, user: any, info: any) {
+        if (err || !user) {
+            throw err || new ServerException(ERROR_RESPONSE.UNAUTHORIZED);
+        }
 
-    //     return user;
-    // }
+        return user;
+    }
 }

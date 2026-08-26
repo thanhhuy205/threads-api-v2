@@ -1,4 +1,4 @@
-import type { CursorPaginationMeta } from '@/common/helpers/cursor-pagination.helper';
+import type { CursorPaginationMeta } from '@/common/dto/pagination.dto';
 import type { MentionNotification, ReplyNotification } from '../events/notification.events';
 import type {
   CreateNotificationGroupInput,

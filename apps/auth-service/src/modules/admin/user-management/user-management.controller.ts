@@ -1,10 +1,13 @@
+/*
+ * Legacy user-management endpoints. This responsibility has moved to user-service.
+ *
 import { GetUserId } from '@/common/decorators/get-user-id.decorator';
 import { Controller, Get, HttpCode, HttpStatus, Param, Patch, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Message } from '@/common/decorators/message.decorator';
 import { Pagination } from '@/common/decorators/pagination.decorator';
 import { ApiOffsetPaginatedResponse } from '@/common/decorators/swagger-response.decorator';
-import type { OffsetPagination } from '@/common/helpers/offset-pagination.helper';
+import type { OffsetPagination } from '@/common/dto/pagination.dto';
 import { AdminRoleGuard } from '../guards/admin-role.guard';
 import { ListUsersQueryDto } from "./dto/request/list-users.query.dto";
 import { UserManagementService } from "./user-management.service";
@@ -60,3 +63,4 @@ export class UserManagementController {
     });
   }
 }
+*/

@@ -1,4 +1,4 @@
-import { TransactionModule } from '@/shared/transaction/transaction.module';
+import { TransactionModule } from '@user-service/transaction/transaction.module';
 import { Module } from '@nestjs/common';
 import { HistoryPositionSkillController } from './controller/history-position-skill.controller';
 import { HistoryPositionController } from './controller/history-position.controller';

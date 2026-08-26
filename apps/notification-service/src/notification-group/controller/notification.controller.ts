@@ -2,7 +2,7 @@ import { GetUserId } from '@/common/decorators/get-user-id.decorator';
 import { Message } from '@/common/decorators/message.decorator';
 import { CursorPagination } from '@/common/decorators/cursor-pagination.decorator';
 import { ApiCursorPaginatedResponse } from '@/common/decorators/swagger-response.decorator';
-import type { CursorPagination as CursorPaginationParams } from '@/common/helpers/cursor-pagination.helper';
+import type { CursorPagination as CursorPaginationParams } from '@/common/dto/pagination.dto';
 import { Controller, Get, HttpCode, HttpStatus, Inject, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { NotificationQueryDto } from '../dto/request/notification.query.dto';

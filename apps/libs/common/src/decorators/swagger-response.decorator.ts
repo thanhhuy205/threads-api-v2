@@ -1,20 +1,6 @@
 import { applyDecorators, HttpStatus, Type } from '@nestjs/common';
-import { ApiExtraModels, ApiProperty, ApiResponse, getSchemaPath } from '@nestjs/swagger';
-
-export class OffsetPaginationMetaDto {
-  @ApiProperty({ example: 1 }) currentPage!: number;
-  @ApiProperty({ example: 10 }) perPage!: number;
-  @ApiProperty({ example: 42 }) total!: number;
-  @ApiProperty({ example: 5 }) lastPage!: number;
-  @ApiProperty({ example: 1 }) from!: number;
-  @ApiProperty({ example: 10 }) to!: number;
-}
-
-export class CursorPaginationMetaDto {
-  @ApiProperty({ example: 10 }) take!: number;
-  @ApiProperty({ nullable: true, example: 'post_01J...' }) after!: string | null;
-  @ApiProperty({ example: true }) hasMore!: boolean;
-}
+import { ApiExtraModels, ApiResponse, getSchemaPath } from '@nestjs/swagger';
+import { CursorPaginationMetaDto, OffsetPaginationMetaDto } from '../dto/pagination.dto';
 
 type SwaggerResponseOptions = {
   description: string;

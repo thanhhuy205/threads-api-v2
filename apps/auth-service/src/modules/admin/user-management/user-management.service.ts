@@ -1,6 +1,9 @@
+/*
+ * Legacy user-management service. This responsibility has moved to user-service.
+ *
 import type { BanUserUnlimitedInput } from "@auth-service/modules/admin/user-management/interfaces/ban-unlimited.input";
 import { buildOffsetPaginationResponse } from '@/common/helpers/offset-pagination.helper';
-import { UserStatus } from "../../../../generated/prisma";
+import { UserStatus } from "apps/auth-service/generated/prisma";
 import type { GetAdminUsersInput } from "./interfaces/get-admin-users.input";
 import { Injectable } from '@nestjs/common';
 import { UserManagementRepository } from "./user-management.repository";
@@ -67,3 +70,4 @@ export class UserManagementService {
     };
   }
 }
+*/

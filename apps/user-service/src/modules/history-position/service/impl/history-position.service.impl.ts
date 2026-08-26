@@ -1,5 +1,5 @@
 import { BadRequestException } from '@/errors/error';
-import { TransactionService } from '@/shared/transaction/transaction.service';
+import { TransactionService } from '@user-service/transaction/transaction.service';
 import { Inject, Injectable } from '@nestjs/common';
 import {
   HISTORY_POSITION_REPOSITORY,

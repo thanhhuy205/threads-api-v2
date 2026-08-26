@@ -1,9 +1,9 @@
-import { bootstrapHttpService } from '@/bootstrap/http-service.bootstrap';
+import { NestFactory } from '@nestjs/core';
 import { AuthServiceModule } from './auth-service.module';
 
-void bootstrapHttpService(AuthServiceModule, {
-  title: 'Threads Auth Service',
-  description: 'Authentication, authorization, and administration API',
-  portEnvironmentVariable: 'AUTH_SERVICE_PORT',
-  defaultPort: 3003,
-});
+async function main() {
+  const app = await NestFactory.create(AuthServiceModule);
+  await app.listen(process.env.AUTH_SERVICE_PORT ?? 3003);
+}
+
+void main();

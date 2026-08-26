@@ -22,7 +22,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { EmailProducer } from "@notification-service/jobs/email/producer/email.producer";
 import crypto from "crypto";
 import ms, { StringValue } from "ms";
-import { UserRoleType, VerificationCodeType } from "../../../../../generated/prisma";
+import { UserRoleType, VerificationCodeType } from "apps/auth-service/generated/prisma";
 import type { ForgotPasswordDto } from "../../dto/request/forgot-password.request.dto";
 import type { LoginDto } from "../../dto/request/login.request.dto";
 import type { LogoutDto } from "../../dto/request/logout.request.dto";
@@ -42,7 +42,7 @@ import type { ForgotPasswordResponseDto } from "../../dto/response/forgot-passwo
 import type { UpdateProfileDataDto } from "../../dto/response/update-profile.response.dto";
 import type { ValidateTokenResponseDto } from "../../dto/response/validate-token.response.dto";
 import type { ValidateUserResponseDto } from "../../dto/response/validate-user.response.dto";
-import { AUTH_REPOSITORY, type AuthRepository } from "../../repository/auth.repository";
+import { AUTH_REPOSITORY, type AuthRepository } from '@user-service/modules/auth/repository/auth.repository';
 import type { AuthService } from '../auth.service';
 
 @Injectable()

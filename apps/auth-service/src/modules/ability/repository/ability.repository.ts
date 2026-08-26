@@ -1,4 +1,4 @@
-import type { PermissionScope } from '../../../../generated/prisma';
+import type { PermissionScope } from "apps/auth-service/generated/prisma";
 
 export const ABILITY_REPOSITORY = Symbol('ABILITY_REPOSITORY');
 

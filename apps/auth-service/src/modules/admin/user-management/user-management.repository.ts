@@ -1,6 +1,9 @@
+/*
+ * Legacy direct User Prisma access. This responsibility has moved to user-service.
+ *
 import { Injectable } from '@nestjs/common';
 import { normalizeOffsetPagination } from '@/common/helpers/offset-pagination.helper';
-import { Prisma, UserStatus } from "../../../../generated/prisma";
+import { Prisma, UserStatus } from "apps/auth-service/generated/prisma";
 import { PrismaService } from '@/shared/database/prisma.service';
 import type { GetAdminUsersInput } from "./interfaces/get-admin-users.input";
 
@@ -115,3 +118,4 @@ export class UserManagementRepository {
   }
 
 }
+*/
