@@ -1,5 +1,5 @@
 import { IS_PUBLIC_KEY } from '@libs/common/src/decorators/is-public.decorator';
-import { ExecutionContext } from '@nestjs/common';
+import { ExecutionContext, InternalServerErrorException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
 export class AppAuthGuard extends AuthGuard('gateway-auth') {
@@ -24,7 +24,7 @@ export class AppAuthGuard extends AuthGuard('gateway-auth') {
     }
     override handleRequest(err: any, user: any, info: any) {
         if (err || !user) {
-            throw err || new ServerException(ERROR_RESPONSE.UNAUTHORIZED);
+            throw err || new InternalServerErrorException('Unauthorized');
         }
 
         return user;

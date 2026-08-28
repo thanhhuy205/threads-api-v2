@@ -19,10 +19,12 @@ enum PermissionScope {
 }
 
 model Role {
-  id        String   @id @default(nanoid())
-  name      String   @unique @db.VarChar(20)
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id          String           @id @default(nanoid())
+  name        String           @unique @db.VarChar(20)
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+  permissions RolePermission[]
+  userRoles   UserRole[]
 
   @@index([name], map: "idx_roles_name")
   @@map("roles")
@@ -34,6 +36,8 @@ model UserRole {
   userId    String   @map("user_id")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+
+  role Role @relation(fields: [roleId], references: [id])
 
   @@index([userId], map: "idx_user_roles_user_id")
   @@index([roleId], map: "idx_user_roles_role_id")
@@ -57,6 +61,7 @@ model RolePermission {
   permissionId String   @map("permission_id")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
+  role         Role     @relation(fields: [roleId], references: [id])
 
   @@index([roleId], map: "idx_role_permissions_role_id")
   @@index([permissionId], map: "idx_role_permissions_permission_id")

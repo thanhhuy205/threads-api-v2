@@ -33,6 +33,11 @@ plugins:
         headers:
           - "X-JWT-CLAIMS: $(jwt_claims)"
 
+  - name: auth-context
+    instance_name: auth_context_jwt
+    enabled: true
+    protocols: [grpc, grpcs, http, https]
+
 services:
   - name: auth-service
     enabled: true

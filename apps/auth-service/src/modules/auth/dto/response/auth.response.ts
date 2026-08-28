@@ -1,6 +1,6 @@
-import type { UserProfile } from '@user-service/modules/user/repository/user.repository';
 import { TokenPairResponse } from '@api/shared/jwt/dto/response/token-pair.response';
 import type { AuthSessionUser } from '@user-service/modules/auth/repository/auth.repository';
+import type { UserProfile } from '@user-service/modules/user/repository/user.repository';
 
 export type AuthSessionResponseDto = {
     user: Pick<AuthSessionUser, 'email' | 'username' | 'name' | 'bio' | 'avatar'>

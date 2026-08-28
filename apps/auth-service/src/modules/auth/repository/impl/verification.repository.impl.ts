@@ -1,6 +1,6 @@
 import configService from '@/config/config';
+import { PrismaService } from '@auth-service/prisma/prisma.service';
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@/shared/database/prisma.service';
 import type { Prisma, VerificationCodeType } from "apps/auth-service/generated/prisma";
 import ms, { StringValue } from 'ms';
 import type { VerificationRepository } from '../verification.repository';
@@ -15,7 +15,7 @@ export type VerificationCodeRecord = Prisma.VerificationCodeGetPayload<Record<st
 
 @Injectable()
 export class VerificationRepositoryImpl implements VerificationRepository {
-    constructor(private readonly prisma: PrismaService) {}
+    constructor(private readonly prisma: PrismaService) { }
 
     async create(payload: CreateVerificationCodePayload): Promise<VerificationCodeRecord> {
         const verificationCode = await this.prisma.verificationCode.create({

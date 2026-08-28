@@ -9,7 +9,6 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { validate } from './config/app.config';
-import { AbilityModule } from './modules/ability/ability.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { AuthModule } from './modules/auth/auth.module';
 
@@ -34,7 +33,6 @@ import { AuthModule } from './modules/auth/auth.module';
     RedisModule,
     JwtModule,
     JobModule,
-    AbilityModule,
     AdminModule,
     AuthModule,
   ],

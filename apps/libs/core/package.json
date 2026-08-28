@@ -11,6 +11,7 @@
     "@workspace/common": "workspace:*",
     "bullmq": "^5.81.3",
     "groq-sdk": "^1.5.0",
+    "passport-custom": "^1.2.1",
     "pusher": "^5.3.4",
     "redis": "^5.12.1"
   }

@@ -1,7 +1,5 @@
 import configService from "@/config/config";
 import { NotFoundException } from "@/errors/error";
-import { ROLE_SERVICE, type RoleService } from "@auth-service/modules/ability/service/role.service";
-import { USER_ROLE_SERVICE, type UserRoleService } from "@auth-service/modules/ability/service/user-role.service";
 import type { SessionMetadata } from "@auth-service/modules/auth/interfaces/session-metadata";
 import {
   VERIFICATION_REPOSITORY,
@@ -12,17 +10,15 @@ import {
   hashPassword,
 } from "@auth-service/modules/auth/util/hasher-password";
 import { hasherToken } from "@auth-service/modules/auth/util/hasher-token";
-import { BloomProducer } from "@api/modules/job/bloom/producer/bloom.producer";
-import { USER_SERVICE, type UserService } from "@user-service/modules/user/service/user.service";
-import { TokenPairResponse } from "@api/shared/jwt/dto/response/token-pair.response";
-import { JwtService } from "@api/shared/jwt/service/jwt.service";
 import { RedisService } from "@libs/cache/redis.service";
 import { redisKey } from "@libs/core/constants/redis-key";
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { EmailProducer } from "@notification-service/jobs/email/producer/email.producer";
+import { AUTH_REPOSITORY, type AuthRepository } from '@user-service/modules/auth/repository/auth.repository';
+import { USER_SERVICE, type UserService } from "@user-service/modules/user/service/user.service";
+import { VerificationCodeType } from "apps/auth-service/generated/prisma";
 import crypto from "crypto";
 import ms, { StringValue } from "ms";
-import { UserRoleType, VerificationCodeType } from "apps/auth-service/generated/prisma";
 import type { ForgotPasswordDto } from "../../dto/request/forgot-password.request.dto";
 import type { LoginDto } from "../../dto/request/login.request.dto";
 import type { LogoutDto } from "../../dto/request/logout.request.dto";
@@ -42,8 +38,8 @@ import type { ForgotPasswordResponseDto } from "../../dto/response/forgot-passwo
 import type { UpdateProfileDataDto } from "../../dto/response/update-profile.response.dto";
 import type { ValidateTokenResponseDto } from "../../dto/response/validate-token.response.dto";
 import type { ValidateUserResponseDto } from "../../dto/response/validate-user.response.dto";
-import { AUTH_REPOSITORY, type AuthRepository } from '@user-service/modules/auth/repository/auth.repository';
 import type { AuthService } from '../auth.service';
+import { TokenPairResponse } from '@api/shared/jwt/dto/response/token-pair.response';
 
 @Injectable()
 export class AuthServiceImpl implements AuthService {
@@ -54,8 +50,6 @@ export class AuthServiceImpl implements AuthService {
     @Inject(VERIFICATION_REPOSITORY)
     private readonly verificationRepository: VerificationRepository,
     private readonly jwtService: JwtService,
-    @Inject(ROLE_SERVICE) private readonly roleService: RoleService,
-    @Inject(USER_ROLE_SERVICE) private readonly userRoleService: UserRoleService,
     @Inject(USER_SERVICE) private readonly userService: UserService,
     private readonly bloomProducer: BloomProducer,
     private readonly emailProducer: EmailProducer,
@@ -69,15 +63,10 @@ export class AuthServiceImpl implements AuthService {
     const password = hashPassword(payload.password);
     const user = await this.authRepository.createUser({ ...payload, password });
 
-    const role = await this.roleService.findByName(UserRoleType.USER);
-    if (role) {
-      await this.userRoleService.assignRoleToUser(user.id, role.id);
-    }
-
     const tokenPair = await this.jwtService.generateTokenPair({
       userId: user.id,
       status: user.status,
-      roles: [UserRoleType.USER],
+      roles: [],
     });
 
     await Promise.all([
@@ -152,13 +141,10 @@ export class AuthServiceImpl implements AuthService {
       return null;
     }
 
-    const userRoles = await this.userRoleService.findByUserId(user.id);
-    const roles = userRoles.map((ur) => ur.role.name as UserRoleType);
-
     const tokenPair = await this.jwtService.generateTokenPair({
       userId: user.id,
       status: user.status,
-      roles: roles,
+      roles: [],
     });
 
     await this.createRefreshToken(
@@ -329,14 +315,11 @@ export class AuthServiceImpl implements AuthService {
 
     await this.authRepository.revokeRefreshTokenById(refreshToken.id, now);
 
-    const userRoles = await this.userRoleService.findByUserId(user.id);
-    const roles = userRoles.map((ur) => ur.role.name as UserRoleType);
-
     const tokenPair = await this.jwtService.generateTokenPair({
       userId: refreshToken.userId,
       sessionId: refreshToken.sessionId,
       status: user.status,
-      roles: roles,
+      roles: [],
     });
 
     this.logger.log(`Generated new token pair for user ${user.id}
