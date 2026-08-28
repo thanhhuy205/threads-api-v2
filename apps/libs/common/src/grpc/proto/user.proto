@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package user;
+
+service UserService {
+  rpc GetUser(GetUserRequest)
+      returns (UserResponse);
+
+  rpc GetUserByEmail(GetUserByEmailRequest)
+      returns (UserResponse);
+
+  rpc FindExistingIds(FindExistingIdsRequest)
+      returns (FindExistingIdsResponse);
+}
+
+message GetUserRequest {
+  string id = 1;
+}
+
+message GetUserByEmailRequest {
+  string email = 1;
+}
+
+message FindExistingIdsRequest {
+  repeated string user_ids = 1;
+}
+
+message FindExistingIdsResponse {
+  repeated string user_ids = 1;
+}
+
+message UserResponse {
+  string id = 1;
+  string email = 2;
+  string username = 3;
+  string name = 4;
+  string role = 5;
+  bool is_active = 6;
+}
