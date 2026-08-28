@@ -1,7 +1,7 @@
 import { ConflictException } from "@/errors/error";
 import { TransactionService } from "@/shared/transaction/transaction.service";
-import { RedisService } from "@libs/cache/redis.service";
 import { redisKey } from "@libs/core/constants/redis-key";
+import { RedisService } from "@libs/core/src/redis/redis.service";
 import { Inject, Injectable } from '@nestjs/common';
 import { VOTE_REPOSITORY, type VoteRepository } from "../../repository/vote.repository";
 import { POLL_SERVICE, type PollService } from "../poll.service";

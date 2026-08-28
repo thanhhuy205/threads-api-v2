@@ -2,7 +2,7 @@ import { APP_CONFIG } from '@auth-service/config/app.config';
 import { NestFactory } from '@nestjs/core';
 import requestId from 'express-request-id';
 import helmet from 'helmet';
-import { AppModule } from './auth-service.module';
+import { AppModule } from './app.module';
 async function bootstrap() {
   // const logger = WinstonModule.createLogger(getWinstonConfig(appName, nodeEnv));
   const app = await NestFactory.create(AppModule);

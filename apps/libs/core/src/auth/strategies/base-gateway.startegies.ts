@@ -3,6 +3,7 @@ import type {
     TokenPayload,
     UserRequestPayload,
 } from '@libs/common/src/interfaces/auth.interface';
+import type { HttpRequest } from '@libs/common/src/types/http.type';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-custom';
@@ -16,12 +17,25 @@ export abstract class BaseGatewayAuthStrategy extends PassportStrategy(
         super();
     }
 
-    async validate(req: Request): Promise<UserRequestPayload> {
-        const { headers } = req;
-        const authUserHeader = headers.get('x-jwt-claims') as string;
+    async validate(req: HttpRequest): Promise<UserRequestPayload> {
+        const authUserHeader = req.headers['x-jwt-claims'];
         if (!authUserHeader) throw new UnauthorizedException('Unauthorized');
-        const authUser: TokenPayload = JSON.parse(authUserHeader);
+
+        let authUser: TokenPayload;
+        try {
+            authUser = JSON.parse(
+                Array.isArray(authUserHeader) ? authUserHeader[0] : authUserHeader,
+            ) as TokenPayload;
+        } catch {
+            throw new UnauthorizedException('Unauthorized');
+        }
+
         if (!authUser?.id) throw new UnauthorizedException('Unauthorized');
+
+        const authorization = req.headers.authorization;
+        if (typeof authorization === 'string') {
+            req.accessToken = authorization.split(' ')[1];
+        }
 
         // // Check valid token in Redis
         // const userTokenKey = this.redisService.getUserTokenKey(authUser.id, authUser.jti);

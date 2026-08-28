@@ -1,3 +1,6 @@
+import { RedisVersionService } from '@/shared/redis-version';
+import { RedisService } from '@libs/core/src/redis/redis.service';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import {
   buildNewFeedWhere,
   buildPostListNamespace,
@@ -10,9 +13,6 @@ import { PostMapper } from "@post-service/modules/post/mapper/post.mapper";
 import type { GetPostWithPublicIdCommand } from '../../command/get-post-with-public-id.command';
 import type { GetPostWithUserCommand } from '../../command/get-post-with-user.command';
 import type { NewsFeedCommand } from '../../command/news-feed.command';
-import { RedisVersionService } from '@/shared/redis-version';
-import { RedisService } from '@libs/cache/redis.service';
-import { Inject, Injectable, Logger } from '@nestjs/common';
 import { POST_REPOSITORY, type PostRepository } from "../../repository/post.repository";
 import type { PostFeedService } from '../post-feed.service';
 

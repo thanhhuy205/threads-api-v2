@@ -1,3 +1,4 @@
+import { registerAs } from '@nestjs/config';
 import { IsOptional, IsString } from 'class-validator';
 
 export class RabbitMqConfiguration {
@@ -6,5 +7,5 @@ export class RabbitMqConfiguration {
   RABBITMQ_URLS = process.env.RABBITMQ_URLS;
 }
 
-export const RABBITMQ_CONFIG = new RabbitMqConfiguration();
 
+export const rabbitmqConfiguration = registerAs('rabbitmq', () => ({}));

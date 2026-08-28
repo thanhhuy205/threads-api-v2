@@ -1,3 +1,4 @@
+import { registerAs } from '@nestjs/config';
 import { IsBoolean, IsIn, IsInt, IsOptional, IsString, Min } from 'class-validator';
 
 const numberFromEnv = (value: string | undefined, defaultValue: number): number =>
@@ -30,3 +31,4 @@ export class KafkaConfiguration {
   KAFKA_SASL_PASSWORD = process.env.KAFKA_SASL_PASSWORD || 'secret';
 }
 
+export const kafkaConfiguration = registerAs('kafka', () => ({}));

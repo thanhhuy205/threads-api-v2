@@ -1,5 +1,5 @@
 import { IS_PUBLIC_KEY } from '@libs/common/src/decorators/is-public.decorator';
-import { ExecutionContext, InternalServerErrorException } from '@nestjs/common';
+import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
 export class AppAuthGuard extends AuthGuard('gateway-auth') {
@@ -19,12 +19,12 @@ export class AppAuthGuard extends AuthGuard('gateway-auth') {
         }
 
         // Only validate token - no authorization logic
-        const isGrand = await super.canActivate(context);
-        return !!isGrand;
+        const isGranted = await super.canActivate(context);
+        return !!isGranted;
     }
     override handleRequest(err: any, user: any, info: any) {
         if (err || !user) {
-            throw err || new InternalServerErrorException('Unauthorized');
+            throw err || new UnauthorizedException('Unauthorized');
         }
 
         return user;

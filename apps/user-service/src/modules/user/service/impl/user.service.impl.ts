@@ -1,7 +1,7 @@
-import { USER_REPOSITORY, type UserRepository } from "@user-service/modules/user/repository/user.repository";
-import { RedisService } from "@libs/cache/redis.service";
 import { redisKey } from "@libs/core/constants/redis-key";
+import { RedisService } from "@libs/core/src/redis/redis.service";
 import { Inject, Injectable } from '@nestjs/common';
+import { USER_REPOSITORY, type UserRepository } from "@user-service/modules/user/repository/user.repository";
 import { Prisma } from 'apps/user-service/generated/prisma';
 import type { UpdateProfileDto } from "../../dto/request/update-profile.request.dto";
 import { mapUserProfileForFE } from "../../mapper/user.mapper";

@@ -1,7 +1,7 @@
 import { CreateBloomUserProducer } from '@api/modules/job/bloom/dto/create-bloom-user.dto';
-import { RedisService } from '@libs/cache/redis.service';
 import { BLOOM_JOB_NAME, QUEUE_NAME } from "@libs/core/constants/queue";
 import { redisKey } from "@libs/core/constants/redis-key";
+import { RedisService } from '@libs/core/src/redis/redis.service';
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import { Job } from 'bullmq';

@@ -1,8 +1,9 @@
-import { AccessTokenGuard } from '@/common/guards/access-token.guard';
 import { configurationFactory } from '@/config/configuration';
-import { RedisModule } from '@libs/cache/redis.module';
 import { DatabaseModule } from '@api/shared/database';
 import { JwtModule } from '@api/shared/jwt/jwt.module';
+import { AppAuthGuard } from '@libs/core/src/auth/guards/auth.guard';
+import { GrpcGatewayAuthStrategy } from '@libs/core/src/auth/strategies/grpc-gate.startegies';
+import { RedisModule } from '@libs/core/src/redis/redis.module';
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -27,6 +28,9 @@ import { SearchModule } from './modules/search/search.module';
     JwtModule,
     SearchModule,
   ],
-  providers: [{ provide: APP_GUARD, useClass: AccessTokenGuard }],
+  providers: [
+    GrpcGatewayAuthStrategy,
+    { provide: APP_GUARD, useClass: AppAuthGuard },
+  ],
 })
-export class SearchServiceModule {}
+export class SearchServiceModule { }

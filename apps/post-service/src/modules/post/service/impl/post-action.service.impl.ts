@@ -4,11 +4,11 @@ import {
   ForbiddenException,
   NotFoundException,
 } from "@/errors/error";
-import { ABILITY_SERVICE, type AbilityService } from '@auth-service/modules/ability/service/ability.service';
 import { RedisVersionService } from '@/shared/redis-version';
-import { RedisService } from "@libs/cache/redis.service";
+import { ABILITY_SERVICE, type AbilityService } from '@auth-service/modules/ability/service/ability.service';
 import { PERMISSIONS } from '@libs/common/src/constants/permission.constant';
 import { redisKey } from "@libs/core/constants/redis-key";
+import { RedisService } from "@libs/core/src/redis/redis.service";
 import { Inject, Injectable } from '@nestjs/common';
 import {
   InteractionType,

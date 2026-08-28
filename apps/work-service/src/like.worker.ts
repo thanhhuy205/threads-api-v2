@@ -1,9 +1,9 @@
-import { POST_REPOSITORY, type PostRepository } from "@post-service/modules/post/repository/post.repository";
-import { LIKE_SERVICE, type LikeService } from "@post-service/modules/post/service/like.service";
-import { RedisService } from "@libs/cache/redis.service";
 import { LIKE_JOB_NAME, QUEUE_NAME } from "@libs/core/constants/queue";
+import { RedisService } from "@libs/core/src/redis/redis.service";
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Inject, Logger } from '@nestjs/common';
+import { POST_REPOSITORY, type PostRepository } from "@post-service/modules/post/repository/post.repository";
+import { LIKE_SERVICE, type LikeService } from "@post-service/modules/post/service/like.service";
 import { Job } from 'bullmq';
 
 type LikeEvent = {

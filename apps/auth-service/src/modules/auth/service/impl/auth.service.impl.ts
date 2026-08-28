@@ -10,10 +10,11 @@ import {
   hashPassword,
 } from "@auth-service/modules/auth/util/hasher-password";
 import { hasherToken } from "@auth-service/modules/auth/util/hasher-token";
-import { RedisService } from "@libs/cache/redis.service";
 import { redisKey } from "@libs/core/constants/redis-key";
+import { RedisService } from "@libs/core/src/redis/redis.service";
+import { JWT_ISSUER, JwtTokenType } from "@libs/common/src/enums/jwt.enum";
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { EmailProducer } from "@notification-service/jobs/email/producer/email.producer";
+import { JwtService } from "@nestjs/jwt";
 import { AUTH_REPOSITORY, type AuthRepository } from '@user-service/modules/auth/repository/auth.repository';
 import { USER_SERVICE, type UserService } from "@user-service/modules/user/service/user.service";
 import { VerificationCodeType } from "apps/auth-service/generated/prisma";
@@ -36,10 +37,10 @@ import {
 } from "../../dto/response/auth.response";
 import type { ForgotPasswordResponseDto } from "../../dto/response/forgot-password.response.dto";
 import type { UpdateProfileDataDto } from "../../dto/response/update-profile.response.dto";
+import type { TokenPairResponse } from "../../dto/response/token-pair.response";
 import type { ValidateTokenResponseDto } from "../../dto/response/validate-token.response.dto";
 import type { ValidateUserResponseDto } from "../../dto/response/validate-user.response.dto";
 import type { AuthService } from '../auth.service';
-import { TokenPairResponse } from '@api/shared/jwt/dto/response/token-pair.response';
 
 @Injectable()
 export class AuthServiceImpl implements AuthService {
@@ -49,10 +50,10 @@ export class AuthServiceImpl implements AuthService {
     @Inject(AUTH_REPOSITORY) private readonly authRepository: AuthRepository,
     @Inject(VERIFICATION_REPOSITORY)
     private readonly verificationRepository: VerificationRepository,
-    private readonly jwtService: JwtService,
     @Inject(USER_SERVICE) private readonly userService: UserService,
-    private readonly bloomProducer: BloomProducer,
-    private readonly emailProducer: EmailProducer,
+    private readonly jwtService: JwtService,
+    // private readonly bloomProducer: BloomProducer,
+    // private readonly emailProducer: EmailProducer,
     private readonly redisService: RedisService,
   ) { }
 
@@ -63,8 +64,9 @@ export class AuthServiceImpl implements AuthService {
     const password = hashPassword(payload.password);
     const user = await this.authRepository.createUser({ ...payload, password });
 
-    const tokenPair = await this.jwtService.generateTokenPair({
+    const tokenPair = await this.generateTokenPair({
       userId: user.id,
+      email: user.email,
       status: user.status,
       roles: [],
     });
@@ -76,10 +78,10 @@ export class AuthServiceImpl implements AuthService {
         tokenPair.sessionId,
         metadata,
       ),
-      this.bloomProducer.addUserNameAndEmailToBloom({
-        email: user.email,
-        userName: user.username,
-      }),
+      // this.bloomProducer.addUserNameAndEmailToBloom({
+      //   email: user.email,
+      //   userName: user.username,
+      // }),
     ]);
 
     return authResponse.toResponse({
@@ -141,8 +143,9 @@ export class AuthServiceImpl implements AuthService {
       return null;
     }
 
-    const tokenPair = await this.jwtService.generateTokenPair({
+    const tokenPair = await this.generateTokenPair({
       userId: user.id,
+      email: user.email,
       status: user.status,
       roles: [],
     });
@@ -315,8 +318,9 @@ export class AuthServiceImpl implements AuthService {
 
     await this.authRepository.revokeRefreshTokenById(refreshToken.id, now);
 
-    const tokenPair = await this.jwtService.generateTokenPair({
+    const tokenPair = await this.generateTokenPair({
       userId: refreshToken.userId,
+      email: user.email,
       sessionId: refreshToken.sessionId,
       status: user.status,
       roles: [],
@@ -396,5 +400,43 @@ export class AuthServiceImpl implements AuthService {
     });
 
     return createdRefreshToken;
+  }
+
+  private async generateTokenPair({
+    userId,
+    email,
+    status,
+    roles,
+    sessionId = crypto.randomUUID(),
+  }: {
+    userId: string;
+    email: string;
+    status: string;
+    roles: string[];
+    sessionId?: string;
+  }): Promise<TokenPairResponse> {
+    const jti = crypto.randomUUID();
+
+    const [accessToken, refreshToken] = await Promise.all([
+      this.jwtService.signAsync(
+        {
+          sub: userId,
+          email,
+          type: JwtTokenType.AccessToken,
+          role: roles,
+          jti,
+          key: JWT_ISSUER,
+          status,
+          sid: sessionId,
+        },
+        {
+          issuer: JWT_ISSUER,
+          expiresIn: configService.JWT_CONFIG.ACCESS_EXPIRES as StringValue,
+        },
+      ),
+      Promise.resolve(crypto.randomBytes(64).toString("hex")),
+    ]);
+
+    return { accessToken, refreshToken, sessionId };
   }
 }

@@ -5,9 +5,9 @@ export interface TokenPayload {
   id: string;
   email: string;
   jti: string;
-  role?: Role;
+  role?: Role | Role[];
   type: JwtTokenType;
-  iss: string;
+  iss?: string;
   key: string;
 }
 
@@ -15,6 +15,6 @@ export interface UserRequestPayload {
   id: string;
   jti: string;
   email: string;
-  role?: Role;
+  role?: Role | Role[];
   emailVerified?: boolean;
 }

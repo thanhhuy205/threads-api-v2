@@ -25,3 +25,4 @@ export class TcpConfiguration {
 }
 
 
+export const tcpConfiguration = registerAs('tcp', () => ({}));

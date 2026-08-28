@@ -1,4 +1,4 @@
-import type { JwtPayload } from 'jsonwebtoken';
+import type { UserRequestPayload } from '../interfaces/auth.interface';
 
 export type HttpHeaders = Record<string, string | string[] | undefined>;
 
@@ -8,7 +8,7 @@ export interface HttpRequest {
   headers: HttpHeaders;
   query: HttpQuery;
   ip?: string;
-  user?: JwtPayload;
+  user?: UserRequestPayload;
   accessToken?: string;
   refreshToken?: string;
 }

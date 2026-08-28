@@ -1,7 +1,7 @@
 import { GetUserId } from '@/common/decorators/get-user-id.decorator';
 import { IsPublic } from '@/common/decorators/is-public.decorator';
 import { Message } from '@/common/decorators/message.decorator';
-import { RefreshTokenHeaderGuard } from '@/common/guards/refresh-token-header.guard';
+import { RefreshTokenStrategy } from '@auth-service/security/refresh-token.strategy';
 import type { HttpRequest as Request } from '@/common/types/http.type';
 import configService from '@/config/config';
 import {
@@ -98,7 +98,7 @@ export class AuthController {
   @Post('refresh-token')
   @IsPublic()
   @HttpCode(HttpStatus.OK)
-  @UseGuards(RefreshTokenHeaderGuard)
+  @UseGuards(RefreshTokenStrategy)
   @Message(AUTH_MESSAGE.REFRESH_TOKEN_SUCCESS)
   @ApiHeader({ name: 'x-refresh-token', required: true, description: 'Valid refresh token' })
   @ApiOperation({ summary: 'Refresh an access token' })
@@ -133,7 +133,7 @@ export class AuthController {
 
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  @UseGuards(RefreshTokenHeaderGuard)
+  @UseGuards(RefreshTokenStrategy)
   @Message(AUTH_MESSAGE.LOGOUT_SUCCESS)
   @ApiBearerAuth('bearer')
   @ApiHeader({ name: 'x-refresh-token', required: true, description: 'Refresh token to revoke' })

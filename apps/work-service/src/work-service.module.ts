@@ -1,20 +1,20 @@
-import { CronModule } from '@work-service/cron/schedule-overview.module';
+import { DatabaseModule } from '@api/shared/database';
+import { configurationFactory } from '@libs/core/config/config';
+import { QUEUE_NAME } from '@libs/core/constants/queue';
+import { RedisModule } from '@libs/core/src/redis/redis.module';
+import { BullModule } from '@nestjs/bullmq';
+import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { LikeRepositoryImpl } from '@post-service/modules/post/repository/impl/like.repository.impl';
 import { PostRepositoryImpl } from '@post-service/modules/post/repository/impl/post.repository.impl';
 import { LIKE_REPOSITORY } from '@post-service/modules/post/repository/like.repository';
 import { POST_REPOSITORY } from '@post-service/modules/post/repository/post.repository';
 import { LikeServiceImpl } from '@post-service/modules/post/service/impl/like.service.impl';
 import { LIKE_SERVICE } from '@post-service/modules/post/service/like.service';
-import { PostMediaRepository } from '@upload/repository/post-media.repository';
-import { RedisModule } from '@libs/cache/redis.module';
-import { configurationFactory } from '@libs/core/config/config';
-import { QUEUE_NAME } from '@libs/core/constants/queue';
-import { DatabaseModule } from '@api/shared/database';
 import { UploadDatabaseModule } from '@upload-service/database/database.module';
 import { CloudflareModule } from '@upload-service/storage/cloudflare.module';
-import { BullModule } from '@nestjs/bullmq';
-import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { PostMediaRepository } from '@upload/repository/post-media.repository';
+import { CronModule } from '@work-service/cron/schedule-overview.module';
 import { BloomWorker } from './bloom.worker';
 import { HlsWorker } from './hls.worker';
 import { LikeWorker } from './like.worker';
@@ -56,4 +56,4 @@ import { LikeWorker } from './like.worker';
     { provide: LIKE_SERVICE, useClass: LikeServiceImpl },
   ],
 })
-export class WorkServiceModule {}
+export class WorkServiceModule { }

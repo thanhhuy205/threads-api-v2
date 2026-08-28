@@ -6,7 +6,7 @@ import type { HttpRequest } from '../types/http.type';
 export const GetUserId = createParamDecorator(
   (_data: unknown, context: ExecutionContext): string => {
     const request = context.switchToHttp().getRequest<HttpRequest>();
-    const userId = request.user?.sub;
+    const userId = request.user?.id;
 
     if (!userId) {
       throw new UnauthorizedException(AUTH_MESSAGE.TOKEN_INVALID);
