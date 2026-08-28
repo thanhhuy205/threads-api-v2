@@ -10,9 +10,9 @@ import {
   hashPassword,
 } from "@auth-service/modules/auth/util/hasher-password";
 import { hasherToken } from "@auth-service/modules/auth/util/hasher-token";
+import { JWT_ISSUER, JwtTokenType } from "@libs/common/src/enums/jwt.enum";
 import { redisKey } from "@libs/core/constants/redis-key";
 import { RedisService } from "@libs/core/src/redis/redis.service";
-import { JWT_ISSUER, JwtTokenType } from "@libs/common/src/enums/jwt.enum";
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { JwtService } from "@nestjs/jwt";
 import { AUTH_REPOSITORY, type AuthRepository } from '@user-service/modules/auth/repository/auth.repository';
@@ -36,8 +36,8 @@ import {
   AuthSessionResponseDto,
 } from "../../dto/response/auth.response";
 import type { ForgotPasswordResponseDto } from "../../dto/response/forgot-password.response.dto";
-import type { UpdateProfileDataDto } from "../../dto/response/update-profile.response.dto";
 import type { TokenPairResponse } from "../../dto/response/token-pair.response";
+import type { UpdateProfileDataDto } from "../../dto/response/update-profile.response.dto";
 import type { ValidateTokenResponseDto } from "../../dto/response/validate-token.response.dto";
 import type { ValidateUserResponseDto } from "../../dto/response/validate-user.response.dto";
 import type { AuthService } from '../auth.service';
@@ -103,11 +103,11 @@ export class AuthServiceImpl implements AuthService {
     const hashedToken = hasherToken(token);
 
     await Promise.all([
-      this.emailProducer.sendForgotPasswordEmail({
-        userId: user.id,
-        email: user.email,
-        token,
-      }),
+      // this.emailProducer.sendForgotPasswordEmail({
+      //   userId: user.id,
+      //   email: user.email,
+      //   token,
+      // }),
 
       this.verificationRepository.create({
         userId: user.id,
@@ -190,12 +190,12 @@ export class AuthServiceImpl implements AuthService {
     const hashedToken = hasherToken(token);
 
     await Promise.all([
-      this.emailProducer.sendVerifyEmail({
-        userName: user.username,
-        email: user.email,
-        token,
-        originUrl
-      }),
+      // this.emailProducer.sendVerifyEmail({
+      //   userName: user.username,
+      //   email: user.email,
+      //   token,
+      //   originUrl
+      // }),
       this.verificationRepository.create({
         userId: user.id,
         tokenHash: hashedToken,
