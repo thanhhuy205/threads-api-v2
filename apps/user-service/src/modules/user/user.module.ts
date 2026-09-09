@@ -1,4 +1,3 @@
-import { JwtModule } from '@api/shared/jwt/jwt.module';
 import { Module } from '@nestjs/common';
 import { AuthRepositoryModule } from '../auth/auth-repository.module';
 import { UserController } from './controller/user.controller';
@@ -9,7 +8,7 @@ import { UserServiceImpl } from './service/impl/user.service.impl';
 import { USER_SERVICE } from './service/user.service';
 
 @Module({
-  imports: [JwtModule, AuthRepositoryModule],
+  imports: [AuthRepositoryModule],
   controllers: [UserController, UsersController],
   providers: [
     { provide: USER_REPOSITORY, useClass: UserRepositoryImpl },

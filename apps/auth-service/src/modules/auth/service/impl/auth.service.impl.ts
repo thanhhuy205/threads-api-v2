@@ -17,6 +17,10 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { JwtService } from "@nestjs/jwt";
 import { AUTH_REPOSITORY, type AuthRepository } from '@user-service/modules/auth/repository/auth.repository';
 import { USER_SERVICE, type UserService } from "@user-service/modules/user/service/user.service";
+import {
+  REFRESH_TOKEN_REPOSITORY,
+  type RefreshTokenRepository,
+} from '@auth-service/modules/auth/repository/refresh-token.repository';
 import { VerificationCodeType } from "apps/auth-service/generated/prisma";
 import crypto from "crypto";
 import ms, { StringValue } from "ms";
@@ -48,6 +52,8 @@ export class AuthServiceImpl implements AuthService {
 
   constructor(
     @Inject(AUTH_REPOSITORY) private readonly authRepository: AuthRepository,
+    @Inject(REFRESH_TOKEN_REPOSITORY)
+    private readonly refreshTokenRepository: RefreshTokenRepository,
     @Inject(VERIFICATION_REPOSITORY)
     private readonly verificationRepository: VerificationRepository,
     @Inject(USER_SERVICE) private readonly userService: UserService,
@@ -296,7 +302,7 @@ export class AuthServiceImpl implements AuthService {
   ): Promise<TokenPairResponse | null> {
     const hashedToken = hasherToken(payload.refreshToken);
     const refreshToken =
-      await this.authRepository.findRefreshTokenByToken(hashedToken);
+      await this.refreshTokenRepository.findByToken(hashedToken);
 
     this.logger.log(`Attempting to refresh token with provided refresh token. Found refresh token record: ${JSON.stringify(refreshToken)}`);
     if (!refreshToken || refreshToken.revokedAt) {
@@ -305,7 +311,7 @@ export class AuthServiceImpl implements AuthService {
 
     const now = new Date();
     if (refreshToken.expireAt < now) {
-      await this.authRepository.revokeRefreshTokenById(refreshToken.id, now);
+      await this.refreshTokenRepository.revokeById(refreshToken.id, now);
       this.logger.log(`Refresh token with id ${refreshToken.id} has expired and been revoked.`);
       return null;
     }
@@ -316,7 +322,7 @@ export class AuthServiceImpl implements AuthService {
       return null;
     }
 
-    await this.authRepository.revokeRefreshTokenById(refreshToken.id, now);
+    await this.refreshTokenRepository.revokeById(refreshToken.id, now);
 
     const tokenPair = await this.generateTokenPair({
       userId: refreshToken.userId,
@@ -376,9 +382,9 @@ export class AuthServiceImpl implements AuthService {
 
     const hashedToken = hasherToken(payload.refreshToken);
     const refreshToken =
-      await this.authRepository.findRefreshTokenByToken(hashedToken);
+      await this.refreshTokenRepository.findByToken(hashedToken);
     if (refreshToken) {
-      await this.authRepository.revokeRefreshTokenById(refreshToken.id, new Date());
+      await this.refreshTokenRepository.revokeById(refreshToken.id, new Date());
     }
   }
 
@@ -388,7 +394,7 @@ export class AuthServiceImpl implements AuthService {
     sessionId: string,
     metadata: SessionMetadata,
   ) {
-    const createdRefreshToken = await this.authRepository.createRefreshToken({
+    const createdRefreshToken = await this.refreshTokenRepository.create({
       userId: userId,
       token: hasherToken(refreshToken),
       sessionId: sessionId,

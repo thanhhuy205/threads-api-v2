@@ -1,13 +1,10 @@
-import { PrismaService } from '@api/shared/database/prisma.service';
+import { PrismaService } from '@user-service/prisma/prisma.service';
 import { Injectable } from '@nestjs/common';
 import {
   authSessionUserSelect,
   type AuthRepository,
   type AuthSessionUser,
   type CreateAuthUserPayload,
-  type CreateRefreshTokenPayload,
-  type RefreshTokenRecord,
-  refreshTokenSelect,
 } from '../auth.repository';
 
 @Injectable()
@@ -32,26 +29,6 @@ export class AuthRepositoryImpl implements AuthRepository {
         OR: [{ email: login }, { username: login }],
       },
       select: authSessionUserSelect,
-    });
-  }
-
-  async createRefreshToken(payload: CreateRefreshTokenPayload): Promise<void> {
-    await this.prisma.refreshToken.create({
-      data: payload,
-    });
-  }
-
-  async findRefreshTokenByToken(token: string): Promise<RefreshTokenRecord | null> {
-    return this.prisma.refreshToken.findUnique({
-      where: { token },
-      select: refreshTokenSelect,
-    });
-  }
-
-  async revokeRefreshTokenById(id: number, revokedAt: Date): Promise<void> {
-    await this.prisma.refreshToken.update({
-      where: { id },
-      data: { revokedAt },
     });
   }
 

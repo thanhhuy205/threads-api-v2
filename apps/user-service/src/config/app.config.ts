@@ -17,8 +17,8 @@ export class AppConfig {
 
     constructor() {
         this.MICROSERVICE_NAME = MicroserviceName.UserService;
-        this.USER_SERVICE_HOST = process.env['USER_SERVICE_HOST'] ?? 'localhost';
-        this.USER_SERVICE_PORT = Number(process.env['USER_SERVICE_PORT'] ?? 3006);
+        this.USER_SERVICE_HOST = process.env['USER_SERVICE_HOST'] ?? '0.0.0.0';
+        this.USER_SERVICE_PORT = Number(process.env['USER_SERVICE_PORT'] ?? 3301);
     }
 }
 

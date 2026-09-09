@@ -1,7 +1,8 @@
-import { Body, Controller, HttpStatus, Inject, Patch } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { GetUserId } from '@/common/decorators/get-user-id.decorator';
 import { Message } from '@/common/decorators/message.decorator';
+import { Body, Controller, HttpStatus, Inject, Patch } from '@nestjs/common';
+import { GrpcMethod } from '@nestjs/microservices';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UpdateProfileDto } from '../dto/request/update-profile.request.dto';
 import { USER_SERVICE, type UserService } from '../service/user.service';
 
@@ -9,7 +10,7 @@ import { USER_SERVICE, type UserService } from '../service/user.service';
 @ApiBearerAuth('bearer')
 @Controller('me')
 export class UserController {
-  constructor(@Inject(USER_SERVICE) private readonly userService: UserService) {}
+  constructor(@Inject(USER_SERVICE) private readonly userService: UserService) { }
 
   @Patch('profile')
   @Message('Profile updated successfully')
@@ -20,5 +21,10 @@ export class UserController {
     @GetUserId() userId: string,
   ) {
     return this.userService.updateProfile(userId, payload);
+  }
+
+  @GrpcMethod('UserService', 'GetUserByEmail')
+  async getUserByEmail(data: { email: string }) {
+    return this.userService.findUserByEmail(data.email);
   }
 }

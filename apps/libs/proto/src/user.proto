@@ -3,14 +3,9 @@ syntax = "proto3";
 package user;
 
 service UserService {
-  rpc GetUser(GetUserRequest)
-      returns (UserResponse);
-
-  rpc GetUserByEmail(GetUserByEmailRequest)
-      returns (UserResponse);
-
-  rpc FindExistingIds(FindExistingIdsRequest)
-      returns (FindExistingIdsResponse);
+  rpc GetUser(GetUserRequest) returns (UserResponse);
+  rpc GetUserByEmail(GetUserByEmailRequest) returns (UserResponse);
+  rpc FindExistingIds(FindExistingIdsRequest) returns (FindExistingIdsResponse);
 }
 
 message GetUserRequest {

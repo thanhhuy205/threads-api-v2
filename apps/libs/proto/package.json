@@ -1,0 +1,11 @@
+{
+  "name": "@purse-board/proto",
+  "version": "1.0.0",
+  "private": true,
+  "files": [
+    "src"
+  ],
+  "exports": {
+    "./user.proto": "./src/user.proto"
+  }
+}

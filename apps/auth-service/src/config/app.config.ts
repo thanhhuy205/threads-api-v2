@@ -17,8 +17,8 @@ export class AppConfig {
 
     constructor() {
         this.MICROSERVICE_NAME = MicroserviceName.AuthService;
-        this.AUTH_SERVICE_HOST = process.env['AUTH_SERVICE_HOST'] ?? 'localhost';
-        this.AUTH_SERVICE_PORT = Number(process.env['AUTH_SERVICE_PORT'] ?? 3003);
+        this.AUTH_SERVICE_HOST = process.env['AUTH_SERVICE_HOST'] ?? '0.0.0.0';
+        this.AUTH_SERVICE_PORT = Number(process.env['AUTH_SERVICE_PORT'] ?? 3300);
     }
 }
 

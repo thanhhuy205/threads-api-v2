@@ -4,9 +4,16 @@ consumers:
   - custom_id: auth-service
     username: auth-service
     jwt_secrets:
+      # `key` must equal the `iss` claim auth-service signs tokens with
+      # (JWT_ISSUER in apps/libs/common/src/enums/jwt.enum.ts), because the jwt
+      # plugin uses key_claim_name: iss to look the consumer up.
+      #
+      # {vault://env/...} is a Kong vault reference, resolved at runtime. Plain
+      # ${JWT_SECRET} is NOT interpolated by Kong and would be used literally.
+      # Requires KONG_VAULTS=env (set in docker-compose.provider.yaml).
       - algorithm: HS256
-      - key: auth-service
-      - secret: ${JWT_SECRET}
+        key: auth-service
+        secret: "{vault://env/kong-jwt-secret}"
   - custom_id: anonymousConsumer
     username: anonymousConsumer
 
@@ -24,14 +31,10 @@ plugins:
       secret_is_base64: false # secret is base64 encoded or not
       uri_param_names: [jwt] # accept jwt in query string, e.g. /path?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
-  - name: request-transformer
-    instance_name: transform_jwt_claims
-    enabled: true
-    protocols: [grpc, grpcs, http, https]
-    config:
-      add:
-        headers:
-          - "X-JWT-CLAIMS: $(jwt_claims)"
+  # NOTE: the `auth-context` plugin below is what actually sets X-JWT-CLAIMS.
+  # A global request-transformer using "$(jwt_claims)" used to live here — that
+  # is not a valid Kong template variable, and it fought the Lua plugin for the
+  # same header, so it was removed.
 
   - name: auth-context
     instance_name: auth_context_jwt
@@ -50,26 +53,22 @@ services:
     write_timeout: 60000
     retries: 5
     routes:
-      - name: auth-swagger
-        paths: [/auth-service/swagger]
-        strip_path: false
-        regex_priority: 100
-        tags: [auth]
-        plugins:
-          - name: jwt
-            config:
-              {
-                anonymous: anonymousConsumer,
-                claims_to_verify: [exp],
-                header_names: [authorization],
-                key_claim_name: iss,
-                uri_param_names: [jwt],
-              }
-          - name: request-transformer
-            config: { replace: { uri: /swagger } }
-
+      # Public routes are declared explicitly so they can re-declare `jwt` with
+      # an anonymous consumer (a request with no token still reaches the app,
+      # which then decides via @IsPublic()).
+      #
+      # Paths below match the real controllers: @Controller('auth') with
+      # @Post('login') => /auth/login. There is no setGlobalPrefix('api') in
+      # the app, so no /api segment. There is also no SwaggerModule.setup(),
+      # so the former /auth-service/swagger route was removed.
+      #
+      # IMPORTANT — why strip_path: false here but true on the catchall:
+      # strip_path removes the WHOLE matched prefix. These routes match the full
+      # path, so strip_path: true would leave the upstream with "/" instead of
+      # "/auth/login". Hence strip_path: false + an explicit rewrite. The
+      # catchall only matches "/auth-service", so stripping there is correct.
       - name: auth-login
-        paths: [/auth-service/api/auth/login]
+        paths: [/auth-service/auth/login]
         strip_path: false
         regex_priority: 100
         tags: [auth]
@@ -84,15 +83,14 @@ services:
                 uri_param_names: [jwt],
               }
           - name: request-transformer
-            config: { replace: { uri: /api/auth/login } }
+            config: { replace: { uri: /auth/login } }
           - name: rate-limiting
-            consumer: anonymousConsumer
             config:
               minute: 5
               policy: local
 
       - name: auth-register
-        paths: [/auth-service/api/auth/register]
+        paths: [/auth-service/auth/register]
         strip_path: false
         regex_priority: 100
         tags: [auth]
@@ -107,7 +105,7 @@ services:
                 uri_param_names: [jwt],
               }
           - name: request-transformer
-            config: { replace: { uri: /api/auth/register } }
+            config: { replace: { uri: /auth/register } }
 
       - name: auth-service-catchall
         paths: [/auth-service]

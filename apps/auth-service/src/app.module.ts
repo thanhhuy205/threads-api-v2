@@ -11,6 +11,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
 import { validate } from './config/app.config';
 import { AuthModule } from './modules/auth/auth.module';
+import { PrismaModule } from './prisma/prisma.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -45,6 +46,7 @@ import { AuthModule } from './modules/auth/auth.module';
 
       inject: [jwtConfiguration.KEY],
     }),
+    PrismaModule,
     RedisModule,
     AuthModule,
   ],

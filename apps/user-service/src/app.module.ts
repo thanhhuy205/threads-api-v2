@@ -1,5 +1,4 @@
 import { configurationFactory } from '@/config/configuration';
-import { JwtModule } from '@api/shared/jwt/jwt.module';
 import { AppAuthGuard } from '@libs/core/src/auth/guards/auth.guard';
 import { GrpcGatewayAuthStrategy } from '@libs/core/src/auth/strategies/grpc-gate.startegies';
 import { RedisModule } from '@libs/core/src/redis/redis.module';
@@ -11,10 +10,11 @@ import { GroupTeamModule } from './modules/group-team/group-team.module';
 import { HistoryPositionModule } from './modules/history-position/history-position.module';
 import { UserModule } from './modules/user/user.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { validate } from './config/app.config';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true, cache: true, load: [configurationFactory] }),
+    ConfigModule.forRoot({ isGlobal: true, cache: true, validate, load: [configurationFactory] }),
     BullModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -27,7 +27,6 @@ import { PrismaModule } from './prisma/prisma.module';
     }),
     PrismaModule,
     RedisModule,
-    JwtModule,
     UserModule,
     HistoryPositionModule,
     GroupTeamModule,

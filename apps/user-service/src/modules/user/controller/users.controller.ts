@@ -1,11 +1,10 @@
+import { GetOptionalUserId } from '@/common/decorators/get-optional-user-id.decorator';
 import { GetUserId } from '@/common/decorators/get-user-id.decorator';
 import { IsPublic } from '@/common/decorators/is-public.decorator';
 import { Message } from '@/common/decorators/message.decorator';
-import type { HttpRequest as Request } from '@/common/types/http.type';
 import { NotFoundException } from '@/errors/error';
-import { JwtService } from '@api/shared/jwt/service/jwt.service';
 import { USER_MESSAGE } from '@libs/core/constants/message';
-import { Controller, Get, Inject, Param, Query, Req } from '@nestjs/common';
+import { Controller, Get, Inject, Param, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UserNameMentionQueryDto, UsernameParamsDto } from '../dto/request';
 import { USER_SERVICE, type UserService } from '../service/user.service';
@@ -15,7 +14,6 @@ import { USER_SERVICE, type UserService } from '../service/user.service';
 export class UsersController {
   constructor(
     @Inject(USER_SERVICE) private readonly userService: UserService,
-    private readonly jwtService: JwtService,
   ) { }
 
   @Get('mention')
@@ -49,9 +47,8 @@ export class UsersController {
   @ApiOperation({ summary: 'Get a user profile by username' })
   @ApiResponse({ status: 200, description: USER_MESSAGE.GET_USER_SUCCESS })
   @ApiResponse({ status: 404, description: USER_MESSAGE.USER_NOT_FOUND })
-  async getByUsername(@Param() params: UsernameParamsDto, @Req() request: Request) {
-    const userId = await this.jwtService.requestAuthToken(request);
-    const user = await this.userService.findByUsername(params.username, userId ?? undefined);
+  async getByUsername(@Param() params: UsernameParamsDto, @GetOptionalUserId() userId?: string) {
+    const user = await this.userService.findByUsername(params.username, userId);
     if (!user) {
       throw new NotFoundException(USER_MESSAGE.USER_NOT_FOUND);
     }
