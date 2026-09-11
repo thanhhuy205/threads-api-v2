@@ -6,6 +6,7 @@ import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
+import { DepartmentModule } from './modules/department/department.module';
 import { GroupTeamModule } from './modules/group-team/group-team.module';
 import { HistoryPositionModule } from './modules/history-position/history-position.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -28,6 +29,7 @@ import { validate } from './config/app.config';
     RedisModule,
     HistoryPositionModule,
     GroupTeamModule,
+    DepartmentModule,
   ],
   providers: [
     GrpcGatewayAuthStrategy,
