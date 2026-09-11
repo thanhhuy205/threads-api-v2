@@ -35,12 +35,12 @@
       "sourceRoot": "apps/search-service/src",
       "compilerOptions": { "tsConfigPath": "apps/search-service/tsconfig.app.json" }
     },
-    "user-service": {
+    "workspace-service": {
       "type": "application",
-      "root": "apps/user-service",
+      "root": "apps/workspace-service",
       "entryFile": "main",
-      "sourceRoot": "apps/user-service/src",
-      "compilerOptions": { "tsConfigPath": "apps/user-service/tsconfig.app.json" }
+      "sourceRoot": "apps/workspace-service/src",
+      "compilerOptions": { "tsConfigPath": "apps/workspace-service/tsconfig.app.json" }
     },
     "work-service": {
       "type": "application",

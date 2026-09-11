@@ -1,7 +1,7 @@
 import { BadRequestException } from "@/errors/error";
 import { dispatchMentionNotification } from "@notification/events/notification.dispatcher";
 import type { CreatePostCommand } from "../../command/create-post.command";
-import { USER_SERVICE, type UserService } from '@user-service/modules/user/service/user.service';
+import { USER_SERVICE, type UserService } from '@auth-service/modules/user/service/user.service';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import type { PostMentionService } from '../post-mention.service';
 

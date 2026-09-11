@@ -6,7 +6,7 @@
     // apps/libs/*, so the emitted tree keeps the full repo-relative path.
     // Entrypoint therefore lands at:
     //   dist/apps/auth-service/apps/auth-service/src/main.js
-    "outDir": "../../dist/apps/auth-service"
+    "outDir": "./dist"
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist", "test", "**/*.spec.ts"]

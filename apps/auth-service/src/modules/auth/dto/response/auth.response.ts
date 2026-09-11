@@ -1,5 +1,5 @@
-import type { AuthSessionUser } from '@user-service/modules/auth/repository/auth.repository';
-import type { UserProfile } from '@user-service/modules/user/repository/user.repository';
+import type { AuthSessionUser } from '@auth-service/modules/auth/repository/auth.repository';
+import type { UserProfile } from '@auth-service/modules/user/repository/user.repository';
 import type { TokenPairResponse } from './token-pair.response';
 
 export type AuthSessionResponseDto = {

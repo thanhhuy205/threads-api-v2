@@ -11,9 +11,9 @@
     "apps/post-service/src/**/*.ts",
     "apps/search-service/src/**/*.ts",
     "apps/upload-service/src/**/*.ts",
-    "apps/user-service/src/**/*.ts",
+    "apps/workspace-service/src/**/*.ts",
     "apps/work-service/src/**/*.ts",
-    "apps/libs/**/*.ts"
+    "libs/**/*.ts"
   ],
   "exclude": ["node_modules", "dist", "apps/workers/test", "**/*.spec.ts"]
 }

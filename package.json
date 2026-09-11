@@ -8,9 +8,9 @@
     "prisma:generate": "pnpm -r --if-present prisma:generate",
     "build": "pnpm -r --if-present build",
     "build:auth-service": "pnpm --filter @purse/auth-service build",
-    "build:user-service": "pnpm --filter @purse/user-service build",
+    "build:workspace-service": "pnpm --filter @purse/workspace-service build",
     "dev:auth-service": "pnpm --filter @purse/auth-service dev",
-    "dev:user-service": "pnpm --filter @purse/user-service dev"
+    "dev:workspace-service": "pnpm --filter @purse/workspace-service dev"
   },
   "devDependencies": {
     "tsc-alias": "^1.8.16",

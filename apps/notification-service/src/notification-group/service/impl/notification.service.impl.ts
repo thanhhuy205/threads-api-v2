@@ -4,7 +4,7 @@ import { NOTIFICATION_JOB_KEY } from "@libs/core/constants/queue";
 import { RedisService } from "@libs/core/src/redis/redis.service";
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { PusherService } from '@notification-service/pusher/service/pusher.service';
-import { USER_SERVICE, type UserService } from '@user-service/modules/user/service/user.service';
+import { USER_SERVICE, type UserService } from '@auth-service/modules/user/service/user.service';
 import { registerNotificationHandlers } from '../../events/notification.dispatcher';
 import { MentionNotification, ReplyNotification } from "../../events/notification.events";
 import type {

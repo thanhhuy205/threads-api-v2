@@ -40,7 +40,7 @@ services:
       - ./apps/config/kong:/kong:ro
     depends_on:
       - auth-service
-      - user-service
+      - workspace-service
     networks:
       - threads-network
 
@@ -67,26 +67,27 @@ services:
       REDIS_PORT: 6379
     expose:
       - "3300"
+      - "5001"
     depends_on:
       - mysql
       - redis
     networks:
       - threads-network
 
-  user-service:
+  workspace-service:
     build:
       context: .
       dockerfile: docker/service.Dockerfile
       args:
-        SERVICE: user-service
-    container_name: pulse-user-service
+        SERVICE: workspace-service
+    container_name: pulse-workspace-service
     restart: unless-stopped
     env_file:
       - .env
     environment:
-      USER_SERVICE_HOST: 0.0.0.0
-      USER_SERVICE_PORT: 3301
-      MICROSERVICE_NAME: UserService
+      WORKSPACE_SERVICE_HOST: 0.0.0.0
+      WORKSPACE_SERVICE_PORT: 3301
+      MICROSERVICE_NAME: WorkspaceService
       DB_HOST: mysql
       DB_PORT: 3306
       REDIS_HOST: redis

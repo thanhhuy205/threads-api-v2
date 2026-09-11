@@ -1,4 +1,4 @@
-import { UserModule } from '@user-service/modules/user/user.module';
+import { UserModule } from '@auth-service/modules/user/user.module';
 import { Module } from '@nestjs/common';
 import { PusherModule } from '@notification-service/pusher/pusher.module';
 import { NotificationController } from './controller/notification.controller';

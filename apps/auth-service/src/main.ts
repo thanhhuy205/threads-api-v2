@@ -1,5 +1,6 @@
 import { APP_CONFIG } from '@auth-service/config/app.config';
 import { NestFactory } from '@nestjs/core';
+import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import requestId from 'express-request-id';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
@@ -23,8 +24,17 @@ async function bootstrap() {
   app.enableCors({ origin: corsOrigin(), credentials: true });
   app.use(requestId());
 
+  app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.GRPC,
+    options: {
+      package: 'user',
+      protoPath: require.resolve('@purse/proto/user.proto'),
+      url: '0.0.0.0:5001',
+    },
+  });
 
-  await app.init();
+
+  await app.startAllMicroservices();
   await app.listen(APP_CONFIG.AUTH_SERVICE_PORT, APP_CONFIG.AUTH_SERVICE_HOST);
 }
 

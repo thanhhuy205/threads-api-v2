@@ -15,12 +15,13 @@ import { redisKey } from "@libs/core/constants/redis-key";
 import { RedisService } from "@libs/core/src/redis/redis.service";
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { JwtService } from "@nestjs/jwt";
-import { AUTH_REPOSITORY, type AuthRepository } from '@user-service/modules/auth/repository/auth.repository';
-import { USER_SERVICE, type UserService } from "@user-service/modules/user/service/user.service";
+import { AUTH_REPOSITORY, type AuthRepository } from '@auth-service/modules/auth/repository/auth.repository';
+
 import {
   REFRESH_TOKEN_REPOSITORY,
   type RefreshTokenRepository,
 } from '@auth-service/modules/auth/repository/refresh-token.repository';
+import { USER_SERVICE, type UserService } from "@auth-service/modules/user/service/user.service";
 import { VerificationCodeType } from "apps/auth-service/generated/prisma";
 import crypto from "crypto";
 import ms, { StringValue } from "ms";

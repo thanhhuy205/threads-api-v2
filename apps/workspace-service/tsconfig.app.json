@@ -1,0 +1,13 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "declaration": false,
+    // rootDir is the repo root (inherited): this service imports from
+    // apps/libs/*, so the emitted tree keeps the full repo-relative path.
+    // Entrypoint therefore lands at:
+    //   dist/apps/workspace-service/apps/workspace-service/src/main.js
+    "outDir": "./dist"
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist", "test", "**/*.spec.ts"]
+}

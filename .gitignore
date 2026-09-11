@@ -15,3 +15,4 @@ docker
 .env.prod
 temp
 apps/*/generated
+out

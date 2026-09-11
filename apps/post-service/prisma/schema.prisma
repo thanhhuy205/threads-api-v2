@@ -1,47 +1,87 @@
-generator client { provider = "prisma-client-js" output = "../generated/prisma" }
-datasource db { provider = "mysql" }
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
 
-enum PostType { POST ANNOUNCEMENT DECIDE }
-enum ReplyPermission { EVERYONE FOLLOWERS FOLLOWING MENTIONED }
-enum VisibilityPost { WORKSPACE GROUP CUSTOM ONLY_ME }
-enum InteractionType { HIDE SAVE }
+datasource db {
+  provider = "mysql"
+}
+
+enum PostType {
+  POST
+  ANNOUNCEMENT
+  DECIDE
+}
+
+enum ReplyPermission {
+  EVERYONE
+  FOLLOWERS
+  FOLLOWING
+  MENTIONED
+}
+
+enum VisibilityPost {
+  WORKSPACE
+  GROUP
+  CUSTOM
+  ONLY_ME
+}
+
+enum InteractionType {
+  HIDE
+  SAVE
+}
 
 model Post {
-  id Int @id @default(autoincrement())
-  publicId String @unique @default(nanoid()) @map("public_id")
-  userId String @map("user_id")
-  content String @db.Text
-  contentJson Json? @map("content_json")
+  id          Int    @id @default(autoincrement())
+  publicId    String @unique @default(nanoid()) @map("public_id")
+  userId      String @map("user_id")
+  content     String @db.Text
+  contentJson Json?  @map("content_json")
+
   type PostType @default(POST)
-  parentId Int? @map("parent_id")
-  rootPostId Int? @map("root_post_id")
+
+  parentId       Int?    @map("parent_id")
+  rootPostId     Int?    @map("root_post_id")
   parentPublicId String? @map("parent_public_id")
-  rootPublicId String? @map("root_public_id")
-  originPostId Int? @map("origin_post_id")
+  rootPublicId   String? @map("root_public_id")
+
+  originPostId   Int?    @map("origin_post_id")
   originPublicId String? @map("origin_public_id")
-  isQuote Boolean @default(false) @map("is_quote")
-  visibility VisibilityPost @default(WORKSPACE)
+  isQuote        Boolean @default(false) @map("is_quote")
+
+  visibility      VisibilityPost  @default(WORKSPACE)
   replyPermission ReplyPermission @default(EVERYONE) @map("reply_permission")
-  commentsEnabled Boolean @default(true)
-  isPinned Boolean @default(false) @map("is_pinned")
+
+  commentsEnabled         Boolean @default(true) @map("comments_enabled")
+  isPinned                Boolean @default(false) @map("is_pinned")
   requiresAcknowledgement Boolean @default(false) @map("requires_acknowledgement")
+
   publishedAt DateTime? @map("published_at")
+
   scheduledTimeFrom DateTime? @map("scheduled_time_from") @db.Time(0)
-  scheduledTimeTo DateTime? @map("scheduled_time_to") @db.Time(0)
+  scheduledTimeTo   DateTime? @map("scheduled_time_to") @db.Time(0)
+
   dateRangeFrom DateTime? @map("date_range_from")
-  dateRangeTo DateTime? @map("date_range_to")
-  isDecline Boolean @default(false) @map("is_decline")
-  groupTeamId Int? @map("group_team_id")
-  isSurvey Boolean @default(false) @map("is_survey")
+  dateRangeTo   DateTime? @map("date_range_to")
+
+  isDecline   Boolean @default(false) @map("is_decline")
+  groupTeamId Int?    @map("group_team_id")
+
+  isSurvey   Boolean   @default(false) @map("is_survey")
   deadlineAt DateTime? @map("deadline_at")
+
   userSnapshot Json? @map("user_snapshot")
-  likesCount Int @default(0) @map("likes_count")
-  repliesCount Int @default(0) @map("replies_count")
+
+  likesCount                Int @default(0) @map("likes_count")
+  repliesCount              Int @default(0) @map("replies_count")
   repostsCountAndQuoteCount Int @default(0) @map("reposts_and_quotes_count")
-  viewsCount Int @default(0) @map("views_count")
+  viewsCount                Int @default(0) @map("views_count")
+
   deletedAt DateTime? @map("deleted_at")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
   @@index([userId, createdAt])
   @@index([parentId])
   @@index([rootPostId])
@@ -53,22 +93,24 @@ model Post {
 }
 
 model AnnouncementReceipt {
-  id Int @id @default(autoincrement())
-  postId Int @map("post_id")
-  userId String @map("user_id")
-  readAt DateTime? @map("read_at")
+  id             Int       @id @default(autoincrement())
+  postId         Int       @map("post_id")
+  userId         String    @map("user_id")
+  readAt         DateTime? @map("read_at")
   acknowledgedAt DateTime? @map("acknowledged_at")
+
   @@unique([postId, userId])
   @@index([userId, readAt])
   @@map("announcement_receipts")
 }
 
 model PostInteraction {
-  id Int @id @default(autoincrement())
-  userId String @map("user_id")
-  postId Int @map("post_id")
-  type InteractionType @map("type_enum")
-  createdAt DateTime @default(now()) @map("created_at")
+  id        Int             @id @default(autoincrement())
+  userId    String          @map("user_id")
+  postId    Int             @map("post_id")
+  type      InteractionType @map("type_enum")
+  createdAt DateTime        @default(now()) @map("created_at")
+
   @@unique([userId, postId, type], map: "uq_saves_user_post_type")
   @@index([userId], map: "idx_saves_user_id")
   @@index([postId], map: "idx_saves_post_id")
@@ -76,12 +118,13 @@ model PostInteraction {
 }
 
 model OverviewDecline {
-  id Int @id @default(autoincrement())
-  postId Int @map("post_id")
-  userId String @map("user_id")
-  context String @db.Text
-  reason String @db.Text
+  id        Int      @id @default(autoincrement())
+  postId    Int      @map("post_id")
+  userId    String   @map("user_id")
+  context   String   @db.Text
+  reason    String   @db.Text
   createdAt DateTime @default(now()) @map("created_at")
+
   @@unique([postId, userId], map: "uq_overview_declines_post_user")
   @@index([postId], map: "idx_overview_declines_post_id")
   @@index([userId], map: "idx_overview_declines_user_id")
@@ -89,34 +132,37 @@ model OverviewDecline {
 }
 
 model Poll {
-  id Int @id @default(autoincrement())
-  postId Int @map("post_id")
-  isExpired Boolean @default(false) @map("is_expired")
+  id        Int      @id @default(autoincrement())
+  postId    Int      @map("post_id")
+  isExpired Boolean  @default(false) @map("is_expired")
   expiresAt DateTime @map("expires_at")
   createdAt DateTime @default(now()) @map("created_at")
-  voteCount Int @default(0) @map("vote_count")
+  voteCount Int      @default(0) @map("vote_count")
+
   @@unique([postId], map: "uq_polls_post_id")
   @@index([postId], map: "idx_polls_post_id")
   @@map("polls")
 }
 
 model PollOption {
-  id Int @id @default(autoincrement())
-  pollId Int @map("poll_id")
-  optionText String @map("option_text") @db.VarChar(255)
-  votesCount Int @default(0) @map("votes_count")
-  createdAt DateTime @default(now()) @map("created_at")
+  id         Int      @id @default(autoincrement())
+  pollId     Int      @map("poll_id")
+  optionText String   @map("option_text") @db.VarChar(255)
+  votesCount Int      @default(0) @map("votes_count")
+  createdAt  DateTime @default(now()) @map("created_at")
+
   @@unique([id, pollId], map: "uq_poll_options_id_poll_id")
   @@index([pollId], map: "idx_poll_options_poll_id")
   @@map("poll_options")
 }
 
 model Vote {
-  id Int @id @default(autoincrement())
-  userId String @map("user_id")
-  pollId Int @map("poll_id")
-  pollOptionId Int @map("poll_option_id")
-  createdAt DateTime @default(now()) @map("created_at")
+  id           Int      @id @default(autoincrement())
+  userId       String   @map("user_id")
+  pollId       Int      @map("poll_id")
+  pollOptionId Int      @map("poll_option_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+
   @@unique([userId, pollOptionId], map: "uq_votes_user_poll_option")
   @@unique([userId, pollId], map: "uq_votes_user_poll")
   @@index([userId], map: "idx_votes_user_id")
@@ -125,10 +171,11 @@ model Vote {
 }
 
 model PostMention {
-  id Int @id @default(autoincrement())
-  postId Int @map("post_id")
-  userId String @map("user_id")
+  id        Int      @id @default(autoincrement())
+  postId    Int      @map("post_id")
+  userId    String   @map("user_id")
   createdAt DateTime @default(now()) @map("created_at")
+
   @@unique([postId, userId], map: "uq_post_mentions_post_user")
   @@index([postId], map: "idx_post_mentions_post_id")
   @@index([userId], map: "idx_post_mentions_user_id")
@@ -136,12 +183,13 @@ model PostMention {
 }
 
 model Like {
-  id Int @id @default(autoincrement())
-  userId String @map("user_id")
-  postId String @map("post_id")
-  isLike Boolean @default(false) @map("is_like")
+  id        Int      @id @default(autoincrement())
+  userId    String   @map("user_id")
+  postId    Int      @map("post_id")
+  isLike    Boolean  @default(false) @map("is_like")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+
   @@unique([userId, postId], map: "uq_likes_user_post")
   @@index([userId], map: "idx_likes_user_id")
   @@index([postId], map: "idx_likes_post_id")
@@ -149,11 +197,12 @@ model Like {
 }
 
 model Topic {
-  id Int @id @default(autoincrement())
-  name String @unique @db.VarChar(255)
-  count Int @default(1)
+  id        Int      @id @default(autoincrement())
+  name      String   @unique @db.VarChar(255)
+  count     Int      @default(1)
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+
   @@index([name], map: "idx_topics_name")
   @@index([count], map: "idx_topics_count")
   @@fulltext([name], map: "idx_topics_name_fulltext")
@@ -161,10 +210,11 @@ model Topic {
 }
 
 model TopicsPost {
-  id Int @id @default(autoincrement())
-  postId Int @map("post_id")
-  topicId Int? @map("topic_id")
+  id        Int      @id @default(autoincrement())
+  postId    Int      @map("post_id")
+  topicId   Int?     @map("topic_id")
   createdAt DateTime @default(now()) @map("created_at")
+
   @@unique([postId, topicId], map: "uq_topics_posts_post_topic")
   @@index([postId], map: "idx_topics_posts_post_id")
   @@index([topicId], map: "idx_topics_posts_topic_id")

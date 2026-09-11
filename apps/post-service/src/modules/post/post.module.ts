@@ -1,9 +1,9 @@
-import { AbilityModule } from '@auth-service/modules/ability/ability.module';
-import { GroupTeamModule } from '@user-service/modules/group-team/group-team.module';
+import { AbilityModule } from '@workspace-service/modules/ability/ability.module';
+import { GroupTeamModule } from '@workspace-service/modules/group-team/group-team.module';
 import { RedisVersionModule } from '@/shared/redis-version';
 import { TransactionModule } from '@/shared/transaction/transaction.module';
 import { AiModule } from '@api/modules/ai/ai.module';
-import { UserModule } from '@user-service/modules/user/user.module';
+import { UserModule } from '@auth-service/modules/user/user.module';
 import { JwtModule } from '@api/shared/jwt/jwt.module';
 import { Module } from '@nestjs/common';
 import { PostController } from './controller/post.controller';

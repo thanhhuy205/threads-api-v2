@@ -6,7 +6,7 @@ import { Message } from "@/common/decorators/message.decorator";
 import { ApiCursorPaginatedResponse } from "@/common/decorators/swagger-response.decorator";
 import type { CursorPagination as CursorPaginationParams } from "@/common/dto/pagination.dto";
 import { NotFoundException } from "@/errors/error";
-import { USER_SERVICE, type UserService } from "@user-service/modules/user/service/user.service";
+import { USER_SERVICE, type UserService } from "@auth-service/modules/user/service/user.service";
 import { JwtService } from "@api/shared/jwt/service/jwt.service";
 import { POST_MESSAGE } from "@libs/core/constants/message";
 import {

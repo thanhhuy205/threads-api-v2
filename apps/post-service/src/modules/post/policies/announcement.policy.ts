@@ -1,4 +1,4 @@
-import { ABILITY_SERVICE, type AbilityService } from "@auth-service/modules/ability/service/ability.service";
+import { ABILITY_SERVICE, type AbilityService } from "@workspace-service/modules/ability/ability.service";
 import type { CreatePostCommand } from "@post-service/modules/post/command/create-post.command";
 import { PostCreationPolicy } from "@post-service/modules/post/policies/interface/post-creation-policy.interface";
 import { PERMISSIONS } from "@libs/common/src/constants/permission.constant";

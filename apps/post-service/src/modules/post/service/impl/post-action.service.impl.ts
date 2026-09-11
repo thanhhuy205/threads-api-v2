@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from "@/errors/error";
 import { RedisVersionService } from '@/shared/redis-version';
-import { ABILITY_SERVICE, type AbilityService } from '@auth-service/modules/ability/service/ability.service';
+import { ABILITY_SERVICE, type AbilityService } from '@workspace-service/modules/ability/ability.service';
 import { PERMISSIONS } from '@libs/common/src/constants/permission.constant';
 import { redisKey } from "@libs/core/constants/redis-key";
 import { RedisService } from "@libs/core/src/redis/redis.service";

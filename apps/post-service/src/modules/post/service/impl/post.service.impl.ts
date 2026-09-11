@@ -1,7 +1,7 @@
 import { BadRequestException, NotFoundException } from "@/errors/error";
-import { ABILITY_SERVICE, type AbilityService } from '@auth-service/modules/ability/service/ability.service';
-import { GROUP_TEAM_SERVICE, type GroupTeamService } from '@user-service/modules/group-team/service/group-team.service';
-import { USER_SERVICE, type UserService } from "@user-service/modules/user/service/user.service";
+import { ABILITY_SERVICE, type AbilityService } from '@workspace-service/modules/ability/ability.service';
+import { GROUP_TEAM_SERVICE, type GroupTeamService } from '@workspace-service/modules/group-team/service/group-team.service';
+import { USER_SERVICE, type UserService } from "@auth-service/modules/user/service/user.service";
 import { TransactionService } from "@/shared/transaction/transaction.service";
 import { AiService } from '@api/modules/ai/service/ai.service';
 import { PostCreationContext } from '@post-service/modules/post/context/post-creation-context';

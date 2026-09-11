@@ -7,7 +7,7 @@ import { Controller, Get, HttpStatus, Inject, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SearchPostsQueryDto, SearchTopicQueryDto, SearchUsernameQueryDto } from '../dto/search.dto';
 import { SEARCH_SERVICE, type SearchService } from '../service/search.service';
-import { USER_SERVICE, type UserService } from '@user-service/modules/user/service/user.service';
+import { USER_SERVICE, type UserService } from '@auth-service/modules/user/service/user.service';
 
 @ApiTags('Search')
 @ApiBearerAuth('bearer')

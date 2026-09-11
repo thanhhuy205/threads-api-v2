@@ -16,4 +16,4 @@ allowBuilds:
 
 packages:
   - apps/*
-  - apps/libs/*
+  - libs/*
