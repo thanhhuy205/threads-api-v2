@@ -1,7 +1,4 @@
 import { configurationFactory } from '@/config/configuration';
-import { JobModule } from '@api/modules/job/job.module';
-import { DatabaseModule } from '@api/shared/database';
-import { JwtModule } from '@api/shared/jwt/jwt.module';
 import { AppAuthGuard } from '@libs/core/src/auth/guards/auth.guard';
 import { GrpcGatewayAuthStrategy } from '@libs/core/src/auth/strategies/grpc-gate.startegies';
 import { RedisModule } from '@libs/core/src/redis/redis.module';
@@ -9,13 +6,15 @@ import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
+import { validate } from './config/app.config';
 import { PollModule } from './modules/poll/poll.module';
 import { PostModule } from './modules/post/post.module';
 import { TopicModule } from './modules/topic/topic.module';
+import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true, cache: true, load: [configurationFactory] }),
+    ConfigModule.forRoot({ isGlobal: true, cache: true, validate, load: [configurationFactory] }),
     BullModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -26,10 +25,8 @@ import { TopicModule } from './modules/topic/topic.module';
         },
       }),
     }),
-    DatabaseModule,
+    PrismaModule,
     RedisModule,
-    JwtModule,
-    JobModule,
     PollModule,
     TopicModule,
     PostModule,
@@ -39,4 +36,4 @@ import { TopicModule } from './modules/topic/topic.module';
     { provide: APP_GUARD, useClass: AppAuthGuard },
   ],
 })
-export class PostServiceModule { }
+export class AppModule { }

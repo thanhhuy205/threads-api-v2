@@ -1,4 +1,4 @@
-import { PrismaService } from '@/shared/database/prisma.service';
+import { PrismaService } from '@post-service/prisma/prisma.service';
 import { Injectable } from '@nestjs/common';
 import type { TopicRepository } from '../topic.repository';
 

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@/shared/database/prisma.service';
+import { PrismaService } from '@post-service/prisma/prisma.service';
 import { InteractionType, Prisma } from "../../../../../generated/prisma";
 import type { PostInteractionPayload, PostInteractionRepository } from '../post-interaction.repository';
 

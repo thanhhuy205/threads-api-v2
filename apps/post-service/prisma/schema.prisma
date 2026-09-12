@@ -92,18 +92,6 @@ model Post {
   @@map("posts")
 }
 
-model AnnouncementReceipt {
-  id             Int       @id @default(autoincrement())
-  postId         Int       @map("post_id")
-  userId         String    @map("user_id")
-  readAt         DateTime? @map("read_at")
-  acknowledgedAt DateTime? @map("acknowledged_at")
-
-  @@unique([postId, userId])
-  @@index([userId, readAt])
-  @@map("announcement_receipts")
-}
-
 model PostInteraction {
   id        Int             @id @default(autoincrement())
   userId    String          @map("user_id")
@@ -117,27 +105,14 @@ model PostInteraction {
   @@map("post_interactions")
 }
 
-model OverviewDecline {
-  id        Int      @id @default(autoincrement())
-  postId    Int      @map("post_id")
-  userId    String   @map("user_id")
-  context   String   @db.Text
-  reason    String   @db.Text
-  createdAt DateTime @default(now()) @map("created_at")
-
-  @@unique([postId, userId], map: "uq_overview_declines_post_user")
-  @@index([postId], map: "idx_overview_declines_post_id")
-  @@index([userId], map: "idx_overview_declines_user_id")
-  @@map("overview_declines")
-}
-
 model Poll {
-  id        Int      @id @default(autoincrement())
-  postId    Int      @map("post_id")
-  isExpired Boolean  @default(false) @map("is_expired")
-  expiresAt DateTime @map("expires_at")
-  createdAt DateTime @default(now()) @map("created_at")
-  voteCount Int      @default(0) @map("vote_count")
+  id          Int          @id @default(autoincrement())
+  postId      Int          @map("post_id")
+  isExpired   Boolean      @default(false) @map("is_expired")
+  expiresAt   DateTime     @map("expires_at")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  voteCount   Int          @default(0) @map("vote_count")
+  pollOptions PollOption[]
 
   @@unique([postId], map: "uq_polls_post_id")
   @@index([postId], map: "idx_polls_post_id")
@@ -150,6 +125,7 @@ model PollOption {
   optionText String   @map("option_text") @db.VarChar(255)
   votesCount Int      @default(0) @map("votes_count")
   createdAt  DateTime @default(now()) @map("created_at")
+  poll       Poll     @relation(fields: [pollId], references: [id])
 
   @@unique([id, pollId], map: "uq_poll_options_id_poll_id")
   @@index([pollId], map: "idx_poll_options_poll_id")

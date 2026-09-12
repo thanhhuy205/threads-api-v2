@@ -1,7 +1,7 @@
 import { AbilityModule } from '@workspace-service/modules/ability/ability.module';
 import { GroupTeamModule } from '@workspace-service/modules/group-team/group-team.module';
 import { RedisVersionModule } from '@/shared/redis-version';
-import { TransactionModule } from '@/shared/transaction/transaction.module';
+import { TransactionModule } from '@post-service/transaction/transaction.module';
 import { AiModule } from '@api/modules/ai/ai.module';
 import { UserModule } from '@auth-service/modules/user/user.module';
 import { JwtModule } from '@api/shared/jwt/jwt.module';

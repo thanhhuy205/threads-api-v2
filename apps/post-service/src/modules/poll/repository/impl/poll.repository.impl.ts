@@ -1,6 +1,6 @@
-import { PrismaService } from '@/shared/database/prisma.service';
-import { Injectable } from '@nestjs/common';
-import { Prisma } from "../../../../../generated/prisma";
+import { Inject, Injectable } from '@nestjs/common';
+import { PrismaService } from '@post-service/prisma/prisma.service';
+import { Prisma } from 'apps/post-service/generated/prisma';
 import type { PollRepository } from '../poll.repository';
 
 export type CreatePollPayload = {
@@ -13,28 +13,38 @@ export type PollVoteCountUpdate = {
   voteCount: number;
 };
 
+type PrismaClientOrTransaction =
+  | PrismaService
+  | Prisma.TransactionClient;
+
 @Injectable()
 export class PollRepositoryImpl implements PollRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    @Inject(PrismaService)
+    private readonly prisma: PrismaService,
+  ) { }
 
   create(
     payload: CreatePollPayload,
-    tx?: Prisma.TransactionClient,
+    tx: PrismaClientOrTransaction = this.prisma,
   ) {
-    return (tx ?? this.prisma).poll.create({
+    return tx.poll.create({
       data: payload,
     });
   }
 
-  findByPostId(postId: number, tx?: Prisma.TransactionClient) {
-    return (tx ?? this.prisma).poll.findFirst({
+  findByPostId(
+    postId: number,
+    tx: PrismaClientOrTransaction = this.prisma,
+  ) {
+    return tx.poll.findFirst({
       where: {
         postId,
       },
       include: {
         pollOptions: {
           orderBy: {
-            id: "asc",
+            id: 'asc',
           },
         },
       },
@@ -43,26 +53,26 @@ export class PollRepositoryImpl implements PollRepository {
 
   bulkUpdateVoteCount(
     updates: PollVoteCountUpdate[],
-    tx?: Prisma.TransactionClient,
+    tx: PrismaClientOrTransaction = this.prisma,
   ) {
     if (updates.length === 0) {
       return Promise.resolve(0);
     }
 
     const ids = updates.map((update) => update.pollId);
+
     const cases = Prisma.join(
       updates.map(
         (update) =>
           Prisma.sql`WHEN ${update.pollId} THEN ${update.voteCount}`,
       ),
-      " ",
+      ' ',
     );
 
-    return (tx ?? this.prisma).$executeRaw`
+    return tx.$executeRaw`
       UPDATE polls
       SET vote_count = CASE id ${cases} END
       WHERE id IN (${Prisma.join(ids)})
     `;
   }
 }
-

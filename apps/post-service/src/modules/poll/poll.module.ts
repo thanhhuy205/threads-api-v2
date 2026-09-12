@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { TransactionModule } from '@/shared/transaction/transaction.module';
+import { TransactionModule } from '@post-service/transaction/transaction.module';
 import { PollController } from './controller/poll.controller';
 import { PollOptionsRepositoryImpl } from './repository/impl/poll-options.repository.impl';
 import { PollRepositoryImpl } from './repository/impl/poll.repository.impl';
@@ -26,4 +26,4 @@ import { VOTE_SERVICE } from './service/vote.service';
     { provide: VOTE_SERVICE, useClass: VoteServiceImpl },
   ],
 })
-export class PollModule {}
+export class PollModule { }

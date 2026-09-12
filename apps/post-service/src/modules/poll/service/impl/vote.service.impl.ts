@@ -1,5 +1,5 @@
 import { ConflictException } from "@/errors/error";
-import { TransactionService } from "@/shared/transaction/transaction.service";
+import { TransactionService } from '@post-service/transaction/transaction.service';
 import { redisKey } from "@libs/core/constants/redis-key";
 import { RedisService } from "@libs/core/src/redis/redis.service";
 import { Inject, Injectable } from '@nestjs/common';

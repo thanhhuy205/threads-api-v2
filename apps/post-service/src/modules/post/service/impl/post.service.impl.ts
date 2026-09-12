@@ -2,7 +2,7 @@ import { BadRequestException, NotFoundException } from "@/errors/error";
 import { ABILITY_SERVICE, type AbilityService } from '@workspace-service/modules/ability/ability.service';
 import { GROUP_TEAM_SERVICE, type GroupTeamService } from '@workspace-service/modules/group-team/service/group-team.service';
 import { USER_SERVICE, type UserService } from "@auth-service/modules/user/service/user.service";
-import { TransactionService } from "@/shared/transaction/transaction.service";
+import { TransactionService } from '@post-service/transaction/transaction.service';
 import { AiService } from '@api/modules/ai/service/ai.service';
 import { PostCreationContext } from '@post-service/modules/post/context/post-creation-context';
 import { POST_CREATION_POLICIES, PostCreationPolicy } from '@post-service/modules/post/policies/interface/post-creation-policy.interface';

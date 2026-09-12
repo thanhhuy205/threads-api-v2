@@ -1,5 +1,5 @@
-import { PrismaService } from '@/shared/database/prisma.service';
 import { Injectable } from '@nestjs/common';
+import { PrismaService } from '@post-service/prisma/prisma.service';
 import { Prisma } from "../../../../../generated/prisma";
 import type { VoteRepository } from '../vote.repository';
 
@@ -11,7 +11,7 @@ export type CreateVotePayload = {
 
 @Injectable()
 export class VoteRepositoryImpl implements VoteRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   create(
     payload: CreateVotePayload,

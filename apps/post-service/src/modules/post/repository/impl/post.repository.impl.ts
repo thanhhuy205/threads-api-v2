@@ -1,6 +1,6 @@
 import { toTime } from "@post-service/modules/post/helper/conver-date.helper";
 import type { CreatePostCommand } from '../../command/create-post.command';
-import { PrismaService } from '@/shared/database/prisma.service';
+import { PrismaService } from '@post-service/prisma/prisma.service';
 import { Injectable, Logger } from '@nestjs/common';
 import {
   InteractionType,
