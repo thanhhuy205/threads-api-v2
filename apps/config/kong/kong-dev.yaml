@@ -131,3 +131,21 @@ services:
         regex_priority: 0
         tags: [workspace-service]
         # not set plugins because use jwt global
+
+  - name: post-service
+    enabled: true # jwt
+    host: post-service # đổi đúng tên container/host thật
+    port: 3302
+    path: /
+    protocol: http
+    connect_timeout: 60000
+    read_timeout: 60000 # max 60s, if > 60s -> 504 Gateway Timeout
+    write_timeout: 60000
+    retries: 5 # retry 5 if request failed
+    routes:
+      - name: post-service-catchall
+        paths: [/post-service]
+        strip_path: true
+        regex_priority: 0
+        tags: [post-service]
+        # not set plugins because use jwt global
