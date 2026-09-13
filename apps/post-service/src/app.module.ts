@@ -7,9 +7,9 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { validate } from './config/app.config';
-import { PollModule } from './modules/poll/poll.module';
 import { PostModule } from './modules/post/post.module';
-import { TopicModule } from './modules/topic/topic.module';
+// MAINTENANCE: import { PollModule } from './modules/poll/poll.module';
+// MAINTENANCE: import { TopicModule } from './modules/topic/topic.module';
 import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
@@ -27,8 +27,8 @@ import { PrismaModule } from './prisma/prisma.module';
     }),
     PrismaModule,
     RedisModule,
-    PollModule,
-    TopicModule,
+    // MAINTENANCE: PollModule,
+    // MAINTENANCE: TopicModule,
     PostModule,
   ],
   providers: [

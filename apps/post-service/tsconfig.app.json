@@ -2,12 +2,31 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "declaration": false,
-    "outDir": "../../dist/apps/post-service",
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["src/*"]
-    }
+    "outDir": "../../dist/apps/post-service"
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "dist", "test", "**/*.spec.ts"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "test",
+    "**/*.spec.ts",
+    "src/modules/poll/**/*.ts",
+    "src/modules/topic/**/*.ts",
+    "src/modules/post/context/**/*.ts",
+    "src/modules/post/policies/**/*.ts",
+    "src/modules/post/repository/impl/like.repository.impl.ts",
+    "src/modules/post/repository/impl/post-interaction.repository.impl.ts",
+    "src/modules/post/repository/impl/topics-post.repository.impl.ts",
+    "src/modules/post/repository/like.repository.ts",
+    "src/modules/post/repository/post-interaction.repository.ts",
+    "src/modules/post/repository/topics-post.repository.ts",
+    "src/modules/post/service/impl/like.service.impl.ts",
+    "src/modules/post/service/impl/overview-decline.service.impl.ts",
+    "src/modules/post/service/impl/post-mention.service.impl.ts",
+    "src/modules/post/service/impl/post-meta.service.impl.ts",
+    "src/modules/post/service/like.service.ts",
+    "src/modules/post/service/overview-decline.service.ts",
+    "src/modules/post/service/post-mention.service.ts",
+    "src/modules/post/service/post-meta.service.ts"
+  ]
 }

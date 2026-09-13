@@ -144,6 +144,7 @@ export class PostFeedServiceImpl implements PostFeedService {
     return this.postRepository.findLimitReplyInByPostIds(postIds, limit);
   }
 
+  /* MAINTENANCE: DECIDE/overview feed helpers.
   findPostDecideWithinWeekByIds(postIds: number[]) {
     return this.postRepository.findPostDecideWithinWeekByIds(postIds);
   }
@@ -159,4 +160,5 @@ export class PostFeedServiceImpl implements PostFeedService {
   updateManyDecideStatus(postIds: number[], isDecline: boolean) {
     return this.postRepository.updateManyDecideStatus(postIds, isDecline);
   }
+  */
 }

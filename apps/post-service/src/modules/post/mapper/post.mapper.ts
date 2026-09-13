@@ -1,5 +1,5 @@
 import { Logger } from '@nestjs/common';
-import { Post, Prisma, UserStatus } from "../../../../generated/prisma";
+import { Post, Prisma } from '../../../../generated/prisma';
 
 import type { PostRecord } from "../repository/post.repository";
 
@@ -7,15 +7,15 @@ export const postFeedSelect = Prisma.validator<Prisma.PostSelect>()({
   publicId: true, userId: true, content: true, visibility: true, type: true,
   isPinned: true, dateRangeFrom: true, dateRangeTo: true,
   scheduledTimeFrom: true, scheduledTimeTo: true,
-  groupTeam: { select: { publicId: true, name: true } },
+  groupTeamId: true,
+  // MAINTENANCE: groupTeam: { select: { publicId: true, name: true } },
   parentId: true, parentPublicId: true, originPostId: true, rootPostId: true,
-  rootPublicId: true, isQuote: true, origin: true, parent: true,
+  rootPublicId: true, isQuote: true,
+  // MAINTENANCE: origin: true, parent: true,
   userSnapshot: true, likesCount: true, viewsCount: true, isSurvey: true,
   createdAt: true,
-  poll: { select: { id: true, expiresAt: true, pollOptions: { select: { id: true, optionText: true, votesCount: true }, orderBy: { id: "asc" } }, voteCount: true, isExpired: true } },
-  media: { select: { id: true, url: true, type: true, width: true, height: true, status: true } },
-  mentions: { select: { userId: true, user: { select: { username: true } } } },
-  topicsPosts: { select: { topic: { select: { name: true } } } },
+  repliesCount: true, repostsCountAndQuoteCount: true,
+  // MAINTENANCE: poll/media/mentions/topicsPosts relation selects.
 });
 
 export const postSelectRepository = {
@@ -55,7 +55,10 @@ export type PostFeedResponse = Omit<
   | "derivatives"
   | "postInteractions"
 > & {
-  media: Array<Omit<NonNullable<PostFeedItem["media"]>[number], "postId">>;
+  media: any[];
+  groupTeam?: any;
+  origin?: any;
+  parent?: any;
   isLikedByAuth: boolean;
   isRepostByAuth: boolean;
   isSavedByAuth: boolean;
@@ -88,7 +91,7 @@ export type UserSnapshot = {
   bio: string | null;
   name: string;
   avatar: string;
-  status: UserStatus;
+  status: string;
   username: string;
   verifiedAt: Date | null;
 };
@@ -131,8 +134,8 @@ export class PostMapper {
         ?.map((tp: { topic?: { name?: string | null } | null }) => tp.topic?.name)
         .filter((name: string | null | undefined): name is string => !!name) ?? [];
 
-    const repliesCount = post._count?.children ?? 0;
-    const repostsCountAndQuoteCount = post._count?.derivatives ?? 0;
+    const repliesCount = post.repliesCount ?? post._count?.children ?? 0;
+    const repostsCountAndQuoteCount = post.repostsCountAndQuoteCount ?? post._count?.derivatives ?? 0;
     const poll = post.poll ?? null;
     const isVoted = post.poll?.pollOptions.some((op: {
       votes: [
@@ -156,6 +159,7 @@ export class PostMapper {
       dateRangeTo: post.dateRangeTo,
       scheduledTimeFrom: post.scheduledTimeFrom,
       scheduledTimeTo: post.scheduledTimeTo,
+      groupTeamId: post.groupTeamId,
       groupTeam: post.groupTeam,
       parentId: post.parentId,
       parentPublicId: post.parentPublicId,
@@ -174,10 +178,10 @@ export class PostMapper {
       viewsCount: post.viewsCount,
       parent: post.parent,
       media: post.media?.map(({ ...media }) => media) ?? [],
-      mentions: post.mentions.map((m: { userId: string; user: { username: string } }) => ({
+      mentions: post.mentions?.map((m: { userId: string; user: { username: string } }) => ({
         userId: m.userId,
         username: m.user.username,
-      })),
+      })) ?? [],
       isLikedByAuth: Boolean(userId && post.likes?.length),
       isRepostByAuth: Boolean(
         userId && post.derivatives && post.derivatives.length > 0,

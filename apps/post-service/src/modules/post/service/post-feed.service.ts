@@ -11,8 +11,8 @@ export interface PostFeedService {
   getById(publicId: string, userId?: string | null): Promise<any>;
   findFirstReplyByPostPublicId(count: number, publicId: string): Promise<any[]>;
   findLimitReplyInByPostIds(postIds: number[], limit: number): Promise<any[]>;
-  findPostDecideWithinWeekByIds(postIds: number[]): Promise<any[]>;
-  findManyInWeek(): Promise<any[]>;
-  countOverviewDeclineByPostId(postIds: number[]): Promise<any[]>;
-  updateManyDecideStatus(postIds: number[], isDecline: boolean): Promise<any>;
+  // MAINTENANCE: findPostDecideWithinWeekByIds(postIds: number[]): Promise<any[]>;
+  // MAINTENANCE: findManyInWeek(): Promise<any[]>;
+  // MAINTENANCE: countOverviewDeclineByPostId(postIds: number[]): Promise<any[]>;
+  // MAINTENANCE: updateManyDecideStatus(postIds: number[], isDecline: boolean): Promise<any>;
 }

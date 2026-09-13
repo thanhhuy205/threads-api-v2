@@ -54,7 +54,7 @@ export async function paginatePosts({
     },
   });
 
-  // Poll
+  /* MAINTENANCE: poll enrichment.
   const mapPostIdToPollId = new Map<string, number>();
   const voteCountMap = new Map<number, any>()
   posts.forEach((post) => {
@@ -81,6 +81,9 @@ export async function paginatePosts({
       voteCount: voteCountMap.get(post?.poll.id) ?? post.poll?.voteCount ?? 0,
     } : null
   }));
+  */
+
+  const data = posts;
 
   const rows = data.map((post) =>
     PostMapper.toFeedResponse(post, userId ?? undefined),

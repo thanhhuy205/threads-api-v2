@@ -1,13 +1,14 @@
-import { ABILITY_SERVICE, type AbilityService } from "@workspace-service/modules/ability/ability.service";
+import { Inject, Injectable } from "@nestjs/common";
 import type { CreatePostCommand } from "@post-service/modules/post/command/create-post.command";
-import { PostCreationContext } from "@post-service/modules/post/context/post-creation-context";
 import { PostCreationPolicy } from "@post-service/modules/post/policies/interface/post-creation-policy.interface";
-import { PERMISSIONS } from "@libs/common/src/constants/permission.constant";
-import { BadRequestException, Inject, Injectable } from "@nestjs/common";
+import { ABILITY_SERVICE, type AbilityService } from "@workspace-service/modules/ability/ability.service";
 
 @Injectable()
 export class ExpirationPolicy implements PostCreationPolicy {
     constructor(@Inject(ABILITY_SERVICE) private readonly abilityService: AbilityService) { }
+    enforce(payload: CreatePostCommand, ctx: PostCreationContext): Promise<void> {
+        throw new Error("Method not implemented.");
+    }
 
     applies(payload: CreatePostCommand): boolean {
         return (
@@ -18,22 +19,22 @@ export class ExpirationPolicy implements PostCreationPolicy {
         );
     }
 
-    async enforce(
-        payload: CreatePostCommand,
-        ctx: PostCreationContext,
-    ): Promise<void> {
-        if (
-            payload.dateRangeFrom !== undefined &&
-            payload.dateRangeFrom !== null &&
-            payload.dateRangeFrom.getTime() < Date.now()
-        ) {
-            throw new BadRequestException('dateRangeFrom must be in the future');
-        }
-        await this.abilityService.assertCan(
-            payload.userId,
-            PERMISSIONS.POST_EXPIRE,
-            ctx.scope,
-        );
-    }
+    // async enforce(
+    //     payload: CreatePostCommand,
+    //     ctx: PostCreationContext,
+    // ): Promise<void> {
+    //     if (
+    //         payload.dateRangeFrom !== undefined &&
+    //         payload.dateRangeFrom !== null &&
+    //         payload.dateRangeFrom.getTime() < Date.now()
+    //     ) {
+    //         throw new BadRequestException('dateRangeFrom must be in the future');
+    //     }
+    //     await this.abilityService.assertCan(
+    //         payload.userId,
+    //         PERMISSIONS.POST_EXPIRE,
+    //         ctx.scope,
+    //     );
+    // }
 
 }

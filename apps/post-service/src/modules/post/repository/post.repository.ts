@@ -23,10 +23,10 @@ export type PostRecord = {
 };
 
 export interface PostRepository {
-  updateManyDecideStatus(postIds: number[], isDecline: boolean): Promise<any>;
-  findManyInWeek(): Promise<any[]>;
-  countOverviewDeclineByPostId(postIds: number[]): Promise<any[]>;
-  findPostDecideWithinWeekByIds(postIds: number[]): Promise<any[]>;
+  // MAINTENANCE: updateManyDecideStatus(postIds: number[], isDecline: boolean): Promise<any>;
+  // MAINTENANCE: findManyInWeek(): Promise<any[]>;
+  // MAINTENANCE: countOverviewDeclineByPostId(postIds: number[]): Promise<any[]>;
+  // MAINTENANCE: findPostDecideWithinWeekByIds(postIds: number[]): Promise<any[]>;
   findAll(payload: any): Promise<any[]>;
   count(payload?: { where?: Prisma.PostWhereInput }): Promise<number>;
   countPostBydUserId(userId: string): Promise<number>;

@@ -4,14 +4,9 @@ import type { OverviewDeclineService } from '../overview-decline.service';
 
 @Injectable()
 export class OverviewDeclineServiceImpl implements OverviewDeclineService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
-  findOneByPostId(postId: number) {
-    return this.prisma.overviewDecline.findFirst({
-      where: { postId },
-      orderBy: { createdAt: 'desc' },
-    });
+  findOneByPostId(postId: number): Promise<any> {
+    return this.prisma.overviewDecline.findMany({ where: { postId } });
   }
-
-
 }

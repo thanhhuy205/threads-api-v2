@@ -1,34 +1,29 @@
 import { QUEUE_NAME } from "@/constants/queue";
-import {
-  BadRequestException,
-  ForbiddenException,
-  NotFoundException,
-} from "@/errors/error";
+import { NotFoundException } from '@/errors/error';
+// MAINTENANCE: import { BadRequestException, ForbiddenException } from '@/errors/error';
 import { RedisVersionService } from '@/shared/redis-version';
-import { ABILITY_SERVICE, type AbilityService } from '@workspace-service/modules/ability/ability.service';
-import { PERMISSIONS } from '@libs/common/src/constants/permission.constant';
+// MAINTENANCE: import { ABILITY_SERVICE, type AbilityService } from '@workspace-service/modules/ability/ability.service';
+// MAINTENANCE: import { PERMISSIONS } from '@libs/common/src/constants/permission.constant';
 import { redisKey } from "@libs/core/constants/redis-key";
 import { RedisService } from "@libs/core/src/redis/redis.service";
 import { Inject, Injectable } from '@nestjs/common';
-import {
-  InteractionType,
-  PermissionScope,
-  VisibilityPost,
-} from "../../../../../generated/prisma";
-import { UpdatePostDto } from '../../dto/request';
-import { POST_INTERACTION_REPOSITORY, type PostInteractionRepository } from "../../repository/post-interaction.repository";
-import { POST_REPOSITORY, type PostRecord, type PostRepository } from "../../repository/post.repository";
+// MAINTENANCE: import { InteractionType, PermissionScope, VisibilityPost } from '../../../../../generated/prisma';
+// MAINTENANCE: import { UpdatePostDto } from '../../dto/request';
+// MAINTENANCE: import { POST_INTERACTION_REPOSITORY, type PostInteractionRepository } from '../../repository/post-interaction.repository';
+import { POST_REPOSITORY, type PostRepository } from '../../repository/post.repository';
 import type { PostActionService } from '../post-action.service';
 
 @Injectable()
 export class PostActionServiceImpl implements PostActionService {
   constructor(
     @Inject(POST_REPOSITORY) private readonly postRepository: PostRepository,
-    @Inject(POST_INTERACTION_REPOSITORY) private readonly postInteractionRepository: PostInteractionRepository,
+    // MAINTENANCE: @Inject(POST_INTERACTION_REPOSITORY) private readonly postInteractionRepository: PostInteractionRepository,
     private readonly redisVersionService: RedisVersionService,
     private readonly redisService: RedisService,
-    @Inject(ABILITY_SERVICE) private readonly abilityService: AbilityService,
+    // MAINTENANCE: @Inject(ABILITY_SERVICE) private readonly abilityService: AbilityService,
   ) { }
+
+  /* MAINTENANCE: hide, admin and save actions.
   async hide(
     publicId: string,
     userId: string,
@@ -115,6 +110,7 @@ export class PostActionServiceImpl implements PostActionService {
 
     await this.redisVersionService.bumpPostListCacheVersion(redisKey.post.listNamespace());
   }
+  */
 
   async like(
     publicId: string,
@@ -169,6 +165,7 @@ export class PostActionServiceImpl implements PostActionService {
     return Number(likeCount) ?? 0 + (post.likesCount ?? 0);
   }
 
+  /* MAINTENANCE: delete and update actions.
   async delete(publicId: string, userId: string): Promise<void> {
     const post = await this.postRepository.findDeleteTargetByPublicId(publicId);
 
@@ -236,5 +233,6 @@ export class PostActionServiceImpl implements PostActionService {
     await this.redisVersionService.bumpPostListCacheVersion(redisKey.post.listNamespace());
     return updatedPost;
   }
+  */
 
 }

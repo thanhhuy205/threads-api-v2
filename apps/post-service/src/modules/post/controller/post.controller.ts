@@ -7,7 +7,6 @@ import { ApiCursorPaginatedResponse } from "@/common/decorators/swagger-response
 import type { CursorPagination as CursorPaginationParams } from "@/common/dto/pagination.dto";
 import { NotFoundException } from "@/errors/error";
 import { USER_SERVICE, type UserService } from "@auth-service/modules/user/service/user.service";
-import { JwtService } from "@api/shared/jwt/service/jwt.service";
 import { POST_MESSAGE } from "@libs/core/constants/message";
 import {
   BadRequestException,
@@ -55,7 +54,6 @@ type AuthenticatedRequest = {
 @Controller("posts")
 export class PostController {
   constructor(
-    private readonly jwtService: JwtService,
     @Inject(USER_SERVICE) private readonly userService: UserService,
     @Inject(POST_SERVICE) private readonly postService: PostService,
     @Inject(POST_ACTION_SERVICE) private readonly postActionService: PostActionService,
@@ -74,7 +72,9 @@ export class PostController {
     @CursorPagination() cursor: CursorPaginationParams,
     @Req() request: AuthenticatedRequest,
   ) {
-    const userId = await this.jwtService.requestAuthToken(request);
+    // MAINTENANCE: restore optional JWT extraction when the local auth adapter is ready.
+    // const userId = await this.jwtService.requestAuthToken(request);
+    const userId = null;
     const { posts, pagination } = await this.postFeedService.getNewsFeed({
       after: cursor.after ?? undefined,
       take: cursor.take,
@@ -133,6 +133,7 @@ export class PostController {
     return { data: posts, pagination };
   }
 
+  /* MAINTENANCE: quote/repost views are temporarily disabled.
   @Get("me/quote")
   @ApiBearerAuth("bearer")
   @Message(POST_MESSAGE.RETRIEVED)
@@ -151,6 +152,7 @@ export class PostController {
     });
     return { data: posts, pagination };
   }
+  */
 
   @Get("user/:username")
   @IsPublic()
@@ -169,7 +171,8 @@ export class PostController {
       after: cursor.after ?? undefined,
       take: cursor.take,
       userId: user.id,
-      myUserId: (await this.jwtService.requestAuthToken(request)) ?? undefined,
+      // MAINTENANCE: myUserId: (await this.jwtService.requestAuthToken(request)) ?? undefined,
+      myUserId: undefined,
     });
     return { data: posts, pagination };
   }
@@ -191,11 +194,13 @@ export class PostController {
       after: cursor.after ?? undefined,
       take: cursor.take,
       userId: user.id,
-      myUserId: (await this.jwtService.requestAuthToken(request)) ?? undefined,
+      // MAINTENANCE: myUserId: (await this.jwtService.requestAuthToken(request)) ?? undefined,
+      myUserId: undefined,
     });
     return { data: posts, pagination };
   }
 
+  /* MAINTENANCE: quote/repost views are temporarily disabled.
   @Get("user/:username/quotes")
   @IsPublic()
   @Message(POST_MESSAGE.RETRIEVED)
@@ -217,6 +222,7 @@ export class PostController {
     });
     return { data: posts, pagination };
   }
+  */
 
   @Get(":publicId/replies")
   @IsPublic()
@@ -234,7 +240,8 @@ export class PostController {
       after: cursor.after ?? undefined,
       take: cursor.take,
       publicId: params.publicId,
-      userId: await this.jwtService.requestAuthToken(request),
+      // MAINTENANCE: userId: await this.jwtService.requestAuthToken(request),
+      userId: undefined,
     });
     return { data: posts, pagination };
   }
@@ -249,7 +256,8 @@ export class PostController {
   ) {
     const post = await this.postFeedService.getById(
       params.publicId,
-      await this.jwtService.requestAuthToken(request),
+      // MAINTENANCE: await this.jwtService.requestAuthToken(request),
+      undefined,
     );
     if (!post) throw new NotFoundException("Post not found");
     return post;
@@ -298,6 +306,7 @@ export class PostController {
     };
   }
 
+  /* MAINTENANCE: repost and quote creation are temporarily disabled.
   @Post(":publicId/repost")
   @ApiBearerAuth("bearer")
   @ResponseOperation(POST_MESSAGE.CREATED, HttpStatus.CREATED, "Repost a post")
@@ -321,7 +330,9 @@ export class PostController {
       userId,
     });
   }
+  */
 
+  /* MAINTENANCE: save/hide/update/delete actions are temporarily disabled.
   @Post(":publicId/save")
   @ApiBearerAuth("bearer")
   @ResponseOperation(POST_MESSAGE.RETRIEVED, HttpStatus.OK, "Save or unsave a post")
@@ -389,6 +400,7 @@ export class PostController {
     await this.postActionService.delete(params.publicId, userId);
     return { deleted: true };
   }
+  */
 
   private async getUser(username: string) {
     const user = await this.userService.findByUsername(username);

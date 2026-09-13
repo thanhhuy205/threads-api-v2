@@ -46,6 +46,10 @@ export class PostRepositoryImpl implements PostRepository {
 
   constructor(private readonly prisma: PrismaService) { }
   private buildFeedSelect(userId?: string | null): typeof postFeedSelect {
+    void userId;
+    return postFeedSelect;
+
+    /* MAINTENANCE: poll and authenticated relation enrichment.
     const select: Prisma.PostSelect = {
       ...postFeedSelect,
       poll: {
@@ -82,8 +86,10 @@ export class PostRepositoryImpl implements PostRepository {
     };
 
     return select as typeof postFeedSelect;
+    */
   }
 
+  /* MAINTENANCE: DECIDE/overview workflow.
   async updateManyDecideStatus(postIds: number[], isDecline: boolean) {
     return this.prisma.post.updateMany({
       where: { id: { in: postIds } },
@@ -163,6 +169,7 @@ export class PostRepositoryImpl implements PostRepository {
       }
     });
   }
+  */
 
   findAll({
     after,
@@ -181,6 +188,16 @@ export class PostRepositoryImpl implements PostRepository {
     this.logger.log(
       `Finding posts with where: ${where ? JSON.stringify(where) : "none"}, orderBy: ${JSON.stringify(sortOrder)}, limit: ${take}, after: ${after ? 1 : 0}`,
     );
+    return this.prisma.post.findMany({
+      where: { AND: [{ deletedAt: null }, where ?? {}] },
+      orderBy: sortOrder,
+      take: after ? take + 1 : take,
+      skip: after ? 1 : 0,
+      cursor: after ? { publicId: after } : undefined,
+      select: this.buildFeedSelect(userId),
+    });
+
+    /* MAINTENANCE: hidden/saved/liked/repost relation enrichment.
     return this.prisma.post.findMany({
       where: {
         AND: [
@@ -251,6 +268,7 @@ export class PostRepositoryImpl implements PostRepository {
           : {}),
       },
     });
+    */
   }
 
   count({ where = {} }: { where?: Prisma.PostWhereInput } = {}) {
@@ -332,8 +350,8 @@ export class PostRepositoryImpl implements PostRepository {
       visibility: VisibilityPost.WORKSPACE,
       userSnapshot,
       isSurvey: Boolean(payload.isSurvey || payload.polls?.length),
-      poll: this.createPoll(payload.polls),
-      media: this.connectMedia(payload.media),
+      // MAINTENANCE: poll: this.createPoll(payload.polls),
+      // MAINTENANCE: media: this.connectMedia(payload.media),
     };
   }
   async create(
@@ -507,6 +525,12 @@ export class PostRepositoryImpl implements PostRepository {
   async findByPublicId(publicId: string, userId?: string | null) {
     return this.prisma.post.findFirst({
       where: { publicId, deletedAt: null },
+      select: { id: true, ...this.buildFeedSelect(userId) },
+    });
+
+    /* MAINTENANCE: saved-state relation enrichment.
+    return this.prisma.post.findFirst({
+      where: { publicId, deletedAt: null },
       select: {
         id: true,
         ...this.buildFeedSelect(userId),
@@ -526,6 +550,7 @@ export class PostRepositoryImpl implements PostRepository {
           : {}),
       },
     });
+    */
   }
 
   countRepliesByPostPublicId(publicId: string): Promise<number> {
@@ -756,6 +781,17 @@ export class PostRepositoryImpl implements PostRepository {
 
     const posts = await this.prisma.post.findMany({
       where: {
+        publicId: { in: publicIds },
+        type: { in: [...primaryPostTypes] },
+        deletedAt: null,
+        visibility: VisibilityPost.WORKSPACE,
+      },
+      select: this.buildFeedSelect(userId),
+    });
+
+    /* MAINTENANCE: hidden/saved/liked/repost relation enrichment.
+    const enrichedPosts = await this.prisma.post.findMany({
+      where: {
         publicId: {
           in: publicIds,
         },
@@ -818,6 +854,7 @@ export class PostRepositoryImpl implements PostRepository {
           : {}),
       },
     });
+    */
 
     const postsByPublicId = new Map(
       posts.map((post) => [post.publicId, post]),

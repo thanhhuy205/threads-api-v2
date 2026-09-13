@@ -1,20 +1,21 @@
-import { BadRequestException, NotFoundException } from "@/errors/error";
-import { ABILITY_SERVICE, type AbilityService } from '@workspace-service/modules/ability/ability.service';
-import { GROUP_TEAM_SERVICE, type GroupTeamService } from '@workspace-service/modules/group-team/service/group-team.service';
+import { NotFoundException } from '@/errors/error';
+// MAINTENANCE: import { BadRequestException } from '@/errors/error';
+// MAINTENANCE: import { ABILITY_SERVICE, type AbilityService } from '@workspace-service/modules/ability/ability.service';
+// MAINTENANCE: import { GROUP_TEAM_SERVICE, type GroupTeamService } from '@workspace-service/modules/group-team/service/group-team.service';
 import { USER_SERVICE, type UserService } from "@auth-service/modules/user/service/user.service";
 import { TransactionService } from '@post-service/transaction/transaction.service';
-import { AiService } from '@api/modules/ai/service/ai.service';
-import { PostCreationContext } from '@post-service/modules/post/context/post-creation-context';
-import { POST_CREATION_POLICIES, PostCreationPolicy } from '@post-service/modules/post/policies/interface/post-creation-policy.interface';
-import { PERMISSIONS } from '@libs/common/src/constants/permission.constant';
+// MAINTENANCE: import { AiService } from '@api/modules/ai/service/ai.service';
+// MAINTENANCE: import { PostCreationContext } from '@post-service/modules/post/context/post-creation-context';
+// MAINTENANCE: import { POST_CREATION_POLICIES, PostCreationPolicy } from '@post-service/modules/post/policies/interface/post-creation-policy.interface';
+// MAINTENANCE: import { PERMISSIONS } from '@libs/common/src/constants/permission.constant';
 import { Inject, Injectable, Logger } from "@nestjs/common";
-import { dispatchReplyNotification } from "@notification/events/notification.dispatcher";
-import { PermissionScope, VisibilityPost } from '../../../../../generated/prisma';
+// MAINTENANCE: import { dispatchReplyNotification } from '@notification/events/notification.dispatcher';
+// MAINTENANCE: import { PermissionScope, VisibilityPost } from '../../../../../generated/prisma';
 import type { CreatePostCommand } from "../../command/create-post.command";
 import { PostMapper } from "../../mapper/post.mapper";
 import { POST_REPOSITORY, type PostRepository } from "../../repository/post.repository";
-import { POST_MENTION_SERVICE, type PostMentionService } from "../post-mention.service";
-import { POST_META_SERVICE, type PostMetaService } from "../post-meta.service";
+// MAINTENANCE: import { POST_MENTION_SERVICE, type PostMentionService } from '../post-mention.service';
+// MAINTENANCE: import { POST_META_SERVICE, type PostMetaService } from '../post-meta.service';
 import type { PostService } from '../post.service';
 
 @Injectable()
@@ -25,16 +26,23 @@ export class PostServiceImpl implements PostService {
     private readonly transactionService: TransactionService,
     @Inject(USER_SERVICE) private readonly userService: UserService,
     @Inject(POST_REPOSITORY) private readonly postRepository: PostRepository,
-    @Inject(POST_MENTION_SERVICE) private readonly postMentionService: PostMentionService,
-    @Inject(POST_META_SERVICE) private readonly postMetaService: PostMetaService,
-    @Inject(ABILITY_SERVICE) private readonly abilityService: AbilityService,
-    @Inject(GROUP_TEAM_SERVICE) private readonly groupTeamService: GroupTeamService,
-    private readonly aiService: AiService,
-    @Inject(POST_CREATION_POLICIES)
-    private readonly postCreationPolicies: PostCreationPolicy[],
+    // MAINTENANCE: @Inject(POST_MENTION_SERVICE) private readonly postMentionService: PostMentionService,
+    // MAINTENANCE: @Inject(POST_META_SERVICE) private readonly postMetaService: PostMetaService,
+    // MAINTENANCE: @Inject(ABILITY_SERVICE) private readonly abilityService: AbilityService,
+    // MAINTENANCE: @Inject(GROUP_TEAM_SERVICE) private readonly groupTeamService: GroupTeamService,
+    // MAINTENANCE: private readonly aiService: AiService,
+    // MAINTENANCE: @Inject(POST_CREATION_POLICIES) private readonly postCreationPolicies: PostCreationPolicy[],
   ) { }
 
   async create(payload: CreatePostCommand) {
+    const { snapshot } = await this.resolveAuthorAndMentions(payload);
+    const post = await this.transactionService.doInTransaction((tx) =>
+      this.postRepository.create(payload, snapshot, tx),
+    );
+    this.logger.log(`Post created: ${post.publicId}`);
+    return post;
+
+    /* MAINTENANCE: policies, AI topics, mentions and notifications.
     const groupTeamId = await this.authorizeCreation(payload);
     const createPayload = { ...payload, groupTeamId };
 
@@ -55,8 +63,10 @@ export class PostServiceImpl implements PostService {
 
     await this.finalizeCreation(post, payload, snapshot, mentionIds, post.publicId, payload.userId);
     return post;
+    */
   }
 
+  /* MAINTENANCE: group authorization and creation policies.
   private async resolveCreationContext(
     payload: CreatePostCommand,
   ): Promise<PostCreationContext> {
@@ -104,6 +114,7 @@ export class PostServiceImpl implements PostService {
 
     return ctx.groupTeamId;
   }
+  */
 
 
   async reply(publicId: string, payload: CreatePostCommand) {
@@ -113,7 +124,7 @@ export class PostServiceImpl implements PostService {
     ]);
     if (!parent) throw new NotFoundException("Origin post not found");
     const post = await this.transactionService.doInTransaction(async (tx) => {
-      const created = await this.postRepository.createReply(
+      return this.postRepository.createReply(
         payload,
         {
           parentPostId: parent.id,
@@ -124,13 +135,9 @@ export class PostServiceImpl implements PostService {
         },
         tx,
       );
-      await this.postMetaService.attachPostMeta(tx, created.id!, {
-        topics: [...(payload.topic ? [payload.topic] : [])],
-        mentionIds: author.mentionIds,
-      });
-      return created;
     });
 
+    /* MAINTENANCE: topics, mentions and reply notifications.
     await this.finalizeCreation(
       post,
       payload,
@@ -140,9 +147,12 @@ export class PostServiceImpl implements PostService {
       parent.userId,
       true,
     );
+    */
+    this.logger.log(`Reply created: ${post.publicId}`);
     return post;
   }
 
+  /* MAINTENANCE: repost and quote creation.
   async repost(publicId: string, userId: string) {
     const [origin, author] = await Promise.all([
       this.postRepository.findOriginReferenceByPublicId(publicId),
@@ -164,7 +174,6 @@ export class PostServiceImpl implements PostService {
     await this.postMetaService.finalizePostCreation({});
     return post;
   }
-
   async quote(publicId: string, payload: CreatePostCommand) {
     const [origin, author] = await Promise.all([
       this.postRepository.findOriginReferenceByPublicId(publicId),
@@ -198,16 +207,24 @@ export class PostServiceImpl implements PostService {
     );
     return post;
   }
+  */
 
   private async resolveAuthorAndMentions(payload: Pick<CreatePostCommand, "userId" | "mentions">) {
+    const user = await this.userService.findByUserId(payload.userId);
+    if (!user) throw new NotFoundException('User not found');
+    return { snapshot: PostMapper.toUserSnapshot(user), mentionIds: [] as string[] };
+
+    /* MAINTENANCE: mention validation.
     const [user, mentionIds] = await Promise.all([
       this.userService.findByUserId(payload.userId),
       this.postMentionService.validateMentions(payload.mentions),
     ]);
     if (!user) throw new NotFoundException("User not found");
     return { snapshot: PostMapper.toUserSnapshot(user), mentionIds };
+    */
   }
 
+  /* MAINTENANCE: mention and reply notifications.
   private async finalizeCreation(
     post: { publicId: string },
     payload: CreatePostCommand,
@@ -245,4 +262,5 @@ export class PostServiceImpl implements PostService {
     }
     this.logger.log(`${isReply ? "Reply" : "Post"} created: ${post.publicId}`);
   }
+  */
 }
