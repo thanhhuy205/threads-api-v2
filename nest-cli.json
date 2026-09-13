@@ -3,7 +3,7 @@
   "root": "apps/api",
   "sourceRoot": "apps/api/src",
   "compilerOptions": {
-    "webpack": true,
+    "builder": "tsc",
     "tsConfigPath": "apps/api/tsconfig.app.json"
   },
   "projects": {
@@ -12,56 +12,72 @@
       "root": "apps/api",
       "entryFile": "main",
       "sourceRoot": "apps/api/src",
-      "compilerOptions": { "tsConfigPath": "apps/api/tsconfig.app.json" }
+      "compilerOptions": {
+        "tsConfigPath": "apps/api/tsconfig.app.json"
+      }
     },
     "auth-service": {
       "type": "application",
       "root": "apps/auth-service",
       "entryFile": "main",
       "sourceRoot": "apps/auth-service/src",
-      "compilerOptions": { "tsConfigPath": "apps/auth-service/tsconfig.app.json" }
+      "compilerOptions": {
+        "tsConfigPath": "apps/auth-service/tsconfig.app.json"
+      }
     },
     "post-service": {
       "type": "application",
       "root": "apps/post-service",
       "entryFile": "main",
       "sourceRoot": "apps/post-service/src",
-      "compilerOptions": { "tsConfigPath": "apps/post-service/tsconfig.app.json" }
+      "compilerOptions": {
+        "tsConfigPath": "apps/post-service/tsconfig.app.json"
+      }
     },
     "search-service": {
       "type": "application",
       "root": "apps/search-service",
       "entryFile": "main",
       "sourceRoot": "apps/search-service/src",
-      "compilerOptions": { "tsConfigPath": "apps/search-service/tsconfig.app.json" }
+      "compilerOptions": {
+        "tsConfigPath": "apps/search-service/tsconfig.app.json"
+      }
     },
     "workspace-service": {
       "type": "application",
       "root": "apps/workspace-service",
       "entryFile": "main",
       "sourceRoot": "apps/workspace-service/src",
-      "compilerOptions": { "tsConfigPath": "apps/workspace-service/tsconfig.app.json" }
+      "compilerOptions": {
+        "tsConfigPath": "apps/workspace-service/tsconfig.app.json"
+      }
     },
     "work-service": {
       "type": "application",
       "root": "apps/work-service",
       "entryFile": "main",
       "sourceRoot": "apps/work-service/src",
-      "compilerOptions": { "tsConfigPath": "apps/work-service/tsconfig.app.json" }
+      "compilerOptions": {
+        "tsConfigPath": "apps/work-service/tsconfig.app.json"
+      }
     },
     "notification-service": {
       "type": "application",
       "root": "apps/notification-service",
       "entryFile": "main",
       "sourceRoot": "apps/notification-service/src",
-      "compilerOptions": { "tsConfigPath": "apps/notification-service/tsconfig.app.json" }
+      "compilerOptions": {
+        "tsConfigPath": "apps/notification-service/tsconfig.app.json"
+      }
     },
     "upload-service": {
       "type": "application",
       "root": "apps/upload-service",
       "entryFile": "main",
       "sourceRoot": "apps/upload-service/src",
-      "compilerOptions": { "tsConfigPath": "apps/upload-service/tsconfig.app.json" }
+      "compilerOptions": {
+        "tsConfigPath": "apps/upload-service/tsconfig.app.json"
+      }
     }
   }
 }

@@ -1,5 +1,5 @@
-import { UnauthorizedException } from '@/errors/error';
-import { AUTH_MESSAGE } from '@libs/core/constants/message';
+import { UnauthorizedException } from '../errors/error';
+import { AUTH_MESSAGE } from '../constants/message';
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 import type { HttpRequest } from '../types/http.type';
 

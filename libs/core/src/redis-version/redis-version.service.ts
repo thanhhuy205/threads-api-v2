@@ -1,4 +1,4 @@
-import { RedisService } from '@libs/core/src/redis/redis.service';
+import { RedisService } from '../redis/redis.service';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()

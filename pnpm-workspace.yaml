@@ -1,9 +1,13 @@
+packages:
+  - apps/*
+  - libs/*
+
 allowBuilds:
-  "@prisma/client": true
-  "@google/genai": true
-  "@openrouter/sdk": true
-  "@prisma/engines": true
-  "@scarf/scarf": true
+  '@google/genai': true
+  '@openrouter/sdk': true
+  '@prisma/client': true
+  '@prisma/engines': true
+  '@scarf/scarf': true
   bcrypt: true
   esbuild: true
   ffmpeg-ffprobe-static: true
@@ -14,6 +18,5 @@ allowBuilds:
   sharp: true
   unrs-resolver: true
 
-packages:
-  - apps/*
-  - libs/*
+ignoredBuiltDependencies:
+  - prisma

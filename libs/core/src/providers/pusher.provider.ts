@@ -1,4 +1,4 @@
-import configService from "@/config/config";
+import configService from '@purse/common/config';
 import Pusher from "pusher";
 export const pusher = new Pusher({
   appId: configService.PUSHER_CONFIG.PUSHER_APP_ID,

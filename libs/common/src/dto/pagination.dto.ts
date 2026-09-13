@@ -1,4 +1,4 @@
-import { DEFAULT_PAGE, MAX_LIMIT, PER_PAGE } from '@libs/core/constants/pagination';
+import { DEFAULT_PAGE, MAX_LIMIT, PER_PAGE } from '../constants/pagination';
 import { Transform, Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsNotEmpty, IsNumber, IsOptional, Max, Min } from 'class-validator';

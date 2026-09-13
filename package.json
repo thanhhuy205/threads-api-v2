@@ -13,6 +13,7 @@
     "dev:workspace-service": "pnpm --filter @purse/workspace-service dev"
   },
   "devDependencies": {
+    "@nestjs/cli": "^12.0.0",
     "tsc-alias": "^1.8.16",
     "tsx": "^4.20.6",
     "typescript": "^5.8.0"

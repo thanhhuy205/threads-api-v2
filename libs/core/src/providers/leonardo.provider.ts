@@ -1,8 +1,8 @@
-import configService from "@/config/config";
+import configService from '@purse/common/config';
 import type {
     LeonardoGenerationJob,
     LeonardoGenerationResponse,
-} from "@/providers/leonardo.types";
+} from './leonardo.types';
 
 const API = "https://cloud.leonardo.ai/api/rest/v1";
 

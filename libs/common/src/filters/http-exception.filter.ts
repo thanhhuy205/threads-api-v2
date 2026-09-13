@@ -1,6 +1,6 @@
-import type { HttpResponse } from '@/common/types/http.type';
-import { HttpException } from '@/errors/error';
-import { COMMON_MESSAGE } from '@libs/core/constants/message';
+import type { HttpResponse } from '../types/http.type';
+import { HttpException } from '../errors/error';
+import { COMMON_MESSAGE } from '../constants/message';
 import {
   ArgumentsHost,
   Catch,

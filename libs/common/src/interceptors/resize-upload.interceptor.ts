@@ -5,8 +5,8 @@ import {
   NestInterceptor,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
-import { resizeImage } from '@/common/utils/image-resize.util';
-import type { UploadedFile } from '@/common/types/http.type';
+import { resizeImage } from '../utils/image-resize.util';
+import type { UploadedFile } from '../types/http.type';
 
 const resizableImageMimeTypes = new Set([
   'image/jpeg',

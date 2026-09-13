@@ -1,5 +1,5 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-import type { HttpRequest } from '@/common/types/http.type';
+import type { HttpRequest } from '../types/http.type';
 import { normalizeCursorPagination } from '../helpers/cursor-pagination.helper';
 
 /** Parses and bounds `after` and `take` query parameters for cursor pagination. */

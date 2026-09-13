@@ -1,4 +1,4 @@
-import { IS_PUBLIC_KEY } from '@libs/common/src/decorators/is-public.decorator';
+import { IS_PUBLIC_KEY } from '@purse/common/decorators';
 import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';

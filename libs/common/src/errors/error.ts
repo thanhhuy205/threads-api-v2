@@ -1,4 +1,4 @@
-import { COMMON_MESSAGE } from "@libs/core/constants/message";
+import { COMMON_MESSAGE } from "../constants/message";
 
 export class HttpException extends Error {
   constructor(

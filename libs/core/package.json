@@ -2,6 +2,41 @@
   "name": "@purse/core",
   "version": "1.0.0",
   "private": true,
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "exports": {
+    "./auth": {
+      "types": "./dist/auth/index.d.ts",
+      "import": "./dist/auth/index.js",
+      "require": "./dist/auth/index.js"
+    },
+    "./microservice": {
+      "types": "./dist/microservice/index.d.ts",
+      "import": "./dist/microservice/index.js",
+      "require": "./dist/microservice/index.js"
+    },
+    "./providers": {
+      "types": "./dist/providers/index.d.ts",
+      "import": "./dist/providers/index.js",
+      "require": "./dist/providers/index.js"
+    },
+    "./queues": {
+      "types": "./dist/queues/index.d.ts",
+      "import": "./dist/queues/index.js",
+      "require": "./dist/queues/index.js"
+    },
+    "./redis": {
+      "types": "./dist/redis/index.d.ts",
+      "import": "./dist/redis/index.js",
+      "require": "./dist/redis/index.js"
+    },
+    "./redis-version": {
+      "types": "./dist/redis-version/index.d.ts",
+      "import": "./dist/redis-version/index.js",
+      "require": "./dist/redis-version/index.js"
+    }
+  },
   "dependencies": {
     "@nestjs/common": "^11.1.28",
     "@nestjs/config": "^4.0.4",

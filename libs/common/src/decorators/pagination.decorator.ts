@@ -1,5 +1,5 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-import type { HttpRequest } from '@/common/types/http.type';
+import type { HttpRequest } from '../types/http.type';
 import { normalizeOffsetPagination } from '../helpers/offset-pagination.helper';
 
 /** Parses and bounds `page` and `limit` query parameters for offset pagination. */

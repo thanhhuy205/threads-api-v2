@@ -1,8 +1,8 @@
-import { JWT_ISSUER, JwtTokenType } from '@libs/common/src/enums/jwt.enum';
+import { JWT_ISSUER, JwtTokenType } from '@purse/common/enums';
 import type {
   TokenPayload,
   UserRequestPayload,
-} from '@libs/common/src/interfaces/auth.interface';
+} from '@purse/common/interfaces';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { BaseGatewayAuthStrategy } from './base-gateway.startegies';
 

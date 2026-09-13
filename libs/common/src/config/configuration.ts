@@ -90,6 +90,6 @@ const collectInvalidFields = (errors: ValidationError[], parentPath = ''): strin
     return error.children?.length ? collectInvalidFields(error.children, path) : [path];
   });
 
-export const CONFIGURATION = new Configuration().validate();
+export const CONFIGURATION = new Configuration();
 export type TConfiguration = typeof CONFIGURATION;
 export const configurationFactory = (): TConfiguration => CONFIGURATION;

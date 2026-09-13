@@ -1,4 +1,4 @@
-import { MAX_LIMIT, PER_PAGE } from '@libs/core/constants/pagination';
+import { MAX_LIMIT, PER_PAGE } from '../constants/pagination';
 import type { CursorPagination } from '../dto/pagination.dto';
 
 export function normalizeCursorPagination(input: {

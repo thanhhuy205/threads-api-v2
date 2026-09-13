@@ -2,8 +2,8 @@
 import type {
     TokenPayload,
     UserRequestPayload,
-} from '@libs/common/src/interfaces/auth.interface';
-import type { HttpRequest } from '@libs/common/src/types/http.type';
+} from '@purse/common/interfaces';
+import type { HttpRequest } from '@purse/common/types';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-custom';

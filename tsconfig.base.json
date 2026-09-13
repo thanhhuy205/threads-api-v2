@@ -12,35 +12,6 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "types": ["node"],
-    "baseUrl": ".",
-    "paths": {
-      "@api/*": ["apps/api/src/*"],
-      "@auth-service/*": ["apps/auth-service/src/*"],
-      "@notification/*": ["apps/notification-service/src/notification-group/*"],
-      "@notification-service/*": ["apps/notification-service/src/*"],
-      "@post-service/*": ["apps/post-service/src/*"],
-      "@search-service/*": ["apps/search-service/src/*"],
-      "@upload/*": ["apps/upload-service/src/upload/*"],
-      "@upload-service/*": ["apps/upload-service/src/*"],
-      "@workspace-service/*": ["apps/workspace-service/src/*"],
-      "@work-service/*": ["apps/work-service/src/*"],
-      "@libs/cache/*": ["libs/core/src/cache/*"],
-      "@libs/core/config/*": ["libs/common/src/config/*"],
-      "@libs/core/constants/*": ["libs/common/src/constants/*"],
-      "@libs/core/providers/*": ["libs/core/src/providers/*"],
-      "@libs/*": ["libs/*"],
-      "@/common/*": ["libs/common/src/*"],
-      "@/bootstrap/*": ["libs/common/src/bootstrap/*"],
-      "@/errors/*": ["libs/common/src/errors/*"],
-      "@/constants/*": ["libs/common/src/constants/*"],
-      "@/config/*": ["libs/common/src/config/*"],
-      "@/providers/*": ["libs/core/src/providers/*"],
-      "@/util/*": ["libs/core/util/*"],
-      "@/constants/queue": ["libs/common/src/constants/queue.ts"],
-      "@/constants/resolve-key/*": ["libs/common/src/constants/resolve-key/*"],
-      "@/shared/database/*": ["apps/api/src/shared/database/*"],
-      "@/shared/redis-version": ["libs/core/src/redis-version/index.ts"],
-      "@/*": ["apps/api/src/*"]
-    }
+    "baseUrl": "."
   }
 }

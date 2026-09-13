@@ -1,4 +1,4 @@
-import { DEFAULT_PAGE, MAX_LIMIT, PER_PAGE } from '@libs/core/constants/pagination';
+import { DEFAULT_PAGE, MAX_LIMIT, PER_PAGE } from '../constants/pagination';
 import type { OffsetPagination } from '../dto/pagination.dto';
 
 export function normalizeOffsetPagination(input: {

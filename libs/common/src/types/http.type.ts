@@ -1,4 +1,3 @@
-import type { UserRequestPayload } from '../interfaces/auth.interface';
 
 export type HttpHeaders = Record<string, string | string[] | undefined>;
 
@@ -8,7 +7,7 @@ export interface HttpRequest {
   headers: HttpHeaders;
   query: HttpQuery;
   ip?: string;
-  user?: UserRequestPayload;
+  user?: any;
   accessToken?: string;
   refreshToken?: string;
 }

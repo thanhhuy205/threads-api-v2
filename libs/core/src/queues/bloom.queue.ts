@@ -1,5 +1,5 @@
 import { QueueEvents } from 'bullmq';
-import { QUEUE_NAME } from '@libs/core/constants/queue';
+import { QUEUE_NAME } from '@purse/common/constants';
 
 const queueEvents = new QueueEvents(QUEUE_NAME.BLOOM_QUEUE);
 
