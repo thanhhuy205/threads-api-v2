@@ -1,4 +1,3 @@
-import { PrismaService } from '@auth-service/prisma/prisma.service';
 import { Injectable } from '@nestjs/common';
 import {
   authSessionUserSelect,
@@ -6,10 +5,11 @@ import {
   type AuthSessionUser,
   type CreateAuthUserPayload,
 } from '../auth.repository';
+import { PrismaService } from '../../../../prisma/prisma.service';
 
 @Injectable()
 export class AuthRepositoryImpl implements AuthRepository {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async createUser(payload: CreateAuthUserPayload): Promise<AuthSessionUser> {
     return this.prisma.user.create({

@@ -1,28 +1,28 @@
-import configService from "@/config/config";
-import { NotFoundException } from "@/errors/error";
-import type { SessionMetadata } from "@auth-service/modules/auth/interfaces/session-metadata";
+import configService from '@purse/common/config';
+import { NotFoundException } from '@purse/common/errors';
+import type { SessionMetadata } from "../../interfaces/session-metadata";
 import {
   VERIFICATION_REPOSITORY,
   type VerificationRepository,
-} from "@auth-service/modules/auth/repository/verification.repository";
+} from "../../repository/verification.repository";
 import {
   comparePassword,
   hashPassword,
-} from "@auth-service/modules/auth/util/hasher-password";
-import { hasherToken } from "@auth-service/modules/auth/util/hasher-token";
-import { JWT_ISSUER, JwtTokenType } from "@libs/common/src/enums/jwt.enum";
-import { redisKey } from "@libs/core/constants/redis-key";
-import { RedisService } from "@libs/core/src/redis/redis.service";
+} from "../../util/hasher-password";
+import { hasherToken } from "../../util/hasher-token";
+import { JWT_ISSUER, JwtTokenType } from '@purse/common/enums';
+import { redisKey } from '@purse/common/constants';
+import { RedisService } from '@purse/core/redis';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { JwtService } from "@nestjs/jwt";
-import { AUTH_REPOSITORY, type AuthRepository } from '@auth-service/modules/auth/repository/auth.repository';
+import { AUTH_REPOSITORY, type AuthRepository } from '../../repository/auth.repository';
 
 import {
   REFRESH_TOKEN_REPOSITORY,
   type RefreshTokenRepository,
-} from '@auth-service/modules/auth/repository/refresh-token.repository';
-import { USER_SERVICE, type UserService } from "@auth-service/modules/user/service/user.service";
-import { VerificationCodeType } from "apps/auth-service/generated/prisma";
+} from '../../repository/refresh-token.repository';
+import { USER_SERVICE, type UserService } from "../../../user/service/user.service";
+import { VerificationCodeType } from '../../../../generated/prisma/client';
 import crypto from "crypto";
 import ms, { StringValue } from "ms";
 import type { ForgotPasswordDto } from "../../dto/request/forgot-password.request.dto";

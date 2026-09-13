@@ -1,14 +1,12 @@
-import { configurationFactory } from '@/config/configuration';
-import { JwtAlgorithm } from '@libs/common/src/enums/jwt.enum';
-import { jwtConfiguration } from '@libs/core/config/jwt.config';
-import { AppAuthGuard } from '@libs/core/src/auth/guards/auth.guard';
-import { GrpcGatewayAuthStrategy } from '@libs/core/src/auth/strategies/grpc-gate.startegies';
-import { RedisModule } from '@libs/core/src/redis/redis.module';
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService, ConfigType } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
+import { configurationFactory, jwtConfiguration } from '@purse/common/config';
+import { JwtAlgorithm } from '@purse/common/enums';
+import { AppAuthGuard, GrpcGatewayAuthStrategy } from '@purse/core/auth';
+import { RedisModule } from '@purse/core/redis';
 import { validate } from './config/app.config';
 import { AuthModule } from './modules/auth/auth.module';
 import { PrismaModule } from './prisma/prisma.module';

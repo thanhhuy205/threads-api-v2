@@ -16,3 +16,4 @@ docker
 temp
 apps/*/generated
 out
+apps/*/src/generated/prisma

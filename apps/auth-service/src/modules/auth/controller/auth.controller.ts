@@ -1,13 +1,11 @@
-import { GetUserId } from '@/common/decorators/get-user-id.decorator';
-import { IsPublic } from '@/common/decorators/is-public.decorator';
-import { Message } from '@/common/decorators/message.decorator';
-import { RefreshTokenStrategy } from '@auth-service/security/refresh-token.strategy';
-import type { HttpRequest as Request } from '@/common/types/http.type';
-import configService from '@/config/config';
+import { GetUserId, IsPublic, Message } from '@purse/common/decorators';
+import { RefreshTokenStrategy } from '../../../security/refresh-token.strategy';
+import type { HttpRequest as Request } from '@purse/common/types';
+import configService from '@purse/common/config';
 import {
   UnauthorizedException
-} from '@/errors/error';
-import { AUTH_MESSAGE } from '@libs/core/constants/message';
+} from '@purse/common/errors';
+import { AUTH_MESSAGE } from '@purse/common/constants';
 import {
   Body,
   Controller,

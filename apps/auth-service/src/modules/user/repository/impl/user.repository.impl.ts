@@ -1,6 +1,6 @@
-import { PrismaService } from '@auth-service/prisma/prisma.service';
+import { PrismaService } from '../../../../prisma/prisma.service';
 import { Injectable } from '@nestjs/common';
-import { Prisma } from 'apps/auth-service/generated/prisma';
+import { Prisma } from '../../../../generated/prisma/client';
 import type { UserRepository } from '../user.repository';
 
 const userProfileSelect = {

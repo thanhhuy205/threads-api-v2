@@ -1,5 +1,4 @@
-import { GetUserId } from '@/common/decorators/get-user-id.decorator';
-import { Message } from '@/common/decorators/message.decorator';
+import { GetUserId, Message } from '@purse/common/decorators';
 import { Body, Controller, HttpStatus, Inject, Patch } from '@nestjs/common';
 import { GrpcMethod } from '@nestjs/microservices';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';

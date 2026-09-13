@@ -1,4 +1,4 @@
-import { PrismaService } from '@auth-service/prisma/prisma.service';
+import { PrismaService } from '../../../../prisma/prisma.service';
 import { Injectable } from '@nestjs/common';
 import {
   type CreateRefreshTokenPayload,

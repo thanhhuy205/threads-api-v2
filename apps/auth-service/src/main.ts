@@ -1,9 +1,10 @@
-import { APP_CONFIG } from '@auth-service/config/app.config';
 import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import requestId from 'express-request-id';
 import helmet from 'helmet';
+import 'reflect-metadata';
 import { AppModule } from './app.module';
+import { APP_CONFIG } from './config/app.config';
 
 // CORS_ORIGIN is a comma-separated whitelist. `*` (the default in
 // libs/common/src/config/app.config.ts) keeps the old permissive behaviour so

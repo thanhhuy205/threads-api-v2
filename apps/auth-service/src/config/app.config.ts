@@ -1,5 +1,5 @@
-import { MicroserviceName } from "@libs/core/src/microservice/microservice.enum";
-import { plainToInstance } from "class-transformer";
+import { MicroserviceName } from '@purse/core/microservice';
+import { plainToInstance, Type } from "class-transformer";
 import { IsNotEmpty, IsNumber, IsString, validateSync } from "class-validator";
 
 export class AppConfig {
@@ -11,6 +11,7 @@ export class AppConfig {
     AUTH_SERVICE_HOST: string;
 
     @IsNumber()
+    @Type(() => Number)
     @IsNotEmpty()
     AUTH_SERVICE_PORT: number;
 

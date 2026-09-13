@@ -1,7 +1,7 @@
-import configService from '@/config/config';
-import { PrismaService } from '@auth-service/prisma/prisma.service';
+import configService from '@purse/common/config';
+import { PrismaService } from '../../../../prisma/prisma.service';
 import { Injectable } from '@nestjs/common';
-import type { Prisma, VerificationCodeType } from "apps/auth-service/generated/prisma";
+import type { Prisma, VerificationCodeType } from '../../../../generated/prisma/client';
 import ms, { StringValue } from 'ms';
 import type { VerificationRepository } from '../verification.repository';
 

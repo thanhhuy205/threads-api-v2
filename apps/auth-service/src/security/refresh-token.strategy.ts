@@ -1,6 +1,6 @@
-import { BadRequestException } from '@/errors/error';
-import type { HttpRequest } from '@/common/types/http.type';
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import { BadRequestException } from '@purse/common/errors';
+import type { HttpRequest } from '@purse/common/types';
 
 @Injectable()
 export class RefreshTokenStrategy implements CanActivate {
