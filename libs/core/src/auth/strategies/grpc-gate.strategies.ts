@@ -1,10 +1,10 @@
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JWT_ISSUER, JwtTokenType } from '@purse/common/enums';
 import type {
   TokenPayload,
   UserRequestPayload,
 } from '@purse/common/interfaces';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { BaseGatewayAuthStrategy } from './base-gateway.startegies';
+import { BaseGatewayAuthStrategy } from './base-gateway.strategies';
 
 @Injectable()
 export class GrpcGatewayAuthStrategy extends BaseGatewayAuthStrategy {

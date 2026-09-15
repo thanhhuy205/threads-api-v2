@@ -1,4 +1,4 @@
-import { Prisma } from "apps/auth-service/src/generated/prisma/client";
+import { Prisma } from "../../../generated/prisma/client";
 
 export const AUTH_REPOSITORY = Symbol('AUTH_REPOSITORY');
 

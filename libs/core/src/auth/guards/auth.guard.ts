@@ -1,32 +1,39 @@
-import { IS_PUBLIC_KEY } from '@purse/common/decorators';
-import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import {
+  ExecutionContext,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
+import { IS_PUBLIC_KEY } from '@purse/common/decorators';
+
+@Injectable()
 export class AppAuthGuard extends AuthGuard('gateway-auth') {
-    constructor(private reflector: Reflector) {
-        super();
+  constructor(private readonly reflector: Reflector) {
+    super();
+  }
+
+  override async canActivate(context: ExecutionContext): Promise<boolean> {
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
+    // Allow public routes
+    if (isPublic) {
+      return true;
     }
 
-    override async canActivate(context: ExecutionContext): Promise<boolean> {
-        const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
-            context.getHandler(),
-            context.getClass(),
-        ]);
+    // Only validate token - no authorization logic
+    const isGranted = await super.canActivate(context);
+    return Boolean(isGranted);
+  }
 
-        // Allow public routes
-        if (isPublic) {
-            return true;
-        }
-
-        // Only validate token - no authorization logic
-        const isGranted = await super.canActivate(context);
-        return !!isGranted;
+  override handleRequest(err: any, user: any, info: any) {
+    if (err || !user) {
+      throw err || new UnauthorizedException('Unauthorized');
     }
-    override handleRequest(err: any, user: any, info: any) {
-        if (err || !user) {
-            throw err || new UnauthorizedException('Unauthorized');
-        }
 
-        return user;
-    }
+    return user;
+  }
 }

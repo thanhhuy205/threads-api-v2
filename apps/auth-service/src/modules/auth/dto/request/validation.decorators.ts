@@ -1,9 +1,9 @@
 import {
+  registerDecorator,
   type ValidationArguments,
+  type ValidationOptions,
   ValidatorConstraint,
   type ValidatorConstraintInterface,
-  registerDecorator,
-  type ValidationOptions,
 } from 'class-validator';
 import { AuthErrorMessage } from './auth-error-message';
 

@@ -1,6 +1,6 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { IsEmail, MaxLength } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
 import { AuthErrorMessage } from './auth-error-message';
 
 export class ForgotPasswordDto {

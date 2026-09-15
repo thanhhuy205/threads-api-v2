@@ -2,12 +2,16 @@ packages:
   - apps/*
   - libs/*
 
+injectWorkspacePackages: true
+syncInjectedDepsAfterScripts:
+  - build
+
 allowBuilds:
-  '@google/genai': true
-  '@openrouter/sdk': true
-  '@prisma/client': true
-  '@prisma/engines': true
-  '@scarf/scarf': true
+  "@google/genai": true
+  "@openrouter/sdk": true
+  "@prisma/client": true
+  "@prisma/engines": true
+  "@scarf/scarf": true
   bcrypt: true
   esbuild: true
   ffmpeg-ffprobe-static: true

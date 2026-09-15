@@ -1,6 +1,6 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { IsString, Matches, MaxLength, MinLength } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
 import { AuthErrorMessage } from './auth-error-message';
 
 const usernameRegex = /^[a-zA-Z0-9._-]{3,32}$/;

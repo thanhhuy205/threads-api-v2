@@ -29,13 +29,11 @@ import { PrismaModule } from './prisma/prisma.module';
     }),
     JwtModule.registerAsync({
       imports: [ConfigModule.forFeature(jwtConfiguration)],
-
+      global: true,
       useFactory: async (
         jwtConfig: ConfigType<typeof jwtConfiguration>,
       ) => ({
-        global: true,
         secret: jwtConfig.secret,
-
         signOptions: {
           algorithm: jwtConfig.algorithm as JwtAlgorithm,
           issuer: jwtConfig.issuer,

@@ -1,11 +1,3 @@
-import { GetUserId, IsPublic, Message } from '@purse/common/decorators';
-import { RefreshTokenStrategy } from '../../../security/refresh-token.strategy';
-import type { HttpRequest as Request } from '@purse/common/types';
-import configService from '@purse/common/config';
-import {
-  UnauthorizedException
-} from '@purse/common/errors';
-import { AUTH_MESSAGE } from '@purse/common/constants';
 import {
   Body,
   Controller,
@@ -27,6 +19,12 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import configService from '@purse/common/config';
+import { AUTH_MESSAGE } from '@purse/common/constants';
+import { GetUserId, IsPublic, Message } from '@purse/common/decorators';
+import { UnauthorizedException } from '@purse/common/errors';
+import type { HttpRequest as Request } from '@purse/common/types';
+import { RefreshTokenStrategy } from '../../../security/refresh-token.strategy';
 import { ForgotPasswordDto } from '../dto/request/forgot-password.request.dto';
 import { LoginDto } from '../dto/request/login.request.dto';
 import { RegisterDto } from '../dto/request/register.request.dto';
@@ -41,7 +39,7 @@ import { AUTH_SERVICE, type AuthService } from '../service/auth.service';
 @Controller('auth')
 export class AuthController {
   private readonly logger = new Logger(AuthController.name);
-  constructor(@Inject(AUTH_SERVICE) private readonly authService: AuthService) { }
+  constructor(@Inject(AUTH_SERVICE) private readonly authService: AuthService) {}
 
   @Post('register')
   @IsPublic()
