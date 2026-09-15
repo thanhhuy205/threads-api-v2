@@ -1,11 +1,11 @@
-import type { Prisma } from "../../../../../generated/prisma";
 import { Inject, Injectable } from '@nestjs/common';
+import type { Prisma } from '../../../../generated/prisma/client';
 import {
   POLL_OPTIONS_REPOSITORY,
-  type PollOptionsRepository,
   type CreatePollOptionPayload,
+  type PollOptionsRepository,
 } from "../../repository/poll-options.repository";
-import type { PollOptionsService } from '../poll-options.services';
+import type { PollOptionsService } from '../poll-options.service';
 
 export type PollOptionInput = string;
 
@@ -14,7 +14,7 @@ export class PollOptionsServiceImpl implements PollOptionsService {
   constructor(
     @Inject(POLL_OPTIONS_REPOSITORY)
     private readonly pollOptionsRepository: PollOptionsRepository,
-  ) {}
+  ) { }
   createMany(
     pollId: number,
     options: PollOptionInput[],

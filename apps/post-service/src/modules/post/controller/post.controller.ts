@@ -1,26 +1,13 @@
-import { CursorPagination } from "@/common/decorators/cursor-pagination.decorator";
-import { GetUserId } from "@/common/decorators/get-user-id.decorator";
-import { ResponseOperation } from "@/common/decorators/http-message-operration.decorator";
-import { IsPublic } from "@/common/decorators/is-public.decorator";
-import { Message } from "@/common/decorators/message.decorator";
-import { ApiCursorPaginatedResponse } from "@/common/decorators/swagger-response.decorator";
-import type { CursorPagination as CursorPaginationParams } from "@/common/dto/pagination.dto";
-import { NotFoundException } from "@/errors/error";
-import { USER_SERVICE, type UserService } from "@auth-service/modules/user/service/user.service";
-import { POST_MESSAGE } from "@libs/core/constants/message";
 import {
-  BadRequestException,
   Body,
   Controller,
-  Delete,
   Get,
   HttpStatus,
   Inject,
   Param,
-  Patch,
   Post,
   Query,
-  Req,
+  Req
 } from "@nestjs/common";
 import {
   ApiBearerAuth,
@@ -28,16 +15,28 @@ import {
   ApiParam,
   ApiTags,
 } from "@nestjs/swagger";
+import { POST_MESSAGE } from '@purse/common/constants';
+import {
+  ApiCursorPaginatedResponse,
+  CursorPagination,
+  GetUserId,
+  IsPublic,
+  Message,
+  ResponseOperation,
+} from '@purse/common/decorators';
+import type { CursorPagination as CursorPaginationParams } from '@purse/common/dto';
+import { NotFoundException } from '@purse/common/errors';
+import {
+  USER_READER,
+  type UserReader,
+} from '../ports/user-reader.port';
 import {
   CreatePostDto,
   CursorPaginationQueryDto,
-  HidePostDto,
   NewsFeedQueryDto,
   PublicIdParamsDto,
-  SavePostDto,
   SearchPostQueryDto,
-  UpdatePostDto,
-  UsernameParamsDto,
+  UsernameParamsDto
 } from "../dto/request";
 import { POST_ACTION_SERVICE, type PostActionService } from "../service/post-action.service";
 import { POST_FEED_SERVICE, type PostFeedService } from "../service/post-feed.service";
@@ -54,13 +53,14 @@ type AuthenticatedRequest = {
 @Controller("posts")
 export class PostController {
   constructor(
-    @Inject(USER_SERVICE) private readonly userService: UserService,
     @Inject(POST_SERVICE) private readonly postService: PostService,
     @Inject(POST_ACTION_SERVICE) private readonly postActionService: PostActionService,
     @Inject(POST_FEED_SERVICE) private readonly postFeedService: PostFeedService,
     @Inject(POST_SEARCH_SERVICE) private readonly postSearchService: PostSearchService,
     @Inject(POST_USER_SERVICE) private readonly postUserService: PostUserService,
-  ) { }
+    @Inject(USER_READER)
+    private readonly userReader: UserReader,
+  ) {}
 
   @Get("news-feed")
   @IsPublic()
@@ -170,7 +170,7 @@ export class PostController {
     const { posts, pagination } = await this.postUserService.getPostsByUser({
       after: cursor.after ?? undefined,
       take: cursor.take,
-      userId: user.id,
+      userId: user.publicId,
       // MAINTENANCE: myUserId: (await this.jwtService.requestAuthToken(request)) ?? undefined,
       myUserId: undefined,
     });
@@ -193,7 +193,7 @@ export class PostController {
     const { posts, pagination } = await this.postUserService.getRepliesByUser({
       after: cursor.after ?? undefined,
       take: cursor.take,
-      userId: user.id,
+      userId: user.publicId,
       // MAINTENANCE: myUserId: (await this.jwtService.requestAuthToken(request)) ?? undefined,
       myUserId: undefined,
     });
@@ -217,7 +217,7 @@ export class PostController {
     const { posts, pagination } = await this.postFeedService.getQuote({
       after: cursor.after ?? undefined,
       take: cursor.take,
-      userId: user.id,
+      userId: user.publicId,
       myUserId: (await this.jwtService.requestAuthToken(request)) ?? undefined,
     });
     return { data: posts, pagination };
@@ -403,7 +403,7 @@ export class PostController {
   */
 
   private async getUser(username: string) {
-    const user = await this.userService.findByUsername(username);
+    const user = await this.userReader.findByUsername(username);
     if (!user) throw new NotFoundException("User not found");
     return user;
   }

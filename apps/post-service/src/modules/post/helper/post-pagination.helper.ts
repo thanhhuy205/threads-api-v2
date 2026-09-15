@@ -1,8 +1,8 @@
-import { buildCursorPagination, normalizeCursorPagination } from '@/common/helpers/cursor-pagination.helper';
-import { redisKey } from "@libs/core/constants/redis-key";
-import { RedisService } from "@libs/core/src/redis/redis.service";
-import { PostMapper } from "@post-service/modules/post/mapper/post.mapper";
-import { Prisma } from "../../../../generated/prisma";
+import { redisKey } from '@purse/common/constants';
+import { buildCursorPagination, normalizeCursorPagination } from '@purse/common/helpers';
+import { RedisService } from '@purse/core/redis';
+import { PostMapper } from '../mapper/post.mapper';
+import { Prisma } from '../../../generated/prisma/client';
 import { PostRepository } from "../repository/post.repository";
 
 export const postListCacheTtlSeconds = 60;

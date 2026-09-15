@@ -1,4 +1,4 @@
-import { BadRequestException } from "@/errors/error";
+import { BadRequestException } from '@purse/common/errors';
 import { dispatchMentionNotification } from "@notification/events/notification.dispatcher";
 import type { CreatePostCommand } from "../../command/create-post.command";
 import { USER_SERVICE, type UserService } from '@auth-service/modules/user/service/user.service';

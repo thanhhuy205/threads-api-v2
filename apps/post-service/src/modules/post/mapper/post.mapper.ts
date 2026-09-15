@@ -1,9 +1,9 @@
 import { Logger } from '@nestjs/common';
-import { Post, Prisma } from '../../../../generated/prisma';
+import { Post, Prisma } from '../../../generated/prisma/client';
 
 import type { PostRecord } from "../repository/post.repository";
 
-export const postFeedSelect = Prisma.validator<Prisma.PostSelect>()({
+export const postFeedSelect = {
   publicId: true, userId: true, content: true, visibility: true, type: true,
   isPinned: true, dateRangeFrom: true, dateRangeTo: true,
   scheduledTimeFrom: true, scheduledTimeTo: true,
@@ -16,7 +16,7 @@ export const postFeedSelect = Prisma.validator<Prisma.PostSelect>()({
   createdAt: true,
   repliesCount: true, repostsCountAndQuoteCount: true,
   // MAINTENANCE: poll/media/mentions/topicsPosts relation selects.
-});
+} satisfies Prisma.PostSelect;
 
 export const postSelectRepository = {
   id: true, publicId: true, content: true, contentJson: true, type: true,

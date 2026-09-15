@@ -1,5 +1,5 @@
-import { RedisVersionService } from '@/shared/redis-version';
-import { RedisService } from '@libs/core/src/redis/redis.service';
+import { RedisService } from '@purse/core/redis';
+import { RedisVersionService } from '@purse/core/redis-version';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import {
   buildNewFeedWhere,
@@ -8,8 +8,8 @@ import {
   buildRepliesWhere,
   paginatePosts,
   postListCacheTtlSeconds,
-} from "@post-service/modules/post/helper";
-import { PostMapper } from "@post-service/modules/post/mapper/post.mapper";
+} from '../../helper';
+import { PostMapper } from '../../mapper/post.mapper';
 import type { GetPostWithPublicIdCommand } from '../../command/get-post-with-public-id.command';
 import type { GetPostWithUserCommand } from '../../command/get-post-with-user.command';
 import type { NewsFeedCommand } from '../../command/news-feed.command';

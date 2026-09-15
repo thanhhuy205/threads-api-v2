@@ -1,9 +1,9 @@
 import { ABILITY_SERVICE, type AbilityService } from "@workspace-service/modules/ability/ability.service";
-import type { CreatePostCommand } from "@post-service/modules/post/command/create-post.command";
-import { PostCreationPolicy } from "@post-service/modules/post/policies/interface/post-creation-policy.interface";
-import { PERMISSIONS } from "@libs/common/src/constants/permission.constant";
+import { PERMISSIONS } from '@purse/common/constants';
+import type { CreatePostCommand } from '../command/create-post.command';
+import { PostCreationPolicy } from './interface/post-creation-policy.interface';
 import { BadRequestException, Inject, Injectable } from "@nestjs/common";
-import { PostType, VisibilityPost } from "../../../../generated/prisma";
+import { PostType, VisibilityPost } from '../../../generated/prisma/client';
 
 @Injectable()
 export class AnnouncementPolicy implements PostCreationPolicy {

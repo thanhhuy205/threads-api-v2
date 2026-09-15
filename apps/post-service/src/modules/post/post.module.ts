@@ -1,11 +1,9 @@
-// MAINTENANCE: import { AbilityModule } from '@workspace-service/modules/ability/ability.module';
-// MAINTENANCE: import { GroupTeamModule } from '@workspace-service/modules/group-team/group-team.module';
-import { RedisVersionModule } from '@/shared/redis-version';
-import { TransactionModule } from '@post-service/transaction/transaction.module';
-// MAINTENANCE: import { AiModule } from '@api/modules/ai/ai.module';
-import { UserModule } from '@auth-service/modules/user/user.module';
-// MAINTENANCE: import { JwtModule } from '@api/shared/jwt/jwt.module';
 import { Module } from '@nestjs/common';
+import { ClientsModule, Transport } from '@nestjs/microservices';
+import { RedisVersionModule } from '@purse/core/redis-version';
+import { GrpcUserReader } from '../../integrations/user/grpc-user-reader';
+import { USER_GRPC_CLIENT } from '../../integrations/user/user.tokens';
+import { TransactionModule } from '../../transaction/transaction.module';
 import { PostController } from './controller/post.controller';
 // MAINTENANCE: import { AnnouncementPolicy } from './policies/announcement.policy';
 // MAINTENANCE: import { ExpirationPolicy } from './policies/expiration.policy';
@@ -18,6 +16,7 @@ import { PostRepositoryImpl } from './repository/impl/post.repository.impl';
 // MAINTENANCE: import { LIKE_REPOSITORY } from './repository/like.repository';
 // MAINTENANCE: import { POST_INTERACTION_REPOSITORY } from './repository/post-interaction.repository';
 import { POST_REPOSITORY } from './repository/post.repository';
+import { USER_READER } from './ports/user-reader.port';
 // MAINTENANCE: import { TOPICS_POST_REPOSITORY } from './repository/topics-post.repository';
 // MAINTENANCE: import { LikeServiceImpl } from './service/impl/like.service.impl';
 // MAINTENANCE: import { OverviewDeclineServiceImpl } from './service/impl/overview-decline.service.impl';
@@ -40,13 +39,23 @@ import { POST_SERVICE } from './service/post.service';
 
 @Module({
   imports: [
+    ClientsModule.register([
+      {
+        name: USER_GRPC_CLIENT,
+        transport: Transport.GRPC,
+        options: {
+          package: 'user',
+          protoPath: require.resolve('@purse/proto/user.proto'),
+          url: process.env.USER_SERVICE_GRPC_URL ?? 'auth-service:5001',
+        },
+      },
+    ]),
     RedisVersionModule,
     TransactionModule,
-    UserModule,
-    // MAINTENANCE: JwtModule, AbilityModule, GroupTeamModule, AiModule,
   ],
   controllers: [PostController],
   providers: [
+    { provide: USER_READER, useClass: GrpcUserReader },
     { provide: POST_REPOSITORY, useClass: PostRepositoryImpl },
     // MAINTENANCE: { provide: POST_INTERACTION_REPOSITORY, useClass: PostInteractionRepositoryImpl },
     // MAINTENANCE: { provide: LIKE_REPOSITORY, useClass: LikeRepositoryImpl },

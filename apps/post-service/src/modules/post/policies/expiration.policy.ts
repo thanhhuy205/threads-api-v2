@@ -1,6 +1,6 @@
 import { Inject, Injectable } from "@nestjs/common";
-import type { CreatePostCommand } from "@post-service/modules/post/command/create-post.command";
-import { PostCreationPolicy } from "@post-service/modules/post/policies/interface/post-creation-policy.interface";
+import type { CreatePostCommand } from '../command/create-post.command';
+import { PostCreationPolicy } from './interface/post-creation-policy.interface';
 import { ABILITY_SERVICE, type AbilityService } from "@workspace-service/modules/ability/ability.service";
 
 @Injectable()

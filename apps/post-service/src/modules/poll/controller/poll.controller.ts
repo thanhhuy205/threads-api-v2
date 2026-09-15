@@ -1,5 +1,4 @@
-import { GetUserId } from '@/common/decorators/get-user-id.decorator';
-import { Message } from '@/common/decorators/message.decorator';
+import { GetUserId, Message } from '@purse/common/decorators';
 import { Body, Controller, HttpCode, HttpStatus, Inject, Param, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CreateVoteDto, VoteParamsDto } from '../dto/request';

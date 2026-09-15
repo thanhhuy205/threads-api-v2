@@ -1,4 +1,4 @@
-import type { CreatePostCommand } from "@post-service/modules/post/command/create-post.command";
+import type { CreatePostCommand } from '../../command/create-post.command';
 
 
 interface PostCreationContext {

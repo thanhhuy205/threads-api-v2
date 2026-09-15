@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { TransactionModule } from '@post-service/transaction/transaction.module';
+import { TransactionModule } from '../../transaction/transaction.module';
 import { PollController } from './controller/poll.controller';
 import { PollOptionsRepositoryImpl } from './repository/impl/poll-options.repository.impl';
 import { PollRepositoryImpl } from './repository/impl/poll.repository.impl';
@@ -10,7 +10,7 @@ import { VOTE_REPOSITORY } from './repository/vote.repository';
 import { PollOptionsServiceImpl } from './service/impl/poll-options.services.impl';
 import { PollServiceImpl } from './service/impl/poll.service.impl';
 import { VoteServiceImpl } from './service/impl/vote.service.impl';
-import { POLL_OPTIONS_SERVICE } from './service/poll-options.services';
+import { POLL_OPTIONS_SERVICE } from './service/poll-options.service';
 import { POLL_SERVICE } from './service/poll.service';
 import { VOTE_SERVICE } from './service/vote.service';
 

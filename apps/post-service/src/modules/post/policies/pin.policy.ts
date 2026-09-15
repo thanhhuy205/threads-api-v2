@@ -1,8 +1,8 @@
 import { ABILITY_SERVICE, type AbilityService } from "@workspace-service/modules/ability/ability.service";
-import type { CreatePostCommand } from "@post-service/modules/post/command/create-post.command";
-import { PostCreationContext } from "@post-service/modules/post/context/post-creation-context";
-import { PostCreationPolicy } from "@post-service/modules/post/policies/interface/post-creation-policy.interface";
-import { PERMISSIONS } from "@libs/common/src/constants/permission.constant";
+import { PERMISSIONS } from '@purse/common/constants';
+import type { CreatePostCommand } from '../command/create-post.command';
+import { PostCreationContext } from '../context/post-creation-context';
+import { PostCreationPolicy } from './interface/post-creation-policy.interface';
 import { Inject, Injectable } from "@nestjs/common";
 
 @Injectable()

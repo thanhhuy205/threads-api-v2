@@ -1,1 +1,1 @@
-export { CursorPaginationQueryDto } from '@/common/dto/pagination.dto';
+export { CursorPaginationQueryDto } from '@purse/common/dto';

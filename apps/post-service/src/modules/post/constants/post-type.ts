@@ -1,4 +1,4 @@
-import { PostType } from "../../../../generated/prisma";
+import { PostType } from '../../../generated/prisma/client';
 
 export const creatablePostTypes = [
   PostType.ANNOUNCEMENT,

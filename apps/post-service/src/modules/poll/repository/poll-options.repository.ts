@@ -1,4 +1,4 @@
-import type { Prisma } from '../../../../generated/prisma';
+import type { Prisma } from '../../../generated/prisma/client';
 
 export const POLL_OPTIONS_REPOSITORY = Symbol('POLL_OPTIONS_REPOSITORY');
 

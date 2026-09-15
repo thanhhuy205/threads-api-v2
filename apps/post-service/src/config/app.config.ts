@@ -1,4 +1,4 @@
-import { MicroserviceName } from '@libs/core/src/microservice/microservice.enum';
+import { MicroserviceName } from '@purse/core/microservice';
 import { plainToInstance } from 'class-transformer';
 import { IsInt, IsNotEmpty, IsString, Max, Min, validateSync } from 'class-validator';
 

@@ -1,0 +1,11 @@
+version: v2
+
+clean: true
+
+plugins:
+  - local: protoc-gen-ts_proto
+    out: src/generated
+    strategy: all
+    opt:
+      - onlyTypes=true
+      - outputServices=none

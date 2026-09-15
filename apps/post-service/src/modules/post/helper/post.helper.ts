@@ -1,4 +1,4 @@
-import { PostType, Prisma, VisibilityPost } from "../../../../generated/prisma";
+import { PostType, Prisma, VisibilityPost } from '../../../generated/prisma/client';
 
 type PostCursorInfo = {
     id: number;

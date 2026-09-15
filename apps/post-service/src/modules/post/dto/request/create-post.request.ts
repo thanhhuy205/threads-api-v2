@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { VisibilityPost } from '../../../../../generated/prisma';
+import { VisibilityPost } from '../../../../generated/prisma/client';
 import { Transform, Type } from 'class-transformer';
 import { ArrayMaxSize, ArrayMinSize, IsArray, IsBoolean, IsDate, IsEnum, IsMilitaryTime, IsOptional, IsString, MaxLength, MinLength, ValidateIf, ValidateNested } from 'class-validator';
 import { creatablePostTypes } from '../../constants/post-type';

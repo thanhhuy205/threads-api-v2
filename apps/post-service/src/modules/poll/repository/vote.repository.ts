@@ -1,4 +1,4 @@
-import type { Prisma } from '../../../../generated/prisma';
+import type { Prisma } from '../../../generated/prisma/client';
 
 export const VOTE_REPOSITORY = Symbol('VOTE_REPOSITORY');
 

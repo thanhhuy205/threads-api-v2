@@ -1,5 +1,4 @@
-import { Message } from '@/common/decorators/message.decorator';
-import { IsPublic } from '@/common/decorators/is-public.decorator';
+import { IsPublic, Message } from '@purse/common/decorators';
 import { Body, Controller, Get, HttpCode, HttpStatus, Inject, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CreateTopicDto, SearchTopicQueryDto } from '../dto/request';

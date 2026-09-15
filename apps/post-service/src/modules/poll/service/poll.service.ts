@@ -1,6 +1,6 @@
-import type { Prisma } from '../../../../generated/prisma';
+import type { Prisma } from '../../../generated/prisma/client';
 import type { PollVoteCountUpdate } from '../repository/poll.repository';
-import type { PollOptionInput } from './poll-options.services';
+import type { PollOptionInput } from './poll-options.service';
 
 export const POLL_SERVICE = Symbol('POLL_SERVICE');
 

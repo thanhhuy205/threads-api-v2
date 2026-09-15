@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { PrismaService } from '@post-service/prisma/prisma.service';
-import { Prisma } from 'apps/post-service/generated/prisma';
+import { PrismaService } from '../../../../prisma/prisma.service';
+import { Prisma } from '../../../../generated/prisma/client';
 import type { PollRepository } from '../poll.repository';
 
 export type CreatePollPayload = {

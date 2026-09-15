@@ -6,6 +6,15 @@ service UserService {
   rpc GetUser(GetUserRequest) returns (UserResponse);
   rpc GetUserByEmail(GetUserByEmailRequest) returns (UserResponse);
   rpc FindExistingIds(FindExistingIdsRequest) returns (FindExistingIdsResponse);
+  rpc FindByUsername(FindByUsernameRequest) returns (FindByUsernameResponse);
+}
+
+message FindByUsernameRequest {
+  string username = 1;
+}
+
+message FindByUsernameResponse {
+  string public_id = 1;
 }
 
 message GetUserRequest {

@@ -1,6 +1,6 @@
-import { BadRequestException, NotFoundException } from "@/errors/error";
 import { Inject, Injectable } from '@nestjs/common';
-import type { Prisma } from "../../../../../generated/prisma";
+import { BadRequestException, NotFoundException } from '@purse/common/errors';
+import type { Prisma } from '../../../../generated/prisma/client';
 import {
   POLL_REPOSITORY,
   type PollRepository,
@@ -9,9 +9,9 @@ import {
 import { VOTE_REPOSITORY, type VoteRepository } from "../../repository/vote.repository";
 import {
   POLL_OPTIONS_SERVICE,
-  type PollOptionsService,
   type PollOptionInput,
-} from "../poll-options.services";
+  type PollOptionsService,
+} from "../poll-options.service";
 import type { PollService } from '../poll.service';
 
 const DEFAULT_POLL_DURATION_HOURS = 24;
@@ -30,7 +30,7 @@ export class PollServiceImpl implements PollService {
     @Inject(VOTE_REPOSITORY) private readonly voteRepository: VoteRepository,
     @Inject(POLL_OPTIONS_SERVICE)
     private readonly pollOptionsService: PollOptionsService,
-  ) {}
+  ) { }
   async createForPost(
     payload: CreatePostPollPayload,
     tx: Prisma.TransactionClient,

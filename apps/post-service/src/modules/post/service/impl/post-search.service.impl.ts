@@ -1,4 +1,4 @@
-import { PostMapper } from "@post-service/modules/post/mapper/post.mapper";
+import { PostMapper } from '../../mapper/post.mapper';
 import { Inject, Injectable } from '@nestjs/common';
 import { POST_REPOSITORY, type PostRepository } from "../../repository/post.repository";
 import type { PostSearchService } from '../post-search.service';

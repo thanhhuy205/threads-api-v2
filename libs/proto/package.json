@@ -6,6 +6,18 @@
     "src"
   ],
   "exports": {
-    "./user.proto": "./src/user.proto"
+    "./user.proto": "./src/user.proto",
+    "./generated/*": {
+      "types": "./dist/generated/*.d.ts",
+      "default": "./dist/generated/*.js"
+    }
+  },
+  "devDependencies": {
+    "@bufbuild/buf": "^1.73.0",
+    "ts-proto": "^2.12.3"
+  },
+  "scripts": {
+    "generate": "buf generate",
+    "build": "pnpm generate && tsc -p tsconfig.json"
   }
 }

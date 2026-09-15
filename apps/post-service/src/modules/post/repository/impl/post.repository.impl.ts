@@ -1,6 +1,6 @@
-import { toTime } from "@post-service/modules/post/helper/conver-date.helper";
+import { toTime } from '../../helper/conver-date.helper';
 import type { CreatePostCommand } from '../../command/create-post.command';
-import { PrismaService } from '@post-service/prisma/prisma.service';
+import { PrismaService } from '../../../../prisma/prisma.service';
 import { Injectable, Logger } from '@nestjs/common';
 import {
   InteractionType,
@@ -8,7 +8,7 @@ import {
   Prisma,
   ReplyPermission,
   VisibilityPost
-} from "../../../../../generated/prisma";
+} from '../../../../generated/prisma/client';
 import { primaryPostTypes } from "../../constants/post-type";
 import { UpdatePostDto } from '../../dto/request';
 import { postFeedSelect, postSelectRepository, UserSnapshot } from "../../mapper/post.mapper";

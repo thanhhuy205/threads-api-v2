@@ -1,11 +1,10 @@
-import { configurationFactory } from '@/config/configuration';
-import { AppAuthGuard } from '@libs/core/src/auth/guards/auth.guard';
-import { GrpcGatewayAuthStrategy } from '@libs/core/src/auth/strategies/grpc-gate.startegies';
-import { RedisModule } from '@libs/core/src/redis/redis.module';
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
+import { configurationFactory } from '@purse/common/config';
+import { AppAuthGuard, GrpcGatewayAuthStrategy } from '@purse/core/auth';
+import { RedisModule } from '@purse/core/redis';
 import { validate } from './config/app.config';
 import { PostModule } from './modules/post/post.module';
 // MAINTENANCE: import { PollModule } from './modules/poll/poll.module';
