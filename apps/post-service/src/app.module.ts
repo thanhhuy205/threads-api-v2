@@ -5,7 +5,8 @@ import { APP_GUARD } from '@nestjs/core';
 import { configurationFactory } from '@purse/common/config';
 import { AppAuthGuard, GrpcGatewayAuthStrategy } from '@purse/core/auth';
 import { RedisModule } from '@purse/core/redis';
-import { validate } from './config/app.config';
+import { resolve } from 'node:path';
+import { databaseConfiguration, validate } from './config';
 import { PostModule } from './modules/post/post.module';
 // MAINTENANCE: import { PollModule } from './modules/poll/poll.module';
 // MAINTENANCE: import { TopicModule } from './modules/topic/topic.module';
@@ -13,7 +14,13 @@ import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true, cache: true, validate, load: [configurationFactory] }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      cache: true,
+      envFilePath: resolve(process.cwd(), '.env'),
+      validate,
+      load: [configurationFactory, databaseConfiguration],
+    }),
     BullModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

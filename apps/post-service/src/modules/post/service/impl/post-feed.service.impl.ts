@@ -140,25 +140,4 @@ export class PostFeedServiceImpl implements PostFeedService {
     return this.postRepository.findFirstRepliesByPostPublicId(count, publicId);
   }
 
-  findLimitReplyInByPostIds(postIds: number[], limit: number) {
-    return this.postRepository.findLimitReplyInByPostIds(postIds, limit);
-  }
-
-  /* MAINTENANCE: DECIDE/overview feed helpers.
-  findPostDecideWithinWeekByIds(postIds: number[]) {
-    return this.postRepository.findPostDecideWithinWeekByIds(postIds);
-  }
-
-  findManyInWeek() {
-    return this.postRepository.findManyInWeek();
-  }
-
-  countOverviewDeclineByPostId(postIds: number[]) {
-    return this.postRepository.countOverviewDeclineByPostId(postIds);
-  }
-
-  updateManyDecideStatus(postIds: number[], isDecline: boolean) {
-    return this.postRepository.updateManyDecideStatus(postIds, isDecline);
-  }
-  */
 }

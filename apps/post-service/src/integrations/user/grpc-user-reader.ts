@@ -22,7 +22,26 @@ export class GrpcUserReader implements UserReader, OnModuleInit {
       this.client.getService<UserGrpcService>('UserService');
   }
 
+  async findExistingIds(userIds: string[]): Promise<string[]> {
+    const response = await firstValueFrom(
+      this.userGrpcService.findExistingIds({ userIds }),
+    );
+    return response.userIds;
+  }
+
+  getUser(userId: string): Promise<UserRef | null> {
+    return firstValueFrom(this.userGrpcService.getUser({ id: userId }));
+  }
+
+  getUserByEmail(email: string): Promise<UserRef | null> {
+    return firstValueFrom(this.userGrpcService.getUserByEmail({ email }));
+  }
+
   findByUsername(username: string): Promise<UserRef | null> {
     return firstValueFrom(this.userGrpcService.findByUsername({ username }));
+  }
+
+  findByUserId(userId: string): Promise<UserRef | null> {
+    return firstValueFrom(this.userGrpcService.findByUserId({ userId }));
   }
 }

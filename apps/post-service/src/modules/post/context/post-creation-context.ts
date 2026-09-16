@@ -1,6 +1,5 @@
-import { PermissionScope } from '../../../generated/prisma/client';
 
 export interface PostCreationContext {
-  scope: PermissionScope;
+  scope: any;
   groupTeamId?: number;
 }

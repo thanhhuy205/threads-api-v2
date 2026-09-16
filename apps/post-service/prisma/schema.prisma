@@ -1,7 +1,7 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
-  module   = "cjs"
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
 }
 
 datasource db {
@@ -66,8 +66,7 @@ model Post {
   dateRangeFrom DateTime? @map("date_range_from")
   dateRangeTo   DateTime? @map("date_range_to")
 
-  isDecline   Boolean @default(false) @map("is_decline")
-  groupTeamId Int?    @map("group_team_id")
+  groupTeamId Int? @map("group_team_id")
 
   isSurvey   Boolean   @default(false) @map("is_survey")
   deadlineAt DateTime? @map("deadline_at")

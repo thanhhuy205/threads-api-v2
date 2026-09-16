@@ -14,7 +14,6 @@ import { LIKE_SERVICE } from '@post-service/modules/post/service/like.service';
 import { UploadDatabaseModule } from '@upload-service/database/database.module';
 import { CloudflareModule } from '@upload-service/storage/cloudflare.module';
 import { PostMediaRepository } from '@upload/repository/post-media.repository';
-import { CronModule } from '@work-service/cron/schedule-overview.module';
 import { BloomWorker } from './bloom.worker';
 import { HlsWorker } from './hls.worker';
 import { LikeWorker } from './like.worker';
@@ -44,7 +43,6 @@ import { LikeWorker } from './like.worker';
     UploadDatabaseModule,
     RedisModule,
     CloudflareModule,
-    CronModule,
   ],
   providers: [
     BloomWorker,

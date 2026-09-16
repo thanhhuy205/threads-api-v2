@@ -1,17 +1,15 @@
+import { Inject, Injectable } from '@nestjs/common';
 import { redisKey } from '@purse/common/constants';
 import { RedisVersionService } from '@purse/core/redis-version';
-import { Inject, Injectable } from '@nestjs/common';
 import { Prisma } from '../../../../generated/prisma/client';
 import { normalizeTopic } from "../../helper/nomalize.hepler";
 import { TOPICS_POST_REPOSITORY, type TopicsPostRepository } from "../../repository/topics-post.repository";
-import { POST_MENTION_SERVICE, type PostMentionService } from "../post-mention.service";
 import type { CreatePostMeta, PostMetaService } from '../post-meta.service';
 
 @Injectable()
 export class PostMetaServiceImpl implements PostMetaService {
   constructor(
     @Inject(TOPICS_POST_REPOSITORY) private readonly topicsPostRepository: TopicsPostRepository,
-    @Inject(POST_MENTION_SERVICE) private readonly postMentionService: PostMentionService,
     private readonly redisVersionService: RedisVersionService,
   ) { }
   async attachPostMeta(
@@ -43,12 +41,12 @@ export class PostMetaServiceImpl implements PostMetaService {
   }
 
   async finalizePostCreation(params: {
-    mentionNotification?: Parameters<PostMentionService['dispatchMentionNotifications']>[0];
+    // MAINTENANCE: mentionNotification?: Parameters<PostMentionService['dispatchMentionNotifications']>[0];
   }): Promise<void> {
     await Promise.all([
-      params.mentionNotification
-        ? this.postMentionService.dispatchMentionNotifications(params.mentionNotification)
-        : undefined,
+      // MAINTENANCE: params.mentionNotification
+      //   ? this.postMentionService.dispatchMentionNotifications(params.mentionNotification)
+      //   : undefined,
       this.redisVersionService.bumpPostListCacheVersion(redisKey.post.listNamespace()),
     ]);
   }

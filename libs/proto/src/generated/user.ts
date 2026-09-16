@@ -12,8 +12,18 @@ export interface FindByUsernameRequest {
   username: string;
 }
 
+export interface FindByUserIdRequest {
+  userId: string;
+}
+
+export interface FindByUserIdResponse {
+  id: string;
+  username: string;
+}
+
 export interface FindByUsernameResponse {
-  publicId: string;
+  id: string;
+  username: string;
 }
 
 export interface GetUserRequest {

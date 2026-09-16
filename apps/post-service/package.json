@@ -2,10 +2,12 @@
   "name": "@purse/post-service",
   "version": "1.0.0",
   "private": true,
+  "type": "commonjs",
   "scripts": {
     "prisma:generate": "prisma generate --config prisma.config.ts",
     "pretypecheck": "pnpm prisma:generate",
-    "typecheck": "tsc -p tsconfig.app.json --noEmit"
+    "typecheck": "tsc -p tsconfig.app.json --noEmit",
+    "start": "tsc -p tsconfig.app.json && node dist/main.js"
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.14.4",
@@ -15,7 +17,7 @@
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.1.28",
     "@nestjs/jwt": "^11.0.2",
-    "@nestjs/microservices": "^11.2.3",
+    "@nestjs/microservices": "^11.1.28",
     "@nestjs/platform-express": "^11.1.28",
     "@nestjs/swagger": "^11.4.6",
     "@prisma/adapter-mariadb": "7.8.0",

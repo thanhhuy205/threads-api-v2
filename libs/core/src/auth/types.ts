@@ -21,7 +21,6 @@
 //     Acknowledge: 'acknowledge', // "Cần bạn xác nhận"
 //     Vote: 'vote',
 //     Decide: 'decide',           // chốt quyết định (badge ✓ Quyết định)
-//     Close: 'close',             // isDecline = true
 //     Verify: 'verify',           // xác nhận HistoryPosition của người khác
 //     Moderate: 'moderate',
 // } as const

@@ -2,7 +2,6 @@ import { NotFoundException } from '@purse/common/errors';
 // MAINTENANCE: import { BadRequestException } from '@purse/common/errors';
 // MAINTENANCE: import { ABILITY_SERVICE, type AbilityService } from '@workspace-service/modules/ability/ability.service';
 // MAINTENANCE: import { GROUP_TEAM_SERVICE, type GroupTeamService } from '@workspace-service/modules/group-team/service/group-team.service';
-import { USER_SERVICE, type UserService } from "@auth-service/modules/user/service/user.service";
 import { TransactionService } from '../../../../transaction/transaction.service';
 // MAINTENANCE: import { AiService } from '@api/modules/ai/service/ai.service';
 // MAINTENANCE: import { PostCreationContext } from '../../context/post-creation-context';
@@ -16,6 +15,7 @@ import { PostMapper } from "../../mapper/post.mapper";
 import { POST_REPOSITORY, type PostRepository } from "../../repository/post.repository";
 // MAINTENANCE: import { POST_MENTION_SERVICE, type PostMentionService } from '../post-mention.service';
 // MAINTENANCE: import { POST_META_SERVICE, type PostMetaService } from '../post-meta.service';
+import { USER_READER, UserReader } from '../../ports/user-reader.port';
 import type { PostService } from '../post.service';
 
 @Injectable()
@@ -24,7 +24,7 @@ export class PostServiceImpl implements PostService {
 
   constructor(
     private readonly transactionService: TransactionService,
-    @Inject(USER_SERVICE) private readonly userService: UserService,
+    @Inject(USER_READER) private readonly userReader: UserReader,
     @Inject(POST_REPOSITORY) private readonly postRepository: PostRepository,
     // MAINTENANCE: @Inject(POST_MENTION_SERVICE) private readonly postMentionService: PostMentionService,
     // MAINTENANCE: @Inject(POST_META_SERVICE) private readonly postMetaService: PostMetaService,
@@ -210,7 +210,7 @@ export class PostServiceImpl implements PostService {
   */
 
   private async resolveAuthorAndMentions(payload: Pick<CreatePostCommand, "userId" | "mentions">) {
-    const user = await this.userService.findByUserId(payload.userId);
+    const user = await this.userReader.findByUserId(payload.userId);
     if (!user) throw new NotFoundException('User not found');
     return { snapshot: PostMapper.toUserSnapshot(user), mentionIds: [] as string[] };
 

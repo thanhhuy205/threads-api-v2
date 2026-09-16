@@ -1,15 +1,14 @@
-import { BadRequestException } from '@purse/common/errors';
-import { dispatchMentionNotification } from "@notification/events/notification.dispatcher";
-import type { CreatePostCommand } from "../../command/create-post.command";
-import { USER_SERVICE, type UserService } from '@auth-service/modules/user/service/user.service';
 import { Inject, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException } from '@purse/common/errors';
+import type { CreatePostCommand } from "../../command/create-post.command";
+import { USER_READER, UserReader } from '../../ports/user-reader.port';
 import type { PostMentionService } from '../post-mention.service';
 
 @Injectable()
 export class PostMentionServiceImpl implements PostMentionService {
   private readonly logger = new Logger(PostMentionServiceImpl.name, { timestamp: true });
 
-  constructor(@Inject(USER_SERVICE) private readonly userService: UserService) { }
+  constructor(@Inject(USER_READER) private readonly userReader: UserReader) { }
   async validateMentions(
     mentions?: CreatePostCommand["mentions"],
   ): Promise<string[]> {
@@ -30,7 +29,7 @@ export class PostMentionServiceImpl implements PostMentionService {
       );
     }
 
-    const existingIds = await this.userService.findExistingIds(uniqueMentionIds);
+    const existingIds = await this.userReader.findExistingIds(uniqueMentionIds);
 
     if (existingIds.length !== uniqueMentionIds.length) {
       throw new BadRequestException("One or more mentioned users do not exist");
@@ -39,6 +38,7 @@ export class PostMentionServiceImpl implements PostMentionService {
     return uniqueMentionIds;
   }
 
+  /* MAINTENANCE: mention notifications are temporarily disabled.
   async dispatchMentionNotifications({
     mentionIds,
     actorId,
@@ -88,4 +88,5 @@ export class PostMentionServiceImpl implements PostMentionService {
       );
     });
   }
+  */
 }

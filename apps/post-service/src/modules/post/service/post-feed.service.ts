@@ -10,9 +10,4 @@ export interface PostFeedService {
   getQuote(payload: GetPostWithUserCommand): Promise<any>;
   getById(publicId: string, userId?: string | null): Promise<any>;
   findFirstReplyByPostPublicId(count: number, publicId: string): Promise<any[]>;
-  findLimitReplyInByPostIds(postIds: number[], limit: number): Promise<any[]>;
-  // MAINTENANCE: findPostDecideWithinWeekByIds(postIds: number[]): Promise<any[]>;
-  // MAINTENANCE: findManyInWeek(): Promise<any[]>;
-  // MAINTENANCE: countOverviewDeclineByPostId(postIds: number[]): Promise<any[]>;
-  // MAINTENANCE: updateManyDecideStatus(postIds: number[], isDecline: boolean): Promise<any>;
 }
