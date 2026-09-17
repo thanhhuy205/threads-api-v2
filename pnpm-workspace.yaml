@@ -7,6 +7,7 @@ syncInjectedDepsAfterScripts:
   - build
 
 allowBuilds:
+  '@bufbuild/buf': false
   "@google/genai": true
   "@openrouter/sdk": true
   "@prisma/client": true
@@ -21,6 +22,3 @@ allowBuilds:
   protobufjs: true
   sharp: true
   unrs-resolver: true
-
-ignoredBuiltDependencies:
-  - prisma

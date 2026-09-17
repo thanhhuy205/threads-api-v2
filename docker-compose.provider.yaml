@@ -34,12 +34,10 @@ services:
       # authenticated request 401s.
       KONG_JWT_SECRET: ${JWT_SECRET}
     ports:
-      - "8000:8000" # proxy — the only public entrypoint
-      - "127.0.0.1:8001:8001" # admin API — loopback only
+      - "8100:8000"
+      - "8101:8001"
     volumes:
-      - ./apps/config/kong:/kong:ro
-    depends_on:
-      - auth-service
+      - ./infrastructure/kong:/kong:ro
     networks:
       - purse-network
 

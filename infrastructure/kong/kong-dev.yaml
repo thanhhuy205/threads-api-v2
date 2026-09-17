@@ -44,7 +44,7 @@ plugins:
 services:
   - name: auth-service
     enabled: true
-    host: auth-service # đổi đúng tên container/host thật trong docker-compose
+    host: host.docker.internal # đổi đúng tên container/host thật trong docker-compose
     port: 3300
     path: /
     protocol: http

@@ -2,7 +2,7 @@
   "name": "@purse/root",
   "version": "1.0.0",
   "private": true,
-  "packageManager": "pnpm@10.15.0",
+  "packageManager": "pnpm@11.26.0",
   "scripts": {
     "typecheck": "pnpm -r typecheck",
     "prisma:generate": "pnpm -r --if-present prisma:generate",
@@ -10,7 +10,8 @@
     "build:auth-service": "pnpm --filter @purse/auth-service build",
     "build:workspace-service": "pnpm --filter @purse/workspace-service build",
     "dev:auth-service": "pnpm --filter @purse/auth-service dev",
-    "dev:workspace-service": "pnpm --filter @purse/workspace-service dev"
+    "dev:workspace-service": "pnpm --filter @purse/workspace-service dev",
+    "test:integration:auth": "tsx --test tests/integration/auth/kong-jwt.e2e-spec.ts"
   },
   "devDependencies": {
     "@nestjs/cli": "^12.0.0",
