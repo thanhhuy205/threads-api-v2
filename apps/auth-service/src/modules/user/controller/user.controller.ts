@@ -1,7 +1,7 @@
-import { GetUserId, Message } from '@purse/common/decorators';
 import { Body, Controller, HttpStatus, Inject, Patch } from '@nestjs/common';
 import { GrpcMethod } from '@nestjs/microservices';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { GetUserId, Message } from '@purse/common/decorators';
 import type {
   FindByUserIdRequest,
   FindByUsernameRequest,

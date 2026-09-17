@@ -15,7 +15,8 @@ import { PrismaModule } from './prisma/prisma.module';
     ConfigModule.forRoot({
       isGlobal: true, cache: true,
       validate,
-      load: [configurationFactory]
+      load: [configurationFactory],
+      envFilePath: process.cwd() + '/.env'
     }),
     BullModule.forRootAsync({
       imports: [ConfigModule],
