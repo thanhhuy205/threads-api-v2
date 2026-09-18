@@ -1,6 +1,9 @@
+import './instrumentation';
+
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { PinoNestLogger } from '@purse/observability/logging';
 import requestId from 'express-request-id';
 import helmet from 'helmet';
 import 'reflect-metadata';
@@ -17,8 +20,11 @@ function corsOrigin(): string[] | boolean {
 }
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { bufferLogs: true });
 
+  app.useLogger(app.get(PinoNestLogger));
+
+  app.setGlobalPrefix('api/v1');
   app.use(helmet());
   app.enableCors({ origin: corsOrigin(), credentials: true });
   app.use(requestId());
@@ -29,9 +35,12 @@ async function bootstrap() {
       package: 'user',
       protoPath: require.resolve('@purse/proto/user.proto'),
       url: '0.0.0.0:5001',
+      loader: {
+        keepCase: false,
+        defaults: true,
+      },
     },
   });
-
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,

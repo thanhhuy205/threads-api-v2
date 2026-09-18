@@ -14,6 +14,8 @@ export abstract class BaseGatewayAuthStrategy extends PassportStrategy(
 ) {
   async validate(req: HttpRequest): Promise<UserRequestPayload> {
     const authUserHeader = req.headers['x-jwt-claims'];
+    console.log('authUserHeader:', authUserHeader);
+
     if (!authUserHeader) throw new UnauthorizedException('Unauthorized');
 
     let authUser: TokenPayload;

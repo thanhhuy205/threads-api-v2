@@ -47,6 +47,10 @@ import { POST_SERVICE } from './service/post.service';
           package: 'user',
           protoPath: require.resolve('@purse/proto/user.proto'),
           url: process.env.USER_SERVICE_GRPC_URL ?? 'auth-service:5001',
+          loader: {
+            keepCase: false,
+            defaults: true,
+          },
         },
       },
     ]),

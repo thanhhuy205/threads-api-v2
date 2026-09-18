@@ -1,4 +1,4 @@
-import { Body, Controller, HttpStatus, Inject, Patch } from '@nestjs/common';
+import { Body, Controller, HttpStatus, Inject, Logger, Patch } from '@nestjs/common';
 import { GrpcMethod } from '@nestjs/microservices';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { GetUserId, Message } from '@purse/common/decorators';
@@ -16,6 +16,8 @@ import { USER_SERVICE, type UserService } from '../service/user.service';
 @ApiBearerAuth('bearer')
 @Controller('me')
 export class UserController {
+  private readonly logger = new Logger(UserController.name);
+
   constructor(@Inject(USER_SERVICE) private readonly userService: UserService) { }
 
   @Patch('profile')
@@ -31,6 +33,9 @@ export class UserController {
 
   @GrpcMethod('UserService', 'FindExistingIds')
   async findExistingIds(data: FindExistingIdsRequest) {
+    this.logger.debug(
+      `[gRPC] FindExistingIds received keys=${Object.keys(data ?? {}).join(',')} userIdsIsArray=${Array.isArray(data?.userIds)} count=${Array.isArray(data?.userIds) ? data.userIds.length : 'undefined'}`,
+    );
     return { userIds: await this.userService.findExistingIds(data.userIds) };
   }
 
@@ -46,6 +51,9 @@ export class UserController {
 
   @GrpcMethod('UserService', 'FindByUserId')
   findByUserId(data: FindByUserIdRequest) {
+    this.logger.debug(
+      `[gRPC] FindByUserId received keys=${Object.keys(data ?? {}).join(',')} hasUserId=${typeof data?.userId === 'string' && data.userId.length > 0}`,
+    );
     return this.userService.findByUserId(data.userId);
   }
 

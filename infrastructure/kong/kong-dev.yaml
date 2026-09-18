@@ -13,7 +13,7 @@ consumers:
       # Requires KONG_VAULTS=env (set in docker-compose.provider.yaml).
       - algorithm: HS256
         key: auth-service
-        secret: "{vault://env/kong-jwt-secret}"
+        secret: your_jwt_secret_key
   - custom_id: anonymousConsumer
     username: anonymousConsumer
 
@@ -57,18 +57,10 @@ services:
       # an anonymous consumer (a request with no token still reaches the app,
       # which then decides via @IsPublic()).
       #
-      # Paths below match the real controllers: @Controller('auth') with
-      # @Post('login') => /auth/login. There is no setGlobalPrefix('api') in
-      # the app, so no /api segment. There is also no SwaggerModule.setup(),
-      # so the former /auth-service/swagger route was removed.
-      #
-      # IMPORTANT — why strip_path: false here but true on the catchall:
-      # strip_path removes the WHOLE matched prefix. These routes match the full
-      # path, so strip_path: true would leave the upstream with "/" instead of
-      # "/auth/login". Hence strip_path: false + an explicit rewrite. The
-      # catchall only matches "/auth-service", so stripping there is correct.
+      # Auth uses the same /api/v1 prefix at Kong and in the Nest application,
+      # so Kong forwards the URI unchanged.
       - name: auth-login
-        paths: [/auth-service/auth/login]
+        paths: [/api/v1/auth/login]
         strip_path: false
         regex_priority: 100
         tags: [auth]
@@ -82,15 +74,13 @@ services:
                 key_claim_name: iss,
                 uri_param_names: [jwt],
               }
-          - name: request-transformer
-            config: { replace: { uri: /auth/login } }
           - name: rate-limiting
             config:
               minute: 5
               policy: local
 
       - name: auth-register
-        paths: [/auth-service/auth/register]
+        paths: [/api/v1/auth/register]
         strip_path: false
         regex_priority: 100
         tags: [auth]
@@ -104,37 +94,16 @@ services:
                 key_claim_name: iss,
                 uri_param_names: [jwt],
               }
-          - name: request-transformer
-            config: { replace: { uri: /auth/register } }
-
       - name: auth-service-catchall
-        paths: [/auth-service]
-        strip_path: true
+        paths: [/api/v1/auth]
+        strip_path: false
         regex_priority: 1
         tags: [auth]
         # not set plugins because use jwt global
 
-  - name: workspace-service
-    enabled: true # jwt
-    host: workspace-service # đổi đúng tên container/host thật
-    port: 3301
-    path: /
-    protocol: http
-    connect_timeout: 60000
-    read_timeout: 60000 # max 60s, if > 60s -> 504 Gateway Timeout
-    write_timeout: 60000
-    retries: 5 # retry 5 if request failed
-    routes:
-      - name: workspace-service-catchall
-        paths: [/workspace-service]
-        strip_path: true
-        regex_priority: 0
-        tags: [workspace-service]
-        # not set plugins because use jwt global
-
   - name: post-service
     enabled: true # jwt
-    host: post-service # đổi đúng tên container/host thật
+    host: host.docker.internal # post-service runs locally in dev
     port: 3302
     path: /
     protocol: http
@@ -144,8 +113,8 @@ services:
     retries: 5 # retry 5 if request failed
     routes:
       - name: post-service-catchall
-        paths: [/post-service]
-        strip_path: true
+        paths: [/api/v1/posts]
+        strip_path: false
         regex_priority: 0
         tags: [post-service]
         # not set plugins because use jwt global

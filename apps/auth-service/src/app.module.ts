@@ -7,11 +7,13 @@ import { configurationFactory, jwtConfiguration } from '@purse/common/config';
 import { JwtAlgorithm } from '@purse/common/enums';
 import { AppAuthGuard, GrpcGatewayAuthStrategy } from '@purse/core/auth';
 import { RedisModule } from '@purse/core/redis';
+import { createLoggerOptions, LoggerModule } from '@purse/observability/logging';
 import { validate } from './config/app.config';
 import { AuthModule } from './modules/auth/auth.module';
 import { PrismaModule } from './prisma/prisma.module';
 @Module({
   imports: [
+    LoggerModule.forRoot(createLoggerOptions('auth-service')),
     ConfigModule.forRoot({
       isGlobal: true, cache: true,
       validate,

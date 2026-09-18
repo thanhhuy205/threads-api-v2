@@ -5,6 +5,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { configurationFactory } from '@purse/common/config';
 import { AppAuthGuard, GrpcGatewayAuthStrategy } from '@purse/core/auth';
 import { RedisModule } from '@purse/core/redis';
+import { createLoggerOptions, LoggerModule } from '@purse/observability/logging';
 import { resolve } from 'node:path';
 import { databaseConfiguration, validate } from './config';
 import { PostModule } from './modules/post/post.module';
@@ -14,6 +15,7 @@ import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
   imports: [
+    LoggerModule.forRoot(createLoggerOptions('post-service')),
     ConfigModule.forRoot({
       isGlobal: true,
       cache: true,

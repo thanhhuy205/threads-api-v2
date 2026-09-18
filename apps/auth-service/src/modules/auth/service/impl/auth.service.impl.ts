@@ -1,6 +1,12 @@
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import { JwtService } from "@nestjs/jwt";
 import configService from '@purse/common/config';
+import { redisKey } from '@purse/common/constants';
+import { JWT_ISSUER, JwtTokenType } from '@purse/common/enums';
 import { NotFoundException } from '@purse/common/errors';
+import { RedisService } from '@purse/core/redis';
 import type { SessionMetadata } from "../../interfaces/session-metadata";
+import { AUTH_REPOSITORY, type AuthRepository } from '../../repository/auth.repository';
 import {
   VERIFICATION_REPOSITORY,
   type VerificationRepository,
@@ -10,21 +16,11 @@ import {
   hashPassword,
 } from "../../util/hasher-password";
 import { hasherToken } from "../../util/hasher-token";
-import { JWT_ISSUER, JwtTokenType } from '@purse/common/enums';
-import { redisKey } from '@purse/common/constants';
-import { RedisService } from '@purse/core/redis';
-import { Inject, Injectable, Logger } from '@nestjs/common';
-import { JwtService } from "@nestjs/jwt";
-import { AUTH_REPOSITORY, type AuthRepository } from '../../repository/auth.repository';
 
-import {
-  REFRESH_TOKEN_REPOSITORY,
-  type RefreshTokenRepository,
-} from '../../repository/refresh-token.repository';
-import { USER_SERVICE, type UserService } from "../../../user/service/user.service";
-import { VerificationCodeType } from '../../../../generated/prisma/client';
 import crypto from "crypto";
 import ms, { StringValue } from "ms";
+import { VerificationCodeType } from '../../../../generated/prisma/client';
+import { USER_SERVICE, type UserService } from "../../../user/service/user.service";
 import type { ForgotPasswordDto } from "../../dto/request/forgot-password.request.dto";
 import type { LoginDto } from "../../dto/request/login.request.dto";
 import type { LogoutDto } from "../../dto/request/logout.request.dto";
@@ -45,6 +41,10 @@ import type { TokenPairResponse } from "../../dto/response/token-pair.response";
 import type { UpdateProfileDataDto } from "../../dto/response/update-profile.response.dto";
 import type { ValidateTokenResponseDto } from "../../dto/response/validate-token.response.dto";
 import type { ValidateUserResponseDto } from "../../dto/response/validate-user.response.dto";
+import {
+  REFRESH_TOKEN_REPOSITORY,
+  type RefreshTokenRepository,
+} from '../../repository/refresh-token.repository';
 import type { AuthService } from '../auth.service';
 
 @Injectable()
@@ -356,11 +356,14 @@ export class AuthServiceImpl implements AuthService {
         // Ignore malformed cache and rebuild from the database.
       }
     }
+    console.log(`Cache miss for user ${userId}. Fetching from database.`);
 
     const user = await this.userService.findByUserId(userId);
     if (!user) {
       return null;
     }
+
+    console.log(`Fetched user ${userId} from database: ${JSON.stringify(user)}`);
 
     const permission = await this.userService.getPermissionPositionByUserId(userId);
     const positionPermission = permission?.userPositions.map((pos) => pos.positionPermission.permission.code) || [];
