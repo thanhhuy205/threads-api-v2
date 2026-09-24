@@ -1,11 +1,10 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
-import type {
-  TokenPayload,
-  UserRequestPayload,
-} from '@purse/common/interfaces';
+import type { UserRequestPayload } from '@purse/common/interfaces';
 import type { HttpRequest } from '@purse/common/types';
+import type { JWTPayload } from 'jose';
 import { Strategy } from 'passport-custom';
+import { getPayloadJwtVerify } from '../keycloak';
 
 @Injectable()
 export abstract class BaseGatewayAuthStrategy extends PassportStrategy(
@@ -13,26 +12,13 @@ export abstract class BaseGatewayAuthStrategy extends PassportStrategy(
   'gateway-auth',
 ) {
   async validate(req: HttpRequest): Promise<UserRequestPayload> {
-    const authUserHeader = req.headers['x-jwt-claims'];
-    console.log('authUserHeader:', authUserHeader);
+    const authHeader = req.headers['authorization'] as string;
+    if (!authHeader) throw new UnauthorizedException('Unauthorized');
 
-    if (!authUserHeader) throw new UnauthorizedException('Unauthorized');
+    const accessToken = authHeader.split(' ')[1];
+    const authUser = await getPayloadJwtVerify(accessToken);
 
-    let authUser: TokenPayload;
-    try {
-      authUser = JSON.parse(
-        Array.isArray(authUserHeader) ? authUserHeader[0] : authUserHeader,
-      ) as TokenPayload;
-    } catch {
-      throw new UnauthorizedException('Unauthorized');
-    }
-
-    if (!authUser?.id) throw new UnauthorizedException('Unauthorized');
-
-    const authorization = req.headers.authorization;
-    if (typeof authorization === 'string') {
-      req.accessToken = authorization.split(' ')[1];
-    }
+    if (!authUser.sub) throw new UnauthorizedException('Unauthorized');
 
     // // Check valid token in Redis
     // const userTokenKey = this.redisService.getUserTokenKey(authUser.id, authUser.jti);
@@ -43,6 +29,6 @@ export abstract class BaseGatewayAuthStrategy extends PassportStrategy(
   }
 
   protected abstract lookupAndValidateUser(
-    authUser: TokenPayload,
+    authUser: JWTPayload,
   ): Promise<UserRequestPayload>;
 }

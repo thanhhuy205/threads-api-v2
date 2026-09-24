@@ -1,31 +1,27 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { JWT_ISSUER, JwtTokenType } from '@purse/common/enums';
-import type {
-  TokenPayload,
-  UserRequestPayload,
-} from '@purse/common/interfaces';
+import type { UserRequestPayload } from '@purse/common/interfaces';
+import type { JWTPayload } from 'jose';
 import { BaseGatewayAuthStrategy } from './base-gateway.strategies';
 
 @Injectable()
 export class GrpcGatewayAuthStrategy extends BaseGatewayAuthStrategy {
   protected async lookupAndValidateUser(
-    authUser: TokenPayload,
+    authUser: JWTPayload,
   ): Promise<UserRequestPayload> {
+    const email = authUser.email;
+
     if (
-      !authUser.id ||
-      !authUser.email ||
-      !authUser.jti ||
-      authUser.type !== JwtTokenType.AccessToken ||
-      authUser.key !== JWT_ISSUER
+      !authUser.sub ||
+      typeof email !== 'string' ||
+      !authUser.jti
     ) {
       throw new UnauthorizedException('Unauthorized');
     }
 
     return {
-      id: authUser.id,
-      email: authUser.email,
+      id: authUser.sub,
+      email,
       jti: authUser.jti,
-      role: authUser.role,
     };
   }
 }
