@@ -9,16 +9,29 @@ export function createLoggerOptions(serviceName: string): Params {
                 environment:
                     process.env.NODE_ENV ?? 'development',
             }),
-            transport: process.env.NODE_ENV === 'development' ? {
+            transport: {
                 target: 'pino-pretty',
                 options: {
                     colorize: true,
                     translateTime: 'SYS:HH:MM:ss',
-                    singleLine: true,
-                    ignore:
-                        'pid,hostname,req.headers,res.headers,req.remoteAddress,req.remotePort',
+                    singleLine: false,
+                    messageFormat:
+                        '{if context}[{context}] {end}{msg}',
+                    ignore: [
+                        'pid',
+                        'hostname',
+                        'req.headers',
+                        'res.headers',
+                        'req.remoteAddress',
+                        'req.remotePort',
+                    ].join(','),
+
+                    errorLikeObjectKeys: [
+                        'err',
+                        'error',
+                    ],
                 },
-            } : undefined,
+            },
             redact: {
                 paths: [
                     'req.headers.authorization',

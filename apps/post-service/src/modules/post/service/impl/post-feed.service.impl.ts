@@ -1,6 +1,6 @@
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { RedisService } from '@purse/core/redis';
 import { RedisVersionService } from '@purse/core/redis-version';
-import { Inject, Injectable, Logger } from '@nestjs/common';
 import {
   buildNewFeedWhere,
   buildPostListNamespace,
@@ -8,13 +8,13 @@ import {
   buildRepliesWhere,
   paginatePosts,
   postListCacheTtlSeconds,
-} from '../../helper';
-import { PostMapper } from '../../mapper/post.mapper';
-import type { GetPostWithPublicIdCommand } from '../../command/get-post-with-public-id.command';
-import type { GetPostWithUserCommand } from '../../command/get-post-with-user.command';
-import type { NewsFeedCommand } from '../../command/news-feed.command';
-import { POST_REPOSITORY, type PostRepository } from "../../repository/post.repository";
-import type { PostFeedService } from '../post-feed.service';
+} from '../../../../helper';
+import { PostMapper } from '../../adapters/inbound/http/presenter/post.mapper';
+import type { GetPostWithPublicIdCommand } from '../../application/commands/get-post-with-public-id.command';
+import type { GetPostWithUserCommand } from '../../application/commands/get-post-with-user.command';
+import type { NewsFeedCommand } from '../../application/commands/news-feed.command';
+import { POST_REPOSITORY, type PostRepository } from '../../application/ports/inbound/post.repository';
+import type { PostFeedService } from '../../application/use-cases/post-feed.service';
 
 @Injectable()
 export class PostFeedServiceImpl implements PostFeedService {

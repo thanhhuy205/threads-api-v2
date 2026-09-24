@@ -1,18 +1,21 @@
-import { toTime } from '../../helper/conver-date.helper';
-import type { CreatePostCommand } from '../../command/create-post.command';
-import { PrismaService } from '../../../../prisma/prisma.service';
 import { Injectable, Logger } from '@nestjs/common';
 import {
-  InteractionType,
   PostType,
   Prisma,
   ReplyPermission,
   VisibilityPost
 } from '../../../../generated/prisma/client';
+import { toTime } from '../../../../helper/conver-date.helper';
+import { PrismaService } from '../../../../prisma/prisma.service';
+import { postFeedSelect, postSelectRepository } from '../../adapters/inbound/http/presenter/post.mapper';
+import type { CreatePostCommand } from '../../application/commands/create-post.command';
+import type { UpdatePostCommand } from '../../application/commands/update-post.command';
+import type {
+  PostRecord,
+  PostRepository,
+  UserSnapshot,
+} from '../../application/ports/inbound/post.repository';
 import { primaryPostTypes } from "../../constants/post-type";
-import { UpdatePostDto } from '../../dto/request';
-import { postFeedSelect, postSelectRepository, UserSnapshot } from "../../mapper/post.mapper";
-import type { PostRecord, PostRepository } from '../post.repository';
 
 type RepositoryCreatePostPayload = Omit<CreatePostCommand, "isSurvey"> & {
   isSurvey?: boolean;
@@ -568,7 +571,7 @@ export class PostRepositoryImpl implements PostRepository {
 
   async updateByPublicId(
     publicId: string,
-    payload: UpdatePostDto,
+    payload: UpdatePostCommand,
   ): Promise<PostRecord> {
     const post = await this.prisma.post.update({
       where: { publicId },

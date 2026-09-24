@@ -2,9 +2,9 @@ import { Inject, Injectable } from '@nestjs/common';
 import { redisKey } from '@purse/common/constants';
 import { RedisVersionService } from '@purse/core/redis-version';
 import { Prisma } from '../../../../generated/prisma/client';
-import { normalizeTopic } from "../../helper/nomalize.hepler";
-import { TOPICS_POST_REPOSITORY, type TopicsPostRepository } from "../../repository/topics-post.repository";
-import type { CreatePostMeta, PostMetaService } from '../post-meta.service';
+import { normalizeTopic } from "../../../../helper/nomalize.hepler";
+import { TOPICS_POST_REPOSITORY, type TopicsPostRepository } from '../../application/ports/inbound/topics-post.repository';
+import type { CreatePostMeta, PostMetaService } from '../../application/use-cases/post-meta.service';
 
 @Injectable()
 export class PostMetaServiceImpl implements PostMetaService {

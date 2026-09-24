@@ -1,8 +1,8 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { BadRequestException } from '@purse/common/errors';
-import type { CreatePostCommand } from "../../command/create-post.command";
-import { USER_READER, UserReader } from '../../ports/user-reader.port';
-import type { PostMentionService } from '../post-mention.service';
+import type { CreatePostCommand } from '../../application/commands/create-post.command';
+import { USER_READER, UserReader } from '../../application/ports/outbound/user-reader.port';
+import type { PostMentionService } from '../../application/use-cases/post-mention.service';
 
 @Injectable()
 export class PostMentionServiceImpl implements PostMentionService {

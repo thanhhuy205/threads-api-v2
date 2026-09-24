@@ -1,7 +1,7 @@
-import { PostMapper } from '../../mapper/post.mapper';
 import { Inject, Injectable } from '@nestjs/common';
-import { POST_REPOSITORY, type PostRepository } from "../../repository/post.repository";
-import type { PostSearchService } from '../post-search.service';
+import { PostMapper } from '../../adapters/inbound/http/presenter/post.mapper';
+import { POST_REPOSITORY, type PostRepository } from '../../application/ports/inbound/post.repository';
+import type { PostSearchService } from '../../application/use-cases/post-search.service';
 
 @Injectable()
 export class PostSearchServiceImpl implements PostSearchService {

@@ -1,2 +1,2 @@
-export * from './create-vote.request';
-export * from './vote-params.request';
+export * from './create-vote.request.dto';
+export * from './vote-params.request.dto';

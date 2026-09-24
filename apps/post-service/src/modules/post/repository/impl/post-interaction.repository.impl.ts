@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../../prisma/prisma.service';
 import { InteractionType, Prisma } from '../../../../generated/prisma/client';
-import type { PostInteractionPayload, PostInteractionRepository } from '../post-interaction.repository';
+import type { PostInteractionPayload, PostInteractionRepository } from '../../application/ports/inbound/post-interaction.repository';
 
 type PostInteractionDbClient = Prisma.TransactionClient | PrismaService;
 

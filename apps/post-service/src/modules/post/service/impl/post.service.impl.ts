@@ -10,13 +10,13 @@ import { TransactionService } from '../../../../transaction/transaction.service'
 import { Inject, Injectable, Logger } from "@nestjs/common";
 // MAINTENANCE: import { dispatchReplyNotification } from '@notification/events/notification.dispatcher';
 // MAINTENANCE: import { PermissionScope, VisibilityPost } from '../../../../generated/prisma/client';
-import type { CreatePostCommand } from "../../command/create-post.command";
-import { PostMapper } from "../../mapper/post.mapper";
-import { POST_REPOSITORY, type PostRepository } from "../../repository/post.repository";
+import { PostMapper } from "../../adapters/inbound/http/presenter/post.mapper";
+import type { CreatePostCommand } from '../../application/commands/create-post.command';
+import { POST_REPOSITORY, type PostRepository } from '../../application/ports/inbound/post.repository';
 // MAINTENANCE: import { POST_MENTION_SERVICE, type PostMentionService } from '../post-mention.service';
 // MAINTENANCE: import { POST_META_SERVICE, type PostMetaService } from '../post-meta.service';
-import { USER_READER, UserReader } from '../../ports/user-reader.port';
-import type { PostService } from '../post.service';
+import { USER_READER, UserReader } from '../../application/ports/outbound/user-reader.port';
+import type { PostService } from '../../application/use-cases/post.service';
 
 @Injectable()
 export class PostServiceImpl implements PostService {

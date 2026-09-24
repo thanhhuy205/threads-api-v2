@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { LIKE_REPOSITORY, type LikeRepository } from '../../repository/like.repository';
-import type { LikeService } from '../like.service';
+import { LIKE_REPOSITORY, type LikeRepository } from '../../application/ports/inbound/like.repository';
+import type { LikeService } from '../../application/use-cases/like.service';
 
 @Injectable()
 export class LikeServiceImpl implements LikeService {

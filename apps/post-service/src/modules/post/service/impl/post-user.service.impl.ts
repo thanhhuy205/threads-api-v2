@@ -1,14 +1,14 @@
+import { Inject, Injectable } from '@nestjs/common';
 import { RedisService } from '@purse/core/redis';
 import { RedisVersionService } from '@purse/core/redis-version';
-import { Inject, Injectable } from '@nestjs/common';
 import {
   buildPostListNamespace,
   paginatePosts,
   postListCacheTtlSeconds
-} from '../../helper';
-import type { GetPostWithUserCommand } from '../../command/get-post-with-user.command';
-import { POST_REPOSITORY, type PostRepository } from '../../repository/post.repository';
-import type { PostUserService } from '../post-user.service';
+} from '../../../../helper';
+import type { GetPostWithUserCommand } from '../../application/commands/get-post-with-user.command';
+import { POST_REPOSITORY, type PostRepository } from '../../application/ports/inbound/post.repository';
+import type { PostUserService } from '../../application/use-cases/post-user.service';
 
 @Injectable()
 export class PostUserServiceImpl implements PostUserService {
