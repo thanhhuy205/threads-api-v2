@@ -1,13 +1,14 @@
 import { Module } from '@nestjs/common';
-import { UserController } from './controller/user.controller';
-import { UsersController } from './controller/users.controller';
-import { UserRepositoryImpl } from './repository/impl/user.repository.impl';
-import { USER_REPOSITORY } from './repository/user.repository';
-import { UserServiceImpl } from './service/impl/user.service.impl';
-import { USER_SERVICE } from './service/user.service';
+import { UserRepositoryImpl } from './adapters/outbound/persistence/user.repository.impl';
+import { UserGrpcController } from './adapters/inbound/grpc/user.grpc.controller';
+import { UserController } from './adapters/inbound/http/user.controller';
+import { UsersController } from './adapters/inbound/http/users.controller';
+import { USER_REPOSITORY } from './application/ports/inbound/user.repository';
+import { UserServiceImpl } from './application/use-cases/impl/user.service.impl';
+import { USER_SERVICE } from './application/use-cases/user.service';
 
 @Module({
-  controllers: [UserController, UsersController],
+  controllers: [UserController, UsersController, UserGrpcController],
   providers: [
     { provide: USER_REPOSITORY, useClass: UserRepositoryImpl },
     { provide: USER_SERVICE, useClass: UserServiceImpl },

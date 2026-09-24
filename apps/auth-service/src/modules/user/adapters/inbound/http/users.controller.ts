@@ -3,8 +3,8 @@ import { NotFoundException } from '@purse/common/errors';
 import { USER_MESSAGE } from '@purse/common/constants';
 import { Controller, Get, Inject, Param, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { UserNameMentionQueryDto, UsernameParamsDto } from '../dto/request';
-import { USER_SERVICE, type UserService } from '../service/user.service';
+import { UserNameMentionQueryDto, UsernameParamsDto } from './dto/request';
+import { USER_SERVICE, type UserService } from '../../../application/use-cases/user.service';
 
 @ApiTags('User')
 @Controller('users')

@@ -1,5 +1,5 @@
-import type { Prisma } from '../../../generated/prisma/client';
-import type { UpdateProfileDto } from '../dto/request/update-profile.request.dto';
+import type { Prisma } from '../../../../generated/prisma/client';
+import type { UpdateProfileDto } from '../../adapters/inbound/http/dto/request/update-profile.request.dto';
 
 export const USER_SERVICE = Symbol('USER_SERVICE');
 

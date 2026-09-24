@@ -1,7 +1,5 @@
-import { Body, Controller, HttpStatus, Inject, Logger, Patch } from '@nestjs/common';
+import { Controller, Inject, Logger } from '@nestjs/common';
 import { GrpcMethod } from '@nestjs/microservices';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { GetUserId, Message } from '@purse/common/decorators';
 import type {
   FindByUserIdRequest,
   FindByUsernameRequest,
@@ -9,27 +7,13 @@ import type {
   GetUserByEmailRequest,
   GetUserRequest,
 } from '@purse/proto/generated/user';
-import { UpdateProfileDto } from '../dto/request/update-profile.request.dto';
-import { USER_SERVICE, type UserService } from '../service/user.service';
+import { USER_SERVICE, type UserService } from '../../../application/use-cases/user.service';
 
-@ApiTags('User')
-@ApiBearerAuth('bearer')
-@Controller('me')
-export class UserController {
-  private readonly logger = new Logger(UserController.name);
+@Controller()
+export class UserGrpcController {
+  private readonly logger = new Logger(UserGrpcController.name);
 
   constructor(@Inject(USER_SERVICE) private readonly userService: UserService) { }
-
-  @Patch('profile')
-  @Message('Profile updated successfully')
-  @ApiOperation({ summary: 'Update the current user profile' })
-  @ApiResponse({ status: HttpStatus.OK, description: 'Profile updated successfully' })
-  updateProfile(
-    @Body() payload: UpdateProfileDto,
-    @GetUserId() userId: string,
-  ) {
-    return this.userService.updateProfile(userId, payload);
-  }
 
   @GrpcMethod('UserService', 'FindExistingIds')
   async findExistingIds(data: FindExistingIdsRequest) {

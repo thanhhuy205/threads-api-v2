@@ -1,10 +1,10 @@
 import { redisKey } from '@purse/common/constants';
 import { RedisService } from '@purse/core/redis';
 import { Inject, Injectable } from '@nestjs/common';
-import { USER_REPOSITORY, type UserRepository } from "../../repository/user.repository";
-import { Prisma } from '../../../../generated/prisma/client';
-import type { UpdateProfileDto } from "../../dto/request/update-profile.request.dto";
-import { mapUserProfileForFE } from "../../mapper/user.mapper";
+import { USER_REPOSITORY, type UserRepository } from '../../ports/inbound/user.repository';
+import { Prisma } from '../../../../../generated/prisma/client';
+import type { UpdateProfileDto } from '../../../adapters/inbound/http/dto/request/update-profile.request.dto';
+import { mapUserProfileForFE } from '../../../adapters/inbound/http/presenter/user.mapper';
 import type { UserService } from '../user.service';
 
 type GetNetworkUsernamesInput = {

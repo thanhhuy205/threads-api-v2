@@ -20,7 +20,7 @@ import { hasherToken } from "../../util/hasher-token";
 import crypto from "crypto";
 import ms, { StringValue } from "ms";
 import { VerificationCodeType } from '../../../../generated/prisma/client';
-import { USER_SERVICE, type UserService } from "../../../user/service/user.service";
+import { USER_SERVICE, type UserService } from '../../../user/application/use-cases/user.service';
 import type { ForgotPasswordDto } from "../../dto/request/forgot-password.request.dto";
 import type { LoginDto } from "../../dto/request/login.request.dto";
 import type { LogoutDto } from "../../dto/request/logout.request.dto";
