@@ -118,3 +118,15 @@ services:
         regex_priority: 0
         tags: [post-service]
         # not set plugins because use jwt global
+      - name: post-keycloak-me
+        paths: [/api/v1/posts/keycloak-me]
+        strip_path: false
+        tags: [post-service, keycloak-test]
+        plugins:
+          - name: jwt
+            config:
+              anonymous: anonymousConsumer
+              claims_to_verify: [exp]
+              header_names: [authorization]
+              key_claim_name: iss
+              uri_param_names: []
