@@ -1,48 +1,7 @@
 _format_version: "3.0"
 
-consumers:
-  - custom_id: auth-service
-    username: auth-service
-    jwt_secrets:
-      # `key` must equal the `iss` claim auth-service signs tokens with
-      # (JWT_ISSUER in apps/libs/common/src/enums/jwt.enum.ts), because the jwt
-      # plugin uses key_claim_name: iss to look the consumer up.
-      #
-      # {vault://env/...} is a Kong vault reference, resolved at runtime. Plain
-      # ${JWT_SECRET} is NOT interpolated by Kong and would be used literally.
-      # Requires KONG_VAULTS=env (set in docker-compose.provider.yaml).
-      - algorithm: HS256
-        key: auth-service
-        secret: your_jwt_secret_key
-  - custom_id: anonymousConsumer
-    username: anonymousConsumer
-
-plugins:
-  - name: jwt
-    instance_name: global_jwt_auth
-    enabled: true
-    protocols: [grpc, grpcs, http, https]
-    config:
-      claims_to_verify: [exp]
-      header_names: [authorization] # header must check if unauthenticated, otherwise will return 401
-      key_claim_name: iss
-      maximum_expiration: 0 # max time kong will accept for exp claim, 0 = no limit
-      run_on_preflight: true # run on preflight request (OPTIONS) or not
-      secret_is_base64: false # secret is base64 encoded or not
-      uri_param_names: [jwt] # accept jwt in query string, e.g. /path?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-
-  # NOTE: the `auth-context` plugin below is what actually sets X-JWT-CLAIMS.
-  # A global request-transformer using "$(jwt_claims)" used to live here — that
-  # is not a valid Kong template variable, and it fought the Lua plugin for the
-  # same header, so it was removed.
-
-  - name: auth-context
-    instance_name: auth_context_jwt
-    enabled: true
-    protocols: [grpc, grpcs, http, https]
-
 services:
-  - name: auth-service
+  - name: user-service
     enabled: true
     host: host.docker.internal # đổi đúng tên container/host thật trong docker-compose
     port: 3300
@@ -59,47 +18,11 @@ services:
       #
       # Auth uses the same /api/v1 prefix at Kong and in the Nest application,
       # so Kong forwards the URI unchanged.
-      - name: auth-login
-        paths: [/api/v1/auth/login]
-        strip_path: false
-        regex_priority: 100
-        tags: [auth]
-        plugins:
-          - name: jwt
-            config:
-              {
-                anonymous: anonymousConsumer,
-                claims_to_verify: [exp],
-                header_names: [authorization],
-                key_claim_name: iss,
-                uri_param_names: [jwt],
-              }
-          - name: rate-limiting
-            config:
-              minute: 5
-              policy: local
-
-      - name: auth-register
-        paths: [/api/v1/auth/register]
-        strip_path: false
-        regex_priority: 100
-        tags: [auth]
-        plugins:
-          - name: jwt
-            config:
-              {
-                anonymous: anonymousConsumer,
-                claims_to_verify: [exp],
-                header_names: [authorization],
-                key_claim_name: iss,
-                uri_param_names: [jwt],
-              }
-      - name: auth-service-catchall
-        paths: [/api/v1/auth]
+      - name: user-service-catchall
+        paths: [/api/v1/user]
         strip_path: false
         regex_priority: 1
-        tags: [auth]
-        # not set plugins because use jwt global
+        tags: [user]
 
   - name: post-service
     enabled: true # jwt

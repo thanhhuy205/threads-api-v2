@@ -8,6 +8,7 @@
     "prisma:generate": "pnpm -r --if-present prisma:generate",
     "build": "pnpm -r --if-present build",
     "build:auth-service": "pnpm --filter @purse/auth-service build",
+    "build:user-service": "pnpm exec nest build user-service",
     "build:workspace-service": "pnpm --filter @purse/workspace-service build",
     "dev:auth-service": "pnpm --filter @purse/auth-service dev",
     "dev:workspace-service": "pnpm --filter @purse/workspace-service dev",
