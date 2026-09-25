@@ -1,0 +1,155 @@
+import { redisKey } from '@purse/common/constants';
+import { RedisService } from '@purse/core/redis';
+import { Inject, Injectable } from '@nestjs/common';
+import { USER_REPOSITORY, type UserRepository } from '../../ports/inbound/user.repository';
+import { Prisma } from '../../../../../generated/prisma/client';
+import type { UpdateProfileDto } from '../../../adapters/inbound/http/dto/request/update-profile.request.dto';
+import { mapUserProfileForFE } from '../../../adapters/inbound/http/presenter/user.mapper';
+import type {
+  CurrentUserProfile,
+  UserPermissionPosition,
+  UserService,
+} from '../user.service';
+
+type GetNetworkUsernamesInput = {
+  query: string;
+};
+
+@Injectable()
+export class UserServiceImpl implements UserService {
+  constructor(
+    @Inject(USER_REPOSITORY) private readonly userRepository: UserRepository,
+    private readonly redisService: RedisService,
+  ) { }
+
+  async updateProfile(userId: string, payload: UpdateProfileDto) {
+    const data: Prisma.UserUpdateInput = {};
+
+    if (payload.name !== undefined) {
+      data.name = payload.name;
+    }
+
+    if (payload.bio !== undefined) {
+      data.bio = payload.bio;
+    }
+
+    if (payload.labelWebsite !== undefined) {
+      data.labelWebsite = payload.labelWebsite;
+    }
+
+    if (payload.website !== undefined) {
+      data.website = payload.website;
+    }
+
+    const user = await this.userRepository.updateProfile(userId, data);
+    await this.redisService.redis.del(redisKey.auth.me(userId));
+
+    return {
+      name: user.name,
+      bio: user.bio,
+      labelWebsite: user.labelWebsite,
+      website: user.website,
+    };
+  }
+
+  async me(userId: string): Promise<CurrentUserProfile | null> {
+    const cacheKey = redisKey.auth.me(userId);
+    const cached = await this.redisService.redis.get(cacheKey);
+    if (cached) {
+      try {
+        return JSON.parse(cached) as CurrentUserProfile;
+      } catch {
+        // Ignore malformed cache and rebuild from the database.
+      }
+    }
+
+    const user = await this.userRepository.findById(userId);
+    if (!user) {
+      return null;
+    }
+
+    const permission = await this.getPermissionPositionByUserId(userId);
+    const response: CurrentUserProfile = {
+      user,
+      positionPermission:
+        permission?.userPositions.map(
+          (position) => position.positionPermission.permission.code,
+        ) ?? [],
+    };
+
+    await this.redisService.redis.set(cacheKey, JSON.stringify(response), { EX: 30 });
+
+    return response;
+  }
+
+  async getPermissionPositionByUserId(
+    userId: string,
+  ): Promise<UserPermissionPosition> {
+    return await this.userRepository.getPermissionPositionByUserId(userId);
+  }
+  async getMyStatusProfile(userId: string) {
+    const user = await this.userRepository.findStatusProfileById(userId);
+
+    if (!user) {
+      return null;
+    }
+
+    return {
+      isSuccessBio: user.bio !== null,
+      isSuccessAvatar: user.avatar !== null && user.avatar !== "",
+    };
+  }
+
+  async findByUserId(userId: string) {
+    return this.userRepository.findById(userId);
+  }
+
+  async findByUsernameNotRelationShip(username: string, tx: Prisma.TransactionClient) {
+    const user = await this.userRepository.findByUsername(username, tx);
+    if (!user) {
+      return null;
+    }
+
+    return mapUserProfileForFE(user);
+  }
+
+  async findByUsername(username: string, userId?: string) {
+    const user = await this.userRepository.findByUsername(username);
+    if (!user) {
+      return null;
+    }
+
+    if (!userId) {
+      return mapUserProfileForFE({
+        ...user,
+      });
+    }
+
+    return mapUserProfileForFE(user);
+  }
+
+  async findExistingIds(userIds: string[]) {
+    return this.userRepository.findExistingIds(userIds);
+  }
+
+  async findUsersByUsernames(usernames: string[]) {
+    const normalizedUsernames = [
+      ...new Set(usernames.map((username) => username.trim()).filter(Boolean)),
+    ];
+
+    return this.userRepository.findByUsernames(normalizedUsernames);
+  }
+
+  async searchUsername({ query }: GetNetworkUsernamesInput) {
+    return this.userRepository.searchUsername(query);
+  }
+
+  async findUserByEmail(email: string) {
+    return this.userRepository.findByEmail(email);
+  }
+
+  async searchUsernameOneQuery({ query }: { query: string }) {
+    return this.userRepository.searchUsernameOneQuery(query);
+  }
+}
+
