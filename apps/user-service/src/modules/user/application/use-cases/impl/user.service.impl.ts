@@ -1,19 +1,17 @@
+import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { redisKey } from '@purse/common/constants';
 import { RedisService } from '@purse/core/redis';
-import { Inject, Injectable } from '@nestjs/common';
-import { USER_REPOSITORY, type UserRepository } from '../../ports/inbound/user.repository';
 import { Prisma } from '../../../../../generated/prisma/client';
-import type { UpdateProfileDto } from '../../../adapters/inbound/http/dto/request/update-profile.request.dto';
-import { mapUserProfileForFE } from '../../../adapters/inbound/http/presenter/user.mapper';
+import type {
+  MeCommand,
+  OnboardingCommand,
+  UpdateProfileCommand,
+} from '../../commands';
+import { USER_REPOSITORY, type UserRepository } from '../../ports/inbound/user.repository';
 import type {
   CurrentUserProfile,
-  UserPermissionPosition,
-  UserService,
-} from '../user.service';
-
-type GetNetworkUsernamesInput = {
-  query: string;
-};
+} from '../../result';
+import type { UserService } from '../user.service';
 
 @Injectable()
 export class UserServiceImpl implements UserService {
@@ -22,7 +20,7 @@ export class UserServiceImpl implements UserService {
     private readonly redisService: RedisService,
   ) { }
 
-  async updateProfile(userId: string, payload: UpdateProfileDto) {
+  async updateProfile({ identity, ...payload }: UpdateProfileCommand) {
     const data: Prisma.UserUpdateInput = {};
 
     if (payload.name !== undefined) {
@@ -41,8 +39,8 @@ export class UserServiceImpl implements UserService {
       data.website = payload.website;
     }
 
-    const user = await this.userRepository.updateProfile(userId, data);
-    await this.redisService.redis.del(redisKey.auth.me(userId));
+    const user = await this.userRepository.updateProfile(identity, data);
+    await this.redisService.redis.del(redisKey.auth.me(identity));
 
     return {
       name: user.name,
@@ -52,8 +50,26 @@ export class UserServiceImpl implements UserService {
     };
   }
 
-  async me(userId: string): Promise<CurrentUserProfile | null> {
-    const cacheKey = redisKey.auth.me(userId);
+  async onboarding({ identity, name, bio, location, avatar }: OnboardingCommand) {
+    const data: Prisma.UserUpdateInput = {
+      name,
+      bio,
+      location,
+      ...(avatar !== undefined && { avatar }),
+    };
+    const user = await this.userRepository.create(identity, data);
+    await this.redisService.redis.del(redisKey.auth.me(identity));
+
+    return {
+      name: user.name,
+      bio: user.bio,
+      location: user.location,
+      avatar: user.avatar,
+    };
+  }
+
+  async me({ identity }: MeCommand): Promise<CurrentUserProfile | null> {
+    const cacheKey = redisKey.auth.me(identity);
     const cached = await this.redisService.redis.get(cacheKey);
     if (cached) {
       try {
@@ -63,30 +79,27 @@ export class UserServiceImpl implements UserService {
       }
     }
 
-    const user = await this.userRepository.findById(userId);
+    const user = await this.userRepository.findById(identity);
     if (!user) {
-      return null;
+      throw new UnauthorizedException();
     }
 
-    const permission = await this.getPermissionPositionByUserId(userId);
-    const response: CurrentUserProfile = {
-      user,
-      positionPermission:
-        permission?.userPositions.map(
-          (position) => position.positionPermission.permission.code,
-        ) ?? [],
+    await this.redisService.redis.set(cacheKey, JSON.stringify(user), { EX: 30 });
+
+    return {
+      id: user.id,
+      identity: user.identity,
+      name: user.name,
+      bio: user.bio,
+      avatar: user.avatar,
+      location: user.location,
+      website: user.website,
+      labelWebsite: user.labelWebsite,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
     };
-
-    await this.redisService.redis.set(cacheKey, JSON.stringify(response), { EX: 30 });
-
-    return response;
   }
 
-  async getPermissionPositionByUserId(
-    userId: string,
-  ): Promise<UserPermissionPosition> {
-    return await this.userRepository.getPermissionPositionByUserId(userId);
-  }
   async getMyStatusProfile(userId: string) {
     const user = await this.userRepository.findStatusProfileById(userId);
 
@@ -104,52 +117,8 @@ export class UserServiceImpl implements UserService {
     return this.userRepository.findById(userId);
   }
 
-  async findByUsernameNotRelationShip(username: string, tx: Prisma.TransactionClient) {
-    const user = await this.userRepository.findByUsername(username, tx);
-    if (!user) {
-      return null;
-    }
-
-    return mapUserProfileForFE(user);
-  }
-
-  async findByUsername(username: string, userId?: string) {
-    const user = await this.userRepository.findByUsername(username);
-    if (!user) {
-      return null;
-    }
-
-    if (!userId) {
-      return mapUserProfileForFE({
-        ...user,
-      });
-    }
-
-    return mapUserProfileForFE(user);
-  }
-
   async findExistingIds(userIds: string[]) {
     return this.userRepository.findExistingIds(userIds);
-  }
-
-  async findUsersByUsernames(usernames: string[]) {
-    const normalizedUsernames = [
-      ...new Set(usernames.map((username) => username.trim()).filter(Boolean)),
-    ];
-
-    return this.userRepository.findByUsernames(normalizedUsernames);
-  }
-
-  async searchUsername({ query }: GetNetworkUsernamesInput) {
-    return this.userRepository.searchUsername(query);
-  }
-
-  async findUserByEmail(email: string) {
-    return this.userRepository.findByEmail(email);
-  }
-
-  async searchUsernameOneQuery({ query }: { query: string }) {
-    return this.userRepository.searchUsernameOneQuery(query);
   }
 }
 

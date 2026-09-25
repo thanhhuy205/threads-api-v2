@@ -1,5 +1,10 @@
-export type StatusProfileDataDto = {
-  isSuccessBio: boolean;
-  isSuccessAvatar: boolean;
-};
+import { ApiProperty } from '@nestjs/swagger';
+
+export class StatusProfileResponseDto {
+  @ApiProperty()
+  isSuccessBio!: boolean;
+
+  @ApiProperty()
+  isSuccessAvatar!: boolean;
+}
 

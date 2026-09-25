@@ -1,35 +1,19 @@
-import type { Prisma } from '../../../../generated/prisma/client';
-import type { UpdateProfileDto } from '../../adapters/inbound/http/dto/request/update-profile.request.dto';
-import type { UserProfile } from '../ports/inbound/user.repository';
+import type {
+  MeCommand,
+  OnboardingCommand,
+  UpdateProfileCommand,
+} from '../commands';
+import type {
+  CurrentUserProfile,
+} from '../result';
 
 export const USER_SERVICE = Symbol('USER_SERVICE');
 
-export type GetNetworkUsernamesInput = { query: string };
-export type UserPermissionPosition = {
-  userPositions: Array<{
-    positionPermission: { permission: { code: string } };
-  }>;
-} | null;
-
-export type CurrentUserProfile = {
-  user: UserProfile;
-  positionPermission: string[];
-};
-
 export interface UserService {
-  updateProfile(userId: string, payload: UpdateProfileDto): Promise<any>;
-  me(userId: string): Promise<CurrentUserProfile | null>;
-  getPermissionPositionByUserId(userId: string): Promise<UserPermissionPosition>;
-  getMyStatusProfile(userId: string): Promise<any>;
-  findByUserId(userId: string): Promise<any>;
-  findByUsernameNotRelationShip(
-    username: string,
-    tx: Prisma.TransactionClient,
-  ): Promise<any>;
-  findByUsername(username: string, userId?: string): Promise<any>;
+  updateProfile(command: UpdateProfileCommand): Promise<any>;
+  onboarding(command: OnboardingCommand): Promise<any>;
+  me(command: MeCommand): Promise<CurrentUserProfile | null>;
+  getMyStatusProfile(identity: string): Promise<any>;
+  findByUserId(identity: string): Promise<any>;
   findExistingIds(userIds: string[]): Promise<string[]>;
-  findUsersByUsernames(usernames: string[]): Promise<any[]>;
-  searchUsername(input: GetNetworkUsernamesInput): Promise<any[]>;
-  findUserByEmail(email: string): Promise<any>;
-  searchUsernameOneQuery(input: { query: string }): Promise<any[]>;
 }

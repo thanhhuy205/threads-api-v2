@@ -2,9 +2,7 @@ import { Controller, Inject, Logger } from '@nestjs/common';
 import { GrpcMethod } from '@nestjs/microservices';
 import type {
   FindByUserIdRequest,
-  FindByUsernameRequest,
   FindExistingIdsRequest,
-  GetUserByEmailRequest,
   GetUserRequest,
 } from '@purse/proto/generated/user';
 import { USER_SERVICE, type UserService } from '../../../application/use-cases/user.service';
@@ -28,11 +26,6 @@ export class UserGrpcController {
     return this.userService.findByUserId(data.id);
   }
 
-  @GrpcMethod('UserService', 'GetUserByEmail')
-  getUserByEmail(data: GetUserByEmailRequest) {
-    return this.userService.findUserByEmail(data.email);
-  }
-
   @GrpcMethod('UserService', 'FindByUserId')
   findByUserId(data: FindByUserIdRequest) {
     this.logger.debug(
@@ -41,8 +34,4 @@ export class UserGrpcController {
     return this.userService.findByUserId(data.userId);
   }
 
-  @GrpcMethod('UserService', 'FindByUsername')
-  findByUsername(data: FindByUsernameRequest) {
-    return this.userService.findByUsername(data.username);
-  }
 }
