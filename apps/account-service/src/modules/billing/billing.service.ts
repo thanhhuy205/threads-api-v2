@@ -5,7 +5,7 @@ import type { CreateBillingDto } from './dto/create-billing.dto';
 
 @Injectable()
 export class BillingService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   findAll() {
     return this.prisma.billing.findMany({ orderBy: { price: 'asc' } });

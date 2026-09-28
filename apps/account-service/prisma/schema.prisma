@@ -39,9 +39,10 @@ enum BillingType {
 
 model Billing {
   id                     String           @id @default(nanoid())
-  keycloakOrganizationId String           @map("keycloak_organization_id") @db.VarChar(100)
+  keycloakOrganizationId String?          @map("keycloak_organization_id") @db.VarChar(100)
   type                   BillingType      @unique @default(FREE)
   price                  Decimal          @default(0) @db.Decimal(10, 2)
+  detail                 String?          @db.Text
   paymentHistories       PaymentHistory[]
   createdAt              DateTime         @default(now()) @map("created_at")
   updatedAt              DateTime         @updatedAt @map("updated_at")
