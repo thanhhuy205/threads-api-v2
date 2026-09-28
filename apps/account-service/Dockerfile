@@ -8,7 +8,7 @@ FROM base AS pruner
 
 COPY . .
 
-RUN pnpm dlx turbo prune @purse/auth-service --docker
+RUN pnpm dlx turbo prune @purse/account-service --docker
 
 FROM base AS builder
 
@@ -25,13 +25,13 @@ RUN pnpm --filter @purse/common build
 RUN pnpm --filter @purse/core build
 RUN pnpm --filter @purse/proto build
 
-RUN pnpm --filter @purse/auth-service prisma:generate
+RUN pnpm --filter @purse/account-service prisma:generate
 
-RUN pnpm exec nest build auth-service
+RUN pnpm exec nest build account-service
 
-RUN pnpm --filter @purse/auth-service deploy --prod --legacy /app/deploy
+RUN pnpm --filter @purse/account-service deploy --prod --legacy /app/deploy
 
-RUN cp -r /app/apps/auth-service/dist /app/deploy/dist
+RUN cp -r /app/apps/account-service/dist /app/deploy/dist
 
 FROM node:22-alpine AS runner
 

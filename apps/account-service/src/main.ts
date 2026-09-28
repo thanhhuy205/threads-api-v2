@@ -49,7 +49,7 @@ async function bootstrap() {
     }),
   );
   await app.startAllMicroservices();
-  await app.listen(APP_CONFIG.AUTH_SERVICE_PORT, APP_CONFIG.AUTH_SERVICE_HOST);
+  await app.listen(APP_CONFIG.ACCOUNT_SERVICE_PORT, APP_CONFIG.ACCOUNT_SERVICE_HOST);
 }
 
 void bootstrap();

@@ -1,7 +1,7 @@
 _format_version: "3.0"
 
 services:
-  - name: user-service
+  - name: account-service
     enabled: true
     host: host.docker.internal # đổi đúng tên container/host thật trong docker-compose
     port: 3300
@@ -18,7 +18,7 @@ services:
       #
       # Auth uses the same /api/v1 prefix at Kong and in the Nest application,
       # so Kong forwards the URI unchanged.
-      - name: user-service-catchall
+      - name: account-service-catchall
         paths: [/api/v1/user]
         strip_path: false
         regex_priority: 1

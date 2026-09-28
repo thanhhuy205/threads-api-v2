@@ -7,11 +7,13 @@ import { AppAuthGuard, GrpcGatewayAuthStrategy } from '@purse/core/auth';
 import { RedisModule } from '@purse/core/redis';
 import { createLoggerOptions, LoggerModule } from '@purse/observability/logging';
 import { validate } from './config/app.config';
-import { UserModule } from './modules/user/user.module';
+import { BillingModule } from './modules/billing/billing.module';
+import { OrganizationModule } from './modules/organizations/organization.module';
+import { ProfileModule } from './modules/profile/profile.module';
 import { PrismaModule } from './prisma/prisma.module';
 @Module({
   imports: [
-    LoggerModule.forRoot(createLoggerOptions('auth-service')),
+    LoggerModule.forRoot(createLoggerOptions('account-service')),
     ConfigModule.forRoot({
       isGlobal: true, cache: true,
       validate,
@@ -30,7 +32,9 @@ import { PrismaModule } from './prisma/prisma.module';
     }),
     PrismaModule,
     RedisModule,
-    UserModule,
+    ProfileModule,
+    OrganizationModule,
+    BillingModule,
   ],
   providers: [
     GrpcGatewayAuthStrategy,

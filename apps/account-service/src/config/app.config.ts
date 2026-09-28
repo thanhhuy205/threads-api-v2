@@ -8,18 +8,18 @@ export class AppConfig {
 
     @IsString()
     @IsNotEmpty()
-    AUTH_SERVICE_HOST: string;
+    ACCOUNT_SERVICE_HOST: string;
 
     @IsNumber()
     @Type(() => Number)
     @IsNotEmpty()
-    AUTH_SERVICE_PORT: number;
+    ACCOUNT_SERVICE_PORT: number;
 
 
     constructor() {
-        this.MICROSERVICE_NAME = MicroserviceName.AuthService;
-        this.AUTH_SERVICE_HOST = process.env['AUTH_SERVICE_HOST'] ?? '0.0.0.0';
-        this.AUTH_SERVICE_PORT = Number(process.env['AUTH_SERVICE_PORT'] ?? 3300);
+        this.MICROSERVICE_NAME = MicroserviceName.AccountService;
+        this.ACCOUNT_SERVICE_HOST = process.env['ACCOUNT_SERVICE_HOST'] ?? process.env['AUTH_SERVICE_HOST'] ?? '0.0.0.0';
+        this.ACCOUNT_SERVICE_PORT = Number(process.env['ACCOUNT_SERVICE_PORT'] ?? process.env['AUTH_SERVICE_PORT'] ?? 3300);
     }
 }
 

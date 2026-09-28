@@ -16,13 +16,13 @@
         "tsConfigPath": "apps/api/tsconfig.app.json"
       }
     },
-    "user-service": {
+    "account-service": {
       "type": "application",
-      "root": "apps/user-service",
+      "root": "apps/account-service",
       "entryFile": "main",
-      "sourceRoot": "apps/user-service/src",
+      "sourceRoot": "apps/account-service/src",
       "compilerOptions": {
-        "tsConfigPath": "apps/user-service/tsconfig.app.json"
+        "tsConfigPath": "apps/account-service/tsconfig.app.json"
       }
     },
     "post-service": {

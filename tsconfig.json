@@ -7,7 +7,7 @@
     "sourceMap": true
   },
   "include": [
-    "apps/user-service/src/**/*.ts",
+    "apps/account-service/src/**/*.ts",
     "apps/notification-service/src/**/*.ts",
     "apps/post-service/src/**/*.ts",
     "apps/search-service/src/**/*.ts",
