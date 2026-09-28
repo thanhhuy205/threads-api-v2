@@ -8,7 +8,6 @@ import { RedisModule } from '@purse/core/redis';
 import { createLoggerOptions, LoggerModule } from '@purse/observability/logging';
 import { validate } from './config/app.config';
 import { BillingModule } from './modules/billing/billing.module';
-import { OrganizationModule } from './modules/organizations/organization.module';
 import { ProfileModule } from './modules/profile/profile.module';
 import { PrismaModule } from './prisma/prisma.module';
 @Module({
@@ -33,7 +32,6 @@ import { PrismaModule } from './prisma/prisma.module';
     PrismaModule,
     RedisModule,
     ProfileModule,
-    OrganizationModule,
     BillingModule,
   ],
   providers: [
