@@ -18,6 +18,8 @@ model User {
   location     String? @db.VarChar(255)
   website      String? @db.VarChar(255)
   labelWebsite String? @map("label_website") @db.VarChar(255)
+  companyName  String? @map("company_name") @db.VarChar(100)
+  companySize  String? @map("company_size") @db.VarChar(50)
 
   deletedAt DateTime? @map("deleted_at")
   createdAt DateTime  @default(now()) @map("created_at")
@@ -27,4 +29,47 @@ model User {
   @@index([name], map: "idx_users_name")
   @@index([deletedAt], map: "idx_users_deleted_at")
   @@map("users")
+}
+
+enum BillingType {
+  FREE
+  PRO
+  MAX
+}
+
+model Billing {
+  id                     String           @id @default(nanoid())
+  keycloakOrganizationId String           @map("keycloak_organization_id") @db.VarChar(100)
+  type                   BillingType      @unique @default(FREE)
+  price                  Decimal          @default(0) @db.Decimal(10, 2)
+  paymentHistories       PaymentHistory[]
+  createdAt              DateTime         @default(now()) @map("created_at")
+  updatedAt              DateTime         @updatedAt @map("updated_at")
+  billingDetails         BillingDetail[]
+
+  @@map("billings")
+}
+
+model BillingDetail {
+  id        String   @id @default(nanoid())
+  price     Decimal  @db.Decimal(10, 2)
+  detail    String?  @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+
+  billing Billing[]
+
+  @@map("billing_details")
+}
+
+model PaymentHistory {
+  id        String      @id @default(nanoid())
+  billingId String      @map("billing_id")
+  billing   Billing     @relation(fields: [billingId], references: [id])
+  type      BillingType
+  price     Decimal     @db.Decimal(10, 2)
+  detail    String?     @db.Text
+  createdAt DateTime    @default(now()) @map("created_at")
+
+  @@index([billingId], map: "idx_billing_histories_billing_id")
+  @@map("billing_histories")
 }
