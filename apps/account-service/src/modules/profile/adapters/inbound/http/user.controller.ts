@@ -13,7 +13,7 @@ import {
   UpdateProfileResponseDto,
 } from './dto/response';
 
-@ApiTags('User')
+@ApiTags('Profile')
 @Controller('users')
 export class UserController {
   constructor(@Inject(USER_SERVICE) private readonly userService: UserService) { }

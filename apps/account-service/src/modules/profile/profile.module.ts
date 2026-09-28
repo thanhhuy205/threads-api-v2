@@ -14,4 +14,4 @@ import { USER_SERVICE } from './application/use-cases/user.service';
   ],
   exports: [USER_SERVICE],
 })
-export class UserModule { }
+export class ProfileModule { }

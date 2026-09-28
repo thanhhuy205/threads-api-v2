@@ -12,6 +12,12 @@ export class UpdateProfileResponseDto {
 
   @ApiPropertyOptional({ nullable: true, format: 'uri' })
   website!: string | null;
+
+  @ApiPropertyOptional({ nullable: true })
+  companyName!: string | null;
+
+  @ApiPropertyOptional({ nullable: true })
+  companySize!: string | null;
 }
 
 export class OnboardingResponseDto {
@@ -26,6 +32,12 @@ export class OnboardingResponseDto {
 
   @ApiPropertyOptional({ nullable: true, format: 'uri' })
   avatar!: string | null;
+
+  @ApiPropertyOptional({ nullable: true })
+  companyName!: string | null;
+
+  @ApiPropertyOptional({ nullable: true })
+  companySize!: string | null;
 }
 
 export class CurrentUserProfileResponseDto {
@@ -52,6 +64,12 @@ export class CurrentUserProfileResponseDto {
 
   @ApiPropertyOptional({ nullable: true })
   labelWebsite!: string | null;
+
+  @ApiPropertyOptional({ nullable: true })
+  companyName!: string | null;
+
+  @ApiPropertyOptional({ nullable: true })
+  companySize!: string | null;
 
   @ApiProperty({ format: 'date-time' })
   createdAt!: Date;

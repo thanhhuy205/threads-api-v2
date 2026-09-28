@@ -39,6 +39,14 @@ export class UserServiceImpl implements UserService {
       data.website = payload.website;
     }
 
+    if (payload.companyName !== undefined) {
+      data.companyName = payload.companyName;
+    }
+
+    if (payload.companySize !== undefined) {
+      data.companySize = payload.companySize;
+    }
+
     const user = await this.userRepository.updateProfile(identity, data);
     await this.redisService.redis.del(redisKey.auth.me(identity));
 
@@ -47,15 +55,19 @@ export class UserServiceImpl implements UserService {
       bio: user.bio,
       labelWebsite: user.labelWebsite,
       website: user.website,
+      companyName: user.companyName,
+      companySize: user.companySize,
     };
   }
 
-  async onboarding({ identity, name, bio, location, avatar }: OnboardingCommand) {
+  async onboarding({ identity, name, bio, location, avatar, companyName, companySize }: OnboardingCommand) {
     const data: Prisma.UserUpdateInput = {
       name,
       bio,
       location,
       ...(avatar !== undefined && { avatar }),
+      ...(companyName !== undefined && { companyName }),
+      ...(companySize !== undefined && { companySize }),
     };
     const user = await this.userRepository.create(identity, data);
     await this.redisService.redis.del(redisKey.auth.me(identity));
@@ -65,6 +77,8 @@ export class UserServiceImpl implements UserService {
       bio: user.bio,
       location: user.location,
       avatar: user.avatar,
+      companyName: user.companyName,
+      companySize: user.companySize,
     };
   }
 
@@ -95,6 +109,8 @@ export class UserServiceImpl implements UserService {
       location: user.location,
       website: user.website,
       labelWebsite: user.labelWebsite,
+      companyName: user.companyName,
+      companySize: user.companySize,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     };

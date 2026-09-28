@@ -4,4 +4,6 @@ export type OnboardingCommand = {
   bio: string;
   location: string;
   avatar?: string;
+  companyName?: string;
+  companySize?: string;
 };

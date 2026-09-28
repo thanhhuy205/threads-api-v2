@@ -26,4 +26,16 @@ export class UpdateProfileDto {
   @IsUrl()
   @MaxLength(255)
   website?: string | null;
+
+  @ApiPropertyOptional({ nullable: true, maxLength: 100 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  companyName?: string | null;
+
+  @ApiPropertyOptional({ nullable: true, maxLength: 50 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  companySize?: string | null;
 }

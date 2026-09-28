@@ -11,6 +11,8 @@ const userProfileSelect = {
   location: true,
   website: true,
   labelWebsite: true,
+  companyName: true,
+  companySize: true,
   createdAt: true,
   updatedAt: true,
 } as const;

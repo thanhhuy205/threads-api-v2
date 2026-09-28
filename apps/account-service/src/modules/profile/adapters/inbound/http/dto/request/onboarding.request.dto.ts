@@ -23,4 +23,16 @@ export class OnboardingDto {
   @IsUrl()
   @MaxLength(255)
   avatar?: string;
+
+  @ApiPropertyOptional({ maxLength: 100 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  companyName?: string;
+
+  @ApiPropertyOptional({ maxLength: 50 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  companySize?: string;
 }
