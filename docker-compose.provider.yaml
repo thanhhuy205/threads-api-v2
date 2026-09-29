@@ -14,32 +14,6 @@ services:
       - ./docker/mysql-data:/var/lib/mysql
     ports:
       - "3308:3306"
-  kong:
-    image: kong:3.7
-    container_name: pulse-kong
-    restart: unless-stopped
-    environment:
-      KONG_DATABASE: "off"
-      KONG_DECLARATIVE_CONFIG: /kong/kong-dev.yaml
-      KONG_PLUGINS: bundled,auth-context
-      KONG_LUA_PACKAGE_PATH: /kong/plugins/?.lua;;
-      KONG_PROXY_LISTEN: 0.0.0.0:8000
-      # Admin API stays bound to loopback via the published port below.
-      KONG_ADMIN_LISTEN: 0.0.0.0:8001
-      KONG_LOG_LEVEL: info
-      # Enables {vault://env/...} references in kong-dev.yaml.
-      KONG_VAULTS: env
-      # Resolves {vault://env/kong-jwt-secret}. Must match the app's JWT_SECRET,
-      # otherwise Kong verifies signatures against the wrong key and every
-      # authenticated request 401s.
-      KONG_JWT_SECRET: ${JWT_SECRET}
-    ports:
-      - "8100:8000"
-      - "8101:8001"
-    volumes:
-      - ./infrastructure/kong:/kong:ro
-    networks:
-      - purse-network
 
   # Both services are reachable only from inside the compose network: they trust
   # X-JWT-CLAIMS unconditionally, so publishing a host port would let anyone set

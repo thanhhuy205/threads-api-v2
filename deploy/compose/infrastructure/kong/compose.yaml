@@ -1,0 +1,31 @@
+services:
+  kong:
+    image: kong:3.7
+    container_name: pulse-kong
+    restart: unless-stopped
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /kong/kong.yaml
+      KONG_PLUGINS: bundled
+      KONG_PROXY_LISTEN: 0.0.0.0:8000
+      # Admin API stays bound to loopback via the published port below.
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001
+      KONG_LOG_LEVEL: info
+      # Enables {vault://env/...} references in kong-dev.yaml.
+      KONG_VAULTS: env
+      # Resolves {vault://env/kong-jwt-secret}. Must match the app's JWT_SECRET,
+      # otherwise Kong verifies signatures against the wrong key and every
+      # authenticated request 401s.
+      KONG_JWT_SECRET: ${JWT_SECRET}
+    volumes:
+      - ./kong.yaml:/kong/kong.yaml:ro
+    networks:
+      - purse-network
+
+# volumes:
+#   - ./kong.yaml:/kong/kong.yaml:ro
+# #   ↑ trên máy    ↑ trong container
+
+# environment:
+#   KONG_DECLARATIVE_CONFIG: /kong/kong.yaml
+# #                            ↑ Kong tìm file ở đây

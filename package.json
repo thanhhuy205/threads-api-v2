@@ -14,7 +14,10 @@
     "dev:auth-service": "pnpm --filter @purse/auth-service dev",
     "dev:workspace-service": "pnpm --filter @purse/workspace-service dev",
     "test:integration:auth": "tsx --test tests/integration/auth/kong-jwt.e2e-spec.ts",
-    "test:integration:auth-post": "tsx --test tests/integration/flows/kong-auth-post.e2e-spec.ts"
+    "test:integration:auth-post": "tsx --test tests/integration/flows/kong-auth-post.e2e-spec.ts",
+    "compose:up:dev": "docker compose --env-file .env -f deploy/compose/compose.yaml -f deploy/compose/overlays/dev.yaml up -d",
+    "compose:down:dev": "docker compose --env-file .env -f deploy/compose/compose.yaml -f deploy/compose/overlays/dev.yaml down",
+    "compose:recreate:dev": "docker compose --env-file .env -f deploy/compose/compose.yaml -f deploy/compose/overlays/dev.yaml  up -d --no-deps --force-recreate"
   },
   "devDependencies": {
     "@nestjs/cli": "^12.0.0",

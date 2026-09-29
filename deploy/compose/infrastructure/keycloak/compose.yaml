@@ -9,7 +9,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./docker/keycloak-db-data:/var/lib/postgresql/data
+      - keycloak-db-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U keycloak -d keycloak"]
       interval: 10s
@@ -18,18 +18,21 @@ services:
 
   keycloak:
     image: quay.io/keycloak/keycloak:26.7.4
+    container_name: purse-keycloak
     command: start-dev
     depends_on:
       keycloak-db:
         condition: service_healthy
-
+    volumes:
+      - ./theme.jar:/opt/keycloak/providers/theme.jar:ro
     environment:
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak
       KC_DB_USERNAME: keycloak
       KC_DB_PASSWORD: keycloak
       KC_HOSTNAME: http://localhost:18081
-      KC_BOOTSTRAP_ADMIN_USERNAME: admin
-      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
     ports:
       - "127.0.0.1:18081:8080"
+
+volumes:
+  keycloak-db-data:
