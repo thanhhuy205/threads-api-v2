@@ -8,40 +8,20 @@ import {
 import { toTime } from '../../../../helper/conver-date.helper';
 import { PrismaService } from '../../../../prisma/prisma.service';
 import { postFeedSelect, postSelectRepository } from '../../adapters/inbound/http/presenter/post.mapper';
-import type { CreatePostCommand } from '../../application/commands/create-post.command';
+import type {
+  CreateQuoteData,
+  CreateReplyData,
+  CreateRepostData,
+  CreateRepostPayload,
+  RepositoryCreatePostPayload,
+} from '../../application/commands/create-post.command';
 import type { UpdatePostCommand } from '../../application/commands/update-post.command';
 import type {
   PostRecord,
   PostRepository,
   UserSnapshot,
 } from '../../application/ports/inbound/post.repository';
-import { primaryPostTypes } from "../../constants/post-type";
-
-type RepositoryCreatePostPayload = Omit<CreatePostCommand, "isSurvey"> & {
-  isSurvey?: boolean;
-  type?: PostType;
-};
-
-type CreateRepostPayload = {
-  userId: string;
-  content?: string;
-};
-
-type CreateReplyData = {
-  parentPostId: number;
-  parentPublicId: string;
-  rootPostId: number;
-  rootPublicId: string;
-  userSnapshot: UserSnapshot;
-};
-
-type CreateRepostData = {
-  originPublicId: string;
-  originPostId: number;
-  userSnapshot: UserSnapshot;
-};
-
-type CreateQuoteData = CreateRepostData;
+import { primaryPostTypes } from '../../../../constants/post-type';
 
 @Injectable()
 export class PostRepositoryImpl implements PostRepository {
