@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>QA Following</title>
+  <style>
+    :root{--bg:#F7F4ED;--paper:#fff;--ink:#171716;--muted:#5B5952;--bd:#D6D1C4;--line:#E8E3D8;--clay:#D97757;--blue:#2563EB;--green:#15803D;--amber:#A16207;--red:#B42318;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;--serif:ui-serif,Georgia,serif;--sans:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:var(--sans);color:var(--ink);line-height:1.55}.wrap{max-width:1080px;margin:auto;padding:56px 28px 92px}.back{font:12px var(--mono);color:#7B786F;text-decoration:none}header{padding:24px 0 30px;border-bottom:1.5px solid var(--bd);margin-bottom:28px}h1{font:500 44px/1.08 var(--serif);margin:0 0 10px}h1 em{color:var(--clay)}p{color:var(--muted)}.legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.pill{background:var(--paper);border:1.5px solid var(--bd);border-radius:14px;padding:16px}.pill b{display:block;font:700 11px var(--mono);text-transform:uppercase;margin-bottom:6px}.ok b{color:var(--green)}.api b{color:var(--blue)}.warn b{color:var(--amber)}.wait b{color:var(--red)}.sec{margin-top:30px}.sec h2{font:500 28px var(--serif);margin:0 0 14px}.diagram{background:var(--paper);border:1.5px solid var(--bd);border-radius:16px;padding:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}.person{border:1px solid var(--line);border-radius:12px;padding:12px}.avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--clay),#7C3AED);margin-bottom:10px}.bar{height:7px;border-radius:99px;background:var(--line);margin:7px 0}.bar.a{width:72%;background:#DDEBFF}.bar.b{width:52%}.btn{height:28px;border-radius:8px;background:#171716;margin-top:10px}.btn.alt{background:#FEEDE9;border:1px solid #F8B4A3}table{width:100%;border-collapse:collapse;background:var(--paper);border:1.5px solid var(--bd);border-radius:14px;overflow:hidden}th,td{padding:14px 16px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;font-size:14px}th{font:700 12px var(--mono);text-transform:uppercase;background:#EFEAE0;color:#68645D}tr:last-child td{border-bottom:0}.tag{display:inline-flex;border-radius:999px;padding:2px 8px;font:700 11px var(--mono);background:#FFF7DF;color:#8A5A00}.tag.ok{background:#EAF7ED;color:var(--green)}.tag.wait{background:#FEEDE9;color:var(--red)}code{font:12px var(--mono);background:#F1EDE5;border:1px solid var(--bd);border-radius:6px;padding:1px 5px}
+  </style>
+</head>
+<body><div class="wrap">
+  <a class="back" href="index.html">← Back</a>
+  <header>
+    <h1>Following <em>QA spec</em></h1>
+    <p>Expected route <code>/[locale]/following</code> là danh sách người current user đang theo dõi. Source hiện tại đang render following feed, nên phần people list cần được tách hoặc đổi component.</p>
+  </header>
+  <div class="legend">
+    <div class="pill wait"><b>Mismatch</b>Current source: <code>SeededFeedPageClient queryMode="following"</code>, không phải list people.</div>
+    <div class="pill api"><b>Available API</b>Có API <code>GET /user/:username/following</code> cho user profile context.</div>
+    <div class="pill warn"><b>Expected UI</b>Avatar, name/username, open profile và unfollow trên từng dòng.</div>
+    <div class="pill ok"><b>Reuse</b>Có thể dùng pattern list tương tự Followers.</div>
+  </div>
+  <section class="sec"><h2>People List Diagram</h2><div class="diagram">
+    <div class="person"><div class="avatar"></div><div class="bar a"></div><div class="bar b"></div><div class="btn alt"></div></div>
+    <div class="person"><div class="avatar"></div><div class="bar a"></div><div class="bar b"></div><div class="btn"></div></div>
+    <div class="person"><div class="avatar"></div><div class="bar a"></div><div class="bar b"></div><div class="btn alt"></div></div>
+  </div></section>
+  <section class="sec"><h2>Scope Table</h2><table><thead><tr><th>Area</th><th>Expected behavior</th><th>Status / source</th></tr></thead><tbody>
+    <tr><td>Load following people</td><td>Hiển thị người current user đang theo dõi, không phải bài viết từ following feed.</td><td><span class="tag wait">Pending UI</span> source hiện là feed</td></tr>
+    <tr><td>Open profile</td><td>Bấm avatar/name mở public profile đúng username.</td><td><span class="tag">Expected</span></td></tr>
+    <tr><td>Unfollow</td><td>Nút hủy theo dõi cập nhật item/counter, rollback khi API lỗi.</td><td><span class="tag ok">API</span> <code>POST /user/:username/follower</code></td></tr>
+    <tr><td>Empty/loading/error</td><td>Có skeleton, empty state khi chưa follow ai và error state nhẹ.</td><td><span class="tag">Expected</span></td></tr>
+  </tbody></table></section>
+</div></body></html>

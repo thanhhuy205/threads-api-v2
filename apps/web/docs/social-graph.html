@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QA Social Graph</title>
+<style>
+  :root{--ivory:#FAF9F5;--paper:#FFFFFF;--slate:#141413;--clay:#D97757;--clay-d:#B85C3E;--oat:#E3DACC;--olive:#788C5D;--g100:#F0EEE6;--g200:#E6E3DA;--g300:#D1CFC5;--g500:#87867F;--g700:#3D3D3A;--serif:ui-serif,Georgia,"Times New Roman",Times,serif;--sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;--mono:ui-monospace,"SF Mono",Menlo,Monaco,Consolas,monospace}
+  *{box-sizing:border-box}body{margin:0;background:var(--ivory);color:var(--slate);font-family:var(--sans);line-height:1.55}.wrap{max-width:1240px;margin:0 auto;padding:56px 32px 96px}.back{font-family:var(--mono);font-size:12px;color:var(--g500);text-decoration:none}
+  header{padding:24px 0 34px;border-bottom:1.5px solid var(--g300);margin-bottom:34px}.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--g500);margin-bottom:12px}h1{font-family:var(--serif);font-weight:500;font-size:46px;line-height:1.08;margin:0 0 12px;letter-spacing:-.018em}h1 em{font-style:italic;color:var(--clay)}.lead{max-width:820px;color:var(--g700);font-size:15px}.status{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;color:var(--olive);background:var(--g100);border:1.5px solid var(--g300);border-radius:999px;padding:5px 10px;margin-top:16px}.status:before{content:"";width:8px;height:8px;border-radius:50%;background:var(--olive)}
+  section{margin-top:34px}.sec-head{display:flex;gap:14px;align-items:baseline;margin-bottom:14px}.idx{font-family:var(--mono);font-size:12px;color:var(--clay);width:28px}.sec-head h2{font-family:var(--serif);font-weight:500;font-size:26px;margin:0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:18px}.card,.flow,.panel{background:var(--paper);border:1.5px solid var(--g300);border-radius:14px;padding:18px;min-width:0}.card h3,.panel h3{font-family:var(--serif);font-weight:500;font-size:20px;margin:0 0 8px}.card p,.card li,.panel li{font-size:13.5px;color:var(--g700)}ul{padding-left:18px;margin:8px 0 0}code{font-family:var(--mono);font-size:12px;background:var(--g100);border:1px solid var(--g300);border-radius:6px;padding:1px 5px;color:var(--slate);white-space:normal;overflow-wrap:anywhere;word-break:break-word}
+  table{width:100%;border-collapse:collapse;background:var(--paper);border:1.5px solid var(--g300);border-radius:14px;overflow:hidden;display:table}th,td{padding:12px 14px;border-bottom:1px solid var(--g100);text-align:left;vertical-align:top;font-size:13.5px;overflow-wrap:anywhere;word-break:break-word}th{font-family:var(--mono);font-size:11px;text-transform:uppercase;color:var(--g500);background:var(--g100)}tr:last-child td{border-bottom:0}
+  .social-ui{display:grid;grid-template-columns:.9fr 1.1fr;gap:18px}.phone{border:1.5px solid var(--g300);border-radius:20px;background:var(--ivory);padding:14px}.row{display:grid;grid-template-columns:42px 1fr auto;gap:10px;align-items:center;border-bottom:1px solid var(--g200);padding:12px 0}.row:last-child{border-bottom:0}.avatar{width:40px;height:40px;border-radius:50%;background:var(--olive);border:2px solid var(--paper)}.line{height:7px;border-radius:5px;background:var(--g300);margin:6px 0}.w80{width:80%}.w60{width:60%}.w45{width:45%}.btn{border:1px solid var(--slate);border-radius:10px;background:var(--slate);color:var(--paper);font-size:12px;font-weight:700;padding:7px 12px;white-space:nowrap}.btn.ghost{background:var(--paper);color:var(--slate)}.request-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.request-card{border:1.5px solid var(--g300);border-radius:14px;background:var(--ivory);padding:16px}.request-card h3{font-family:var(--serif);font-weight:500;font-size:20px;margin:0 0 8px}
+  .nodes{display:grid;grid-template-columns:repeat(5,minmax(120px,1fr));gap:12px}.node{border:1.5px solid var(--g300);border-radius:10px;background:var(--paper);padding:12px;min-height:88px;position:relative}.node:after{content:"";position:absolute;right:-12px;top:42px;width:12px;border-top:1.5px solid var(--g500)}.node:last-child:after{display:none}.node.warn{background:#fff7f2;border-color:var(--clay)}.node.ok{background:var(--g100);border-color:var(--olive)}.node h3{font-family:var(--mono);font-size:12px;margin:0 0 6px}.node p{font-size:12.5px;color:var(--g700);margin:0}
+  footer{margin-top:56px;border-top:1.5px solid var(--g300);padding-top:24px;color:var(--g500);font-size:13px}@media(max-width:820px){.wrap{padding:36px 20px 72px}.social-ui,.request-grid,.nodes{grid-template-columns:1fr}.node:after{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="index.html">← Back to QA Feature Coverage</a>
+  <header>
+    <div class="eyebrow">Social graph · followers and friend requests</div>
+    <h1>Social Graph <em>QA spec</em></h1>
+    <p class="lead">Nhóm page người theo dõi, yêu cầu kết bạn đã nhận và yêu cầu đã gửi. QA cần kiểm tra xem profile từ từng dòng, theo dõi lại/hủy theo dõi, chấp nhận/từ chối lời mời và trạng thái sau mutation.</p>
+    <div class="status">Page route hiện có</div>
+  </header>
+
+  <section>
+    <div class="sec-head"><span class="idx">01</span><h2>Source Map</h2></div>
+    <div class="grid">
+      <div class="card"><h3>Followers</h3><p><code>src/app/[locale]/(main)/(private)/(default)/follower/page.client.tsx</code><br><code>FollowerItem.tsx</code></p></div>
+      <div class="card"><h3>Friend requests</h3><p><code>friend-requests/page.client.tsx</code><br><code>FriendRequestItem.tsx</code></p></div>
+      <div class="card"><h3>Sent requests</h3><p><code>send-request/page.client.tsx</code><br><code>SendRequestItem.tsx</code></p></div>
+      <div class="card"><h3>APIs</h3><p><code>GET /me/followers</code><br><code>POST /user/:username/follower</code><br><code>GET /me/friend-requests/received</code><br><code>GET /me/friend-requests/sent</code></p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="idx">02</span><h2>Followers Card</h2></div>
+    <div class="social-ui">
+      <div class="phone" aria-hidden="true">
+        <div class="row"><div class="avatar"></div><div><div class="line w80"></div><div class="line w45"></div></div><button class="btn">Theo dõi</button></div>
+        <div class="row"><div class="avatar"></div><div><div class="line w60"></div><div class="line w45"></div></div><button class="btn ghost">Đang theo dõi</button></div>
+        <div class="row"><div class="avatar"></div><div><div class="line w80"></div><div class="line w60"></div></div><button class="btn">Theo dõi</button></div>
+      </div>
+      <div class="panel">
+        <h3>Expected Behavior</h3>
+        <ul>
+          <li>Page <code>/[locale]/follower</code> hiển thị danh sách người đang theo dõi user hiện tại.</li>
+          <li>Bấm avatar/name đi tới profile công khai của người đó.</li>
+          <li>Nếu chưa follow lại, nút hiển thị <code>Theo dõi</code>; bấm sẽ gọi follow API và đổi sang <code>Đang theo dõi</code>.</li>
+          <li>Nếu đã follow, nút <code>Đang theo dõi</code> phải cho hủy theo dõi như hành vi follow/unfollow bình thường.</li>
+          <li>Danh sách dùng infinite scroll và phải load thêm khi còn <code>hasNextPage</code>.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="idx">03</span><h2>Friend Request Cards</h2></div>
+    <div class="request-grid">
+      <div class="request-card">
+        <h3>Yêu cầu kết bạn</h3>
+        <ul>
+          <li>Route: <code>/[locale]/friend-requests</code>.</li>
+          <li>Data: <code>GET /me/friend-requests/received</code>.</li>
+          <li>Mỗi card hiển thị người gửi, link tới profile, nút <code>Đồng ý kết bạn</code> và <code>Từ chối kết bạn</code>.</li>
+          <li>Accept gọi <code>/me/friend-requests/:username/accept</code>; reject gọi handler với <code>{ isAccept: false }</code>.</li>
+        </ul>
+      </div>
+      <div class="request-card">
+        <h3>Yêu cầu đã gửi</h3>
+        <ul>
+          <li>Route: <code>/[locale]/send-request</code>.</li>
+          <li>Data: <code>GET /me/friend-requests/sent</code>.</li>
+          <li>QA spec mong muốn card này cũng có đủ hai action: <code>Chấp nhận</code> và <code>Từ chối/Huỷ</code> theo trạng thái backend trả về.</li>
+          <li>Implementation hiện tại mới có nút <code>Huỷ lời mời kết bạn</code> cho request pending, nên cần bổ sung/verify action chấp nhận nếu backend hỗ trợ.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="idx">04</span><h2>State Rules</h2></div>
+    <div class="grid">
+      <div class="card">
+        <h3>Pending</h3>
+        <ul>
+          <li>Request pending phải có action button, disabled trong lúc mutation đang chạy.</li>
+          <li>Không được gửi nhiều mutation trùng khi double click.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Accepted</h3>
+        <ul>
+          <li>Request accepted hiển thị trạng thái đã kết bạn, không còn nút accept/reject.</li>
+          <li>Follower/following state nên được refetch hoặc cập nhật optimistic sau khi accept.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Rejected Or Canceled</h3>
+        <ul>
+          <li>Request rejected/canceled hiển thị trạng thái đã hủy hoặc bị từ chối.</li>
+          <li>Không để item pending cũ còn action sai trạng thái sau khi API thành công.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="idx">05</span><h2>Route Map</h2></div>
+    <div class="flow">
+      <div class="nodes">
+        <div class="node"><h3>01 · Followers</h3><p>Xem danh sách người theo dõi và mở profile.</p></div>
+        <div class="node ok"><h3>02 · Follow back</h3><p>Theo dõi lại hoặc hủy theo dõi từ list.</p></div>
+        <div class="node"><h3>03 · Received</h3><p>Chấp nhận hoặc từ chối lời mời nhận được.</p></div>
+        <div class="node warn"><h3>04 · Sent</h3><p>Hiện có hủy request; cần rõ accept/reject nếu backend hỗ trợ.</p></div>
+        <div class="node ok"><h3>05 · State</h3><p>Accepted/rejected/canceled cập nhật UI đúng trạng thái.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="idx">06</span><h2>Expected Coverage</h2></div>
+    <table>
+      <thead><tr><th>Case</th><th>Kỳ vọng</th></tr></thead>
+      <tbody>
+        <tr><td>Mở <code>/follower</code></td><td>Thấy danh sách follower, bấm từng người mở profile.</td></tr>
+        <tr><td>Bấm <code>Theo dõi</code> từ follower card</td><td>Gọi API follow và đổi sang <code>Đang theo dõi</code>.</td></tr>
+        <tr><td>Bấm <code>Đang theo dõi</code></td><td>Hủy theo dõi và đổi lại trạng thái follow được.</td></tr>
+        <tr><td>Yêu cầu kết bạn nhận được</td><td>Có cả nút chấp nhận và từ chối, mutation cập nhật trạng thái.</td></tr>
+        <tr><td>Yêu cầu đã gửi</td><td>Có card riêng; hiện có hủy lời mời, cần bổ sung/verify action chấp nhận nếu backend có trạng thái đó.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <footer>Thread Next.js QA Feature Coverage · Social Graph</footer>
+</div>
+</body>
+</html>

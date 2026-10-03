@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>QA Friends</title>
+  <style>
+    :root{--bg:#F7F4ED;--paper:#fff;--ink:#171716;--muted:#5B5952;--bd:#D6D1C4;--line:#E8E3D8;--clay:#D97757;--blue:#2563EB;--green:#15803D;--amber:#A16207;--red:#B42318;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;--serif:ui-serif,Georgia,serif;--sans:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:var(--sans);color:var(--ink);line-height:1.55}.wrap{max-width:1080px;margin:auto;padding:56px 28px 92px}.back{font:12px var(--mono);color:#7B786F;text-decoration:none}header{padding:24px 0 30px;border-bottom:1.5px solid var(--bd);margin-bottom:28px}h1{font:500 44px/1.08 var(--serif);margin:0 0 10px}h1 em{color:var(--clay)}p{color:var(--muted)}.legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.pill{background:var(--paper);border:1.5px solid var(--bd);border-radius:14px;padding:16px}.pill b{display:block;font:700 11px var(--mono);text-transform:uppercase;margin-bottom:6px}.ok b{color:var(--green)}.api b{color:var(--blue)}.warn b{color:var(--amber)}.wait b{color:var(--red)}.sec{margin-top:30px}.sec h2{font:500 28px var(--serif);margin:0 0 14px}.pair{background:var(--paper);border:1.5px solid var(--bd);border-radius:16px;padding:18px;display:grid;grid-template-columns:1fr 70px 1fr;gap:12px;align-items:center}.user{border:1px solid var(--line);border-radius:12px;padding:14px}.avatar{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#D97757,#15803D);margin-bottom:10px}.link{height:4px;background:var(--clay);border-radius:99px}.bar{height:8px;border-radius:99px;background:var(--line);margin:8px 0}.bar.a{width:76%;background:#DDEBFF}.bar.b{width:52%}table{width:100%;border-collapse:collapse;background:var(--paper);border:1.5px solid var(--bd);border-radius:14px;overflow:hidden}th,td{padding:14px 16px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;font-size:14px}th{font:700 12px var(--mono);text-transform:uppercase;background:#EFEAE0;color:#68645D}tr:last-child td{border-bottom:0}.tag{display:inline-flex;border-radius:999px;padding:2px 8px;font:700 11px var(--mono);background:#FFF7DF;color:#8A5A00}.tag.ok{background:#EAF7ED;color:var(--green)}.tag.wait{background:#FEEDE9;color:var(--red)}code{font:12px var(--mono);background:#F1EDE5;border:1px solid var(--bd);border-radius:6px;padding:1px 5px}
+  </style>
+</head>
+<body><div class="wrap">
+  <a class="back" href="index.html">← Back</a>
+  <header><h1>Friends <em>QA spec</em></h1><p>Expected route <code>/[locale]/friends</code> là danh sách bạn bè và là điều kiện nhắn tin. Source hiện tại đang render friend feed, không phải people list.</p></header>
+  <div class="legend">
+    <div class="pill wait"><b>Mismatch</b>Current source: <code>SeededFeedPageClient feedType=FRIEND</code>.</div>
+    <div class="pill warn"><b>Expected UI</b>Danh sách bạn bè, mở profile, message action và unfriend nếu UI hỗ trợ.</div>
+    <div class="pill ok"><b>Messaging rule</b>Chỉ friend mới được nhắn tin 1-1.</div>
+    <div class="pill api"><b>Mutation source</b>Friend request accept từ received requests tạo relationship friend.</div>
+  </div>
+  <section class="sec"><h2>Friend Relationship Diagram</h2><div class="pair"><div class="user"><div class="avatar"></div><div class="bar a"></div><div class="bar b"></div></div><div class="link"></div><div class="user"><div class="avatar"></div><div class="bar a"></div><div class="bar b"></div></div></div></section>
+  <section class="sec"><h2>Scope Table</h2><table><thead><tr><th>Area</th><th>Expected behavior</th><th>Status / source</th></tr></thead><tbody>
+    <tr><td>Load friends people</td><td>Hiển thị danh sách bạn bè hiện tại, không phải bài viết friend feed.</td><td><span class="tag wait">Pending UI</span> source hiện là feed</td></tr>
+    <tr><td>Open profile</td><td>Bấm vào bạn bè mở profile người đó.</td><td><span class="tag">Expected</span></td></tr>
+    <tr><td>Friend request sync</td><td>Accept từ friend requests đưa người đó vào friends; reject/cancel không tạo friend.</td><td><span class="tag ok">API</span> accept request mutation</td></tr>
+    <tr><td>Message eligibility</td><td>Message action chỉ hợp lệ khi còn là friend; mất friend thì gửi message bị chặn.</td><td><span class="tag ok">Rule</span> messages flow</td></tr>
+  </tbody></table></section>
+</div></body></html>

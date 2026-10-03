@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>QA Private Profile</title>
+  <style>
+    :root{--bg:#F7F4ED;--paper:#fff;--ink:#171716;--muted:#5B5952;--bd:#D6D1C4;--line:#E8E3D8;--clay:#D97757;--blue:#2563EB;--green:#15803D;--amber:#A16207;--red:#B42318;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;--serif:ui-serif,Georgia,serif;--sans:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:var(--sans);color:var(--ink);line-height:1.55}.wrap{max-width:1100px;margin:auto;padding:56px 28px 92px}.back{font:12px var(--mono);color:#7B786F;text-decoration:none}header{padding:24px 0 30px;border-bottom:1.5px solid var(--bd);margin-bottom:28px}h1{font:500 44px/1.08 var(--serif);margin:0 0 10px}h1 em{color:var(--clay)}p{color:var(--muted)}.legend,.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.pill,.panel{background:var(--paper);border:1.5px solid var(--bd);border-radius:14px;padding:16px}.pill b{display:block;font:700 11px var(--mono);text-transform:uppercase;margin-bottom:6px}.ok b{color:var(--green)}.api b{color:var(--blue)}.warn b{color:var(--amber)}.wait b{color:var(--red)}.sec{margin-top:30px}.sec h2{font:500 28px var(--serif);margin:0 0 14px}.panel h3{margin:0 0 8px;font:700 13px var(--mono);text-transform:uppercase;color:var(--blue)}.panel ul{margin:0;padding-left:18px;color:var(--muted);font-size:14px}table{width:100%;border-collapse:collapse;background:var(--paper);border:1.5px solid var(--bd);border-radius:14px;overflow:hidden}th,td{padding:14px 16px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;font-size:14px}th{font:700 12px var(--mono);text-transform:uppercase;background:#EFEAE0;color:#68645D}tr:last-child td{border-bottom:0}.tag{display:inline-flex;border-radius:999px;padding:2px 8px;font:700 11px var(--mono);background:#EAF7ED;color:var(--green)}.tag.warn{background:#FFF7DF;color:#8A5A00}.tag.wait{background:#FEEDE9;color:var(--red)}code{font:12px var(--mono);background:#F1EDE5;border:1px solid var(--bd);border-radius:6px;padding:1px 5px}
+  </style>
+</head>
+<body><div class="wrap">
+  <a class="back" href="index.html">← Back</a>
+  <header><h1>Private Profile <em>QA spec</em></h1><p>Route <code>/[locale]/profile</code>. Kiểm thử hồ sơ cá nhân, chỉnh sửa thông tin, verify email, privacy và bài viết của chính mình.</p></header>
+  <div class="legend">
+    <div class="pill ok"><b>Done</b>Shell profile, tabs, counters, edit profile modal và verify email button đã có.</div>
+    <div class="pill api"><b>API</b><code>PATCH /me/profile</code>, resend verify email, load my posts.</div>
+    <div class="pill warn"><b>Partial</b>Media tab có route nhưng component đang rỗng.</div>
+    <div class="pill wait"><b>Review</b>Save/copy/delete post cá nhân nằm trong menu post, cần test theo từng card.</div>
+  </div>
+  <section class="sec"><h2>Functional Cards</h2><div class="grid">
+    <div class="panel"><h3>Profile editor</h3><ul><li>Name, bio, website/label website, avatar và privacy public/private.</li><li>Preview data sau save không cần reload trang.</li></ul></div>
+    <div class="panel"><h3>Verification</h3><ul><li>User chưa verified thấy nút gửi lại email xác thực.</li><li>User verified chỉ thấy edit profile.</li></ul></div>
+    <div class="panel"><h3>Personal posts</h3><ul><li>Load threads của chính mình, composer/new post entry point.</li><li>Post menu có save/unsave, copy link và delete.</li></ul></div>
+  </div></section>
+  <section class="sec"><h2>Scope Table</h2><table><thead><tr><th>Area</th><th>Expected behavior</th><th>Status / source</th></tr></thead><tbody>
+    <tr><td>Edit info</td><td>Modal lưu thông tin cá nhân, privacy public/private, website và avatar; lỗi API hiển thị toast.</td><td><span class="tag">API</span> <code>ProfileSettings</code></td></tr>
+    <tr><td>Email verify</td><td>Nút verify chỉ hiện khi chưa xác minh; gửi lại mail có loading và toast.</td><td><span class="tag">API</span> <code>useResendVerifyEmailSessionMutation</code></td></tr>
+    <tr><td>Threads</td><td>Tab chính load bài cá nhân; setup profile card chỉ hiện khi profile chưa hoàn tất.</td><td><span class="tag">API</span> <code>useGetMyPostsQuery</code></td></tr>
+    <tr><td>Own post menu</td><td>Save personal post, copy post và delete personal post hoạt động từ menu của tác giả.</td><td><span class="tag warn">Verify</span> <code>MenuMe</code> và saved state</td></tr>
+    <tr><td>Tabs</td><td>Replies/repost/media route không crash, active tab đúng sau refresh.</td><td><span class="tag warn">Partial</span> media chưa render dữ liệu</td></tr>
+  </tbody></table></section>
+</div></body></html>

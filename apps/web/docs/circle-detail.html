@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QA Circle Detail</title>
+<style>
+  :root{--ivory:#FAF9F5;--paper:#FFFFFF;--slate:#141413;--clay:#D97757;--olive:#788C5D;--g100:#F0EEE6;--g200:#E6E3DA;--g300:#D1CFC5;--g500:#87867F;--g700:#3D3D3A;--serif:ui-serif,Georgia,"Times New Roman",Times,serif;--sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;--mono:ui-monospace,"SF Mono",Menlo,Monaco,Consolas,monospace}
+  *{box-sizing:border-box}body{margin:0;background:var(--ivory);color:var(--slate);font-family:var(--sans);line-height:1.55}.wrap{max-width:1120px;margin:0 auto;padding:56px 32px 96px}.back{font-family:var(--mono);font-size:12px;color:var(--g500);text-decoration:none}header{padding:24px 0 34px;border-bottom:1.5px solid var(--g300);margin-bottom:34px}.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--g500);margin-bottom:12px}h1{font-family:var(--serif);font-weight:500;font-size:44px;line-height:1.08;margin:0 0 12px}h1 em{font-style:italic;color:var(--clay)}.lead{max-width:820px;color:var(--g700);font-size:15px}section{margin-top:34px}.sec-head{display:flex;gap:14px;align-items:baseline;margin-bottom:14px}.idx{font-family:var(--mono);font-size:12px;color:var(--clay);width:28px}.sec-head h2{font-family:var(--serif);font-weight:500;font-size:26px;margin:0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px}.card{background:var(--paper);border:1.5px solid var(--g300);border-radius:14px;padding:18px}.card h3{font-family:var(--serif);font-weight:500;font-size:20px;margin:0 0 8px}.card p,.card li{font-size:13.5px;color:var(--g700)}ul{padding-left:18px;margin:8px 0 0}code{font-family:var(--mono);font-size:12px;background:var(--g100);border:1px solid var(--g300);border-radius:6px;padding:1px 5px;color:var(--slate);white-space:normal;overflow-wrap:anywhere}table{width:100%;border-collapse:collapse;background:var(--paper);border:1.5px solid var(--g300);border-radius:14px;overflow:hidden}th,td{padding:12px 14px;border-bottom:1px solid var(--g100);text-align:left;vertical-align:top;font-size:13.5px}th{font-family:var(--mono);font-size:11px;text-transform:uppercase;color:var(--g500);background:var(--g100)}tr:last-child td{border-bottom:0}footer{margin-top:56px;border-top:1.5px solid var(--g300);padding-top:24px;color:var(--g500);font-size:13px}@media(max-width:820px){.wrap{padding:36px 20px 72px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="index.html">← Back to QA Feature Coverage</a>
+  <header>
+    <div class="eyebrow">Circle · detail page</div>
+    <h1>Circle Detail <em>QA spec</em></h1>
+    <p class="lead">Spec riêng cho route <code>/[locale]/circle/[publicId]</code>. Page này kiểm thử hai trạng thái chưa tham gia/đã tham gia, invitation, join request, HP, burn karma, level-up và quyền vào manage.</p>
+  </header>
+
+  <section>
+    <div class="sec-head"><span class="idx">01</span><h2>Source Map</h2></div>
+    <div class="grid">
+      <div class="card"><h3>Page</h3><p><code>CircleDetailClientPage</code> đọc <code>isJoined</code>, <code>joinStatus</code>, <code>inInvitation</code>, <code>isAdmin</code>, <code>permission</code>.</p></div>
+      <div class="card"><h3>APIs</h3><p><code>GET /circle/:publicId</code>, <code>GET /circle/:publicId/posts</code>, <code>GET /circle/:publicId/members</code>, <code>POST /circle/:publicId/sacrifice</code>, <code>POST /circle/:publicId/level-up</code>.</p></div>
+      <div class="card"><h3>Permission</h3><p>Manage button chỉ hiện khi <code>isAdmin=true</code> và permission có <code>manage_super</code>. Level-up cần <code>update_level</code>.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="idx">02</span><h2>Functional Scope</h2></div>
+    <div class="grid">
+      <div class="card">
+        <h3>Chưa tham gia</h3>
+        <ul>
+          <li>Thấy banner/default locked state và thông báo chưa tham gia hoặc nhóm private.</li>
+          <li>Không thấy composer, full members, museum đầy đủ hoặc Burning Karma.</li>
+          <li>Nếu được mời, hiển thị <code>Chấp nhận</code> và <code>Từ chối</code>.</li>
+          <li>Nếu chưa có invitation, hiển thị nút gửi yêu cầu tham gia; pending thì không gửi trùng.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Đã tham gia</h3>
+        <ul>
+          <li>Tabs đầy đủ gồm <code>Posts</code>, <code>Members</code>, <code>Museum</code>.</li>
+          <li>Có entry tạo bài nếu Circle chưa dead.</li>
+          <li>Xem post feed, member list, level/EXP và recent media museum.</li>
+          <li>Circle dead không cho post, join hoặc hồi sinh.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Burning Karma</h3>
+        <ul>
+          <li>Lấy <code>userKarma</code> từ daily quests.</li>
+          <li><code>POST /circle/:publicId/sacrifice</code> với <code>{ karmaAmount }</code>.</li>
+          <li>1 Karma = 10 HP, mỗi lần tối đa +500 HP.</li>
+          <li>Sau khi burn, user bị hạn chế 48 giờ và nút burn chuyển trạng thái hạn chế.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Level Up</h3>
+        <ul>
+          <li><code>EvolutionChamber</code> hiển thị current level, EXP, next level và unlock.</li>
+          <li>Owner/admin có permission <code>update_level</code> mới bấm được.</li>
+          <li>Thiếu EXP/HP hoặc bấm repeat phải trả lỗi rõ ràng.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="idx">03</span><h2>Expected Coverage</h2></div>
+    <table>
+      <thead><tr><th>Case</th><th>Kỳ vọng</th></tr></thead>
+      <tbody>
+        <tr><td>Not joined public/private</td><td>Hiển thị locked/default state đúng theo visibility và joinStatus.</td></tr>
+        <tr><td>Invitation</td><td>User được mời có thể accept/reject, sau accept chuyển sang joined.</td></tr>
+        <tr><td>Joined tabs</td><td>Posts/Members/Museum hoạt động theo data thật.</td></tr>
+        <tr><td>Burn karma</td><td>HP tăng, Karma giảm, restriction 48h được phản ánh.</td></tr>
+        <tr><td>Manage access</td><td>Chỉ user có <code>manage_super</code> thấy và mở manage.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <footer>Thread Next.js QA Feature Coverage · Circle Detail</footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>QA Followers</title>
+  <style>
+    :root{--bg:#F7F4ED;--paper:#fff;--ink:#171716;--muted:#5B5952;--bd:#D6D1C4;--line:#E8E3D8;--clay:#D97757;--blue:#2563EB;--green:#15803D;--amber:#A16207;--red:#B42318;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;--serif:ui-serif,Georgia,serif;--sans:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:var(--sans);color:var(--ink);line-height:1.55}.wrap{max-width:1080px;margin:auto;padding:56px 28px 92px}.back{font:12px var(--mono);color:#7B786F;text-decoration:none}header{padding:24px 0 30px;border-bottom:1.5px solid var(--bd);margin-bottom:28px}h1{font:500 44px/1.08 var(--serif);margin:0 0 10px}h1 em{color:var(--clay)}p{color:var(--muted)}.legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.pill{background:var(--paper);border:1.5px solid var(--bd);border-radius:14px;padding:16px}.pill b{display:block;font:700 11px var(--mono);text-transform:uppercase;margin-bottom:6px}.ok b{color:var(--green)}.api b{color:var(--blue)}.warn b{color:var(--amber)}.wait b{color:var(--red)}.sec{margin-top:30px}.sec h2{font:500 28px var(--serif);margin:0 0 14px}.list{background:var(--paper);border:1.5px solid var(--bd);border-radius:16px;overflow:hidden}.row{display:grid;grid-template-columns:44px 1fr 130px;gap:12px;align-items:center;padding:14px;border-bottom:1px solid var(--line)}.row:last-child{border-bottom:0}.avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--clay),#15803D)}.bar{height:8px;border-radius:99px;background:var(--line);margin:7px 0}.bar.a{width:68%;background:#DDEBFF}.bar.b{width:42%}.btn{height:30px;border-radius:9px;background:#171716}.btn.alt{background:#F9FAFB;border:1px solid var(--bd)}table{width:100%;border-collapse:collapse;background:var(--paper);border:1.5px solid var(--bd);border-radius:14px;overflow:hidden}th,td{padding:14px 16px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;font-size:14px}th{font:700 12px var(--mono);text-transform:uppercase;background:#EFEAE0;color:#68645D}tr:last-child td{border-bottom:0}.tag{display:inline-flex;border-radius:999px;padding:2px 8px;font:700 11px var(--mono);background:#EAF7ED;color:var(--green)}.tag.warn{background:#FFF7DF;color:#8A5A00}code{font:12px var(--mono);background:#F1EDE5;border:1px solid var(--bd);border-radius:6px;padding:1px 5px}
+  </style>
+</head>
+<body><div class="wrap">
+  <a class="back" href="index.html">← Back</a>
+  <header><h1>Followers <em>QA spec</em></h1><p>Route <code>/[locale]/follower</code>. Kiểm thử người đang theo dõi mình, mở profile, follow back và hủy follow.</p></header>
+  <div class="legend">
+    <div class="pill ok"><b>Done</b>Route là people list, dùng <code>PrivateFollowerPageClient</code>.</div>
+    <div class="pill api"><b>API</b><code>GET /me/followers</code>, <code>POST /user/:username/follower</code>.</div>
+    <div class="pill warn"><b>State</b>Local <code>followingMap</code> cần khởi tạo đúng nếu API trả trạng thái follow sẵn.</div>
+    <div class="pill ok"><b>Expected</b>Follower có thể follow back hoặc unfollow như hành vi bình thường.</div>
+  </div>
+  <section class="sec"><h2>List Diagram</h2><div class="list"><div class="row"><div class="avatar"></div><div><div class="bar a"></div><div class="bar b"></div></div><div class="btn"></div></div><div class="row"><div class="avatar"></div><div><div class="bar a"></div><div class="bar b"></div></div><div class="btn alt"></div></div></div></section>
+  <section class="sec"><h2>Scope Table</h2><table><thead><tr><th>Area</th><th>Expected behavior</th><th>Status / source</th></tr></thead><tbody>
+    <tr><td>Load followers</td><td>Hiển thị follower với avatar, name/username, skeleton, empty và pagination.</td><td><span class="tag">API</span> <code>useGetFollowerInfinite</code></td></tr>
+    <tr><td>Open profile</td><td>Bấm follower mở public profile đúng username/public id.</td><td><span class="tag">UI</span> <code>FollowerItem</code></td></tr>
+    <tr><td>Follow back</td><td>Nếu chưa follow lại, nút follow đổi sang đang theo dõi sau API success.</td><td><span class="tag">API</span> follow mutation</td></tr>
+    <tr><td>Unfollow</td><td>Nếu đang follow, bấm lại hủy follow và rollback khi API lỗi.</td><td><span class="tag warn">Verify</span> local state + backend state</td></tr>
+  </tbody></table></section>
+</div></body></html>

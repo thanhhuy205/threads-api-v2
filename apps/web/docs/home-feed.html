@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QA Home Feed Detail</title>
+<style>
+  :root {
+    --ivory:#FAF9F5; --paper:#FFFFFF; --slate:#141413; --clay:#D97757; --clay-d:#B85C3E;
+    --oat:#E3DACC; --olive:#788C5D; --g100:#F0EEE6; --g200:#E6E3DA; --g300:#D1CFC5;
+    --g500:#87867F; --g700:#3D3D3A;
+    --serif:ui-serif, Georgia, "Times New Roman", Times, serif;
+    --sans:system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono:ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ivory);color:var(--slate);font-family:var(--sans);line-height:1.55}
+  .wrap{max-width:1240px;margin:0 auto;padding:56px 32px 96px}
+  .back{font-family:var(--mono);font-size:12px;color:var(--g500);text-decoration:none}
+  header{padding:24px 0 34px;border-bottom:1.5px solid var(--g300);margin-bottom:34px}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--g500);margin-bottom:12px}
+  h1{font-family:var(--serif);font-weight:500;font-size:46px;line-height:1.08;margin:0 0 12px;letter-spacing:-.018em}
+  h1 em{font-style:italic;color:var(--clay)}
+  .lead{max-width:790px;color:var(--g700);font-size:15px}
+  .status{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;color:var(--olive);background:var(--g100);border:1.5px solid var(--g300);border-radius:999px;padding:5px 10px;margin-top:16px}
+  .status:before{content:"";width:8px;height:8px;border-radius:50%;background:var(--olive)}
+  section{margin-top:34px}
+  .sec-head{display:flex;gap:14px;align-items:baseline;margin-bottom:14px}
+  .idx{font-family:var(--mono);font-size:12px;color:var(--clay);width:28px}
+  .sec-head h2{font-family:var(--serif);font-weight:500;font-size:26px;margin:0}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:18px}
+  .card,.flow,.state-card,.post-shell{background:var(--paper);border:1.5px solid var(--g300);border-radius:14px;padding:18px;min-width:0}
+  .card h3,.state-card h3,.post-shell h3{font-family:var(--serif);font-weight:500;font-size:20px;margin:0 0 8px}
+  .card p,.card li,.state-card li,.post-shell li{font-size:13.5px;color:var(--g700)}
+  ul{padding-left:18px;margin:8px 0 0}
+  code{font-family:var(--mono);font-size:12px;background:var(--g100);border:1px solid var(--g300);border-radius:6px;padding:1px 5px;color:var(--slate);white-space:normal;overflow-wrap:anywhere;word-break:break-word}
+  table{width:100%;border-collapse:collapse;background:var(--paper);border:1.5px solid var(--g300);border-radius:14px;overflow:hidden;display:table}
+  th,td{padding:12px 14px;border-bottom:1px solid var(--g100);text-align:left;vertical-align:top;font-size:13.5px;overflow-wrap:anywhere;word-break:break-word}
+  th{font-family:var(--mono);font-size:11px;text-transform:uppercase;color:var(--g500);background:var(--g100)}
+  tr:last-child td{border-bottom:0}
+  .state-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+  .state-card{position:relative;overflow:hidden}
+  .state-card:before{content:"";position:absolute;inset:0 0 auto;height:6px;background:var(--clay)}
+  .state-card.auth:before{background:var(--olive)}
+  .state-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin:2px 0 12px}
+  .badge{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--g500);border:1px solid var(--g300);background:var(--g100);border-radius:999px;padding:3px 8px;white-space:nowrap}
+  .chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
+  .chip{font-family:var(--mono);font-size:11px;border:1px solid var(--g300);border-radius:999px;background:var(--g100);padding:4px 8px;color:var(--g700)}
+  .mini-feed{border:1.5px solid var(--g300);border-radius:12px;background:var(--ivory);padding:12px;margin-top:12px}
+  .mini-post{display:grid;grid-template-columns:34px 1fr;gap:10px;border-bottom:1px solid var(--g200);padding-bottom:11px;margin-bottom:11px}
+  .mini-post:last-child{border-bottom:0;margin-bottom:0;padding-bottom:0}
+  .avatar{width:34px;height:34px;border-radius:50%;background:var(--clay);border:2px solid var(--paper)}
+  .auth .avatar{background:var(--olive)}
+  .line{height:7px;border-radius:5px;background:var(--g300);margin:6px 0}
+  .line.w80{width:80%}.line.w62{width:62%}.line.w45{width:45%}
+  .actions{display:flex;gap:8px;margin-top:9px}
+  .action-dot{width:30px;height:18px;border:1px solid var(--g300);border-radius:999px;background:var(--paper)}
+  .post-shell{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:stretch}
+  .post-preview{border:1.5px solid var(--g300);border-radius:13px;background:var(--ivory);padding:14px}
+  .post-header{display:grid;grid-template-columns:38px 1fr auto;gap:10px;align-items:center}
+  .menu-dot{width:28px;height:28px;border-radius:50%;border:1px solid var(--g300);display:grid;place-items:center;font-family:var(--mono)}
+  .media-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+  .media-tile{height:82px;border-radius:10px;background:linear-gradient(135deg,var(--oat),var(--g200));border:1px solid var(--g300)}
+  .media-tile.video{background:linear-gradient(135deg,var(--slate),var(--g700));position:relative}
+  .media-tile.video:after{content:"";position:absolute;left:50%;top:50%;transform:translate(-40%,-50%);border-left:15px solid var(--paper);border-top:10px solid transparent;border-bottom:10px solid transparent}
+  .nodes{display:grid;grid-template-columns:repeat(5,minmax(120px,1fr));gap:12px;align-items:stretch}
+  .node{border:1.5px solid var(--g300);border-radius:10px;background:var(--paper);padding:12px;min-height:88px;position:relative}
+  .node:after{content:"";position:absolute;right:-12px;top:42px;width:12px;border-top:1.5px solid var(--g500)}
+  .node:last-child:after{display:none}
+  .node.ok{background:var(--g100);border-color:var(--olive)}
+  .node h3{font-family:var(--mono);font-size:12px;margin:0 0 6px}
+  .node p{font-size:12.5px;color:var(--g700);margin:0}
+  .qa-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+  .qa-item{border:1px solid var(--g300);border-radius:10px;background:var(--paper);padding:12px;font-size:13.5px;color:var(--g700)}
+  footer{margin-top:56px;border-top:1.5px solid var(--g300);padding-top:24px;color:var(--g500);font-size:13px}
+  @media(max-width:820px){.wrap{padding:36px 20px 72px}.state-grid,.post-shell,.nodes{grid-template-columns:1fr}.node:after{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="index.html">← Back to QA Feature Coverage</a>
+  <header>
+    <div class="eyebrow">Feed detail · home</div>
+    <h1>Home Feed <em>QA spec</em></h1>
+    <p class="lead">
+      Trang chủ feed ở <code>/[locale]</code> cần tách rõ trạng thái khách và trạng thái đã đăng nhập. QA tập trung vào quyền xem feed, gating interaction, menu ba chấm, tab theo dõi/bạn bè, khối post và composer đăng bài.
+    </p>
+    <div class="status">Page route hiện có</div>
+  </header>
+
+  <section>
+    <div class="sec-head"><span class="idx">01</span><h2>Source Map</h2></div>
+    <div class="grid">
+      <div class="card"><h3>Page feed</h3><p><code>src/app/[locale]/(main)/(default)/page.tsx</code><br><code>src/app/[locale]/(main)/_components/post/SeededFeedPageClient.tsx</code></p></div>
+      <div class="card"><h3>Feed API</h3><p><code>src/features/post/api/server/index.ts</code><br><code>src/features/post/api/get-feeds.ts</code><br><code>src/features/post/hooks/use-feeds-query.ts</code></p></div>
+      <div class="card"><h3>Post UI</h3><p><code>PostCard</code>, <code>InteractionBar</code>, <code>Menu</code>, <code>RepostMenu</code>, <code>ShareMenu</code></p></div>
+      <div class="card"><h3>Composer/schema</h3><p><code>src/hooks/use-create-post.ts</code><br><code>src/app/[locale]/(main)/_components/user/UserAction/index.tsx</code><br><code>src/schema/post.schema.ts</code></p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="idx">02</span><h2>Home Feed States</h2></div>
+    <div class="state-grid">
+      <article class="state-card guest">
+        <div class="state-top">
+          <div>
+            <div class="badge">Guest</div>
+            <h3>Guest State</h3>
+          </div>
+          <span class="badge">Optional Bearer</span>
+        </div>
+        <ul>
+          <li>Vào <code>/[locale]</code> vẫn load feed mặc định và xem được các bài post public.</li>
+          <li>Bấm <code>like</code>, <code>reply</code>, <code>repost</code> hoặc <code>share</code> phải mở modal yêu cầu đăng nhập, nút tiếp tục đưa về <code>/[locale]/login</code>.</li>
+          <li>Bấm menu ba chấm trên post chỉ được thấy <code>Sao chép liên kết</code>. Các item cần auth như lưu, báo cáo, không quan tâm bị ẩn.</li>
+          <li>Bấm các nav/tab private như <code>/following</code>, <code>/friends</code> không được vào nội dung, phải login trước.</li>
+        </ul>
+        <div class="mini-feed" aria-hidden="true">
+          <div class="mini-post"><div class="avatar"></div><div><div class="line w80"></div><div class="line w62"></div><div class="actions"><span class="action-dot"></span><span class="action-dot"></span><span class="action-dot"></span></div></div></div>
+          <div class="mini-post"><div class="avatar"></div><div><div class="line w62"></div><div class="line w45"></div><div class="actions"><span class="action-dot"></span><span class="action-dot"></span><span class="action-dot"></span></div></div></div>
+        </div>
+        <div class="chips">
+          <span class="chip">GET /posts/news-feed</span>
+          <span class="chip">Auth modal</span>
+          <span class="chip">Copy link only</span>
+        </div>
+      </article>
+
+      <article class="state-card auth">
+        <div class="state-top">
+          <div>
+            <div class="badge">Authenticated</div>
+            <h3>Authenticated State</h3>
+          </div>
+          <span class="badge">Bearer</span>
+        </div>
+        <ul>
+          <li>Vào <code>/[locale]</code> load feed mặc định <code>for_you</code>, yêu cầu không hiển thị bài của chính user đang đăng nhập trong home feed.</li>
+          <li>Tab <code>Đang theo dõi</code> dùng <code>type=following</code>, chỉ hiển thị bài của các trang cá nhân user đang theo dõi.</li>
+          <li>Tab <code>Bạn bè</code> dùng <code>type=friends</code>, chỉ hiển thị bài của những người đang là bạn.</li>
+          <li>Interaction hoạt động thật: like/unlike, reply, repost, quote, share, save/hide/report theo quyền hiện tại.</li>
+          <li>Save/hide nằm trong menu ba chấm. Khi đang lưu phải có trạng thái đang xử lý; khi ẩn thì bài biến mất khỏi feed hiện tại.</li>
+        </ul>
+        <div class="mini-feed" aria-hidden="true">
+          <div class="mini-post"><div class="avatar"></div><div><div class="line w80"></div><div class="line w45"></div><div class="actions"><span class="action-dot"></span><span class="action-dot"></span><span class="action-dot"></span><span class="action-dot"></span></div></div></div>
+          <div class="mini-post"><div class="avatar"></div><div><div class="line w62"></div><div class="line w80"></div><div class="actions"><span class="action-dot"></span><span class="action-dot"></span><span class="action-dot"></span><span class="action-dot"></span></div></div></div>
+        </div>
+        <div class="chips">
+          <span class="chip">for_you</span>
+          <span class="chip">following</span>
+          <span class="chip">friends</span>
+          <span class="chip">filter auth user</span>
+        </div>
+      </article>
+    </div>
+    <div class="post-shell" style="margin-top:18px">
+      <div class="post-preview" aria-hidden="true">
+        <div class="post-header">
+          <div class="avatar"></div>
+          <div><div class="line w45"></div><div class="line w80"></div></div>
+          <div class="menu-dot">...</div>
+        </div>
+        <div class="line w80"></div>
+        <div class="line w62"></div>
+        <div class="media-grid">
+          <div class="media-tile"></div>
+          <div class="media-tile video"></div>
+        </div>
+        <div class="actions"><span class="action-dot"></span><span class="action-dot"></span><span class="action-dot"></span><span class="action-dot"></span></div>
+      </div>
+      <div>
+        <div class="badge">Post card</div>
+        <h3>Post Card In Home Feed</h3>
+        <ul>
+          <li>Khối post gồm author, topic, content, mention, media ảnh/video, poll nếu có, visibility badge và reply permission badge.</li>
+          <li>Interaction chính: <code>like</code>, <code>reply</code>, <code>repost</code>, <code>quote</code>, <code>share</code>.</li>
+          <li>Share mở các hành động <code>sao chép liên kết</code>, <code>sao chép dưới dạng ảnh</code>, <code>lấy mã nhúng</code>.</li>
+          <li>Menu ba chấm xử lý sao chép liên kết, lưu, báo cáo, không quan tâm theo trạng thái đăng nhập.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="idx">03</span><h2>Post Card Block</h2></div>
+    <div class="post-shell">
+      <div class="post-preview" aria-hidden="true">
+        <div class="post-header">
+          <div class="avatar"></div>
+          <div><div class="line w45"></div><div class="line w80"></div></div>
+          <div class="menu-dot">...</div>
+        </div>
+        <div class="line w80"></div>
+        <div class="line w62"></div>
+        <div class="media-grid">
+          <div class="media-tile"></div>
+          <div class="media-tile video"></div>
+        </div>
+        <div class="actions"><span class="action-dot"></span><span class="action-dot"></span><span class="action-dot"></span><span class="action-dot"></span></div>
+      </div>
+      <div>
+        <h3>Expected Behavior</h3>
+        <ul>
+          <li>Header post hiển thị author, topic đầu tiên, thời gian, badge visibility nếu không phải public và badge quyền reply.</li>
+          <li>Nội dung hỗ trợ mention dạng <code>@username</code>, link sang profile nếu mention hợp lệ.</li>
+          <li>Media hỗ trợ ảnh và video; nhiều media dùng carousel, video đang xử lý hiển thị trạng thái tải video.</li>
+          <li>Repost menu gồm <code>đăng lại</code> và <code>trích dẫn</code>. Share menu gồm <code>sao chép liên kết</code>, <code>sao chép dưới dạng ảnh</code> và <code>lấy mã nhúng</code>.</li>
+          <li>Menu ba chấm của post người khác: lưu/bỏ lưu, báo cáo, không quan tâm, sao chép liên kết. Với khách chỉ còn sao chép liên kết.</li>
+          <li>Khi bài đang trong trạng thái saved/saving, QA cần kiểm tra share không được kích hoạt trong lúc mutation đang xử lý để tránh chia sẻ sai trạng thái.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="idx">04</span><h2>Saved, Hidden And Library State</h2></div>
+    <div class="grid">
+      <div class="card">
+        <h3>Save From Home Feed</h3>
+        <ul>
+          <li>Menu ba chấm gọi <code>POST /posts/:publicId/save</code> với <code>{ isSaved }</code>.</li>
+          <li>Trong lúc mutation chạy, UI cần thể hiện trạng thái đang lưu hoặc đang bỏ lưu, không cho bấm lặp liên tục.</li>
+          <li>Sau khi lưu thành công, menu đổi nhãn thành <code>Hủy lưu</code> và icon bookmark ở trạng thái active.</li>
+          <li>Danh sách bài đã lưu ở <code>/[locale]/saved</code> hiện mới có empty state, chưa triển khai render các bài đã saved.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Hide From Home Feed</h3>
+        <ul>
+          <li>Menu ba chấm gọi <code>POST /posts/:publicId/hide</code> với <code>{ isHidden }</code>.</li>
+          <li>Sau khi ẩn thành công, post phải biến mất khỏi feed đang xem và không còn được share từ card đó.</li>
+          <li>Nếu API lỗi, post vẫn giữ nguyên trên feed và hiện toast lỗi.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Saved And Liked Pages</h3>
+        <ul>
+          <li><code>/[locale]/saved</code> hiện là page có route và empty state, chưa có danh sách bài đã lưu.</li>
+          <li><code>/[locale]/liked</code> hiện là page có route và empty state, chưa có danh sách bài đã thích.</li>
+          <li>QA cần ghi rõ hai page library này chưa hoàn tất phần data list, dù hành động save/like trên post card có API riêng.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="idx">05</span><h2>Home Composer</h2></div>
+    <div class="grid">
+      <div class="card">
+        <h3>Content And Media</h3>
+        <ul>
+          <li>User đã đăng nhập mở composer để đăng bài từ trang home.</li>
+          <li>Nhập content, thêm emoji bằng <code>emoji-picker-react</code>.</li>
+          <li>Upload ảnh hoặc video qua input <code>accept="image/*,video/*"</code>, tối đa 5 file ở upload layer.</li>
+          <li>Có thể thêm khảo sát; khi bật khảo sát thì không hiển thị nút media trong form hiện tại.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Topic</h3>
+        <ul>
+          <li>Mỗi post chỉ có tối đa 1 chủ đề qua field <code>topic</code>.</li>
+          <li>Input topic gọi search topic theo từ khóa đã debounce.</li>
+          <li>Nếu có kết quả thì chọn topic có sẵn; nếu không có kết quả thì hiển thị hành động thêm chủ đề mới.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Visibility And Reply Rules</h3>
+        <ul>
+          <li>Visibility: <code>PUBLIC</code> công khai, <code>FRIEND</code> bạn bè, <code>PRIVATE</code> riêng tư.</li>
+          <li>Reply permission: <code>EVERYONE</code>, <code>FOLLOWERS</code>, <code>FOLLOWING</code>, <code>MENTIONED</code>.</li>
+          <li>Post card phải phản ánh đúng badge visibility và quyền reply sau khi đăng.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Mention</h3>
+        <ul>
+          <li>Khi content đang nhập <code>@</code>, form search user mention với query <code>q</code>.</li>
+          <li>Chọn user sẽ thay đoạn đang gõ thành <code>@username</code> và thêm vào payload <code>mentions</code>.</li>
+          <li>QA cần xác nhận người được mention nhận notification sau khi post được tạo.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="idx">06</span><h2>Route map</h2></div>
+    <div class="flow">
+      <div class="nodes">
+        <div class="node"><h3>01 · SSR</h3><p><code>page.tsx</code> gọi <code>getFeedsServer()</code> lấy feed đầu tiên.</p></div>
+        <div class="node"><h3>02 · Client</h3><p><code>SeededFeedPageClient</code> hydrate initial response và infinite query.</p></div>
+        <div class="node"><h3>03 · Tabs</h3><p><code>/</code>, <code>/following</code>, <code>/friends</code> đổi type feed.</p></div>
+        <div class="node"><h3>04 · Card</h3><p><code>PostCard</code> render content, media, menu, interaction.</p></div>
+        <div class="node ok"><h3>05 · Submit</h3><p><code>useCreatePost</code> validate Zod, upload media rồi POST <code>/posts</code>.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="idx">07</span><h2>Zod Validation</h2></div>
+    <table>
+      <thead><tr><th>Schema</th><th>Field</th><th>Validate</th><th>Dùng để làm gì</th></tr></thead>
+      <tbody>
+        <tr><td><code>createPostSchema</code><br><code>replyPostSchema</code><br><code>quotePostSchema</code></td><td><code>content</code></td><td><code>string().trim().min(1).max(5000)</code></td><td>Bắt buộc có nội dung sau khi trim, giới hạn 5000 ký tự cho post, reply và quote.</td></tr>
+        <tr><td><code>basePostFields</code></td><td><code>media</code></td><td><code>array(any()).optional()</code></td><td>Cho phép gửi media trong payload. Giới hạn loại file và số lượng đang nằm ở upload API: tối đa 5 file, chỉ <code>image/*</code> hoặc <code>video/*</code>.</td></tr>
+        <tr><td><code>basePostFields</code></td><td><code>topic</code></td><td><code>string().trim().min(1).optional()</code></td><td>Chủ đề là optional nhưng nếu gửi thì không được rỗng. UI hiện chỉ quản lý 1 topic.</td></tr>
+        <tr><td><code>basePostFields</code></td><td><code>mentions</code></td><td>Mảng object <code>{ userId, username }</code>, mỗi field <code>min(1)</code>, tối đa 5 mention.</td><td>Gửi danh sách user được nhắc đến để backend xử lý link/notification. Refinement cấm trùng <code>userId</code>.</td></tr>
+        <tr><td><code>basePostFields</code></td><td><code>replyPermission</code></td><td>Enum <code>EVERYONE</code>, <code>FOLLOWERS</code>, <code>FOLLOWING</code>, <code>MENTIONED</code>.</td><td>Quy định ai được reply/quote. <code>InteractionBar</code> disable reply nếu user đăng nhập không đủ quyền.</td></tr>
+        <tr><td><code>basePostFields</code></td><td><code>visibility</code></td><td>Enum <code>PUBLIC</code>, <code>FRIEND</code>, <code>PRIVATE</code>.</td><td>Quy định phạm vi hiển thị post: công khai, bạn bè hoặc riêng tư.</td></tr>
+        <tr><td><code>pollsSchema</code></td><td><code>polls</code></td><td>Mảng string trim, mỗi lựa chọn không rỗng, tối thiểu 2 và tối đa 4.</td><td>Validate lựa chọn khảo sát dùng chung cho post, reply và quote.</td></tr>
+        <tr><td><code>applyBaseRefinements</code></td><td><code>isSurvey</code> + <code>polls</code></td><td>Nếu <code>isSurvey</code> true thì <code>polls</code> bắt buộc có ít nhất 2 lựa chọn không rỗng.</td><td>Chặn đăng khảo sát thiếu lựa chọn.</td></tr>
+        <tr><td><code>updatePostSchema</code></td><td><code>content</code>, <code>visibility</code></td><td><code>content</code> optional min 1 max 5000, <code>visibility</code> optional enum; refine bắt buộc có ít nhất một field.</td><td>Validate sửa post: không cho PATCH body rỗng.</td></tr>
+        <tr><td><code>userNameMentionQuerySchema</code></td><td><code>q</code>, <code>after</code>, <code>take</code></td><td><code>q</code> trim min 1; <code>take</code> số nguyên dương tối đa 100.</td><td>Validate API gợi ý mention khi người dùng gõ <code>@</code>.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="idx">08</span><h2>Expected Coverage</h2></div>
+    <div class="qa-list">
+      <div class="qa-item">Khách mở home thấy post public và scroll phân trang được.</div>
+      <div class="qa-item">Khách bấm like/reply/repost/share đều hiện modal login.</div>
+      <div class="qa-item">Khách mở ba chấm chỉ thấy sao chép liên kết.</div>
+      <div class="qa-item">Khách bấm following/friends bị yêu cầu login.</div>
+      <div class="qa-item">User đăng nhập không thấy bài của chính mình trong home feed mặc định.</div>
+      <div class="qa-item">Following chỉ có bài của người đang theo dõi; friends chỉ có bài của bạn bè.</div>
+      <div class="qa-item">Đăng bài với content rỗng sau trim bị chặn; content hợp lệ đăng thành công.</div>
+      <div class="qa-item">Upload quá 5 file hoặc file không phải ảnh/video bị chặn ở upload layer.</div>
+      <div class="qa-item">Mention tối đa 5 user, không trùng userId, người được mention nhận thông báo.</div>
+      <div class="qa-item">Quote, copy as image và embed code hoạt động từ share/repost menu khi đã đăng nhập.</div>
+      <div class="qa-item">Save post đổi sang trạng thái đang lưu/đã lưu; không cho thao tác share trong lúc trạng thái save đang xử lý.</div>
+      <div class="qa-item">Hide post thành công làm bài biến mất khỏi home feed hiện tại.</div>
+      <div class="qa-item">Saved và liked library page hiện chỉ có empty state, chưa có danh sách bài.</div>
+    </div>
+  </section>
+
+  <footer>Thread Next.js QA Feature Coverage · Home Feed detail</footer>
+</div>
+</body>
+</html>

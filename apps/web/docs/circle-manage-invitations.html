@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>QA Circle Invitations</title>
+  <style>
+    :root{--bg:#FAF9F5;--paper:#fff;--bd:#D1CFC5;--ink:#171716;--muted:#51504B;--accent:#D97757;--ok:#2F7D62;--warn:#A7652B;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;--serif:ui-serif,Georgia,serif;--sans:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:var(--sans);color:var(--ink);line-height:1.55}.wrap{max-width:1100px;margin:auto;padding:56px 28px 88px}.back{font:12px var(--mono);color:#87867F;text-decoration:none}header{border-bottom:1.5px solid var(--bd);padding:24px 0 30px;margin-bottom:28px}h1{font:500 44px/1.08 var(--serif);margin:0 0 10px}h1 em{color:var(--accent)}p{color:var(--muted)}.sec-head{display:flex;align-items:center;gap:12px;margin:32px 0 14px}.idx{font:12px var(--mono);color:var(--accent)}h2{font:500 28px var(--serif);margin:0}table{width:100%;border-collapse:collapse;background:var(--paper);border:1.5px solid var(--bd);border-radius:14px;overflow:hidden}th,td{padding:14px 16px;border-bottom:1px solid #E4E0D6;text-align:left;vertical-align:top;font-size:14px}th{font:700 12px var(--mono);text-transform:uppercase;color:#67645D;background:#F0EEE6}tr:last-child td{border-bottom:0}code{font:12px var(--mono);background:#F0EEE6;border:1px solid var(--bd);border-radius:6px;padding:1px 5px}.ok{color:var(--ok)}.warn{color:var(--warn)}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="back" href="index.html">← Back</a>
+    <header>
+      <h1>Circle Invitations <em>QA spec</em></h1>
+      <p>Route <code>/[locale]/circle/[publicId]/manage/invitations</code>. Page này xem ledger lời mời vào Circle và trạng thái accept/reject.</p>
+    </header>
+    <section>
+      <div class="sec-head"><span class="idx">01</span><h2>Scope Table</h2></div>
+      <table>
+        <thead><tr><th>Item</th><th>Expected behavior</th><th>API/source</th></tr></thead>
+        <tbody>
+          <tr><td>Invitation list</td><td>Load invitee, status, inviter, resent count và created time, có pagination.</td><td><code>GET /circle/:publicId/manage/invitations?page=&amp;limit=10</code></td></tr>
+          <tr><td>Invitation stats</td><td>Hiển thị Pending, Accepted, Rejected từ stats endpoint.</td><td><code>GET /circle/:publicId/manage/invitations/stats</code></td></tr>
+          <tr><td>View detail</td><td>Nút eye mở modal chi tiết invitation để xem context.</td><td><code>CircleInvitationDetailModal</code></td></tr>
+          <tr><td>Send invite from dashboard</td><td>Owner/admin có thể mời member trong dashboard bằng modal invite; user được invite sẽ nhận lời mời.</td><td><code>POST /circle/:publicId/send-invitation/manage</code></td></tr>
+        </tbody>
+      </table>
+    </section>
+    <section>
+      <div class="sec-head"><span class="idx">02</span><h2>Mock / Pending</h2></div>
+      <table>
+        <thead><tr><th>Item</th><th>Status</th><th>Note</th></tr></thead>
+        <tbody>
+          <tr><td>Resend invitation</td><td class="warn">Toast only</td><td>Nút resend hiện chỉ toast success, chưa thấy API resend.</td></tr>
+          <tr><td>Cancel invitation</td><td class="warn">Toast only</td><td>Nút cancel hiện chỉ toast, chưa thấy API cancel/delete invitation.</td></tr>
+          <tr><td>Accept/reject by invited user</td><td class="ok">Assigned elsewhere</td><td>User xử lý invitation ở Circle detail/activity flow bằng invitation response API, không phải trong manage ledger này.</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </div>
+</body>
+</html>

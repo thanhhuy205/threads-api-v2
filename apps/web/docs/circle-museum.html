@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QA Circle Museum</title>
+<style>
+  :root{--ivory:#FAF9F5;--paper:#FFFFFF;--slate:#141413;--clay:#D97757;--olive:#788C5D;--g100:#F0EEE6;--g200:#E6E3DA;--g300:#D1CFC5;--g500:#87867F;--g700:#3D3D3A;--serif:ui-serif,Georgia,"Times New Roman",Times,serif;--sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;--mono:ui-monospace,"SF Mono",Menlo,Monaco,Consolas,monospace}
+  *{box-sizing:border-box}body{margin:0;background:var(--ivory);color:var(--slate);font-family:var(--sans);line-height:1.55}.wrap{max-width:1120px;margin:0 auto;padding:56px 32px 96px}.back{font-family:var(--mono);font-size:12px;color:var(--g500);text-decoration:none}header{padding:24px 0 34px;border-bottom:1.5px solid var(--g300);margin-bottom:34px}.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--g500);margin-bottom:12px}h1{font-family:var(--serif);font-weight:500;font-size:44px;line-height:1.08;margin:0 0 12px}h1 em{font-style:italic;color:var(--clay)}.lead{max-width:780px;color:var(--g700);font-size:15px}section{margin-top:34px}.sec-head{display:flex;gap:14px;align-items:baseline;margin-bottom:14px}.idx{font-family:var(--mono);font-size:12px;color:var(--clay);width:28px}.sec-head h2{font-family:var(--serif);font-weight:500;font-size:26px;margin:0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px}.card{background:var(--paper);border:1.5px solid var(--g300);border-radius:14px;padding:18px}.card h3{font-family:var(--serif);font-weight:500;font-size:20px;margin:0 0 8px}.card p,.card li{font-size:13.5px;color:var(--g700)}ul{padding-left:18px;margin:8px 0 0}code{font-family:var(--mono);font-size:12px;background:var(--g100);border:1px solid var(--g300);border-radius:6px;padding:1px 5px;color:var(--slate);white-space:normal;overflow-wrap:anywhere}table{width:100%;border-collapse:collapse;background:var(--paper);border:1.5px solid var(--g300);border-radius:14px;overflow:hidden}th,td{padding:12px 14px;border-bottom:1px solid var(--g100);text-align:left;vertical-align:top;font-size:13.5px}th{font-family:var(--mono);font-size:11px;text-transform:uppercase;color:var(--g500);background:var(--g100)}tr:last-child td{border-bottom:0}.status{display:inline-flex;font-family:var(--mono);font-size:12px;color:var(--clay);background:#fff7f2;border:1.5px solid var(--clay);border-radius:999px;padding:5px 10px;margin-top:16px}footer{margin-top:56px;border-top:1.5px solid var(--g300);padding-top:24px;color:var(--g500);font-size:13px}@media(max-width:820px){.wrap{padding:36px 20px 72px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="index.html">← Back to QA Feature Coverage</a>
+  <header>
+    <div class="eyebrow">Circle · museum page</div>
+    <h1>Circle Museum <em>QA spec</em></h1>
+    <p class="lead">Spec riêng cho route <code>/[locale]/circle/museum</code>. Page này hiện được xem là prototype/UI mock, không dùng để kết luận contract backend museum.</p>
+    <div class="status">UI/mock scope</div>
+  </header>
+
+  <section>
+    <div class="sec-head"><span class="idx">01</span><h2>Functional Scope</h2></div>
+    <div class="grid">
+      <div class="card">
+        <h3>Standalone Museum</h3>
+        <ul>
+          <li>Kiểm thử layout, empty state, card/preview và responsive.</li>
+          <li>Dữ liệu hiện dựa vào mock/local data, không verify bằng API museum.</li>
+          <li>Không dùng page này để kết luận số lượng media/bài lưu niệm thật.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Detail Museum Tab</h3>
+        <ul>
+          <li>Trong Circle Detail, tab Museum dùng recent media từ post feed.</li>
+          <li>Member đã join mới thấy tab museum đầy đủ.</li>
+          <li>Circle chưa join/private bị khóa theo rule detail page.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Backend Gap</h3>
+        <ul>
+          <li>Handoff có nhắc endpoint <code>/api/v1/museum</code>, nhưng frontend hiện chưa wired client rõ ràng.</li>
+          <li>Nếu product yêu cầu dữ liệu thật, cần thêm client hoặc test backend riêng.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="idx">02</span><h2>Expected Coverage</h2></div>
+    <table>
+      <thead><tr><th>Case</th><th>Kỳ vọng</th></tr></thead>
+      <tbody>
+        <tr><td>Mock UI</td><td>Page render không lỗi, responsive ổn, card không overlap.</td></tr>
+        <tr><td>Backend distinction</td><td>QA note rõ đây là UI prototype, không phải dữ liệu thật.</td></tr>
+        <tr><td>Detail tab relation</td><td>Recent media trong detail được kiểm ở <code>circle-detail.html</code>.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <footer>Thread Next.js QA Feature Coverage · Circle Museum</footer>
+</div>
+</body>
+</html>

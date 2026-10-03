@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QA Auth Detail - Verify Email</title>
+<style>
+  :root{--ivory:#FAF9F5;--paper:#FFFFFF;--slate:#141413;--clay:#D97757;--clay-d:#B85C3E;--oat:#E3DACC;--olive:#788C5D;--g100:#F0EEE6;--g200:#E6E3DA;--g300:#D1CFC5;--g500:#87867F;--g700:#3D3D3A;--serif:ui-serif,Georgia,"Times New Roman",Times,serif;--sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;--mono:ui-monospace,"SF Mono",Menlo,Monaco,Consolas,monospace}
+  *{box-sizing:border-box}body{margin:0;background:var(--ivory);color:var(--slate);font-family:var(--sans);line-height:1.55}.wrap{max-width:1240px;margin:0 auto;padding:56px 32px 96px}.back{font-family:var(--mono);font-size:12px;color:var(--g500);text-decoration:none}header{padding:24px 0 34px;border-bottom:1.5px solid var(--g300);margin-bottom:34px}.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--g500);margin-bottom:12px}h1{font-family:var(--serif);font-weight:500;font-size:46px;line-height:1.08;margin:0 0 12px;letter-spacing:-.018em}h1 em{font-style:italic;color:var(--clay)}.lead{max-width:780px;color:var(--g700);font-size:15px}.status{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:12px;color:var(--olive);background:var(--g100);border:1.5px solid var(--g300);border-radius:999px;padding:5px 10px;margin-top:16px}.status:before{content:"";width:8px;height:8px;border-radius:50%;background:var(--olive)}section{margin-top:34px}.sec-head{display:flex;gap:14px;align-items:baseline;margin-bottom:14px}.idx{font-family:var(--mono);font-size:12px;color:var(--clay);width:28px}.sec-head h2{font-family:var(--serif);font-weight:500;font-size:26px;margin:0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:18px}.card,.flow{background:var(--paper);border:1.5px solid var(--g300);border-radius:14px;padding:18px;min-width:0}.card h3{font-family:var(--serif);font-weight:500;font-size:20px;margin:0 0 8px}.card p,.card li{font-size:13.5px;color:var(--g700)}ul{padding-left:18px;margin:8px 0 0}code{font-family:var(--mono);font-size:12px;background:var(--g100);border:1px solid var(--g300);border-radius:6px;padding:1px 5px;color:var(--slate);white-space:normal;overflow-wrap:anywhere;word-break:break-word}.nodes{display:grid;grid-template-columns:repeat(7,minmax(104px,1fr));gap:12px}.node{border:1.5px solid var(--g300);border-radius:10px;background:var(--paper);padding:12px;min-height:104px;position:relative}.node:after{content:"";position:absolute;right:-12px;top:48px;width:12px;border-top:1.5px solid var(--g500)}.node:last-child:after{display:none}.node.ok{background:var(--g100);border-color:var(--olive)}.node.warn{background:var(--g100);border-color:var(--clay)}.node h3{font-family:var(--mono);font-size:12px;margin:0 0 6px}.node p{font-size:12.5px;color:var(--g700);margin:0}footer{margin-top:56px;border-top:1.5px solid var(--g300);padding-top:24px;color:var(--g500);font-size:13px}@media(max-width:960px){.wrap{padding:36px 20px 72px}.nodes{grid-template-columns:1fr}.node:after{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="index.html">← Back to QA Feature Coverage</a>
+  <header>
+    <div class="eyebrow">Auth detail · completed</div>
+    <h1>Verify Email <em>QA spec</em></h1>
+    <p class="lead">Route xác minh email là public. User đăng ký xong được đăng nhập và chuyển vào trang chủ ngay. Nếu tài khoản chưa xác minh, khi vào profile sẽ thấy nút xác minh để gửi lại email; link trong email mở route verify và redirect về home với query kết quả.</p>
+    <div class="status">Đã xong</div>
+  </header>
+
+  <section>
+    <div class="sec-head"><span class="idx">01</span><h2>Nguồn code</h2></div>
+    <div class="grid">
+      <div class="card"><h3>Verify route</h3><p><code>src/app/[locale]/(main)/(basic)/verify-email/page.tsx</code><br><code>page.client.tsx</code></p></div>
+      <div class="card"><h3>Server call</h3><p><code>src/features/auth/server/verify-email.ts</code></p></div>
+      <div class="card"><h3>Profile resend</h3><p><code>src/app/[locale]/(main)/(private)/(default)/profile/_components/ProfilePageShell/index.tsx</code></p></div>
+      <div class="card"><h3>Toast handler</h3><p><code>src/app/[locale]/(main)/_components/layout/auth/VerifyEmailToastHandler.tsx</code></p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="idx">02</span><h2>Public behavior</h2></div>
+    <div class="grid">
+      <div class="card"><h3>Route</h3><p><code>/[locale]/verify-email?token=...</code> không yêu cầu session. Server gọi backend với <code>auth: false</code>.</p></div>
+      <div class="card"><h3>Missing token</h3><p>Nếu không có token hoặc token rỗng, redirect về <code>/[locale]/login</code>.</p></div>
+      <div class="card"><h3>Token expired UI</h3><p>Client component tồn tại để hiển thị màn hình token expired/error với nút về login và home, nhưng normal server branch đang redirect khi verify thành công/thất bại.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="idx">03</span><h2>Registration to verification flow</h2></div>
+    <div class="flow">
+      <div class="nodes">
+        <div class="node"><h3>01 · Register</h3><p>User submit register tại <code>/[locale]/register</code>.</p></div>
+        <div class="node"><h3>02 · Session</h3><p>BFF register sync auth cookies.</p></div>
+        <div class="node ok"><h3>03 · Home</h3><p><code>waitForAuthSession()</code> xong redirect <code>/[locale]/</code>.</p></div>
+        <div class="node warn"><h3>04 · Profile</h3><p>Nếu <code>!user.verifiedAt</code>, profile hiện nút <code>auth.verifyEmail</code>.</p></div>
+        <div class="node"><h3>05 · Resend</h3><p>Click nút gọi <code>resendVerifyEmailSession</code>.</p></div>
+        <div class="node"><h3>06 · Email link</h3><p>User mở <code>/[locale]/verify-email?token=...</code>.</p></div>
+        <div class="node ok"><h3>07 · Verified</h3><p>Success redirect <code>/[locale]/?verified=1</code>; failed redirect <code>/?error=verify-failed</code>.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="idx">04</span><h2>Route map details</h2></div>
+    <div class="grid">
+      <div class="card">
+        <h3>Verify API call</h3>
+        <ul>
+          <li><code>verifyEmailToken(token)</code> POST <code>/auth/verify-email</code>.</li>
+          <li>Body là <code>{ token }</code>.</li>
+          <li>Nếu response không ok: return <code>false</code>.</li>
+          <li>Nếu JSON parse được và <code>success !== false</code>: coi là verified.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Home toast</h3>
+        <ul>
+          <li><code>?verified=1</code>: show <code>auth.verifySuccess</code> rồi xóa query khỏi URL.</li>
+          <li><code>?error=verify-failed</code>: show <code>auth.verifyFailed</code> rồi xóa query khỏi URL.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Profile CTA</h3>
+        <ul>
+          <li>Nếu <code>user.verifiedAt</code> có giá trị: chỉ hiện Edit Profile full width.</li>
+          <li>Nếu chưa verified: hiện Edit Profile và Verify Email cạnh nhau.</li>
+          <li>Resend success: toast <code>auth.verifyEmailSuccess</code>; error: toast message từ API hoặc <code>auth.verifyEmailFailed</code>.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="idx">05</span><h2>QA notes</h2></div>
+    <div class="grid">
+      <div class="card"><h3>Test public route</h3><p>Mở verify link ở browser chưa login vẫn phải xử lý token vì server call dùng <code>auth: false</code>.</p></div>
+      <div class="card"><h3>Test profile resend</h3><p>Dùng user chưa verified, vào <code>/[locale]/profile</code>, click nút xác minh và kiểm tra toast success/error.</p></div>
+      <div class="card"><h3>Test redirect query</h3><p>Sau verify thành công, home nhận <code>?verified=1</code> và toast handler xóa query khỏi address bar.</p></div>
+    </div>
+  </section>
+
+  <footer>Thread Next.js QA Feature Coverage · Verify email detail</footer>
+</div>
+</body>
+</html>

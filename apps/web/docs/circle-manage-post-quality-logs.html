@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>QA Circle Post Quality Logs</title>
+  <style>
+    :root{--bg:#FAF9F5;--paper:#fff;--bd:#D1CFC5;--ink:#171716;--muted:#51504B;--accent:#D97757;--ok:#2F7D62;--warn:#A7652B;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;--serif:ui-serif,Georgia,serif;--sans:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:var(--sans);color:var(--ink);line-height:1.55}.wrap{max-width:1100px;margin:auto;padding:56px 28px 88px}.back{font:12px var(--mono);color:#87867F;text-decoration:none}header{border-bottom:1.5px solid var(--bd);padding:24px 0 30px;margin-bottom:28px}h1{font:500 44px/1.08 var(--serif);margin:0 0 10px}h1 em{color:var(--accent)}p{color:var(--muted)}.sec-head{display:flex;align-items:center;gap:12px;margin:32px 0 14px}.idx{font:12px var(--mono);color:var(--accent)}h2{font:500 28px var(--serif);margin:0}table{width:100%;border-collapse:collapse;background:var(--paper);border:1.5px solid var(--bd);border-radius:14px;overflow:hidden}th,td{padding:14px 16px;border-bottom:1px solid #E4E0D6;text-align:left;vertical-align:top;font-size:14px}th{font:700 12px var(--mono);text-transform:uppercase;color:#67645D;background:#F0EEE6}tr:last-child td{border-bottom:0}code{font:12px var(--mono);background:#F0EEE6;border:1px solid var(--bd);border-radius:6px;padding:1px 5px}.ok{color:var(--ok)}.warn{color:var(--warn)}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="back" href="index.html">← Back</a>
+    <header>
+      <h1>Post Quality Logs <em>QA spec</em></h1>
+      <p>Route <code>/[locale]/circle/[publicId]/manage/post-quality-logs</code>. Page này xem log AI/quality scoring và tác động tới HP/EXP của Circle.</p>
+    </header>
+    <section>
+      <div class="sec-head"><span class="idx">01</span><h2>Scope Table</h2></div>
+      <table>
+        <thead><tr><th>Item</th><th>Expected behavior</th><th>API/source</th></tr></thead>
+        <tbody>
+          <tr><td>Load logs</td><td>Load log theo page, giữ previous data khi chuyển trang.</td><td><code>GET /circle/:publicId/manage/post-quality-log?page=&amp;limit=10</code></td></tr>
+          <tr><td>Score fields</td><td>Mỗi row có member, label, hpDelta, expDelta, confidence và reason.</td><td><code>CircleManagePostQualityLogItem</code></td></tr>
+          <tr><td>Post preview</td><td>Nếu log có post, nút <code>Xem bài gốc</code> mở modal preview; nếu post null thì hiển thị dấu trừ.</td><td><code>PostPreviewModal</code></td></tr>
+          <tr><td>After Circle post</td><td>Bài vừa đăng trong Circle có thể xuất hiện ở log sau khi backend đánh giá xong.</td><td>Backend quality scoring pipeline.</td></tr>
+        </tbody>
+      </table>
+    </section>
+    <section>
+      <div class="sec-head"><span class="idx">02</span><h2>Mock / Pending</h2></div>
+      <table>
+        <thead><tr><th>Item</th><th>Status</th><th>Note</th></tr></thead>
+        <tbody>
+          <tr><td>Log list</td><td class="ok">API assigned</td><td>Use backend data, not static mock.</td></tr>
+          <tr><td>Manual re-score/action</td><td class="warn">Not assigned</td><td>Page chỉ xem log; chưa thấy API để chạy lại đánh giá hoặc sửa score.</td></tr>
+          <tr><td>Deleted/private original post</td><td class="ok">Handled in UI</td><td>Preview button chỉ hiện khi log còn post object.</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </div>
+</body>
+</html>
