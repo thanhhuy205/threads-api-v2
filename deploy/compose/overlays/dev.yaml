@@ -10,3 +10,6 @@ services:
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?Missing KEYCLOAK_ADMIN_PASSWORD}
     ports:
       - "127.0.0.1:18081:8080"
+  keycloak-db:
+    ports:
+      - "5555:5432"
