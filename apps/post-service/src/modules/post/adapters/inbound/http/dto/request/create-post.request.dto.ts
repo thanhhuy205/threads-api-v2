@@ -2,9 +2,9 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
 import { ArrayMaxSize, ArrayMinSize, IsArray, IsBoolean, IsDate, IsEnum, IsMilitaryTime, IsOptional, IsString, MaxLength, MinLength, ValidateIf, ValidateNested } from 'class-validator';
 import { VisibilityPost } from '../../../../../../../generated/prisma/client';
-import { creatablePostTypes } from '../../../../../constants/post-type';
 import { PostMediaDto } from '../response/post-media.response.dto';
 import { PostMentionDto } from '../response/post-mention.response.dto';
+import { creatablePostTypes } from '../../../../../../../constants/post-type';
 
 const normalizeEnum = ({ value }: { value: unknown }) =>
   typeof value === 'string' ? value.trim().toUpperCase() : value;

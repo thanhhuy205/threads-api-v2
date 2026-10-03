@@ -7,7 +7,6 @@ import {
   Param,
   Post,
   Query,
-  Req,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -26,11 +25,6 @@ import {
 } from '@purse/common/decorators';
 import type { CursorPagination as CursorPaginationParams } from '@purse/common/dto';
 import {
-  CreatePostDto,
-  CursorPaginationQueryDto,
-  PublicIdParamsDto,
-} from './dto/request';
-import {
   POST_ACTION_SERVICE,
   type PostActionService,
 } from '../../../application/use-cases/post-action.service';
@@ -39,11 +33,11 @@ import {
   type PostFeedService,
 } from '../../../application/use-cases/post-feed.service';
 import { POST_SERVICE, type PostService } from '../../../application/use-cases/post.service';
-
-type AuthenticatedRequest = {
-  headers: { authorization?: string | string[] | undefined };
-  user?: { sub?: string };
-};
+import {
+  CreatePostDto,
+  CursorPaginationQueryDto,
+  PublicIdParamsDto,
+} from './dto/request';
 
 @ApiTags('Post')
 @Controller('posts')
@@ -65,7 +59,6 @@ export class PostActionController {
     @Param() params: PublicIdParamsDto,
     @Query() _query: CursorPaginationQueryDto,
     @CursorPagination() cursor: CursorPaginationParams,
-    @Req() request: AuthenticatedRequest,
   ) {
     const { posts, pagination } = await this.postFeedService.getReplies({
       after: cursor.after ?? undefined,
