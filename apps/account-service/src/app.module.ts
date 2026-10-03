@@ -7,8 +7,10 @@ import { AppAuthGuard, GrpcGatewayAuthStrategy } from '@purse/core/auth';
 import { RedisModule } from '@purse/core/redis';
 import { createLoggerOptions, LoggerModule } from '@purse/observability/logging';
 import { validate } from './config/app.config';
+import { keycloakApiConfiguration } from './config/keycloak-api.config';
 import { BillingModule } from './modules/billing/billing.module';
 import { ProfileModule } from './modules/profile/profile.module';
+import { UserModule } from './modules/user/user.module';
 import { PrismaModule } from './prisma/prisma.module';
 @Module({
   imports: [
@@ -16,7 +18,7 @@ import { PrismaModule } from './prisma/prisma.module';
     ConfigModule.forRoot({
       isGlobal: true, cache: true,
       validate,
-      load: [configurationFactory],
+      load: [configurationFactory, keycloakApiConfiguration],
       envFilePath: process.cwd() + '/.env'
     }),
     BullModule.forRootAsync({
@@ -32,6 +34,7 @@ import { PrismaModule } from './prisma/prisma.module';
     PrismaModule,
     RedisModule,
     ProfileModule,
+    UserModule,
     BillingModule,
   ],
   providers: [
