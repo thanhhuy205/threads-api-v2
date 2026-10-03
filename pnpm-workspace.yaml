@@ -10,9 +10,11 @@ allowBuilds:
   '@bufbuild/buf': false
   "@google/genai": true
   "@openrouter/sdk": true
+  '@parcel/watcher': false
   "@prisma/client": true
   "@prisma/engines": true
   "@scarf/scarf": true
+  '@swc/core': false
   bcrypt: true
   esbuild: true
   ffmpeg-ffprobe-static: true
