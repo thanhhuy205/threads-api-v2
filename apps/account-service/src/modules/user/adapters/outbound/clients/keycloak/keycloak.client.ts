@@ -1,7 +1,13 @@
-import { keycloakApiConfiguration } from '@/config';
 import { Inject, Injectable } from '@nestjs/common';
 import type { ConfigType } from '@nestjs/config';
 import axios, { AxiosInstance } from 'axios';
+import { keycloakApiConfiguration } from '../../../../../../config';
+import type {
+    GetOrgMembersDTO,
+    GetOrgsDTO,
+    GetTeamInOrgDTO,
+    GetUserByTeamDTO,
+} from './dto/request';
 
 @Injectable()
 export class KeycloakClient {
@@ -11,7 +17,7 @@ export class KeycloakClient {
         private readonly keycloakApiConfig: ConfigType<typeof keycloakApiConfiguration>,
     ) {
         this.axiosCaller = axios.create({
-            baseURL: `${this.keycloakApiConfig.baseUrl}/${this.keycloakApiConfig.realm}/`,
+            baseURL: `${this.keycloakApiConfig.baseUrl}/admin/realms/${this.keycloakApiConfig.realm}/`,
         });
 
     }
@@ -39,29 +45,42 @@ export class KeycloakClient {
         return response.data;
     }
 
-    async getOrgMembers(accessToken: string, orgId: string) {
-        const response = await this.axiosCaller.get(`organizations/${orgId}/members?first=0&max=20`, {
+    async getOrgMembers(accessToken: string, orgId: string, payload: GetOrgMembersDTO) {
+        const response = await this.axiosCaller.get(`organizations/${orgId}/members`, {
             headers: {
                 Authorization: `Bearer ${accessToken}`,
             },
+            params: payload,
         });
         return response.data;
     }
 
-    async getUserByTeam(accessToken: string, orgId: string, teamId: string) {
-        const response = await this.axiosCaller.get(`organizations/${orgId}/groups/${teamId}/members?first=0&max=20`, {
+    async getOrgs(accessToken: string, payload: GetOrgsDTO) {
+        const response = await this.axiosCaller.get('organizations', {
             headers: {
                 Authorization: `Bearer ${accessToken}`,
             },
+            params: payload,
         });
         return response.data;
     }
 
-    async getTeamsInOrg(accessToken: string, orgId: string) {
-        const response = await this.axiosCaller.get(`organizations/${orgId}/groups?first=0&max=20`, {
+    async getUserByTeam(accessToken: string, orgId: string, teamId: string, payload: GetUserByTeamDTO) {
+        const response = await this.axiosCaller.get(`organizations/${orgId}/groups/${teamId}/members`, {
             headers: {
                 Authorization: `Bearer ${accessToken}`,
             },
+            params: payload,
+        });
+        return response.data;
+    }
+
+    async getTeamsInOrg(accessToken: string, orgId: string, payload: GetTeamInOrgDTO) {
+        const response = await this.axiosCaller.get(`organizations/${orgId}/groups`, {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+            },
+            params: payload,
         });
         return response.data;
     }

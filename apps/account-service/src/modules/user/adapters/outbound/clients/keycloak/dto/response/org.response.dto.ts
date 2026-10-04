@@ -1,14 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { OrgDomainResponseDto } from './org-domain.response.dto';
 
 export class OrgResponseDto {
   @ApiProperty({ description: 'Organization primary identifier' })
   id!: string;
-
-  @ApiProperty({ description: 'Referenced Keycloak realm identifier' })
-  realmId!: string;
-
-  @ApiProperty({ description: 'Referenced Keycloak group identifier' })
-  groupId!: string;
 
   @ApiProperty()
   name!: string;
@@ -24,4 +19,7 @@ export class OrgResponseDto {
 
   @ApiProperty({ format: 'uri' })
   redirectUrl!: string;
+
+  @ApiProperty({ type: OrgDomainResponseDto, isArray: true })
+  domains!: OrgDomainResponseDto[];
 }
