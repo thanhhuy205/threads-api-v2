@@ -2,7 +2,6 @@ import './instrumentation';
 
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { PinoNestLogger } from '@purse/observability/logging';
 import requestId from 'express-request-id';
 import helmet from 'helmet';
@@ -29,18 +28,18 @@ async function bootstrap() {
   app.enableCors({ origin: corsOrigin(), credentials: true });
   app.use(requestId());
 
-  app.connectMicroservice<MicroserviceOptions>({
-    transport: Transport.GRPC,
-    options: {
-      package: 'user',
-      protoPath: require.resolve('@purse/proto/user.proto'),
-      url: '0.0.0.0:5001',
-      loader: {
-        keepCase: false,
-        defaults: true,
-      },
-    },
-  });
+  // app.connectMicroservice<MicroserviceOptions>({
+  //   transport: Transport.GRPC,
+  //   options: {
+  //     package: 'user',
+  //     protoPath: require.resolve('@purse/proto/user.proto'),
+  //     url: '0.0.0.0:5001',
+  //     loader: {
+  //       keepCase: false,
+  //       defaults: true,
+  //     },
+  //   },
+  // });
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
