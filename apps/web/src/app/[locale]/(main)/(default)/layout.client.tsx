@@ -12,10 +12,15 @@ interface LayoutProps {
 export default function Layout({ children }: LayoutProps) {
   return (
     <SidebarProvider
-      style={{ "--header-height": "3.5rem" } as CSSProperties}
+      style={
+        {
+          "--header-height": "4.25rem",
+          "--sidebar-width": "15.75rem",
+        } as CSSProperties
+      }
     >
       <AppSidebar />
-      <main className="flex min-w-0 flex-1 flex-col">
+      <main className="flex min-w-0 flex-1 flex-col bg-[#fafbfc]">
         <SiteHeader />
         {children}
       </main>

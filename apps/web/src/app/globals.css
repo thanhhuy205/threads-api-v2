@@ -14,33 +14,33 @@
   --sidebar-menu: 304px;
 
   /* Light mode - giữ nguyên từ CSS cũ */
-  --background: #fafafa;
-  --foreground: #000000;
+  --background: #fafbfc;
+  --foreground: #0d121c;
   --card: #ffffff;
-  --card-foreground: #000000;
+  --card-foreground: #0d121c;
   --popover: #ffffff;
-  --popover-foreground: #000000;
-  --primary: #000000;
+  --popover-foreground: #0d121c;
+  --primary: #0d121c;
   --primary-foreground: #ffffff;
-  --secondary: #fafafa;
-  --secondary-foreground: #000000;
-  --muted: #fafafa;
-  --muted-foreground: #65676b;
-  --accent: #e4e6ea;
-  --accent-foreground: #000000;
+  --secondary: #f9fafb;
+  --secondary-foreground: #0d121c;
+  --muted: #f3f4f6;
+  --muted-foreground: #6c737f;
+  --accent: #f9fafb;
+  --accent-foreground: #0d121c;
   --destructive: #e0245e;
   --destructive-foreground: #ffffff;
-  --border: #dadde1;
-  --input: #f0f2f5;
-  --ring: #000000;
-  --sidebar: hsl(0 0% 98%);
-  --sidebar-foreground: hsl(240 5.3% 26.1%);
-  --sidebar-primary: hsl(240 5.9% 10%);
-  --sidebar-primary-foreground: hsl(0 0% 98%);
-  --sidebar-accent: hsl(240 4.8% 95.9%);
-  --sidebar-accent-foreground: hsl(240 5.9% 10%);
-  --sidebar-border: hsl(220 13% 91%);
-  --sidebar-ring: hsl(217.2 91.2% 59.8%);
+  --border: #f3f4f6;
+  --input: #f9fafb;
+  --ring: #1a84a3;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #1f2a37;
+  --sidebar-primary: #0d121c;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f9fafb;
+  --sidebar-accent-foreground: #0d121c;
+  --sidebar-border: #f3f4f6;
+  --sidebar-ring: #1a84a3;
   --radius: 0.625rem;
 }
 
