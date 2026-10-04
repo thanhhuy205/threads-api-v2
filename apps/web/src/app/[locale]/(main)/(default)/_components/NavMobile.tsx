@@ -11,12 +11,10 @@ import {
   useMarkNotificationReadMutation,
 } from "@/features/notification/hooks";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useModal } from "@/hooks/use-modal";
 import { SearchIcon } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 
-import AuthSocialModal from "@/app/[locale]/(auth)/_components/LoginModal";
 import Footer from "@/app/[locale]/(main)/_components/common/ModalPopup/Footer";
 import Header from "@/app/[locale]/(main)/_components/common/ModalPopup/Header";
 import UserPostForm from "@/app/[locale]/(main)/_components/user/UserPostForm";
@@ -32,18 +30,16 @@ import { useLocale, useTranslations } from "next-intl";
 const navItems = [
   { key: "home", icon: <HomeIcon size={26} />, link: "/" },
   { key: "search", icon: <SearchIcon size={26} />, link: "/search" },
-  { key: "write", icon: <SubtractIcon size={20} />, isAuth: true },
+  { key: "write", icon: <SubtractIcon size={20} /> },
   {
     key: "activity",
     icon: <FavoriteIcon size={26} />,
     link: "/activity",
-    isAuth: true,
   },
   {
     key: "profile",
     icon: <UserIcon size={26} />,
     link: "/profile",
-    isAuth: true,
   },
 ];
 
@@ -54,16 +50,15 @@ const NavMobile: React.FC = () => {
 
   const router = useRouter();
   const isMobile = useIsMobile();
-  const { isAuthenticated, user } = useAuth();
+  const { user } = useAuth();
   const { data: unreadNotificationData } = useGetNotificationUnreadQuery({
-    options: { enabled: isAuthenticated },
+    options: { enabled: Boolean(user) },
   });
   const { mutateAsync: markAsRead } = useMarkNotificationReadMutation();
   const hasUnreadNotification = Boolean(
     unreadNotificationData?.data?.isNotification,
   );
 
-  const { show, hide } = useModal();
   const {
     content,
     setContent,
@@ -109,18 +104,6 @@ const NavMobile: React.FC = () => {
   if (!isMobile) return null;
 
   const handleNavClick = (item: (typeof navItems)[0]) => {
-    if (item.isAuth && !isAuthenticated) {
-      show(
-        <AuthSocialModal
-          onClose={hide}
-          onContinue={hide}
-          title={t("auth.loginModalTitle")}
-          description={t("auth.loginModalDesc")}
-        />,
-      );
-      return;
-    }
-
     if (item.key === "activity" && hasUnreadNotification) {
       markAsRead().catch(() => {});
     }
@@ -140,21 +123,6 @@ const NavMobile: React.FC = () => {
   };
 
   const handleWriteClick = () => {
-    if (!isAuthenticated) {
-      show(
-        <AuthSocialModal
-          onClose={hide}
-          onContinue={() => {
-            router.push(localizeRoute("/login"));
-            hide();
-          }}
-          title={t("auth.loginRequiredTitle")}
-          description={t("auth.loginRequiredDescription")}
-        />,
-      );
-      return;
-    }
-
     setOpenSheet(true);
   };
 

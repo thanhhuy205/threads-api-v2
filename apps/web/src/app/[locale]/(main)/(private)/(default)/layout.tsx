@@ -1,10 +1,10 @@
-import DefaultRoutesLayoutClient from "@/app/[locale]/(main)/(default)/layout.client";
+import LayoutClient from "@/app/[locale]/(main)/(default)/layout.client";
 import type { ReactNode } from "react";
 
-export default function PrivateDefaultRoutesLayout({
+export default function Layout({
   children,
 }: {
   children: ReactNode;
 }) {
-  return <DefaultRoutesLayoutClient>{children}</DefaultRoutesLayoutClient>;
+  return <LayoutClient>{children}</LayoutClient>;
 }

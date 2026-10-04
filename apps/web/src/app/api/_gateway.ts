@@ -20,20 +20,6 @@ const HOP_BY_HOP_HEADERS = new Set([
   REFRESH_TOKEN_HEADER,
 ]);
 
-const ALLOW_EXPLICIT_AUTHORIZATION_PATHS = new Set([
-  "/auth/resend-verify-email",
-]);
-
-const PUBLIC_PROXY_PATHS = [
-  "/auth/resend-verify-email",
-  "/auth/reset-password",
-  "/auth/validate/username",
-  "/auth/verify-email",
-  `/auth/validate/email`,
-  "/auth/login",
-  "/auth/register",
-];
-
 const resolveUpstreamUrl = (path: string) => {
   const base = configService.backendUrl;
   if (!base) throw new Error("Missing API base URL. Set BACKEND_URL.");
@@ -145,10 +131,9 @@ const redactAuthTokens = (payload: unknown) => {
     return payload;
   const { data, ...rest } = payload as { data?: unknown };
   if (!data || typeof data !== "object" || Array.isArray(data)) return payload;
-  const { accessToken, refreshToken, ...safeData } = data as Record<
-    string,
-    unknown
-  >;
+  const safeData = { ...(data as Record<string, unknown>) };
+  delete safeData.accessToken;
+  delete safeData.refreshToken;
   return { ...rest, data: safeData };
 };
 
@@ -239,21 +224,12 @@ export const forwardAuthRequest = async (options: ForwardOptions) => {
   }
 };
 
-const isPublicProxyPath = (path: string) =>
-  PUBLIC_PROXY_PATHS.some((p) => path.startsWith(p));
-
-const createForwardHeaders = (request: Request, path: string) => {
+const createForwardHeaders = (request: Request) => {
   const headers = new Headers();
 
   request.headers.forEach((value, key) => {
     if (!HOP_BY_HOP_HEADERS.has(key.toLowerCase())) headers.set(key, value);
   });
-
-  const explicit = request.headers.get("authorization");
-
-  if (explicit && ALLOW_EXPLICIT_AUTHORIZATION_PATHS.has(path)) {
-    headers.set("Authorization", explicit);
-  }
 
   return headers;
 };
@@ -263,13 +239,11 @@ export const forwardProxyRequest = async (request: Request, path: string) => {
 
   const pathname = path.startsWith("/") ? path : `/${path}`; // fallback path
 
-  const isPublic = isPublicProxyPath(pathname);
-
   const upstreamPath = `${pathname}${new URL(request.url).search}`; // server be
 
-  const baseHeader = createForwardHeaders(request, pathname);
+  const baseHeader = createForwardHeaders(request);
 
-  if (tokens.accessToken && !baseHeader.has("Authorization") && !isPublic) {
+  if (tokens.accessToken && !baseHeader.has("Authorization")) {
     baseHeader.set("Authorization", `Bearer ${tokens.accessToken}`);
   }
 
@@ -281,7 +255,7 @@ export const forwardProxyRequest = async (request: Request, path: string) => {
     const callUpstream = (accessToken: string | null) => {
       const headers = new Headers(baseHeader);
 
-      if (accessToken && !isPublic)
+      if (accessToken)
         headers.set("Authorization", `Bearer ${accessToken}`);
       return fetch(resolveUpstreamUrl(upstreamPath), {
         method: request.method,

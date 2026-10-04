@@ -4,7 +4,6 @@ import { authKeys } from "@/features/auth/keys";
 import { getCurrentUser } from "@/features/auth/api";
 import { useAuthStore } from "@/features/auth/store/auth-store";
 import { useQuery } from "@tanstack/react-query";
-import type { UserResponse } from "@/types/user";
 import { useEffect } from "react";
 
 const CURRENT_USER_STALE_TIME = 5 * 60 * 1000;

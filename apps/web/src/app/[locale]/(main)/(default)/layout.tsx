@@ -1,10 +1,10 @@
 import type { ReactNode } from "react";
-import DefaultRoutesLayoutClient from "./layout.client";
+import LayoutClient from "./layout.client";
 
-export default function DefaultRoutesLayout({
+export default function Layout({
   children,
 }: {
   children: ReactNode;
 }) {
-  return <DefaultRoutesLayoutClient>{children}</DefaultRoutesLayoutClient>;
+  return <LayoutClient>{children}</LayoutClient>;
 }

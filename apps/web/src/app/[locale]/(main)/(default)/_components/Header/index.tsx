@@ -141,7 +141,7 @@ const Header = () => {
           </button>
         ) : null}
 
-        {isAuthenticated && user ? (
+        {user ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
@@ -205,15 +205,7 @@ const Header = () => {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        ) : (
-          <button
-            type="button"
-            onClick={() => router.push(`/${locale}/login`)}
-            className="h-[34px] rounded-full bg-primary px-4 text-xs font-semibold text-primary-foreground transition-opacity hover:opacity-85"
-          >
-            {t("auth.login")}
-          </button>
-        )}
+        ) : null}
       </div>
     </header>
   );

@@ -18,13 +18,6 @@ const PRIVATE_PATH_PREFIXES = [
   "/"
 ] as const;
 
-const GUEST_PATH_PREFIXES = [
-  "/forgot-password",
-  "/login",
-  "/register",
-  "/reset-password",
-] as const;
-
 type AuthTokens = {
   accessToken: string | null;
   refreshToken: string | null;
@@ -142,14 +135,6 @@ const buildDownstreamHeaders = (
   return headers;
 };
 
-const redirectTo = (request: NextRequest, pathname: string) => {
-  const url = new URL(request.url);
-  url.pathname = pathname;
-  url.search = "";
-  url.hash = "";
-  return NextResponse.redirect(url);
-};
-
 export async function proxy(request: NextRequest) {
   const localePath = resolveLocalePath(request.nextUrl.pathname);
   const intlResponse = intlMiddleware(request);
@@ -161,21 +146,15 @@ export async function proxy(request: NextRequest) {
   const { locale, pathname } = localePath;
   const tokens = getRequestAuthTokens(request);
   const isPrivateRoute = isPathUnder(pathname, PRIVATE_PATH_PREFIXES, locale);
-  const isGuestRoute = isPathUnder(pathname, GUEST_PATH_PREFIXES, locale);
   if (isPrivateRoute) {
     if (!tokens.accessToken) {
       if (!tokens.refreshToken) {
-        const response = redirectTo(request, `/${locale}/login`);
-        copyLocaleCookies(response, intlResponse);
-        clearAuthCookies(response.headers);
-        return response;
+        return intlResponse;
       }
       const refreshed = await requestRefreshToken(tokens.refreshToken);
       if (!refreshed?.accessToken) {
-        const response = redirectTo(request, `/${locale}/login`);
-        copyLocaleCookies(response, intlResponse);
-        clearAuthCookies(response.headers);
-        return response;
+        clearAuthCookies(intlResponse.headers);
+        return intlResponse;
       }
 
       const response = NextResponse.next({
@@ -192,23 +171,6 @@ export async function proxy(request: NextRequest) {
     return intlResponse;
   }
 
-  if (isGuestRoute) {
-    if (tokens.refreshToken && !tokens.accessToken) {
-      const refreshed = await requestRefreshToken(tokens.refreshToken);
-      if (refreshed?.accessToken) {
-        const response = redirectTo(request, `/${locale}`);
-        copyLocaleCookies(response, intlResponse);
-        setAuthCookies(response.headers, refreshed);
-        return response;
-      }
-
-      clearAuthCookies(intlResponse.headers);
-    } else if (tokens.accessToken) {
-      const response = redirectTo(request, `/${locale}`);
-      copyLocaleCookies(response, intlResponse);
-      return response;
-    }
-  }
   return intlResponse;
 }
 

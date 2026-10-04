@@ -55,19 +55,22 @@ export default function PrivateSettingsPageClient() {
           <SidebarMenu className="space-y-4 ">
             {items.map((item) => (
               <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton className="hover:!bg-transparent" asChild>
-                  <Link
-                    className="w-full flex items-center justify-between "
-                    href={item.url}
-                  >
-                    <div className="flex items-center gap-5">
-                      <item.icon size={25} className="text-foreground" />
-                      <span className="text-[16px]">{item.title}</span>
-                    </div>
-                    <span>
-                      <ChevronRight size={20} className="text-[#ccc]" />
-                    </span>
-                  </Link>
+                <SidebarMenuButton
+                  className="hover:!bg-transparent"
+                  render={
+                    <Link
+                      className="w-full flex items-center justify-between "
+                      href={item.url}
+                    />
+                  }
+                >
+                  <div className="flex items-center gap-5">
+                    <item.icon size={25} className="text-foreground" />
+                    <span className="text-[16px]">{item.title}</span>
+                  </div>
+                  <span>
+                    <ChevronRight size={20} className="text-[#ccc]" />
+                  </span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             ))}

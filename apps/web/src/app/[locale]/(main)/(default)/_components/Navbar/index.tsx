@@ -1,6 +1,5 @@
 "use client";
 
-import AuthSocialModal from "@/app/[locale]/(auth)/_components/LoginModal";
 import AvatarGroup from "@/app/[locale]/(main)/_components/common/AvatarGroup";
 import HomeIcon from "@/app/[locale]/(main)/_components/common/Icon/HomeIcon";
 import NewPostModal from "@/app/[locale]/(main)/_components/post/NewPostModal";
@@ -35,7 +34,6 @@ type NavConfigItem = {
   link: string;
   labelKey: string;
   group: "main" | "core" | "personal";
-  isAuth?: boolean;
 };
 
 const NAV_CONFIG: NavConfigItem[] = [
@@ -71,7 +69,6 @@ const NAV_CONFIG: NavConfigItem[] = [
     key: "growth",
     Icon: TrendingUp,
     link: "/growth",
-    isAuth: true,
     labelKey: "nav.growth",
     group: "core",
   },
@@ -79,7 +76,6 @@ const NAV_CONFIG: NavConfigItem[] = [
     key: "activity",
     Icon: Bell,
     link: "/activity",
-    isAuth: true,
     labelKey: "nav.activity",
     group: "core",
   },
@@ -87,7 +83,6 @@ const NAV_CONFIG: NavConfigItem[] = [
     key: "profile",
     Icon: UserRound,
     link: "/profile",
-    isAuth: true,
     labelKey: "nav.profile",
     group: "personal",
   },
@@ -95,7 +90,6 @@ const NAV_CONFIG: NavConfigItem[] = [
     key: "saved",
     Icon: Bookmark,
     link: "/saved",
-    isAuth: true,
     labelKey: "nav.saved",
     group: "personal",
   },
@@ -108,9 +102,8 @@ const Navbar: React.FC = () => {
   const router = useRouter();
   const t = useTranslations();
   const modal = useModal();
-  const isAuthenticated = Boolean(currentUser);
   const { data: unreadNotificationData } = useGetNotificationUnreadQuery({
-    options: { enabled: isAuthenticated },
+    options: { enabled: Boolean(currentUser) },
   });
 
   const { mutateAsync: markReads } = useMarkNotificationReadMutation();
@@ -142,21 +135,6 @@ const Navbar: React.FC = () => {
   }, [localizedPathname]);
 
   const handleNavClick = (item: (typeof NAV_CONFIG)[number]) => {
-    if (item?.isAuth && !currentUser) {
-      modal.show(
-        <AuthSocialModal
-          onClose={() => modal.hide()}
-          onContinue={() => {
-            modal.hide();
-            router.push(localizeRoute("/login"));
-          }}
-          title={t("modal.loginToContinue")}
-          description={t("modal.joinThreads")}
-        />,
-      );
-      return;
-    }
-
     if (item?.link) {
       if (
         item.key === "home" &&
@@ -175,21 +153,6 @@ const Navbar: React.FC = () => {
   };
 
   const handleWriteClick = () => {
-    if (!currentUser) {
-      modal.show(
-        <AuthSocialModal
-          onClose={() => modal.hide()}
-          onContinue={() => {
-            modal.hide();
-            router.push(localizeRoute("/login"));
-          }}
-          title={t("modal.loginToContinue")}
-          description={t("modal.joinThreads")}
-        />,
-      );
-      return;
-    }
-
     modal.show(<NewPostModal onClose={() => modal.hide()} />);
   };
 
@@ -262,14 +225,10 @@ const Navbar: React.FC = () => {
         </p>
         {renderNavGroup("core")}
 
-        {isAuthenticated ? (
-          <>
-            <p className="hidden px-2.5 pb-1.5 pt-3.5 font-mono text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground lg:block">
-              {t("nav.mine")}
-            </p>
-            {renderNavGroup("personal")}
-          </>
-        ) : null}
+        <p className="hidden px-2.5 pb-1.5 pt-3.5 font-mono text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground lg:block">
+          {t("nav.mine")}
+        </p>
+        {renderNavGroup("personal")}
       </div>
 
       <div className="border-t border-sidebar-border pt-2.5">

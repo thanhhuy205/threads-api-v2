@@ -50,75 +50,6 @@
     "workspace": "Acme Tech",
     "workspaceSubtitle": "Phòng Kỹ thuật"
   },
-  "auth": {
-    "login": "Đăng nhập",
-    "register": "Đăng ký",
-    "logout": "Đăng xuất",
-    "loginWithInstagram": "Đăng nhập bằng tài khoản Instagram",
-    "continueWithInstagram": "Tiếp tục bằng Instagram",
-    "forgotPassword": "Quên mật khẩu?",
-    "forgotPasswordTitle": "Quên mật khẩu",
-    "sendResetLink": "Gửi liên kết đặt lại",
-    "dontHaveAccount": "Bạn chưa có tài khoản?",
-    "alreadyHaveAccount": "Đã có tài khoản?",
-    "backToLogin": "Quay lại đăng nhập",
-    "usernamePlaceholder": "Tên người dùng",
-    "passwordPlaceholder": "Mật khẩu",
-    "confirmPasswordPlaceholder": "Xác nhận mật khẩu",
-    "emailPlaceholder": "Email",
-    "namePlaceholder": "Tên",
-    "phonePlaceholder": "Số điện thoại",
-    "loadingSendResetLink": "Đang gửi liên kết đặt lại",
-    "newPassword": "Mật khẩu mới",
-    "confirmPassword": "Xác nhận mật khẩu",
-    "resetPassword": "Đặt lại mật khẩu",
-    "loading": "Đang xử lý...",
-    "resetPasswordTitle": "Đặt lại mật khẩu",
-    "resetPasswordDescription": "Nhập mật khẩu mới cho tài khoản của bạn.",
-    "email": "Email của bạn",
-    "loginSuccess": "Đăng nhập thành công",
-    "accountVerified": "Đã xác minh tài khoản thành công. Vui lòng đăng nhập.",
-    "loggingIn": "Đang đăng nhập...",
-    "loginFailed": "Tài khoản hoặc mật khẩu không đúng",
-    "registerFailed": "Đăng ký thất bại",
-    "registerLoading": "Vui lòng chờ trong giây lát",
-    "getUserFailed": "Không thể lấy thông tin người dùng",
-    "logoutFailed": "Đăng xuất có sự cố",
-    "forgotPasswordError": "Không thể gửi email đặt lại mật khẩu",
-    "tokenExpired": "Liên kết đã hết hạn hoặc không hợp lệ",
-    "updateFailed": "Cập nhật thông tin thất bại",
-    "resendEmailError": "Không thể gửi lại email xác minh",
-    "unknownError": "Đã xảy ra lỗi, vui lòng thử lại sau",
-    "verifyEmailSent": "Chúng tôi đã gửi liên kết xác minh email",
-    "verifyEmailError": "Gửi email xác minh thất bại",
-    "verifyEmail": "Xác minh email",
-    "verifyEmailSuccess": "Đã gửi email xác minh, vui lòng kiểm tra hộp thư.",
-    "verifyEmailFailed": "Gửi email xác minh thất bại. Vui lòng thử lại sau.",
-    "verifySuccess": "Xác minh email thành công!",
-    "verifyFailed": "Xác minh email thất bại. Vui lòng thử lại hoặc yêu cầu mã xác minh mới.",
-    "forgotSending": "Đang gửi email...",
-    "forgotSuccess": "Gửi thành công! Vui lòng kiểm tra email.",
-    "forgotError": "Có lỗi xảy ra, vui lòng thử lại.",
-    "emailNotFound": "Email không tồn tại",
-    "forgotPasswordDescription": "Nhập email của bạn để nhận liên kết đặt lại mật khẩu.",
-    "verifying": "Đang xác minh...",
-    "goToLogin": "Đi tới trang đăng nhập",
-    "loginRequiredTitle": "Đăng nhập để tiếp tục",
-    "loginRequiredDescription": "Tham gia PulseBoard để chia sẻ suy nghĩ của bạn...",
-    "loginModalTitle": "Đăng nhập để tiếp tục",
-    "loginModalDesc": "Tham gia PulseBoard để kết nối và chia sẻ...",
-    "error": {
-      "usernameInvalid": "Tên đăng nhập không hợp lệ",
-      "usernameRule": "Tên đăng nhập chỉ được chứa chữ cái, số, dấu gạch ngang (-) và gạch dưới (_)",
-      "emailInvalid": "Email không hợp lệ",
-      "passwordInvalid": "Mật khẩu không hợp lệ",
-      "passwordMin": "Mật khẩu tối thiểu 8 ký tự",
-      "passwordConfirmNotMatch": "Mật khẩu không khớp",
-      "emailExists": "Email đã tồn tại",
-      "usernameExists": "Tên đăng nhập đã tồn tại"
-    },
-    "registerSuccess": "Registration successful"
-  },
   "autoDelete": {
     "title": "Chưa có bài viết tự biến mất nào",
     "description": "Hệ thống sẽ lưu trữ bài viết tự hủy sau 24 giờ và chuyển thread trả lời vào tin nhắn. Chỉ mình bạn xem được ai đã thích và trả lời."
@@ -265,12 +196,6 @@
     "scheduleStart": "Bắt đầu",
     "scheduleEnd": "Kết thúc"
   },
-  "reset": {
-    "loading": "Đang đặt lại mật khẩu...",
-    "success": "Đặt mật khẩu mới thành công, vui lòng đăng nhập.",
-    "error": "Có lỗi xảy ra, vui lòng thử lại.",
-    "invalidToken": "Liên kết đã hết hạn hoặc không hợp lệ"
-  },
   "privacy": {
     "privateProfile": "Trang cá nhân riêng tư",
     "tagAndMention": "Gắn thẻ và nhắc đến",
@@ -296,11 +221,6 @@
     "noResults": "Không tìm thấy kết quả"
   },
   "modal": {
-    "signUpTitle": "Đăng ký để dùng",
-    "signUpDesc": "Tham gia PulseBoard để chia sẻ ý tưởng, đặt câu hỏi, đăng những suy nghĩ bất chợt và hơn thế nữa.",
-    "loginTitle": "Đăng nhập vào PulseBoard",
-    "loginToContinue": "Đăng nhập để tiếp tục",
-    "joinThreads": "Tham gia PulseBoard để chia sẻ suy nghĩ, tìm hiểu những gì đang diễn ra, theo dõi mọi người và hơn thế nữa.",
     "anonymous": "anonymous",
     "cancel": "Hủy",
     "blockBtn": "Chặn",
@@ -434,33 +354,11 @@
     "avatar": "Ảnh đại diện",
     "uploadAvatarDesc": "Thay đổi ảnh đại diện của bạn"
   },
-  "loginCard": {
-    "title": "Đăng nhập hoặc đăng ký PulseBoard",
-    "description": "Xem mọi người đang nói về điều gì và tham gia cuộc trò chuyện.",
-    "loginWithUsername": "Đăng nhập bằng tên người dùng"
-  },
-  "authModal": {
-    "signUpToPost": "Đăng ký để đăng bài",
-    "continueWithLogin": "Tiếp tục với đăng nhập",
-    "signUpToLike": "Đăng ký để thích",
-    "signUpToLikeDesc": "Bạn cần một tài khoản để thích bài đăng.",
-    "signUpToReply": "Đăng ký để trả lời",
-    "signUpToReplyDesc": "Tham gia cuộc trò chuyện bằng cách trả lời bài đăng.",
-    "signUpToRepost": "Đăng ký để đăng lại",
-    "signUpToRepostDesc": "Đăng lại và chia sẻ ý tưởng khi bạn đã đăng nhập.",
-    "signUpToShare": "Đăng ký để chia sẻ",
-    "signUpToShareDesc": "Chia sẻ có sẵn khi bạn tạo tài khoản."
-  },
   "repost": {
     "reposting": "Đang đăng lại...",
     "unreposting": "Đang hủy đăng lại...",
     "repostSuccess": "Đăng lại thành công",
     "unrepostSuccess": "Đã hủy đăng lại"
-  },
-  "restPasswordFound": {
-    "title": "Liên kết không hợp lệ",
-    "description": "Liên kết đặt lại mật khẩu đã hết hạn hoặc không hợp lệ. Vui lòng yêu cầu một liên kết mới.",
-    "back": "Quay lại đăng nhập"
   },
   "toast": {
     "saving": "Đang lưu...",

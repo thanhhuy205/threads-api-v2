@@ -1,8 +1,3 @@
-import AuthSocialModal from "@/app/[locale]/(auth)/_components/LoginModal";
-import {
-  getInteractionAuthConfig,
-  type ActionKey,
-} from "@/constant/pageTitless";
 import { useCurrentUser } from "@/features/auth/hooks";
 import { useLikePostMutation, useSavePostMutation } from "@/features/post/api";
 import { useModal } from "@/hooks/use-modal";
@@ -16,8 +11,7 @@ import {
   Share2,
   ThumbsUp,
 } from "lucide-react";
-import { useLocale, useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useContext, type MouseEvent } from "react";
 import { PostContext } from "../PostContext";
 import ReplyModal from "../ReplyModal";
@@ -48,10 +42,7 @@ const InteractionBar = ({
   const { show, hide } = useModal();
   const { mutateAsync: likePost } = useLikePostMutation();
   const { mutateAsync: savePost } = useSavePostMutation();
-  const router = useRouter();
-  const locale = useLocale();
   const t = useTranslations();
-  const loginRoute = `/${locale}/login`;
 
   const isComment = mode === "comment";
   const iconSize = isComment ? size - 4 : size;
@@ -84,40 +75,12 @@ const InteractionBar = ({
 
   const canReply = canReplyByPermission();
 
-  const openAuthModal = (action?: ActionKey) => {
-    console.log(currentUser);
-
-    if (!action) {
-      show(
-        <AuthSocialModal
-          onContinue={() => router.push(loginRoute)}
-          onClose={hide}
-        />,
-      );
-      return;
-    }
-
-    const cfg = getInteractionAuthConfig(t)[action];
-    show(
-      <AuthSocialModal
-        title={cfg.title}
-        description={cfg.description}
-        buttonText={cfg.buttonText}
-        Icon={cfg.Icon}
-        iconGradient={cfg.iconGradient}
-        onContinue={() => router.push(loginRoute)}
-        onClose={hide}
-      />,
-    );
-  };
-
   const handleLike = async (e: MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
 
     if (!ctx?.post) return;
 
     if (!currentUser) {
-      openAuthModal("like");
       return;
     }
 
@@ -130,7 +93,6 @@ const InteractionBar = ({
   const handleReply = (e: MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
     if (!currentUser) {
-      openAuthModal("reply");
       return;
     }
 
@@ -147,7 +109,6 @@ const InteractionBar = ({
     if (!ctx?.post) return;
 
     if (!currentUser) {
-      openAuthModal();
       return;
     }
 
@@ -200,7 +161,6 @@ const InteractionBar = ({
 
         <ShareMenu
           isAuth={!!currentUser}
-          onUnauthorizedClick={() => openAuthModal("share")}
           className={cn(actionClass, "ml-auto")}
           post={ctx?.post || undefined}
         >
@@ -228,7 +188,7 @@ const InteractionBar = ({
           <Bookmark className="size-5" />
           <span>{t("common.save")}</span>
         </button>
-        <ShareMenu isAuth={!!currentUser} onUnauthorizedClick={() => openAuthModal("share")} post={ctx.post} className="flex items-center justify-center gap-2 py-3 text-sm font-medium transition-colors hover:bg-muted/40 hover:text-foreground">
+        <ShareMenu isAuth={!!currentUser} post={ctx.post} className="flex items-center justify-center gap-2 py-3 text-sm font-medium transition-colors hover:bg-muted/40 hover:text-foreground">
           <Forward className="size-5" />
           <span>{t("post.share")}</span>
         </ShareMenu>
@@ -286,7 +246,6 @@ const InteractionBar = ({
         <RepostMenu
           post={ctx?.post || undefined}
           isAuth={!!currentUser}
-          onUnauthorizedClick={() => openAuthModal("repost")}
           className={` ${styles.interactionButton} ${
             isComment ? "!px-1 scale-90" : ""
           } ${ctx?.post.isRepostByAuth ? "text-green-500" : ""}`}
@@ -303,7 +262,6 @@ const InteractionBar = ({
 
         <ShareMenu
           isAuth={!!currentUser}
-          onUnauthorizedClick={() => openAuthModal("share")}
           className={`${styles.interactionButton} ${
             isComment ? "!px-1 scale-90" : ""
           } ${ctx?.post.isSavedByAuth ? "text-gray-700" : ""}`}

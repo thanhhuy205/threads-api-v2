@@ -1,4 +1,3 @@
-// import PageMetadata from "@/components/layout/PageMetadata";
 import Providers from "@/app/providers";
 import { routing } from "@/i18n/routing";
 import { cn } from "@/lib/utils";

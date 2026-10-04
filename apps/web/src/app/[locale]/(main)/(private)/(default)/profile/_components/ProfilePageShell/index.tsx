@@ -5,10 +5,7 @@ import AvatarGroup from "@/app/[locale]/(main)/_components/common/AvatarGroup";
 import { VerifiedIcon } from "@/app/[locale]/(main)/_components/common/Icon/VerifiedIcon";
 import ScrollTop from "@/app/[locale]/(main)/_components/common/ScrollTop";
 import { Button } from "@/components/ui/button";
-import {
-  useAuth,
-  useResendVerifyEmailSessionMutation,
-} from "@/features/auth/hooks";
+import { useAuth } from "@/features/auth/hooks";
 import { useModal } from "@/hooks/use-modal";
 import { cn } from "@/lib/utils";
 import type { User } from "@/types/user";
@@ -22,7 +19,6 @@ import {
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { toast } from "sonner";
 
 type ProfileTab = "threads" | "replies" | "media" | "repost";
 
@@ -42,17 +38,8 @@ const ProfilePageShell = ({
   const { show, hide } = useModal();
   const { user: authUser } = useAuth();
   const user = authUser ?? initialUser;
-  const resendVerifyEmailMutation = useResendVerifyEmailSessionMutation();
 
   if (!user) return null;
-
-  const handleVerifyEmail = () => {
-    resendVerifyEmailMutation.mutate(undefined, {
-      onSuccess: () => toast.success(t("auth.verifyEmailSuccess")),
-      onError: (error) =>
-        toast.error(error.message || t("auth.verifyEmailFailed")),
-    });
-  };
 
   const localizeRoute = (path: string) => `/${locale}${path}`;
   const tabs: Array<{ value: ProfileTab; label: string; href: string }> = [
@@ -123,17 +110,6 @@ const ProfilePageShell = ({
               </div>
 
               <div className="ml-auto flex gap-2">
-                {!user.verifiedAt ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="rounded-full text-xs font-bold"
-                    disabled={resendVerifyEmailMutation.isPending}
-                    onClick={handleVerifyEmail}>
-                    {locale === "vi" ? "Xác minh" : "Verify"}
-                  </Button>
-                ) : null}
                 <Button
                   type="button"
                   size="sm"
