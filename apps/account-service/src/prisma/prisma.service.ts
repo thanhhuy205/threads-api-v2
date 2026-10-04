@@ -1,17 +1,13 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { PrismaMariaDb } from '@prisma/adapter-mariadb';
+import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../generated/prisma/client';
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
   constructor(configService: ConfigService) {
-    const adapter = new PrismaMariaDb({
-      host: configService.get<string>('DATABASE_CONFIG.DB_HOST'),
-      port: configService.get<number>('DATABASE_CONFIG.DB_PORT'),
-      user: configService.get<string>('DATABASE_CONFIG.DB_USER'),
-      password: configService.get<string>('DATABASE_CONFIG.DB_PASSWORD'),
-      database: configService.get<string>('DATABASE_CONFIG.DB_NAME'),
+    const adapter = new PrismaPg({
+      connectionString: configService.getOrThrow<string>('DATABASE_URL'),
     });
     super({ adapter, log: ['error', 'warn'] });
   }
