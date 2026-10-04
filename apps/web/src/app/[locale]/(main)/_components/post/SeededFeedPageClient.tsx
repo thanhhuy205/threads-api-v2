@@ -3,7 +3,10 @@
 import LoadingFetch from "@/app/[locale]/(main)/_components/common/LoadingFetch";
 import SkeletonFetch from "@/app/[locale]/(main)/_components/common/Skeleton/SkeletonFetch";
 import ContentNotFound from "@/app/[locale]/(main)/_components/post/ContentNotFound";
-import FeedTabs from "@/app/[locale]/(main)/_components/post/FeedTabs";
+import BusinessCommunityMock from "@/app/[locale]/(main)/_components/post/BusinessCommunityMock";
+import FeedTabs, {
+  type FeedFilter,
+} from "@/app/[locale]/(main)/_components/post/FeedTabs";
 import InfiniteList from "@/app/[locale]/(main)/_components/post/InfiniteList";
 import PostCard from "@/app/[locale]/(main)/_components/post/PostCard";
 import PostForm from "@/app/[locale]/(main)/_components/post/PostForm";
@@ -15,7 +18,6 @@ import {
   type FeedType as FeedTypeValue,
   type PostItem,
   type PostResponse,
-  type PostTypeStatus,
 } from "@/types/post";
 import type { User } from "@/types/user";
 import { keepPreviousData } from "@tanstack/react-query";
@@ -24,8 +26,6 @@ import { useMemo, useState } from "react";
 import { KeepAlive } from "react-activation";
 
 type FeedQueryMode = "feed" | "following";
-type FeedFilter = "ALL" | "WORKSPACE" | PostTypeStatus;
-
 type SeededFeedPageClientProps = {
   emptyState?: "home" | "plain";
   feedType?: FeedTypeValue;
@@ -72,16 +72,27 @@ export default function SeededFeedPageClient({
   const activeQuery = feedQuery;
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     activeQuery;
-  const [activeFilter, setActiveFilter] = useState<FeedFilter>("ALL");
+  const [activeFilter, setActiveFilter] = useState<FeedFilter>("LATEST");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const feeds = data?.pages.flatMap((page) => page.data) ?? [];
 
-  const filteredFeeds =
-    activeFilter === "ALL"
-      ? feeds
-      : activeFilter === "WORKSPACE"
-        ? feeds.filter((post) => post.visibility === "WORKSPACE")
-        : feeds.filter((post) => post.type === activeFilter);
+  const normalizedSearchQuery = searchQuery.trim().toLowerCase();
+  const filteredFeeds = feeds.filter((post) => {
+    const matchesTab =
+      activeFilter === "LATEST" ||
+      (activeFilter === "ANNOUNCEMENT" && post.type === "ANNOUNCEMENT") ||
+      (activeFilter === "PINNED" && post.isSavedByAuth);
+    const matchesSearch =
+      !normalizedSearchQuery ||
+      post.content?.toLowerCase().includes(normalizedSearchQuery) ||
+      post.userSnapshot?.username
+        ?.toLowerCase()
+        .includes(normalizedSearchQuery) ||
+      post.userSnapshot?.name?.toLowerCase().includes(normalizedSearchQuery);
+
+    return matchesTab && matchesSearch;
+  });
 
   const handleNavigateToDetail = (publicId: string, username?: string) => {
     if (typeof window !== "undefined") {
@@ -102,14 +113,24 @@ export default function SeededFeedPageClient({
 
   return (
     <KeepAlive>
-      <div className="mx-auto min-h-full w-full bg-background">
-        <FeedTabs value={activeFilter} onChange={setActiveFilter} />
+      <div className="mx-auto min-h-full w-full max-w-5xl space-y-3 bg-background px-3 py-4 sm:px-5 sm:py-5">
+        <FeedTabs
+          value={activeFilter}
+          onChange={setActiveFilter}
+          query={searchQuery}
+          onQueryChange={setSearchQuery}
+        />
         <PostForm variant="feed" />
+        {!normalizedSearchQuery ? (
+          <BusinessCommunityMock filter={activeFilter} />
+        ) : null}
 
         {emptyState === "home" && !hasNextPage && filteredFeeds.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center text-muted-foreground">
-            <p className="text-lg font-medium">Hiện chưa có thông báo gì mới</p>
-          </div>
+          normalizedSearchQuery ? (
+            <div className="rounded-2xl border border-[#f3f4f6] bg-white px-5 py-12 text-center text-sm text-[#6c737f]">
+              Không tìm thấy cuộc trò chuyện phù hợp.
+            </div>
+          ) : null
         ) : (
           <InfiniteList
             data={filteredFeeds}
@@ -128,16 +149,18 @@ export default function SeededFeedPageClient({
             continuePage={hasNextPage || false}
             skeleton={<SkeletonFetch />}
             itemContent={(_index, post: PostItem) => (
-              <PostCard
-                presentation="feed"
-                onClick={() => {
-                  handleNavigateToDetail(
-                    post.publicId,
-                    post.userSnapshot?.username,
-                  );
-                }}
-                post={mapPost(post)}
-              />
+              <div className="pb-3">
+                <PostCard
+                  presentation="feed"
+                  onClick={() => {
+                    handleNavigateToDetail(
+                      post.publicId,
+                      post.userSnapshot?.username,
+                    );
+                  }}
+                  post={mapPost(post)}
+                />
+              </div>
             )}
           />
         )}

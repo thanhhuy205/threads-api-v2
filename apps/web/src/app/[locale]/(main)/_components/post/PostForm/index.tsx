@@ -4,7 +4,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/features/auth/hooks";
 import { useModal } from "@/hooks/use-modal";
-import { BarChart3, ImageIcon, Layers3 } from "lucide-react";
+import {
+  ImageIcon,
+  Smile,
+  Video,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 import NewPostModal from "../NewPostModal";
 
@@ -12,60 +16,57 @@ const PostForm = ({ variant = "default" }: { variant?: "default" | "feed" }) => 
   const { show, hide } = useModal();
   const t = useTranslations();
   const { user, isAuthenticated } = useAuth();
-  if (!isAuthenticated) return null;
 
   const openComposer = () => {
+    if (!isAuthenticated) return;
     show(<NewPostModal onClose={hide} />);
   };
 
   if (variant === "feed") {
-    const roleLabel = user?.role === "ADMIN" ? "Quản trị viên" : "Thành viên";
-
     return (
-      <div className="flex items-start gap-3 border-b border-border px-5 py-4">
+      <div className="flex min-h-[88px] items-center gap-6 rounded-xl border border-[#e5e7eb] bg-white px-4 py-5 sm:px-6">
         <AvatarGroup
-          size={8}
+          size={10}
           url={user?.avatar ?? ""}
-          fallBack={user?.username?.slice(0, 2).toUpperCase()}
+          fallBack={user?.username?.slice(0, 2).toUpperCase() ?? "PB"}
         />
 
-        <div className="min-w-0 flex-1">
+        <div className="flex min-w-0 flex-1 items-center gap-6">
           <button
             type="button"
             onClick={openComposer}
-            className="block w-full pt-1.5 text-left text-[14.5px] text-muted-foreground"
+            aria-disabled={!isAuthenticated}
+            title={!isAuthenticated ? "Đăng nhập để tạo bài viết" : undefined}
+            className="flex h-12 min-w-0 flex-1 items-center rounded-[11px] bg-[#f9fafb] px-5 text-left text-base text-[#4d5761] transition-colors hover:bg-[#f3f4f6]"
           >
-            Chia sẻ điều gì đó với đội…
+            <span className="truncate">Bạn đang nghĩ gì?</span>
           </button>
 
-          <div className="mt-2 flex items-center gap-2">
+          <div className="hidden shrink-0 gap-1.5 sm:flex">
             <button
               type="button"
+              aria-label="Thêm hình ảnh"
               onClick={openComposer}
-              className="inline-flex items-center gap-1.5 rounded-full border border-border px-2 py-1 font-mono text-[10.5px] font-semibold text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              className="flex size-9 items-center justify-center rounded-full text-[#4d5761] transition-colors hover:bg-[#f9fafb] hover:text-[#0d121c]"
             >
-              <Layers3 className="size-3" />
-              Đăng với vai trò {roleLabel}
+              <ImageIcon className="size-5" />
             </button>
-
-            <div className="ml-auto flex gap-1.5">
-              <button
-                type="button"
-                aria-label="Thêm hình ảnh"
-                onClick={openComposer}
-                className="flex size-[30px] items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-              >
-                <ImageIcon className="size-3.5" />
-              </button>
-              <button
-                type="button"
-                aria-label="Tạo khảo sát"
-                onClick={openComposer}
-                className="flex size-[30px] items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-              >
-                <BarChart3 className="size-3.5" />
-              </button>
-            </div>
+            <button
+              type="button"
+              aria-label="Thêm video"
+              onClick={openComposer}
+              className="flex size-9 items-center justify-center rounded-full text-[#4d5761] transition-colors hover:bg-[#f9fafb] hover:text-[#0d121c]"
+            >
+              <Video className="size-5" />
+            </button>
+            <button
+              type="button"
+              aria-label="Thêm cảm xúc"
+              onClick={openComposer}
+              className="flex size-9 items-center justify-center rounded-full text-[#4d5761] transition-colors hover:bg-[#f9fafb] hover:text-[#0d121c]"
+            >
+              <Smile className="size-5" />
+            </button>
           </div>
         </div>
       </div>

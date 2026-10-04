@@ -388,7 +388,7 @@ const PostCard = ({
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onClick={handleCardClick}
-        className="border-b border-border px-5 pb-3.5 pt-4 transition-colors hover:bg-card/45"
+        className="rounded-2xl border border-[#f3f4f6] bg-white px-5 pb-3.5 pt-4 transition-colors hover:border-[#e5e7eb] hover:shadow-[0_8px_30px_rgba(13,18,28,0.04)]"
         style={{ cursor: onClick ? "pointer" : "default" }}
       >
         <header className="flex items-start gap-2.5">
