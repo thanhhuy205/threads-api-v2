@@ -5,11 +5,11 @@
   "scripts": {
     "prisma:generate": "prisma generate --config prisma.config.ts",
     "pretypecheck": "prisma generate --config prisma.config.ts",
-    "typecheck": "tsc -p tsconfig.app.json --noEmit",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
     "prebuild": "prisma generate --config prisma.config.ts",
     "build": "nest build",
-    "dev": "tsc --watch -p tsconfig.app.json",
-    "start": "tsc -p tsconfig.app.json && node dist/main.js"
+    "dev": "nest start --watch",
+    "start": "node dist/main.js"
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.14.4",

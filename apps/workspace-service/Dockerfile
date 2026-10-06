@@ -12,7 +12,6 @@ FROM base AS builder
 
 COPY --from=pruner /app/out/json/ ./
 COPY --from=pruner /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
-COPY --from=pruner /app/tsconfig.json ./tsconfig.json
 COPY --from=pruner /app/tsconfig.base.json ./tsconfig.base.json
 
 RUN pnpm install --frozen-lockfile
@@ -28,4 +27,4 @@ ENV NODE_ENV=production
 
 COPY --from=builder /app/apps/workspace-service/dist ./dist
 
-CMD ["node", "app/dist/apps/workspace-service/src/main.js"]
+CMD ["node", "dist/main.js"]

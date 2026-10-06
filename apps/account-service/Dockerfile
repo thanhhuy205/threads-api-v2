@@ -14,7 +14,6 @@ FROM base AS builder
 
 COPY --from=pruner /app/out/json/ ./
 COPY --from=pruner /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
-COPY --from=pruner /app/tsconfig.json ./tsconfig.json
 COPY --from=pruner /app/tsconfig.base.json ./tsconfig.base.json
 
 RUN pnpm install --frozen-lockfile
@@ -27,7 +26,7 @@ RUN pnpm --filter @purse/proto build
 
 RUN pnpm --filter @purse/account-service prisma:generate
 
-RUN pnpm exec nest build account-service
+RUN pnpm --filter @purse/account-service build
 
 RUN pnpm --filter @purse/account-service deploy --prod --legacy /app/deploy
 

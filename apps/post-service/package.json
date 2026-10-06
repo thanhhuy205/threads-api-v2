@@ -6,13 +6,15 @@
   "scripts": {
     "prisma:generate": "prisma generate --config prisma.config.ts",
     "pretypecheck": "pnpm prisma:generate",
-    "typecheck": "tsc -p tsconfig.app.json --noEmit",
-    "start": "tsc -p tsconfig.app.json && node dist/main.js"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "prebuild": "pnpm prisma:generate",
+    "build": "nest build",
+    "dev": "nest start --watch",
+    "start": "node dist/main.js"
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.14.4",
     "@grpc/proto-loader": "^0.8.1",
-    "@purse/observability": "workspace:*",
     "@nestjs/bullmq": "^11.0.5",
     "@nestjs/common": "^11.1.28",
     "@nestjs/config": "^4.0.2",
@@ -25,6 +27,7 @@
     "@prisma/client": "7.8.0",
     "@purse/common": "workspace:*",
     "@purse/core": "workspace:*",
+    "@purse/observability": "workspace:*",
     "@purse/proto": "workspace:*",
     "bullmq": "^5.81.3",
     "class-transformer": "^0.5.1",

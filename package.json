@@ -4,16 +4,16 @@
   "private": true,
   "packageManager": "pnpm@11.26.0",
   "scripts": {
-    "typecheck": "pnpm -r typecheck",
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "typecheck": "turbo run typecheck",
+    "lint": "turbo run lint",
     "prisma:generate": "pnpm -r --if-present prisma:generate",
-    "build": "pnpm -r --if-present build",
-    "build:auth-service": "pnpm --filter @purse/auth-service build",
-    "build:account-service": "pnpm exec nest build account-service",
-    "build:workspace-service": "pnpm --filter @purse/workspace-service build",
-    "build:packages": "pnpm --filter \"./packages/**\" build",
+    "build:account-service": "turbo run build --filter=@purse/account-service",
+    "build:workspace-service": "turbo run build --filter=@purse/workspace-service",
+    "build:packages": "turbo run build --filter=\"./packages/*\"",
     "start:account-service": "pnpm --filter @purse/account-service start",
-    "start:auth-service": "pnpm --filter @purse/auth-service dev",
-    "build:core": "pnpm --filter @purse/core build",
+    "build:core": "turbo run build --filter=@purse/core",
     "dev:workspace-service": "pnpm --filter @purse/workspace-service dev",
     "test:integration:auth": "tsx --test tests/integration/auth/kong-jwt.e2e-spec.ts",
     "test:integration:auth-post": "tsx --test tests/integration/flows/kong-auth-post.e2e-spec.ts",
@@ -26,6 +26,7 @@
     "@types/node": "^22.20.1",
     "tsc-alias": "^1.8.16",
     "tsx": "^4.20.6",
+    "turbo": "^2.11.7",
     "typescript": "^5.8.0"
   }
 }
