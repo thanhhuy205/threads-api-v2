@@ -1,6 +1,6 @@
 import { applyDecorators, HttpStatus, Type } from '@nestjs/common';
 import { ApiExtraModels, ApiResponse, getSchemaPath } from '@nestjs/swagger';
-import { CursorPaginationMetaDto, OffsetPaginationMetaDto } from '../dto/pagination.dto';
+import { CursorPaginationMetaDto, OffsetPaginationMetaDto } from '../dto/response/pagination.dto';
 
 type SwaggerResponseOptions = {
   description: string;

@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { configurationFactory } from '@purse/common/config';
+import { TransformInterceptor } from '@purse/common/interceptors';
 import { AppAuthGuard, GrpcGatewayAuthStrategy } from '@purse/core/auth';
 import { RedisModule } from '@purse/core/redis';
 import { createLoggerOptions, LoggerModule } from '@purse/observability/logging';
@@ -42,6 +43,7 @@ import { PrismaModule } from './prisma/prisma.module';
   ],
   providers: [
     GrpcGatewayAuthStrategy,
+    { provide: 'TransformInterceptor', useClass: TransformInterceptor },
     { provide: APP_GUARD, useClass: AppAuthGuard },
   ],
 })

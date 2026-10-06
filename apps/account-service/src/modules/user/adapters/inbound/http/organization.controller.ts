@@ -1,6 +1,7 @@
 import { Controller, Get, Inject, Param, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { IsPublic } from '@purse/common/decorators';
+import { ApiResponse } from '@purse/common/dto';
 import type {
   KeycloakUserAdapter,
 } from '../../../application/ports/outbound/keycloak.port';
@@ -22,17 +23,19 @@ export class OrganizationController {
   @IsPublic()
   @Get()
   @ApiOperation({ summary: 'List organizations' })
-  findAll(@Query() payload: GetOrgsDTO) {
-    return this.keycloakUserAdapter.getOrgs(payload);
+  async findAll(@Query() payload: GetOrgsDTO) {
+    const result = await this.keycloakUserAdapter.getOrgs(payload);
+    return ApiResponse.ok(result);
   }
 
   @Get(':orgId/teams')
   @ApiOperation({ summary: 'List users in an organization' })
   @ApiParam({ name: 'orgId', type: String })
-  findTeams(
+  async findTeams(
     @Param('orgId') orgId: string,
     @Query() payload: GetTeamInOrgDTO,
   ) {
-    return this.keycloakUserAdapter.getTeamsInOrg(orgId, payload);
+    const result = await this.keycloakUserAdapter.getTeamsInOrg(orgId, payload);
+    return ApiResponse.ok(result);
   }
 }

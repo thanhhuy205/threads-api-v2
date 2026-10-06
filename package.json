@@ -12,7 +12,7 @@
     "build:account-service": "turbo run build --filter=@purse/account-service",
     "build:workspace-service": "turbo run build --filter=@purse/workspace-service",
     "build:packages": "turbo run build --filter=\"./packages/*\"",
-    "start:account-service": "pnpm --filter @purse/account-service start",
+    "start:account-service": "turbo run start --filter=@purse/account-service",
     "build:core": "turbo run build --filter=@purse/core",
     "dev:workspace-service": "pnpm --filter @purse/workspace-service dev",
     "test:integration:auth": "tsx --test tests/integration/auth/kong-jwt.e2e-spec.ts",

@@ -1,7 +1,7 @@
-import { DEFAULT_PAGE, MAX_LIMIT, PER_PAGE } from '../constants/pagination';
-import { Transform, Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Transform, Type } from 'class-transformer';
 import { IsNotEmpty, IsNumber, IsOptional, Max, Min } from 'class-validator';
+import { DEFAULT_PAGE, MAX_LIMIT, PER_PAGE } from '../../constants/pagination';
 
 export class PaginationQueryDto {
   @ApiPropertyOptional({ default: DEFAULT_PAGE, minimum: 1 })

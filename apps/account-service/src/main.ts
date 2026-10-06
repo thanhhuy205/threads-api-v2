@@ -27,6 +27,7 @@ async function bootstrap() {
   app.use(helmet());
   app.enableCors({ origin: corsOrigin(), credentials: true });
   app.use(requestId());
+  app.useGlobalInterceptors(app.get('TransformInterceptor'));
 
   // app.connectMicroservice<MicroserviceOptions>({
   //   transport: Transport.GRPC,

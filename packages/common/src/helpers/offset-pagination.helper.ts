@@ -1,5 +1,5 @@
 import { DEFAULT_PAGE, MAX_LIMIT, PER_PAGE } from '../constants/pagination';
-import type { OffsetPagination } from '../dto/pagination.dto';
+import type { OffsetPagination } from '../dto/response/pagination.dto';
 
 export function normalizeOffsetPagination(input: {
   page?: string | number;
