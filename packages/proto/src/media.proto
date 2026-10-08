@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package media;
+
+service MediaService {
+  rpc ConnectMedia(ConnectMediaRequest) returns (ConnectMediaResponse);
+}
+
+message ConnectMediaRequest {
+  int32 post_id = 1;
+  repeated int32 media_ids = 2;
+}
+
+message ConnectMediaResponse {
+  int32 count = 1;
+}

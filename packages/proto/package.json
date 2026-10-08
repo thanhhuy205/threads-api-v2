@@ -6,6 +6,7 @@
         "src"
     ],
     "exports": {
+        "./media.proto": "./src/media.proto",
         "./user.proto": "./src/user.proto",
         "./generated/*": {
             "types": "./dist/generated/*.d.ts",
