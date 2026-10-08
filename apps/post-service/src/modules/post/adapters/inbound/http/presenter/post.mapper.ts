@@ -1,10 +1,7 @@
 import { Logger } from '@nestjs/common';
 import { Post, Prisma } from '../../../../../../generated/prisma/client';
 
-import type {
-  PostRecord,
-  UserSnapshot,
-} from '../../../../application/ports/inbound/post.repository';
+import type { PostRecord, UserSnapshot } from '../../../../application/result';
 
 export const postFeedSelect = {
   publicId: true, userId: true, content: true, visibility: true, type: true,

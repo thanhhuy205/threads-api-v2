@@ -1,7 +1,7 @@
-// import { PrismaService } from '../../../../prisma/prisma.service';
+// import { PrismaService } from '../../../../../prisma/prisma.service';
 // import { Injectable } from '@nestjs/common';
-// import { Prisma } from '../../../../generated/prisma/client';
-// import type { LikeRepository } from '../../application/ports/inbound/like.repository';
+// import { Prisma } from '../../../../../generated/prisma/client';
+// import type { LikeRepository } from '../../../application/ports/outbound/persistence/like.repository.port';
 
 // type LikeDbClient = Prisma.TransactionClient | PrismaService;
 

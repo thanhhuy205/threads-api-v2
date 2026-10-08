@@ -1,37 +1,12 @@
-import type { PostType, Prisma, VisibilityPost } from '../../../../../generated/prisma/client';
-import type { CreatePostCommand } from '../../commands/create-post.command';
-import type { UpdatePostCommand } from '../../commands/update-post.command';
+import type { PostType } from '@purse/common/enums';
+import type { Prisma } from '../../../../../../generated/prisma/client';
+import type { CreatePostCommand } from '../../../commands/create-post.command';
+import type { UpdatePostCommand } from '../../../commands/update-post.command';
+import type { PostRecord, UserSnapshot } from '../../../result';
 
 export const POST_REPOSITORY = Symbol('POST_REPOSITORY');
 
-export type PostRecord = {
-  id?: number;
-  publicId: string;
-  content: string;
-  contentJson?: Prisma.JsonValue;
-  userId: string;
-  type: PostType;
-  visibility: VisibilityPost;
-  isPinned?: boolean;
-  dateRangeFrom?: Date | null;
-  dateRangeTo?: Date | null;
-  scheduledTimeFrom?: Date | null;
-  scheduledTimeTo?: Date | null;
-  groupTeamId?: number | null;
-  createdAt: string;
-};
-
-export type UserSnapshot = {
-  id: string;
-  bio: string | null;
-  name: string;
-  avatar: string;
-  status: string;
-  username: string;
-  verifiedAt: Date | null;
-};
-
-export interface PostRepository {
+export interface PostRepositoryPort {
   findAll(payload: any): Promise<any[]>;
   count(payload?: { where?: Prisma.PostWhereInput }): Promise<number>;
   countPostBydUserId(userId: string): Promise<number>;

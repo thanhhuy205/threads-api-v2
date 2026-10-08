@@ -1,4 +1,4 @@
-import { PostType } from "../generated/prisma/enums";
+import { PostType } from '@purse/common/enums';
 
 export const creatablePostTypes = [
   PostType.ANNOUNCEMENT,

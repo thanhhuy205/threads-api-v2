@@ -8,14 +8,17 @@ import { RedisVersionService } from '@purse/core/redis-version';
 import { Inject, Injectable } from '@nestjs/common';
 // MAINTENANCE: import { InteractionType, PermissionScope, VisibilityPost } from '../../../../generated/prisma/client';
 // MAINTENANCE: import type { UpdatePostCommand } from '../../application/command/update-post.command';
-// MAINTENANCE: import { POST_INTERACTION_REPOSITORY, type PostInteractionRepository } from '../../application/ports/inbound/post-interaction.repository';
-import { POST_REPOSITORY, type PostRepository } from '../../application/ports/inbound/post.repository';
-import type { PostActionService } from '../../application/use-cases/post-action.service';
+// MAINTENANCE: import { POST_INTERACTION_REPOSITORY, type PostInteractionRepository } from '../../application/ports/outbound/persistence/interaction.repository.port';
+import type { PostActionService } from '../ports/inbound/post-action.service';
+import {
+  POST_REPOSITORY,
+  type PostRepositoryPort,
+} from '../ports/outbound/persistence/post.repository.port';
 
 @Injectable()
 export class PostActionServiceImpl implements PostActionService {
   constructor(
-    @Inject(POST_REPOSITORY) private readonly postRepository: PostRepository,
+    @Inject(POST_REPOSITORY) private readonly postRepository: PostRepositoryPort,
     // MAINTENANCE: @Inject(POST_INTERACTION_REPOSITORY) private readonly postInteractionRepository: PostInteractionRepository,
     private readonly redisVersionService: RedisVersionService,
     private readonly redisService: RedisService,

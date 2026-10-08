@@ -27,20 +27,20 @@ import {
 import type { CursorPagination as CursorPaginationParams } from '@purse/common/dto';
 import { NotFoundException } from '@purse/common/errors';
 import {
+  POST_SEARCH_SERVICE,
+  type PostSearchService,
+} from '../../../application/ports/inbound/post-search.service';
+import {
+  POST_FEED_SERVICE,
+  type PostFeedService,
+} from '../../../application/ports/inbound/post-feed.service';
+import { POST_SERVICE, type PostService } from '../../../application/ports/inbound/post.service';
+import {
   CreatePostDto,
   NewsFeedQueryDto,
   PublicIdParamsDto,
   SearchPostQueryDto,
 } from './dto/request';
-import {
-  POST_FEED_SERVICE,
-  type PostFeedService,
-} from '../../../application/use-cases/post-feed.service';
-import {
-  POST_SEARCH_SERVICE,
-  type PostSearchService,
-} from '../../../application/use-cases/post-search.service';
-import { POST_SERVICE, type PostService } from '../../../application/use-cases/post.service';
 
 type AuthenticatedRequest = {
   headers: { authorization?: string | string[] | undefined };
@@ -56,7 +56,7 @@ export class PostController {
     private readonly postFeedService: PostFeedService,
     @Inject(POST_SEARCH_SERVICE)
     private readonly postSearchService: PostSearchService,
-  ) {}
+  ) { }
 
   @Get('news-feed')
   @IsPublic()

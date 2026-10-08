@@ -1,4 +1,5 @@
-import { PostType, Prisma, VisibilityPost } from '../generated/prisma/client';
+import { PostType, VisibilityPost } from '@purse/common/enums';
+import { Prisma } from '../generated/prisma/client';
 
 type PostCursorInfo = {
     id: number;

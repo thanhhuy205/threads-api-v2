@@ -6,14 +6,17 @@ import {
   paginatePosts,
   postListCacheTtlSeconds
 } from '../../../../helper';
-import type { GetPostWithUserCommand } from '../../application/commands/get-post-with-user.command';
-import { POST_REPOSITORY, type PostRepository } from '../../application/ports/inbound/post.repository';
-import type { PostUserService } from '../../application/use-cases/post-user.service';
+import type { PostUserService } from '../ports/inbound/post-user.service';
+import type { GetPostWithUserCommand } from '../commands/get-post-with-user.command';
+import {
+  POST_REPOSITORY,
+  type PostRepositoryPort,
+} from '../ports/outbound/persistence/post.repository.port';
 
 @Injectable()
 export class PostUserServiceImpl implements PostUserService {
   constructor(
-    @Inject(POST_REPOSITORY) private readonly postRepository: PostRepository,
+    @Inject(POST_REPOSITORY) private readonly postRepository: PostRepositoryPort,
     private readonly redisVersionService: RedisVersionService,
     private readonly redisService: RedisService,
   ) { }

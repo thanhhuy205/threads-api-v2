@@ -1,31 +1,24 @@
 import { Injectable, Logger } from '@nestjs/common';
-import {
-  PostType,
-  Prisma,
-  ReplyPermission,
-  VisibilityPost
-} from '../../../../generated/prisma/client';
-import { toTime } from '../../../../helper/conver-date.helper';
-import { PrismaService } from '../../../../prisma/prisma.service';
-import { postFeedSelect, postSelectRepository } from '../../adapters/inbound/http/presenter/post.mapper';
+import { PostType, ReplyPermission, VisibilityPost } from '@purse/common/enums';
+import { primaryPostTypes } from '../../../../../constants/post-type';
+import { Prisma } from '../../../../../generated/prisma/client';
+import { toTime } from '../../../../../helper/conver-date.helper';
+import { PrismaService } from '../../../../../prisma/prisma.service';
 import type {
   CreateQuoteData,
   CreateReplyData,
   CreateRepostData,
   CreateRepostPayload,
   RepositoryCreatePostPayload,
-} from '../../application/commands/create-post.command';
-import type { UpdatePostCommand } from '../../application/commands/update-post.command';
-import type {
-  PostRecord,
-  PostRepository,
-  UserSnapshot,
-} from '../../application/ports/inbound/post.repository';
-import { primaryPostTypes } from '../../../../constants/post-type';
+} from '../../../application/commands/create-post.command';
+import type { UpdatePostCommand } from '../../../application/commands/update-post.command';
+import type { PostRepositoryPort } from '../../../application/ports/outbound/persistence/post.repository.port';
+import type { PostRecord, UserSnapshot } from '../../../application/result';
+import { postFeedSelect, postSelectRepository } from '../../inbound/http/presenter/post.mapper';
 
 @Injectable()
-export class PostRepositoryImpl implements PostRepository {
-  private readonly logger = new Logger(PostRepositoryImpl.name, { timestamp: true });
+export class PrismaPostRepository implements PostRepositoryPort {
+  private readonly logger = new Logger(PrismaPostRepository.name, { timestamp: true });
 
   constructor(private readonly prisma: PrismaService) { }
   private buildFeedSelect(userId?: string | null): typeof postFeedSelect {
@@ -208,12 +201,6 @@ export class PostRepositoryImpl implements PostRepository {
     });
   }
 
-  private connectMedia(media?: { id: number }[]) {
-    return media?.length
-      ? { connect: media.map((m) => ({ id: m.id })) }
-      : undefined;
-  }
-
   private createPoll(polls?: string[]) {
     const options = polls
       ?.map((poll) => poll.trim())
@@ -252,7 +239,6 @@ export class PostRepositoryImpl implements PostRepository {
       userSnapshot,
       isSurvey: Boolean(payload.isSurvey || payload.polls?.length),
       // MAINTENANCE: poll: this.createPoll(payload.polls),
-      // MAINTENANCE: media: this.connectMedia(payload.media),
     };
   }
   async create(

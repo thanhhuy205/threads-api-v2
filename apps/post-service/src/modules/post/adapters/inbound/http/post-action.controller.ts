@@ -27,12 +27,12 @@ import type { CursorPagination as CursorPaginationParams } from '@purse/common/d
 import {
   POST_ACTION_SERVICE,
   type PostActionService,
-} from '../../../application/use-cases/post-action.service';
+} from '../../../application/ports/inbound/post-action.service';
 import {
   POST_FEED_SERVICE,
   type PostFeedService,
-} from '../../../application/use-cases/post-feed.service';
-import { POST_SERVICE, type PostService } from '../../../application/use-cases/post.service';
+} from '../../../application/ports/inbound/post-feed.service';
+import { POST_SERVICE, type PostService } from '../../../application/ports/inbound/post.service';
 import {
   CreatePostDto,
   CursorPaginationQueryDto,
@@ -47,7 +47,7 @@ export class PostActionController {
     @Inject(POST_ACTION_SERVICE)
     private readonly postActionService: PostActionService,
     @Inject(POST_FEED_SERVICE) private readonly postFeedService: PostFeedService,
-  ) {}
+  ) { }
 
   @Get(':publicId/replies')
   @IsPublic()

@@ -1,12 +1,15 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { PostMapper } from '../../adapters/inbound/http/presenter/post.mapper';
-import { POST_REPOSITORY, type PostRepository } from '../../application/ports/inbound/post.repository';
-import type { PostSearchService } from '../../application/use-cases/post-search.service';
+import type { PostSearchService } from '../ports/inbound/post-search.service';
+import {
+  POST_REPOSITORY,
+  type PostRepositoryPort,
+} from '../ports/outbound/persistence/post.repository.port';
 
 @Injectable()
 export class PostSearchServiceImpl implements PostSearchService {
   constructor(
-    @Inject(POST_REPOSITORY) private readonly postRepository: PostRepository,
+    @Inject(POST_REPOSITORY) private readonly postRepository: PostRepositoryPort,
   ) { }
   async search(query: {
     q: string;

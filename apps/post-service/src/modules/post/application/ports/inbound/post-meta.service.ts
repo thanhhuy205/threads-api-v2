@@ -1,4 +1,4 @@
-import type { Prisma } from '../../../../generated/prisma/client';
+import type { Prisma } from '../../../../../generated/prisma/client';
 import type { MentionNotificationPayload } from './post-mention.service';
 export const POST_META_SERVICE = Symbol('POST_META_SERVICE');
 export type CreatePostMeta = { topics?: string[]; mentionIds: string[] };

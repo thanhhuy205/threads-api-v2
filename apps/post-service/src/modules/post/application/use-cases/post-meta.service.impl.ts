@@ -3,8 +3,8 @@ import { redisKey } from '@purse/common/constants';
 import { RedisVersionService } from '@purse/core/redis-version';
 import { Prisma } from '../../../../generated/prisma/client';
 import { normalizeTopic } from "../../../../helper/nomalize.hepler";
-import { TOPICS_POST_REPOSITORY, type TopicsPostRepository } from '../../application/ports/inbound/topics-post.repository';
-import type { CreatePostMeta, PostMetaService } from '../../application/use-cases/post-meta.service';
+import type { CreatePostMeta, PostMetaService } from '../ports/inbound/post-meta.service';
+import { TOPICS_POST_REPOSITORY, type TopicsPostRepository } from '../ports/outbound/persistence/topic.repository.port';
 
 @Injectable()
 export class PostMetaServiceImpl implements PostMetaService {

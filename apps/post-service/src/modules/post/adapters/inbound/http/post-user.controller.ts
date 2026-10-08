@@ -23,11 +23,11 @@ import { USER_READER, type UserReader } from '../../../application/ports/outboun
 import {
   POST_FEED_SERVICE,
   type PostFeedService,
-} from '../../../application/use-cases/post-feed.service';
+} from '../../../application/ports/inbound/post-feed.service';
 import {
   POST_USER_SERVICE,
   type PostUserService,
-} from '../../../application/use-cases/post-user.service';
+} from '../../../application/ports/inbound/post-user.service';
 
 type AuthenticatedRequest = {
   headers: { authorization?: string | string[] | undefined };

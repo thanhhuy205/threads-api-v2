@@ -1,4 +1,4 @@
-import type { Prisma } from '../../../../../generated/prisma/client';
+import type { Prisma } from '../../../../../../generated/prisma/client';
 
 export const TOPICS_POST_REPOSITORY = Symbol('TOPICS_POST_REPOSITORY');
 

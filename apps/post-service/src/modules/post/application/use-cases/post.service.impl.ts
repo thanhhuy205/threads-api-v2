@@ -11,12 +11,19 @@ import { Inject, Injectable, Logger } from "@nestjs/common";
 // MAINTENANCE: import { dispatchReplyNotification } from '@notification/events/notification.dispatcher';
 // MAINTENANCE: import { PermissionScope, VisibilityPost } from '../../../../generated/prisma/client';
 import { PostMapper } from "../../adapters/inbound/http/presenter/post.mapper";
-import type { CreatePostCommand } from '../../application/commands/create-post.command';
-import { POST_REPOSITORY, type PostRepository } from '../../application/ports/inbound/post.repository';
+import type { CreatePostCommand } from '../commands/create-post.command';
+import {
+  MEDIA_PORT,
+  type MediaPort,
+} from '../ports/outbound/media.ports';
+import {
+  POST_REPOSITORY,
+  type PostRepositoryPort,
+} from '../ports/outbound/persistence/post.repository.port';
 // MAINTENANCE: import { POST_MENTION_SERVICE, type PostMentionService } from '../post-mention.service';
 // MAINTENANCE: import { POST_META_SERVICE, type PostMetaService } from '../post-meta.service';
-import { USER_READER, UserReader } from '../../application/ports/outbound/user-reader.port';
-import type { PostService } from '../../application/use-cases/post.service';
+import type { PostService } from '../ports/inbound/post.service';
+import { USER_READER, UserReader } from '../ports/outbound/user-reader.port';
 
 @Injectable()
 export class PostServiceImpl implements PostService {
@@ -25,7 +32,8 @@ export class PostServiceImpl implements PostService {
   constructor(
     private readonly transactionService: TransactionService,
     @Inject(USER_READER) private readonly userReader: UserReader,
-    @Inject(POST_REPOSITORY) private readonly postRepository: PostRepository,
+    @Inject(POST_REPOSITORY) private readonly postRepository: PostRepositoryPort,
+    @Inject(MEDIA_PORT) private readonly mediaPort: MediaPort,
     // MAINTENANCE: @Inject(POST_MENTION_SERVICE) private readonly postMentionService: PostMentionService,
     // MAINTENANCE: @Inject(POST_META_SERVICE) private readonly postMetaService: PostMetaService,
     // MAINTENANCE: @Inject(ABILITY_SERVICE) private readonly abilityService: AbilityService,
@@ -39,6 +47,7 @@ export class PostServiceImpl implements PostService {
     const post = await this.transactionService.doInTransaction((tx) =>
       this.postRepository.create(payload, snapshot, tx),
     );
+    await this.connectMedia(post.id, payload.media);
     this.logger.log(`Post created: ${post.publicId}`);
     return post;
 
@@ -61,6 +70,7 @@ export class PostServiceImpl implements PostService {
       return created;
     });
 
+    await this.connectMedia(post.id, payload.media);
     await this.finalizeCreation(post, payload, snapshot, mentionIds, post.publicId, payload.userId);
     return post;
     */
@@ -136,6 +146,7 @@ export class PostServiceImpl implements PostService {
         tx,
       );
     });
+    await this.connectMedia(post.id, payload.media);
 
     /* MAINTENANCE: topics, mentions and reply notifications.
     await this.finalizeCreation(
@@ -150,6 +161,21 @@ export class PostServiceImpl implements PostService {
     */
     this.logger.log(`Reply created: ${post.publicId}`);
     return post;
+  }
+
+  private async connectMedia(
+    postId: number | undefined,
+    media?: { id: number }[],
+  ): Promise<void> {
+    if (!media?.length) return;
+    if (postId === undefined) {
+      throw new Error('Cannot connect media before the post has been created');
+    }
+
+    await this.mediaPort.connectMedia({
+      postId,
+      mediaIds: [...new Set(media.map(({ id }) => id))],
+    });
   }
 
   /* MAINTENANCE: repost and quote creation.
@@ -197,6 +223,7 @@ export class PostServiceImpl implements PostService {
       });
       return created;
     });
+    await this.connectMedia(post.id, payload.media);
     await this.finalizeCreation(
       post,
       payload,

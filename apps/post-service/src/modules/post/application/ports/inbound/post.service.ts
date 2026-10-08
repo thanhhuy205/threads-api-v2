@@ -1,4 +1,4 @@
-import type { CreatePostCommand } from '../commands/create-post.command';
+import type { CreatePostCommand } from '../../commands/create-post.command';
 export const POST_SERVICE = Symbol('POST_SERVICE');
 export interface PostService {
   create(payload: CreatePostCommand): Promise<any>;

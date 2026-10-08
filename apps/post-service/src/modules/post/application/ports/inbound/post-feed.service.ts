@@ -1,6 +1,6 @@
-import type { GetPostWithPublicIdCommand } from '../commands/get-post-with-public-id.command';
-import type { GetPostWithUserCommand } from '../commands/get-post-with-user.command';
-import type { NewsFeedCommand } from '../commands/news-feed.command';
+import type { GetPostWithPublicIdCommand } from '../../commands/get-post-with-public-id.command';
+import type { GetPostWithUserCommand } from '../../commands/get-post-with-user.command';
+import type { NewsFeedCommand } from '../../commands/news-feed.command';
 
 export const POST_FEED_SERVICE = Symbol('POST_FEED_SERVICE');
 export interface PostFeedService {

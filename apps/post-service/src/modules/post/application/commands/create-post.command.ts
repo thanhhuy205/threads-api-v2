@@ -1,5 +1,5 @@
-import type { PostType, VisibilityPost } from '../../../../generated/prisma/client';
-import type { UserSnapshot } from '../ports/inbound/post.repository';
+import type { PostType, VisibilityPost } from '@purse/common/enums';
+import type { UserSnapshot } from '../result';
 
 export type PostMentionCommand = {
   userId: string;

@@ -10,18 +10,21 @@ import {
   postListCacheTtlSeconds,
 } from '../../../../helper';
 import { PostMapper } from '../../adapters/inbound/http/presenter/post.mapper';
-import type { GetPostWithPublicIdCommand } from '../../application/commands/get-post-with-public-id.command';
-import type { GetPostWithUserCommand } from '../../application/commands/get-post-with-user.command';
-import type { NewsFeedCommand } from '../../application/commands/news-feed.command';
-import { POST_REPOSITORY, type PostRepository } from '../../application/ports/inbound/post.repository';
-import type { PostFeedService } from '../../application/use-cases/post-feed.service';
+import type { PostFeedService } from '../ports/inbound/post-feed.service';
+import type { GetPostWithPublicIdCommand } from '../commands/get-post-with-public-id.command';
+import type { GetPostWithUserCommand } from '../commands/get-post-with-user.command';
+import type { NewsFeedCommand } from '../commands/news-feed.command';
+import {
+  POST_REPOSITORY,
+  type PostRepositoryPort,
+} from '../ports/outbound/persistence/post.repository.port';
 
 @Injectable()
 export class PostFeedServiceImpl implements PostFeedService {
   private readonly logger = new Logger(PostFeedServiceImpl.name, { timestamp: true });
 
   constructor(
-    @Inject(POST_REPOSITORY) private readonly postRepository: PostRepository,
+    @Inject(POST_REPOSITORY) private readonly postRepository: PostRepositoryPort,
     private readonly redisVersionService: RedisVersionService,
     private readonly redisService: RedisService,
   ) { }

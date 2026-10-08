@@ -3,7 +3,7 @@ import { buildCursorPagination, normalizeCursorPagination } from '@purse/common/
 import { RedisService } from '@purse/core/redis';
 import { Prisma } from '../generated/prisma/client';
 import { PostMapper } from '../modules/post/adapters/inbound/http/presenter/post.mapper';
-import type { PostRepository } from '../modules/post/application/ports/inbound/post.repository';
+import type { PostRepositoryPort } from '../modules/post/application/ports/outbound/persistence/post.repository.port';
 
 export const postListCacheTtlSeconds = 60;
 
@@ -39,7 +39,7 @@ export async function paginatePosts({
   take: number;
   where: Prisma.PostWhereInput;
   userId?: string | null;
-  postRepository: PostRepository;
+  postRepository: PostRepositoryPort;
   redisService: RedisService;
 }) {
   const { after: currentAfter, take: currentLimit } = normalizeCursorPagination({ after, take });

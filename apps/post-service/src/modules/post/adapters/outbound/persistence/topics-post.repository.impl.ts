@@ -1,7 +1,7 @@
-// import { PrismaService } from '../../../../prisma/prisma.service';
+// import { PrismaService } from '../../../../../prisma/prisma.service';
 // import { Injectable } from '@nestjs/common';
-// import { Prisma } from '../../../../generated/prisma/client';
-// import type { CreateTopicsPostInput, TopicsPostRepository } from '../../application/ports/inbound/topics-post.repository';
+// import { Prisma } from '../../../../../generated/prisma/client';
+// import type { CreateTopicsPostInput, TopicsPostRepository } from '../../../application/ports/outbound/persistence/topic.repository.port';
 
 // @Injectable()
 // export class TopicsPostRepositoryImpl implements TopicsPostRepository {

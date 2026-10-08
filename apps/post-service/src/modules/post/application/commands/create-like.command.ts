@@ -1,5 +1,3 @@
-export type CreateLikeCommand = {
-  publicId: string;
-  userId: string;
-  isLiked: boolean;
-};
+export type LikeCommand = { userId: string; postId: string };
+
+export type CreateLikeCommand = LikeCommand & { isLike: boolean };
