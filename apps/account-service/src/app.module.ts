@@ -21,9 +21,9 @@ import { PrismaModule } from './prisma/prisma.module';
       validate,
       load: [configurationFactory, keycloakApiConfiguration],
       envFilePath: [
-        process.cwd() + '/.env',
         '.env',
-      ]
+        '../../../.env',
+      ],
     }),
     BullModule.forRootAsync({
       imports: [ConfigModule],
