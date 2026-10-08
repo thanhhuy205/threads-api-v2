@@ -8,11 +8,13 @@ export enum UserRoleType {
   WORKSPACE_OWNER = 'WORKSPACE_OWNER',
 }
 
-export enum PostType {
-  POST = 'POST',
-  ANNOUNCEMENT = 'ANNOUNCEMENT',
-  DECIDE = 'DECIDE',
-}
+export const PostType = {
+  POST: 'POST',
+  ANNOUNCEMENT: 'ANNOUNCEMENT',
+  DECIDE: 'DECIDE',
+} as const;
+
+export type PostType = (typeof PostType)[keyof typeof PostType];
 
 export enum QueueStatus {
   PENDING = 'PENDING',
@@ -34,12 +36,14 @@ export enum JobStatus {
   FAILED = 'FAILED',
 }
 
-export enum ReplyPermission {
-  EVERYONE = 'EVERYONE',
-  FOLLOWERS = 'FOLLOWERS',
-  FOLLOWING = 'FOLLOWING',
-  MENTIONED = 'MENTIONED',
-}
+export const ReplyPermission = {
+  EVERYONE: 'EVERYONE',
+  FOLLOWERS: 'FOLLOWERS',
+  FOLLOWING: 'FOLLOWING',
+  MENTIONED: 'MENTIONED',
+} as const;
+
+export type ReplyPermission = (typeof ReplyPermission)[keyof typeof ReplyPermission];
 
 export enum UserStatus {
   ACTIVE = 'ACTIVE',
@@ -48,12 +52,14 @@ export enum UserStatus {
   DEACTIVATED = 'DEACTIVATED',
 }
 
-export enum VisibilityPost {
-  WORKSPACE = 'WORKSPACE',
-  GROUP = 'GROUP',
-  CUSTOM = 'CUSTOM',
-  ONLY_ME = 'ONLY_ME',
-}
+export const VisibilityPost = {
+  WORKSPACE: 'WORKSPACE',
+  GROUP: 'GROUP',
+  CUSTOM: 'CUSTOM',
+  ONLY_ME: 'ONLY_ME',
+} as const;
+
+export type VisibilityPost = (typeof VisibilityPost)[keyof typeof VisibilityPost];
 
 export enum PermissionScope {
   WORKSPACE = 'WORKSPACE',
@@ -95,10 +101,12 @@ export enum ActionType {
   GENERATE_IMAGE = 'GENERATE_IMAGE',
 }
 
-export enum InteractionType {
-  HIDE = 'HIDE',
-  SAVE = 'SAVE',
-}
+export const InteractionType = {
+  HIDE: 'HIDE',
+  SAVE: 'SAVE',
+} as const;
+
+export type InteractionType = (typeof InteractionType)[keyof typeof InteractionType];
 
 export enum PostMediaType {
   IMAGE = 'IMAGE',
