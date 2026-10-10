@@ -1,0 +1,15 @@
+services:
+  apisix:
+    image: apache/apisix:3.19.0-debian
+    container_name: apisix
+    restart: unless-stopped
+    environment:
+      APISIX_STAND_ALONE: "true"
+    ports:
+      - "9080:9080"
+    volumes:
+      - ./apisix/config.yaml:/usr/local/apisix/conf/config.yaml:ro
+      - ./apisix/apisix.yaml:/usr/local/apisix/conf/apisix.yaml:ro
+
+    networks:
+      - purse-network

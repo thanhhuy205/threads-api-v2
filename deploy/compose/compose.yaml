@@ -2,8 +2,7 @@ name: purse-board
 
 include:
   - ./infrastructure/keycloak/compose.yaml
-  - ./infrastructure/kong/compose.yaml
-
+  - ./infrastructure/api-gateway/compose.yaml
 networks:
   purse-network:
     name: purse-network
