@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { RedisVersionModule } from '@purse/core/redis-version';
+import { RedisVersionModule } from '@purse/redis/redis-version';
 import { TransactionModule } from '../../transaction/transaction.module';
 import { PostActionController } from './adapters/inbound/http/post-action.controller';
 import { PostUserController } from './adapters/inbound/http/post-user.controller';

@@ -1,0 +1,29 @@
+{
+  "name": "@purse/auth",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@nestjs/passport": "^11.0.5",
+    "@purse/common": "workspace:*",
+    "jose": "^6.2.12",
+    "passport-custom": "^1.2.1"
+  },
+  "peerDependencies": {
+    "@nestjs/common": "^11.1.28",
+    "@nestjs/core": "^11.1.28"
+  },
+  "devDependencies": {
+    "@nestjs/common": "^11.1.28",
+    "@nestjs/core": "^11.1.28"
+  }
+}

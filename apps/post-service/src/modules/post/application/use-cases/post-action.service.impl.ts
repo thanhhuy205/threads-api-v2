@@ -1,8 +1,8 @@
 import { QUEUE_NAME, redisKey } from '@purse/common/constants';
 import { NotFoundException } from '@purse/common/errors';
 // MAINTENANCE: import { BadRequestException, ForbiddenException } from '@purse/common/errors';
-import { RedisService } from '@purse/core/redis';
-import { RedisVersionService } from '@purse/core/redis-version';
+import { RedisService } from '@purse/redis';
+import { RedisVersionService } from '@purse/redis/redis-version';
 // MAINTENANCE: import { ABILITY_SERVICE, type AbilityService } from '@workspace-service/modules/ability/ability.service';
 // MAINTENANCE: import { PERMISSIONS } from '@purse/common/constants';
 import { Inject, Injectable } from '@nestjs/common';

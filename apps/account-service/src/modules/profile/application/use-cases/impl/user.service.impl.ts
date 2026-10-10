@@ -1,6 +1,6 @@
 import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { redisKey } from '@purse/common/constants';
-import { RedisService } from '@purse/core/redis';
+import { RedisService } from '@purse/redis';
 import { Prisma } from '../../../../../generated/prisma/client';
 import type {
   MeCommand,

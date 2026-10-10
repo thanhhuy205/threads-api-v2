@@ -6,11 +6,6 @@
     "build": "tsc -p tsconfig.json"
   },
   "exports": {
-    "./auth": {
-      "types": "./dist/auth/index.d.ts",
-      "import": "./dist/auth/index.js",
-      "require": "./dist/auth/index.js"
-    },
     "./microservice": {
       "types": "./dist/microservice/index.d.ts",
       "import": "./dist/microservice/index.js",
@@ -25,29 +20,14 @@
       "types": "./dist/queues/index.d.ts",
       "import": "./dist/queues/index.js",
       "require": "./dist/queues/index.js"
-    },
-    "./redis": {
-      "types": "./dist/redis/index.d.ts",
-      "import": "./dist/redis/index.js",
-      "require": "./dist/redis/index.js"
-    },
-    "./redis-version": {
-      "types": "./dist/redis-version/index.d.ts",
-      "import": "./dist/redis-version/index.js",
-      "require": "./dist/redis-version/index.js"
     }
   },
   "dependencies": {
-    "@nestjs/config": "^4.0.4",
-    "@nestjs/passport": "^11.0.5",
     "@openrouter/sdk": "^0.12.79",
     "@purse/common": "workspace:*",
     "bullmq": "^5.81.3",
     "groq-sdk": "^1.5.0",
-    "jose": "^6.2.12",
-    "passport-custom": "^1.2.1",
-    "pusher": "^5.3.4",
-    "redis": "^5.12.1"
+    "pusher": "^5.3.4"
   },
   "peerDependencies": {
     "@nestjs/common": "^11.1.28",

@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { redisKey } from '@purse/common/constants';
-import { RedisVersionService } from '@purse/core/redis-version';
+import { RedisVersionService } from '@purse/redis/redis-version';
 import { Prisma } from '../../../../generated/prisma/client';
 import { normalizeTopic } from "../../../../helper/nomalize.hepler";
 import type { CreatePostMeta, PostMetaService } from '../ports/inbound/post-meta.service';

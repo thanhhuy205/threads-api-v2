@@ -1,6 +1,6 @@
 import { redisKey } from '@purse/common/constants';
 import { ConflictException } from '@purse/common/errors';
-import { RedisService } from '@purse/core/redis';
+import { RedisService } from '@purse/redis';
 import { Inject, Injectable } from '@nestjs/common';
 import { TransactionService } from '../../../../transaction/transaction.service';
 import { VOTE_REPOSITORY, type VoteRepository } from "../../repository/vote.repository";

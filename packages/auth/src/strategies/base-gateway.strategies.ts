@@ -12,18 +12,13 @@ export abstract class BaseGatewayAuthStrategy extends PassportStrategy(
   'gateway-auth',
 ) {
   async validate(req: HttpRequest): Promise<UserRequestPayload> {
-    const authHeader = req.headers['authorization'] as string;
+    const authHeader = req.headers.authorization as string;
     if (!authHeader) throw new UnauthorizedException('Unauthorized');
 
     const accessToken = authHeader.split(' ')[1];
     const authUser = await getPayloadJwtVerify(accessToken);
 
     if (!authUser.sub) throw new UnauthorizedException('Unauthorized');
-
-    // // Check valid token in Redis
-    // const userTokenKey = this.redisService.getUserTokenKey(authUser.id, authUser.jti);
-    // const isTokenValid = await this.redisService.getValue<string>(userTokenKey);
-    // if (!isTokenValid) throw new UnauthorizedException('Unauthorized');
 
     return this.lookupAndValidateUser(authUser);
   }

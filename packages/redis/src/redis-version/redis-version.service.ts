@@ -1,9 +1,9 @@
-import { RedisService } from '../redis/redis.service';
 import { Injectable } from '@nestjs/common';
+import { RedisService } from '../redis.service';
 
 @Injectable()
 export class RedisVersionService {
-  constructor(private readonly redisService: RedisService) { }
+  constructor(private readonly redisService: RedisService) {}
 
   private getCacheName(namespace: string) {
     return `${namespace}:version`;

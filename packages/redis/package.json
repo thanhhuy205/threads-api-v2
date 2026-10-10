@@ -1,0 +1,32 @@
+{
+  "name": "@purse/redis",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    },
+    "./redis-version": {
+      "types": "./dist/redis-version/index.d.ts",
+      "import": "./dist/redis-version/index.js",
+      "require": "./dist/redis-version/index.js"
+    }
+  },
+  "dependencies": {
+    "@nestjs/config": "^4.0.4",
+    "redis": "^5.12.1"
+  },
+  "peerDependencies": {
+    "@nestjs/common": "^11.1.28",
+    "@nestjs/core": "^11.1.28"
+  },
+  "devDependencies": {
+    "@nestjs/common": "^11.1.28",
+    "@nestjs/core": "^11.1.28"
+  }
+}

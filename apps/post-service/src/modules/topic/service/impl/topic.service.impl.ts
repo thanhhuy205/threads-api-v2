@@ -1,5 +1,5 @@
 import { redisKey } from '@purse/common/constants';
-import { RedisService } from '@purse/core/redis';
+import { RedisService } from '@purse/redis';
 import { Inject, Injectable } from '@nestjs/common';
 import { TOPIC_REPOSITORY, type TopicRepository } from "../../repository/topic.repository";
 import type { TopicService } from '../topic.service';

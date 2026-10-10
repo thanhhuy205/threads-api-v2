@@ -1,6 +1,6 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { RedisService } from '@purse/core/redis';
-import { RedisVersionService } from '@purse/core/redis-version';
+import { RedisService } from '@purse/redis';
+import { RedisVersionService } from '@purse/redis/redis-version';
 import {
   buildNewFeedWhere,
   buildPostListNamespace,

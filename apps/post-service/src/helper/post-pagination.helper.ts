@@ -1,6 +1,6 @@
 import { redisKey } from '@purse/common/constants';
 import { buildCursorPagination, normalizeCursorPagination } from '@purse/common/helpers';
-import { RedisService } from '@purse/core/redis';
+import { RedisService } from '@purse/redis';
 import { Prisma } from '../generated/prisma/client';
 import { PostMapper } from '../modules/post/adapters/inbound/http/presenter/post.mapper';
 import type { PostRepositoryPort } from '../modules/post/application/ports/outbound/persistence/post.repository.port';

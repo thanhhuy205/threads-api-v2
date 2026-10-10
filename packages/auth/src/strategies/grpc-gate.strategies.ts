@@ -10,11 +10,7 @@ export class GrpcGatewayAuthStrategy extends BaseGatewayAuthStrategy {
   ): Promise<UserRequestPayload> {
     const email = authUser.email;
 
-    if (
-      !authUser.sub ||
-      typeof email !== 'string' ||
-      !authUser.jti
-    ) {
+    if (!authUser.sub || typeof email !== 'string' || !authUser.jti) {
       throw new UnauthorizedException('Unauthorized');
     }
 

@@ -66,18 +66,24 @@ importers:
       '@prisma/client':
         specifier: 7.8.0
         version: 7.8.0(prisma@7.8.0(@types/react-dom@19.3.0(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@5.9.3))(typescript@5.9.3)
+      '@purse/auth':
+        specifier: workspace:*
+        version: file:packages/auth(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/core@11.1.28)(@nestjs/microservices@11.1.28)(@nestjs/platform-express@11.1.28)(passport@0.7.0)(reflect-metadata@0.2.2)(supports-color@7.2.0)
       '@purse/common':
         specifier: workspace:*
         version: file:packages/common(@nestjs/microservices@11.1.28)(@nestjs/platform-express@11.1.28)(reflect-metadata@0.2.2)(supports-color@7.2.0)
       '@purse/core':
         specifier: workspace:*
-        version: file:packages/core(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/core@11.1.28)(@nestjs/microservices@11.1.28)(@nestjs/platform-express@11.1.28)(@opentelemetry/api@1.9.1)(passport@0.7.0)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0)
+        version: file:packages/core(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/core@11.1.28)(@nestjs/microservices@11.1.28)(@nestjs/platform-express@11.1.28)(redis@5.12.1(@opentelemetry/api@1.9.1))(reflect-metadata@0.2.2)(supports-color@7.2.0)
       '@purse/observability':
         specifier: workspace:*
         version: link:../../packages/observability
       '@purse/proto':
         specifier: workspace:*
         version: link:../../packages/proto
+      '@purse/redis':
+        specifier: workspace:*
+        version: file:packages/redis(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/core@11.1.28)(@opentelemetry/api@1.9.1)(rxjs@7.8.2)
       '@types/express-request-id':
         specifier: ^3.0.2
         version: 3.0.2
@@ -266,18 +272,24 @@ importers:
       '@prisma/client':
         specifier: 7.8.0
         version: 7.8.0(prisma@7.8.0(@types/react-dom@19.3.0(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@5.9.3))(typescript@5.9.3)
+      '@purse/auth':
+        specifier: workspace:*
+        version: file:packages/auth(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/core@11.1.28)(@nestjs/microservices@11.1.28)(@nestjs/platform-express@11.1.28)(passport@0.7.0)(reflect-metadata@0.2.2)(supports-color@7.2.0)
       '@purse/common':
         specifier: workspace:*
         version: file:packages/common(@nestjs/microservices@11.1.28)(@nestjs/platform-express@11.1.28)(reflect-metadata@0.2.2)(supports-color@7.2.0)
       '@purse/core':
         specifier: workspace:*
-        version: file:packages/core(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/core@11.1.28)(@nestjs/microservices@11.1.28)(@nestjs/platform-express@11.1.28)(@opentelemetry/api@1.9.1)(passport@0.7.0)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0)
+        version: file:packages/core(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/core@11.1.28)(@nestjs/microservices@11.1.28)(@nestjs/platform-express@11.1.28)(redis@5.12.1(@opentelemetry/api@1.9.1))(reflect-metadata@0.2.2)(supports-color@7.2.0)
       '@purse/observability':
         specifier: workspace:*
         version: link:../../packages/observability
       '@purse/proto':
         specifier: workspace:*
         version: link:../../packages/proto
+      '@purse/redis':
+        specifier: workspace:*
+        version: file:packages/redis(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/core@11.1.28)(@opentelemetry/api@1.9.1)(rxjs@7.8.2)
       bullmq:
         specifier: ^5.81.3
         version: 5.81.3(redis@5.12.1(@opentelemetry/api@1.9.1))(supports-color@7.2.0)
@@ -777,6 +789,28 @@ importers:
         specifier: ^5.8.0
         version: 5.9.3
 
+  packages/auth:
+    dependencies:
+      '@nestjs/passport':
+        specifier: ^11.0.5
+        version: 11.0.5(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(passport@0.7.0)
+      '@purse/common':
+        specifier: workspace:*
+        version: link:../common
+      jose:
+        specifier: ^6.2.12
+        version: 6.2.12
+      passport-custom:
+        specifier: ^1.2.1
+        version: 1.2.1
+    devDependencies:
+      '@nestjs/common':
+        specifier: ^11.1.28
+        version: 11.1.28(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0)
+      '@nestjs/core':
+        specifier: ^11.1.28
+        version: 11.1.28(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/microservices@11.2.3)(@nestjs/platform-express@11.1.28)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+
   packages/common:
     dependencies:
       '@nestjs/common':
@@ -831,12 +865,6 @@ importers:
 
   packages/core:
     dependencies:
-      '@nestjs/config':
-        specifier: ^4.0.4
-        version: 4.0.4(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(rxjs@7.8.2)
-      '@nestjs/passport':
-        specifier: ^11.0.5
-        version: 11.0.5(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(passport@0.7.0)
       '@openrouter/sdk':
         specifier: ^0.12.79
         version: 0.12.79
@@ -849,18 +877,9 @@ importers:
       groq-sdk:
         specifier: ^1.5.0
         version: 1.5.0
-      jose:
-        specifier: ^6.2.12
-        version: 6.2.12
-      passport-custom:
-        specifier: ^1.2.1
-        version: 1.2.1
       pusher:
         specifier: ^5.3.4
         version: 5.3.4
-      redis:
-        specifier: ^5.12.1
-        version: 5.12.1(@opentelemetry/api@1.9.1)
     devDependencies:
       '@nestjs/common':
         specifier: ^11.1.28
@@ -932,6 +951,22 @@ importers:
       ts-proto:
         specifier: ^2.12.3
         version: 2.12.3
+
+  packages/redis:
+    dependencies:
+      '@nestjs/config':
+        specifier: ^4.0.4
+        version: 4.0.4(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(rxjs@7.8.2)
+      redis:
+        specifier: ^5.12.1
+        version: 5.12.1(@opentelemetry/api@1.9.1)
+    devDependencies:
+      '@nestjs/common':
+        specifier: ^11.1.28
+        version: 11.1.28(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0)
+      '@nestjs/core':
+        specifier: ^11.1.28
+        version: 11.1.28(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/microservices@11.2.3)(@nestjs/platform-express@11.1.28)(reflect-metadata@0.2.2)(rxjs@7.8.2)
 
 packages:
 
@@ -2813,11 +2848,23 @@ packages:
   '@protobufjs/utf8@1.1.2':
     resolution: {integrity: sha512-b1UQwcEZ4yCnMCD8DAL1VlbvBJE9/IX4FTIp7BG1xYpf29SLazLSrqUkj4w7Y5y7cCVP6E5tcqqcI0xemPkHug==}
 
+  '@purse/auth@file:packages/auth':
+    resolution: {directory: packages/auth, type: directory}
+    peerDependencies:
+      '@nestjs/common': ^11.1.28
+      '@nestjs/core': ^11.1.28
+
   '@purse/common@file:packages/common':
     resolution: {directory: packages/common, type: directory}
 
   '@purse/core@file:packages/core':
     resolution: {directory: packages/core, type: directory}
+    peerDependencies:
+      '@nestjs/common': ^11.1.28
+      '@nestjs/core': ^11.1.28
+
+  '@purse/redis@file:packages/redis':
+    resolution: {directory: packages/redis, type: directory}
     peerDependencies:
       '@nestjs/common': ^11.1.28
       '@nestjs/core': ^11.1.28
@@ -9903,6 +9950,23 @@ snapshots:
 
   '@protobufjs/utf8@1.1.2': {}
 
+  '@purse/auth@file:packages/auth(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/core@11.1.28)(@nestjs/microservices@11.1.28)(@nestjs/platform-express@11.1.28)(passport@0.7.0)(reflect-metadata@0.2.2)(supports-color@7.2.0)':
+    dependencies:
+      '@nestjs/common': 11.1.28(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0)
+      '@nestjs/core': 11.1.28(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/microservices@11.1.28)(@nestjs/platform-express@11.1.28)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/passport': 11.0.5(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(passport@0.7.0)
+      '@purse/common': file:packages/common(@nestjs/microservices@11.1.28)(@nestjs/platform-express@11.1.28)(reflect-metadata@0.2.2)(supports-color@7.2.0)
+      jose: 6.2.12
+      passport-custom: 1.2.1
+    transitivePeerDependencies:
+      - '@fastify/static'
+      - '@nestjs/microservices'
+      - '@nestjs/platform-express'
+      - '@nestjs/websockets'
+      - passport
+      - reflect-metadata
+      - supports-color
+
   '@purse/common@file:packages/common(@nestjs/microservices@11.1.28)(@nestjs/platform-express@11.1.28)(reflect-metadata@0.2.2)(supports-color@7.2.0)':
     dependencies:
       '@nestjs/common': 11.1.28(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0)
@@ -9927,32 +9991,35 @@ snapshots:
       - reflect-metadata
       - supports-color
 
-  '@purse/core@file:packages/core(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/core@11.1.28)(@nestjs/microservices@11.1.28)(@nestjs/platform-express@11.1.28)(@opentelemetry/api@1.9.1)(passport@0.7.0)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0)':
+  '@purse/core@file:packages/core(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/core@11.1.28)(@nestjs/microservices@11.1.28)(@nestjs/platform-express@11.1.28)(redis@5.12.1(@opentelemetry/api@1.9.1))(reflect-metadata@0.2.2)(supports-color@7.2.0)':
     dependencies:
       '@nestjs/common': 11.1.28(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0)
-      '@nestjs/config': 4.0.4(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(rxjs@7.8.2)
       '@nestjs/core': 11.1.28(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/microservices@11.1.28)(@nestjs/platform-express@11.1.28)(reflect-metadata@0.2.2)(rxjs@7.8.2)
-      '@nestjs/passport': 11.0.5(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(passport@0.7.0)
       '@openrouter/sdk': 0.12.79
       '@purse/common': file:packages/common(@nestjs/microservices@11.1.28)(@nestjs/platform-express@11.1.28)(reflect-metadata@0.2.2)(supports-color@7.2.0)
       bullmq: 5.81.3(redis@5.12.1(@opentelemetry/api@1.9.1))(supports-color@7.2.0)
       groq-sdk: 1.5.0
-      jose: 6.2.12
-      passport-custom: 1.2.1
       pusher: 5.3.4
-      redis: 5.12.1(@opentelemetry/api@1.9.1)
     transitivePeerDependencies:
       - '@fastify/static'
       - '@nestjs/microservices'
       - '@nestjs/platform-express'
       - '@nestjs/websockets'
+      - encoding
+      - redis
+      - reflect-metadata
+      - supports-color
+
+  '@purse/redis@file:packages/redis(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/core@11.1.28)(@opentelemetry/api@1.9.1)(rxjs@7.8.2)':
+    dependencies:
+      '@nestjs/common': 11.1.28(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0)
+      '@nestjs/config': 4.0.4(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(rxjs@7.8.2)
+      '@nestjs/core': 11.1.28(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/microservices@11.1.28)(@nestjs/platform-express@11.1.28)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      redis: 5.12.1(@opentelemetry/api@1.9.1)
+    transitivePeerDependencies:
       - '@node-rs/xxhash'
       - '@opentelemetry/api'
-      - encoding
-      - passport
-      - reflect-metadata
       - rxjs
-      - supports-color
 
   '@radix-ui/number@1.1.3': {}
 

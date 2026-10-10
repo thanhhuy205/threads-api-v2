@@ -24,12 +24,10 @@ export class AppAuthGuard extends AuthGuard('gateway-auth') {
       context.getClass(),
     ]);
 
-    // Allow public routes
     if (isPublic) {
       return true;
     }
 
-    // Only validate token - no authorization logic
     const isGranted = await super.canActivate(context);
     return Boolean(isGranted);
   }
