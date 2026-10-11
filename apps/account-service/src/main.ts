@@ -23,7 +23,7 @@ async function bootstrap() {
 
   app.useLogger(app.get(PinoNestLogger));
 
-  app.setGlobalPrefix('api/v1');
+  app.setGlobalPrefix('api/v1/auth');
   app.use(helmet());
   app.enableCors({ origin: corsOrigin(), credentials: true });
   app.use(requestId());
@@ -41,6 +41,7 @@ async function bootstrap() {
   //     },
   //   },
   // });
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,

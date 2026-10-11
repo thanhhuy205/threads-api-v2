@@ -1,18 +1,75 @@
+upstreams:
+  - id: account-upstream
+    type: roundrobin
+    nodes:
+      "host.docker.internal:8082": 1
+
+  - id: post-upstream
+    type: roundrobin
+    nodes:
+      "post-service:3002": 1
+
+global_rules:
+  - id: global-request-id
+    plugins:
+      request-id:
+        header_name: X-Request-Id
+        include_in_response: true
+
+plugin_configs:
+  - id: protected-keycloak
+
+    plugins:
+      openid-connect:
+        client_id: apisix-gateway
+        client_secret: "$ENV://KEYCLOAK_CLIENT_SECRET"
+
+        discovery: http://keycloak:8080/realms/apisix-gateway/.well-known/openid-configuration
+
+        bearer_only: true
+        use_jwks: true
+        set_access_token_header: true
+        access_token_in_authorization_header: true
+
+        claim_validator:
+          audience:
+            required: true
+            match_with_client_id: true
+
 routes:
-  - id: auth-route
-    uri: /auth/*
-    name: auth-service-route
-    upstream:
-      type: roundrobin
-      nodes:
-        "auth-service:3001": 1
+  - id: public-health
+    uri: /api/v1/auth/health/ping
+    methods: [GET]
+    upstream_id: account-upstream
+
+  - id: public-auth
+    uris:
+      - /api/v1/auth/login
+      - /api/v1/auth/register
+    methods:
+      - POST
+    upstream_id: account-upstream
+
+    plugins:
+      limit-count:
+        count: 60
+        time_window: 60
+        key_type: var
+        key: remote_addr
+        policy: local
+        rejected_code: 429
+
+      proxy-rewrite:
+        regex_uri: ["^/api/v1/(.*)"]
+
+  - id: protected-auth
+    uri: /api/v1/auth/*
+    upstream_id: account-upstream
+    plugin_config_id: protected-keycloak
 
   - id: account-route
-    uri: /account/*
-    name: account-service-route
-    upstream:
-      type: roundrobin
-      nodes:
-        "account-service:3002": 1
+    uris: [/api/v1/accounts/*]
+    upstream_id: account-upstream
+    plugin_config_id: protected-keycloak
 
 #END

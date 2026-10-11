@@ -1,16 +1,14 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Inject, NotFoundException, Post } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Inject, Post } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { AUTH_MESSAGE, USER_MESSAGE } from '@purse/common/constants';
+import { AUTH_MESSAGE } from '@purse/common/constants';
 import { GetUserId, Message } from '@purse/common/decorators';
-import { UnauthorizedException } from '@purse/common/errors';
 import { USER_SERVICE, type UserService } from '../../../application/use-cases/user.service';
 import { OnboardingDto } from './dto/request/onboarding.request.dto';
 import { UpdateProfileDto } from './dto/request/update-profile.request.dto';
 import {
   CurrentUserProfileResponseDto,
   OnboardingResponseDto,
-  StatusProfileResponseDto,
-  UpdateProfileResponseDto,
+  UpdateProfileResponseDto
 } from './dto/response';
 
 @ApiTags('Profile')
@@ -62,26 +60,7 @@ export class UserController {
     type: CurrentUserProfileResponseDto,
   })
   async me(@GetUserId() userId: string) {
-    const user = await this.userService.me({ identity: userId });
-    if (!user) {
-      throw new UnauthorizedException(AUTH_MESSAGE.TOKEN_INVALID);
-    }
-    return user;
+    return this.userService.me({ identity: userId });;
   }
-  @Get('me/status-profile')
-  @ApiBearerAuth('bearer')
-  @Message('User status profile retrieved successfully')
-  @ApiOperation({ summary: 'Get profile completion status for the current user' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'User status profile retrieved successfully',
-    type: StatusProfileResponseDto,
-  })
-  async getMyStatusProfile(@GetUserId() userId: string) {
-    const statusProfile = await this.userService.getMyStatusProfile(userId);
-    if (!statusProfile) {
-      throw new NotFoundException(USER_MESSAGE.USER_NOT_FOUND);
-    }
-    return statusProfile;
-  }
+
 }
