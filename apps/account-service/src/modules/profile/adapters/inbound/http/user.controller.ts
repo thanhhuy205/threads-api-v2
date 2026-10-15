@@ -1,7 +1,6 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Inject, Post } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse as SwaggerApiResponse, ApiTags } from '@nestjs/swagger';
-import { AUTH_MESSAGE } from '@purse/common/constants';
-import { GetUserId, Message } from '@purse/common/decorators';
+import { ApiBearerAuth, ApiOperation, ApiTags, ApiResponse as SwaggerApiResponse } from '@nestjs/swagger';
+import { GetUserId } from '@purse/common/decorators';
 import { ApiResponse } from '@purse/common/dto';
 import { USER_SERVICE, type UserService } from '../../../application/use-cases/user.service';
 import { OnboardingDto } from './dto/request/onboarding.request.dto';
@@ -19,12 +18,10 @@ export class UserController {
 
   @Post('profile')
   @HttpCode(HttpStatus.OK)
-  @Message(AUTH_MESSAGE.UPDATE_USER_SUCCESS)
   @ApiBearerAuth('bearer')
   @ApiOperation({ summary: 'Update the authenticated user profile' })
   @SwaggerApiResponse({
     status: HttpStatus.OK,
-    description: AUTH_MESSAGE.UPDATE_USER_SUCCESS,
     type: UpdateProfileResponseDto,
   })
   async updateProfile(
@@ -38,12 +35,10 @@ export class UserController {
 
   @Post('onboarding')
   @HttpCode(HttpStatus.OK)
-  @Message(AUTH_MESSAGE.UPDATE_USER_SUCCESS)
   @ApiBearerAuth('bearer')
   @ApiOperation({ summary: 'Complete the authenticated user onboarding' })
   @SwaggerApiResponse({
     status: HttpStatus.OK,
-    description: AUTH_MESSAGE.UPDATE_USER_SUCCESS,
     type: OnboardingResponseDto,
   })
   async onboarding(
@@ -56,12 +51,10 @@ export class UserController {
   }
 
   @Get('me')
-  @Message(AUTH_MESSAGE.GET_ME_SUCCESS)
   @ApiBearerAuth('bearer')
   @ApiOperation({ summary: 'Get the authenticated user' })
   @SwaggerApiResponse({
     status: HttpStatus.OK,
-    description: AUTH_MESSAGE.GET_ME_SUCCESS,
     type: CurrentUserProfileResponseDto,
   })
   async me(@GetUserId() userId: string) {

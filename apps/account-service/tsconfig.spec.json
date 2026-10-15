@@ -1,0 +1,25 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "ES2022",
+    "types": ["jest", "node"],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@purse/common/*": ["../../packages/common/dist/*"],
+      "@purse/common": ["../../packages/common/dist"],
+      "@purse/core/*": ["../../packages/core/dist/*"],
+      "@purse/core": ["../../packages/core/dist"],
+      "@purse/observability/*": ["../../packages/observability/dist/*"],
+      "@purse/observability": ["../../packages/observability/dist"],
+      "@purse/auth/*": ["../../packages/auth/dist/*"],
+      "@purse/auth": ["../../packages/auth/dist"]
+    },
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
+  },
+  "include": ["src/**/*.ts", "test/**/*.ts"]
+}

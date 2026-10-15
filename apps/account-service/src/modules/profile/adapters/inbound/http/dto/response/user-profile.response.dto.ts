@@ -1,79 +1,79 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class UpdateProfileResponseDto {
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   name!: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   bio!: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   labelWebsite!: string | null;
 
-  @ApiPropertyOptional({ nullable: true, format: 'uri' })
+  @ApiPropertyOptional({ type: String, nullable: true, format: 'uri' })
   website!: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   companyName!: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   companySize!: string | null;
 }
 
 export class OnboardingResponseDto {
-  @ApiProperty({ nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   name!: string | null;
 
-  @ApiProperty({ nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   bio!: string | null;
 
-  @ApiProperty({ nullable: true })
+  @ApiProperty({ type: String, nullable: true })
   location!: string | null;
 
-  @ApiPropertyOptional({ nullable: true, format: 'uri' })
+  @ApiPropertyOptional({ type: String, nullable: true, format: 'uri' })
   avatar!: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   companyName!: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   companySize!: string | null;
 }
 
 export class CurrentUserProfileResponseDto {
-  @ApiProperty()
+  @ApiProperty({ type: String })
   id!: string;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   identity!: string;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   name!: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   bio!: string | null;
 
-  @ApiPropertyOptional({ nullable: true, format: 'uri' })
+  @ApiPropertyOptional({ type: String, nullable: true, format: 'uri' })
   avatar!: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   location!: string | null;
 
-  @ApiPropertyOptional({ nullable: true, format: 'uri' })
+  @ApiPropertyOptional({ type: String, nullable: true, format: 'uri' })
   website!: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   labelWebsite!: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   companyName!: string | null;
 
-  @ApiPropertyOptional({ nullable: true })
+  @ApiPropertyOptional({ type: String, nullable: true })
   companySize!: string | null;
 
-  @ApiProperty({ format: 'date-time' })
+  @ApiProperty({ type: Date, format: 'date-time' })
   createdAt!: Date;
 
-  @ApiProperty({ format: 'date-time' })
+  @ApiProperty({ type: Date, format: 'date-time' })
   updatedAt!: Date;
 }

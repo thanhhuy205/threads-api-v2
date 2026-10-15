@@ -1,0 +1,16 @@
+{
+  "name": "@purse/types",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "generate:types:account-service": "openapi-typescript ../../apps/account-service/openapi/openapi.yaml -o src/account-service/api.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "devDependencies": {
+    "openapi-typescript": "^7.13.0"
+  }
+}

@@ -5,4 +5,4 @@ export * from './http-message-operration.decorator';
 export * from './is-public.decorator';
 export * from './message.decorator';
 export * from './pagination.decorator';
-export * from './swagger-response.decorator';
+

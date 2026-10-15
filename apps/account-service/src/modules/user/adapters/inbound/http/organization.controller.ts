@@ -27,7 +27,7 @@ export class OrganizationController {
     const result = await this.keycloakUserAdapter.getOrgs(payload);
     return ApiResponse.ok(result);
   }
-
+  @IsPublic()
   @Get(':orgId/teams')
   @ApiOperation({ summary: 'List users in an organization' })
   @ApiParam({ name: 'orgId', type: String })

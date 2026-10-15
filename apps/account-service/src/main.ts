@@ -2,6 +2,7 @@ import './instrumentation';
 
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { PinoNestLogger } from '@purse/observability/logging';
 import requestId from 'express-request-id';
 import helmet from 'helmet';
@@ -29,6 +30,7 @@ async function bootstrap() {
   app.use(requestId());
   app.useGlobalInterceptors(app.get('TransformInterceptor'));
 
+
   // app.connectMicroservice<MicroserviceOptions>({
   //   transport: Transport.GRPC,
   //   options: {
@@ -49,6 +51,19 @@ async function bootstrap() {
       transform: true,
     }),
   );
+  const config = new DocumentBuilder()
+    .setTitle('Microservices API')
+    .setDescription('Public API documentation')
+    .setVersion('1.0.0')
+    .addBearerAuth()
+    .build();
+
+  const document = () =>
+    SwaggerModule.createDocument(app, config);
+
+  SwaggerModule.setup('api', app, document, {
+    yamlDocumentUrl: '/openapi.yaml',
+  });
   await app.startAllMicroservices();
   await app.listen(APP_CONFIG.ACCOUNT_SERVICE_PORT, APP_CONFIG.ACCOUNT_SERVICE_HOST);
 }

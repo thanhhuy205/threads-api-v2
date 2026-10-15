@@ -1,0 +1,250 @@
+openapi: 3.0.0
+paths:
+  /health/ping:
+    get:
+      operationId: HealthController_ping
+      parameters: []
+      responses:
+        "200":
+          description: ""
+      tags:
+        - Health
+  /users/profile:
+    post:
+      operationId: UserController_updateProfile
+      parameters: []
+      responses:
+        "200":
+          description: Update user success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UpdateProfileResponseDto"
+      security:
+        - bearer: []
+      summary: Update the authenticated user profile
+      tags: &a1
+        - Profile
+  /users/onboarding:
+    post:
+      operationId: UserController_onboarding
+      parameters: []
+      responses:
+        "200":
+          description: Update user success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OnboardingResponseDto"
+      security:
+        - bearer: []
+      summary: Complete the authenticated user onboarding
+      tags: *a1
+  /users/me:
+    get:
+      operationId: UserController_me
+      parameters: []
+      responses:
+        "200":
+          description: Get me success
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CurrentUserProfileResponseDto"
+      security:
+        - bearer: []
+      summary: Get the authenticated user
+      tags: *a1
+  /users/{publicId}:
+    get:
+      operationId: UserController_findByPublicId
+      parameters:
+        - name: publicId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+      security:
+        - bearer: []
+      summary: Get a user by public ID
+      tags:
+        - Users
+  /organizations:
+    get:
+      operationId: OrganizationController_findAll
+      parameters: []
+      responses:
+        "200":
+          description: ""
+      security: &a2
+        - bearer: []
+      summary: List organizations
+      tags: &a3
+        - Organizations
+  /organizations/{orgId}/teams:
+    get:
+      operationId: OrganizationController_findTeams
+      parameters:
+        - name: orgId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+      security: *a2
+      summary: List users in an organization
+      tags: *a3
+  /teams/{orgId}/teams/{teamId}/users:
+    get:
+      operationId: TeamController_findUsers
+      parameters:
+        - name: orgId
+          required: true
+          in: path
+          schema:
+            type: string
+        - name: teamId
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+      security:
+        - bearer: []
+      summary: List users in a team
+      tags:
+        - Teams
+  /billings:
+    get:
+      operationId: BillingController_findAll
+      parameters: []
+      responses:
+        "200":
+          description: ""
+      security: &a4
+        - bearer: []
+      summary: List billing plans
+      tags: &a5
+        - Billing
+    post:
+      operationId: BillingController_create
+      parameters: []
+      responses:
+        "201":
+          description: ""
+      security: *a4
+      summary: Create a billing plan
+      tags: *a5
+info:
+  title: My API
+  description: ""
+  version: 1.0.0
+  contact: {}
+tags: []
+servers: []
+components:
+  securitySchemes:
+    bearer:
+      scheme: bearer
+      bearerFormat: JWT
+      type: http
+  schemas:
+    UpdateProfileResponseDto:
+      type: object
+      properties:
+        name:
+          type: string
+          nullable: true
+        bio:
+          type: string
+          nullable: true
+        labelWebsite:
+          type: string
+          nullable: true
+        website:
+          type: string
+          nullable: true
+          format: uri
+        companyName:
+          type: string
+          nullable: true
+        companySize:
+          type: string
+          nullable: true
+    OnboardingResponseDto:
+      type: object
+      properties:
+        name:
+          type: string
+          nullable: true
+        bio:
+          type: string
+          nullable: true
+        location:
+          type: string
+          nullable: true
+        avatar:
+          type: string
+          nullable: true
+          format: uri
+        companyName:
+          type: string
+          nullable: true
+        companySize:
+          type: string
+          nullable: true
+      required:
+        - name
+        - bio
+        - location
+    CurrentUserProfileResponseDto:
+      type: object
+      properties:
+        id:
+          type: string
+        identity:
+          type: string
+        name:
+          type: string
+          nullable: true
+        bio:
+          type: string
+          nullable: true
+        avatar:
+          type: string
+          nullable: true
+          format: uri
+        location:
+          type: string
+          nullable: true
+        website:
+          type: string
+          nullable: true
+          format: uri
+        labelWebsite:
+          type: string
+          nullable: true
+        companyName:
+          type: string
+          nullable: true
+        companySize:
+          type: string
+          nullable: true
+        createdAt:
+          format: date-time
+          type: string
+        updatedAt:
+          format: date-time
+          type: string
+      required:
+        - id
+        - identity
+        - createdAt
+        - updatedAt

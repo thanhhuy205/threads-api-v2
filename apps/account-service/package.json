@@ -9,7 +9,12 @@
     "prebuild": "prisma generate --config prisma.config.ts",
     "build": "nest build",
     "dev": "nest start --watch",
-    "start": "node --env-file=../../.env --env-file=.env dist/main.js"
+    "start": "node --env-file=../../.env --env-file=.env dist/main.js",
+    "generate:openapi": "tsx scripts/generate-openapi.ts",
+    "test": "jest --config jest.config.json",
+    "test:keycloak": "jest --config jest.config.json test/keycloak",
+    "test:keycloak:spec": "jest --config jest.config.json test/keycloak/spec",
+    "test:keycloak:e2e": "jest --config jest.config.json test/keycloak/e2e"
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.14.4",
@@ -46,11 +51,21 @@
     "rxjs": "^7.8.2"
   },
   "devDependencies": {
+    "@nestjs/testing": "^11.2.7",
     "@types/bcrypt": "^6.0.0",
+    "@types/jest": "^30.0.0",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/ms": "^2.1.0",
+    "@types/nock": "^11.1.0",
     "@types/node": "^22.20.1",
+    "@types/supertest": "^7.2.1",
+    "jest": "^30.5.2",
+    "nock": "^13.5.6",
     "prisma": "7.8.0",
-    "typescript": "^5.8.0"
+    "supertest": "^7.3.1",
+    "ts-jest": "^29.4.14",
+    "tsx": "^4.23.13",
+    "typescript": "^5.8.0",
+    "yaml": "^2.9.1"
   }
 }

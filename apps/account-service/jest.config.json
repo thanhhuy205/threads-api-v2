@@ -1,0 +1,27 @@
+{
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "rootDir": ".",
+  "testRegex": ".*\\.(spec|e2e-spec)\\.ts$",
+  "moduleNameMapper": {
+    "^@purse/common/(.*)$": "<rootDir>/../../packages/common/dist/$1",
+    "^@purse/common$": "<rootDir>/../../packages/common/dist/index",
+    "^@purse/core/(.*)$": "<rootDir>/../../packages/core/dist/$1",
+    "^@purse/core$": "<rootDir>/../../packages/core/dist/index",
+    "^@purse/auth/(.*)$": "<rootDir>/../../packages/auth/dist/$1",
+    "^@purse/auth$": "<rootDir>/../../packages/auth/dist/index",
+    "^@purse/observability/(.*)$": "<rootDir>/../../packages/observability/dist/$1",
+    "^@purse/observability$": "<rootDir>/../../packages/observability/dist/index",
+    "^@/(.*)$": "<rootDir>/src/$1"
+  },
+  "transform": {
+    "^.+\\.(t|j)s$": [
+      "ts-jest",
+      {
+        "tsconfig": "<rootDir>/tsconfig.spec.json"
+      }
+    ]
+  },
+  "collectCoverageFrom": ["**/*.(t|j)s"],
+  "coverageDirectory": "./coverage",
+  "testEnvironment": "node"
+}

@@ -20,6 +20,6 @@ export class OrgResponseDto {
   @ApiProperty({ format: 'uri' })
   redirectUrl!: string;
 
-  @ApiProperty({ type: OrgDomainResponseDto, isArray: true })
+  @ApiProperty({ type: () => OrgDomainResponseDto, isArray: true })
   domains!: OrgDomainResponseDto[];
 }

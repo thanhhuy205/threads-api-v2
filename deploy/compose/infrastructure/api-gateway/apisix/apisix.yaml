@@ -13,23 +13,33 @@ global_rules:
   - id: global-request-id
     plugins:
       request-id:
+        algorithm: nanoid
         header_name: X-Request-Id
         include_in_response: true
+
+      limit-count:
+        count: 1000
+        time_window: 60
+        key_type: var
+        key: remote_addr
+        policy: local
+        rejected_code: 429
 
 plugin_configs:
   - id: protected-keycloak
 
     plugins:
       openid-connect:
-        client_id: apisix-gateway
+        client_id: purse-board
         client_secret: "$ENV://KEYCLOAK_CLIENT_SECRET"
 
-        discovery: http://keycloak:8080/realms/apisix-gateway/.well-known/openid-configuration
+        discovery: http://keycloak:8080/realms/purse-board/.well-known/openid-configuration
 
         bearer_only: true
         use_jwks: true
-        set_access_token_header: true
-        access_token_in_authorization_header: true
+        set_userinfo_header: true
+        set_id_token_header: false
+        scope: "openid profile email"
 
         claim_validator:
           audience:
@@ -62,13 +72,8 @@ routes:
       proxy-rewrite:
         regex_uri: ["^/api/v1/(.*)"]
 
-  - id: protected-auth
-    uri: /api/v1/auth/*
-    upstream_id: account-upstream
-    plugin_config_id: protected-keycloak
-
   - id: account-route
-    uris: [/api/v1/accounts/*]
+    uris: [/api/v1/auth/*]
     upstream_id: account-upstream
     plugin_config_id: protected-keycloak
 
