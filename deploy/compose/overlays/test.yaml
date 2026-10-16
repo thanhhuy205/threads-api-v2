@@ -1,0 +1,5 @@
+services:
+  apisix:
+    container_name: test-apisix
+    ports:
+      - "9080:9080"
