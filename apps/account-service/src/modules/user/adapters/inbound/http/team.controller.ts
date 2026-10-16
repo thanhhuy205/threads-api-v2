@@ -5,7 +5,7 @@ import type {
   KeycloakUserAdapter,
 } from '../../../application/ports/outbound/keycloak.port';
 import { KEYCLOAK_USER_ADAPTER } from '../../../application/ports/outbound/keycloak.port';
-import { GetUserByTeamDTO } from '../../outbound/clients/keycloak/dto/request';
+import { GetUserByTeamCommand } from '../../../application/commands/keycloak';
 
 @ApiTags('Teams')
 @ApiBearerAuth('bearer')
@@ -23,7 +23,7 @@ export class TeamController {
   async findUsers(
     @Param('teamId') teamId: string,
     @Param('orgId') orgId: string,
-    @Query() payload: GetUserByTeamDTO,
+    @Query() payload: GetUserByTeamCommand,
   ) {
     const result = await this.keycloakUserAdapter.getUserByTeam(
       orgId,

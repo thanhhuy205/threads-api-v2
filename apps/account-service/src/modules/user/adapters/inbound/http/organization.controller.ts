@@ -7,9 +7,9 @@ import type {
 } from '../../../application/ports/outbound/keycloak.port';
 import { KEYCLOAK_USER_ADAPTER } from '../../../application/ports/outbound/keycloak.port';
 import {
-  GetOrgsDTO,
-  GetTeamInOrgDTO,
-} from '../../outbound/clients/keycloak/dto/request';
+  GetOrgsCommand,
+  GetTeamInOrgCommand,
+} from '../../../application/commands/keycloak';
 
 @ApiTags('Organizations')
 @ApiBearerAuth('bearer')
@@ -23,7 +23,7 @@ export class OrganizationController {
   @IsPublic()
   @Get()
   @ApiOperation({ summary: 'List organizations' })
-  async findAll(@Query() payload: GetOrgsDTO) {
+  async findAll(@Query() payload: GetOrgsCommand) {
     const result = await this.keycloakUserAdapter.getOrgs(payload);
     return ApiResponse.ok(result);
   }
@@ -33,7 +33,7 @@ export class OrganizationController {
   @ApiParam({ name: 'orgId', type: String })
   async findTeams(
     @Param('orgId') orgId: string,
-    @Query() payload: GetTeamInOrgDTO,
+    @Query() payload: GetTeamInOrgCommand,
   ) {
     const result = await this.keycloakUserAdapter.getTeamsInOrg(orgId, payload);
     return ApiResponse.ok(result);

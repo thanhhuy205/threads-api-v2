@@ -1,6 +1,7 @@
+import KcAdminClient from '@keycloak/keycloak-admin-client';
+import OrganizationMemberRepresentation from '@keycloak/keycloak-admin-client/lib/defs/organizationMemberRepresentation';
 import { Inject, Injectable } from '@nestjs/common';
 import type { ConfigType } from '@nestjs/config';
-import axios, { AxiosInstance } from 'axios';
 import { keycloakApiConfiguration } from '../../../../../../config';
 import type {
     GetOrgMembersDTO,
@@ -8,80 +9,70 @@ import type {
     GetTeamInOrgDTO,
     GetUserByTeamDTO,
 } from './dto/request';
-
 @Injectable()
-export class KeycloakClient {
-    private axiosCaller: AxiosInstance;
+export class KeyCloakApi {
+    private keyCloakApi: KcAdminClient;
+    private authPromise: Promise<void> | null = null;
     constructor(
         @Inject(keycloakApiConfiguration.KEY)
         private readonly keycloakApiConfig: ConfigType<typeof keycloakApiConfiguration>,
     ) {
-        this.axiosCaller = axios.create({
-            baseURL: `${this.keycloakApiConfig.baseUrl}/admin/realms/${this.keycloakApiConfig.realm}/`,
+        this.keyCloakApi = new KcAdminClient({ baseUrl: this.keycloakApiConfig.baseUrl, realmName: this.keycloakApiConfig.realm });
+        // Set the token provider.
+        this.keyCloakApi.registerTokenProvider({
+            getAccessToken: () => this.getToken(),
         });
-
     }
 
-    async createTokenRealms() {
-        const { baseUrl, realm, clientId, clientSecretKey } =
-            this.keycloakApiConfig;
 
-        const body = new URLSearchParams({
-            client_id: clientId,
-            client_secret: clientSecretKey,
-            grant_type: 'client_credentials',
-        });
-
-        const response = await axios.post(
-            `${baseUrl}/realms/${realm}/protocol/openid-connect/token`,
-            body.toString(),
-            {
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-            },
-        );
-
-        return response.data;
+    private async getToken(): Promise<string> {
+        if (!this.keyCloakApi.accessToken || this.keyCloakApi.isTokenExpired()) {
+            if (!this.authPromise) {
+                this.authPromise = this.keyCloakApi.auth({
+                    grantType: 'client_credentials',
+                    clientId: this.keycloakApiConfig.apiClientId,
+                    clientSecret: this.keycloakApiConfig.apiClientSecretKey,
+                }).finally(() => {
+                    this.authPromise = null;
+                });
+            }
+            await this.authPromise
+        }
+        const token = this.keyCloakApi.accessToken;
+        if (!token) {
+            throw new Error('Keycloak returned no access token');
+        }
+        return token;
     }
 
-    async getOrgMembers(accessToken: string, orgId: string, payload: GetOrgMembersDTO) {
-        const response = await this.axiosCaller.get(`organizations/${orgId}/members`, {
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-            },
-            params: payload,
+    async getOrgMembers(orgId: string, payload: GetOrgMembersDTO): Promise<OrganizationMemberRepresentation[]> {
+        const response = await this.keyCloakApi.organizations.listMembers({
+            first: payload.first,
+            max: payload.max,
+            orgId: orgId,
         });
-        return response.data;
+        return response;
     }
 
-    async getOrgs(accessToken: string, payload: GetOrgsDTO) {
-        const response = await this.axiosCaller.get('organizations', {
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-            },
-            params: payload,
+    async getOrgs(payload: GetOrgsDTO) {
+        return this.keyCloakApi.organizations.find({
+            first: payload.first,
+            max: payload.max,
         });
-        return response.data;
     }
 
-    async getUserByTeam(accessToken: string, orgId: string, teamId: string, payload: GetUserByTeamDTO) {
-        const response = await this.axiosCaller.get(`organizations/${orgId}/groups/${teamId}/members`, {
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-            },
-            params: payload,
+    async getUserByTeam(orgId: string, teamId: string, payload: GetUserByTeamDTO) {
+        return this.keyCloakApi.organizations.groups(orgId).listMembers({
+            id: teamId,
+            first: payload.first,
+            max: payload.max,
         });
-        return response.data;
     }
 
-    async getTeamsInOrg(accessToken: string, orgId: string, payload: GetTeamInOrgDTO) {
-        const response = await this.axiosCaller.get(`organizations/${orgId}/groups`, {
-            headers: {
-                Authorization: `Bearer ${accessToken}`,
-            },
-            params: payload,
+    async getTeamsInOrg(orgId: string, payload: GetTeamInOrgDTO) {
+        return this.keyCloakApi.organizations.groups(orgId).find({
+            first: payload.first,
+            max: payload.max,
         });
-        return response.data;
     }
 }

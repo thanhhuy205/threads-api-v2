@@ -1,26 +1,27 @@
 import type {
-  KeycloakUserResponseDto,
-  OrgResponseDto,
-  TeamResponseDto,
-} from '../../../adapters/outbound/clients/keycloak/dto/response';
+  GetOrgMembersCommand,
+  GetOrgsCommand,
+  GetTeamInOrgCommand,
+  GetUserByTeamCommand,
+} from '../../commands/keycloak';
 import type {
-  GetOrgMembersDTO,
-  GetOrgsDTO,
-  GetTeamInOrgDTO,
-  GetUserByTeamDTO,
-} from '../../../adapters/outbound/clients/keycloak/dto/request';
+  KeycloakUserDto,
+  OrgDto,
+  TeamDto,
+} from '../../dto/keycloak';
 
 export const KEYCLOAK_USER_ADAPTER = Symbol('KEYCLOAK_USER_ADAPTER');
 export interface KeycloakUserAdapter {
-  getOrgs(payload: GetOrgsDTO): Promise<OrgResponseDto[]>;
-  getTeamsInOrg(orgId: string, payload: GetTeamInOrgDTO): Promise<TeamResponseDto[]>;
+  getOrgs(payload: GetOrgsCommand): Promise<OrgDto[]>;
+  getTeamsInOrg(orgId: string, payload: GetTeamInOrgCommand): Promise<TeamDto[]>;
   getUserByTeam(
     orgId: string,
     teamId: string,
-    payload: GetUserByTeamDTO,
-  ): Promise<KeycloakUserResponseDto[]>;
+    payload: GetUserByTeamCommand,
+  ): Promise<KeycloakUserDto[]>;
   getOrgMembers(
     orgId: string,
-    payload: GetOrgMembersDTO,
-  ): Promise<KeycloakUserResponseDto[]>;
+    payload: GetOrgMembersCommand,
+  ): Promise<KeycloakUserDto[]>;
+
 }

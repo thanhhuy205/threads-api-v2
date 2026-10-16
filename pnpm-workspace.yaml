@@ -16,6 +16,7 @@ allowBuilds:
   "@scarf/scarf": true
   '@swc/core': false
   bcrypt: true
+  cpu-features: false
   esbuild: true
   ffmpeg-ffprobe-static: true
   ffmpeg-static: true
@@ -23,4 +24,5 @@ allowBuilds:
   prisma: true
   protobufjs: true
   sharp: true
+  ssh2: false
   unrs-resolver: true
