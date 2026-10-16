@@ -1,0 +1,26 @@
+name: Reusable CI # Give this workflow a name.
+
+on: # Define how this workflow starts.
+  workflow_call: # Allow other workflows to call it.
+    inputs: # Accept values from another workflow.
+      service: # Define the service name.
+        required: true # The caller must send this value.
+        type: string # The value must be text.
+
+permissions: # Define token access rights.
+  contents: read # Allow reading repository files.
+
+jobs: # Define the jobs.
+  test: # Create a test job.
+    runs-on: ubuntu-latest # Use a Linux runner.
+    steps: # Define the steps.
+      - uses: actions/checkout@v4 # Get the project files.
+      - uses: pnpm/action-setup@v4 # Install pnpm.
+        with: # Configure pnpm.
+          version: 10 # Use pnpm version 10.
+      - uses: actions/setup-node@v4 # Install Node.js.
+        with: # Configure Node.js.
+          node-version: 22 # Use Node.js version 22.
+          cache: pnpm # Cache pnpm packages.
+      - run: pnpm install --frozen-lockfile # Install exact dependencies.
+      - run: pnpm --filter "${{ inputs.service }}" build # Build the selected service.

@@ -1,0 +1,15 @@
+name: Microservices CI # Name the main workflow.
+
+on: # Define events that start this workflow.
+  pull_request: # Run when someone creates or updates a PR.
+  push: # Run after code is pushed.
+    branches: [main] # Only use the main branch for push events.
+
+permissions: # Define token rights.
+  contents: read # Give jobs read access.
+
+jobs: # Define the jobs.
+  account: # Create the account service job.
+    uses: ./.github/workflows/reusable-ci.yml # Call the shared workflow.
+    with: # Send input values.
+      service: account-service # Select the account service.
