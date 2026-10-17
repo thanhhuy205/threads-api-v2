@@ -9,13 +9,13 @@ import { createLoggerOptions, LoggerModule } from '@purse/observability/logging'
 import { RedisModule } from '@purse/redis';
 import { validate } from './config/app.config';
 import { keycloakApiConfiguration } from './config/keycloak-api.config';
-import { HealthController } from './health.controller';
+import { AppController } from './app.controller';
 import { BillingModule } from './modules/billing/billing.module';
 import { ProfileModule } from './modules/profile/profile.module';
 import { UserModule } from './modules/user/user.module';
 import { PrismaModule } from './prisma/prisma.module';
 @Module({
-  controllers: [HealthController],
+  controllers: [AppController],
   imports: [
     LoggerModule.forRoot(createLoggerOptions('account-service')),
     ConfigModule.forRoot({

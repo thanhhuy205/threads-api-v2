@@ -4,7 +4,6 @@ import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { PinoNestLogger } from '@purse/observability/logging';
-import requestId from 'express-request-id';
 import helmet from 'helmet';
 import 'reflect-metadata';
 import { AppModule } from './app.module';
@@ -27,7 +26,6 @@ async function bootstrap() {
   app.setGlobalPrefix('api/v1/auth');
   app.use(helmet());
   app.enableCors({ origin: corsOrigin(), credentials: true });
-  app.use(requestId());
   app.useGlobalInterceptors(app.get('TransformInterceptor'));
 
 
@@ -37,7 +35,7 @@ async function bootstrap() {
   //     package: 'user',
   //     protoPath: require.resolve('@purse/proto/user.proto'),
   //     url: '0.0.0.0:5001',
-  //     loader: {
+  //     loader: {ban
   //       keepCase: false,
   //       defaults: true,
   //     },

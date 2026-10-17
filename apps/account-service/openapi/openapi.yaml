@@ -2,7 +2,7 @@ openapi: 3.0.0
 paths:
   /health/ping:
     get:
-      operationId: HealthController_ping
+      operationId: AppController_ping
       parameters: []
       responses:
         "200":
