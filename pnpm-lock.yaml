@@ -93,9 +93,6 @@ importers:
       '@purse/redis':
         specifier: workspace:*
         version: file:packages/redis(@nestjs/common@11.1.28(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@10.2.2))(@nestjs/core@11.1.28)(@opentelemetry/api@1.9.1)(rxjs@7.8.2)
-      '@types/express-request-id':
-        specifier: ^3.0.2
-        version: 3.0.2
       axios:
         specifier: ^1.20.0
         version: 1.20.0(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2)
@@ -114,9 +111,6 @@ importers:
       dotenv:
         specifier: ^16.5.0
         version: 16.6.1
-      express-request-id:
-        specifier: ^3.0.0
-        version: 3.0.0
       helmet:
         specifier: ^8.3.0
         version: 8.3.0
@@ -363,9 +357,15 @@ importers:
       prisma:
         specifier: 7.8.0
         version: 7.8.0(@types/react-dom@19.3.0(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@5.9.3)
+      tsx:
+        specifier: ^4.23.13
+        version: 4.23.13
       typescript:
         specifier: ^5.8.0
         version: 5.9.3
+      yaml:
+        specifier: ^2.9.1
+        version: 2.9.1
 
   apps/search-service:
     dependencies:
@@ -4363,10 +4363,6 @@ packages:
   '@types/estree@1.0.9':
     resolution: {integrity: sha512-GhdPgy1el4/ImP05X05Uw4cw2/M93BCUmnEvWZNStlCzEKME4Fkk+YpoA5OiHNQmoS7Cafb8Xa3Pya8m1Qrzeg==}
 
-  '@types/express-request-id@3.0.2':
-    resolution: {integrity: sha512-rsRiVmuna/yF5rlsHB4WvlSpGAv6+oYz9VBQx3x2k/5zxp0pSAPxpqzLfHqi6abj19gLwO5/zZxmVkHQvwqMjA==}
-    deprecated: This is a stub types definition. express-request-id provides its own type definitions, so you do not need this installed.
-
   '@types/express-serve-static-core@5.1.3':
     resolution: {integrity: sha512-dPfW8NFiOF4wOHc7+N/QSxlY9cfSsenewGbAz8C8U/MULPd/YZ27LvJUIlzaXie7e6Ove9YunJGgC9tbHD2cKw==}
 
@@ -5989,10 +5985,6 @@ packages:
     engines: {node: '>= 16'}
     peerDependencies:
       express: '>= 4.11'
-
-  express-request-id@3.0.0:
-    resolution: {integrity: sha512-1MNfaOzlsXfrkeV+LZQLK2fq5ufosZ5XUSIXqNv11iTbOsb5SAeuK7N0eHz8BTh8s4UyvTimsecBRRlzMRE7Ng==}
-    engines: {node: ^14.20.1 || >=16.0.0}
 
   express@5.2.1:
     resolution: {integrity: sha512-hIS4idWWai69NezIdRt2xFVofaF4j+6INOpJlVOLDO8zXGpUVEVzIYk12UUi2JzjEzWL3IOAxcTubgz9Po0yXw==}
@@ -9199,11 +9191,6 @@ packages:
 
   uuid@14.0.1:
     resolution: {integrity: sha512-6ZxzVpzDXDa3bJWaHilVayA+BH/1zmxCJoVgvmqJnid/gPoKHxUrS/aC/T6LGQtNHT+XHG9fXPJB4d+IrU30Ew==}
-    hasBin: true
-
-  uuid@9.0.1:
-    resolution: {integrity: sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA==}
-    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
     hasBin: true
 
   v8-to-istanbul@9.3.0:
@@ -13090,10 +13077,6 @@ snapshots:
 
   '@types/estree@1.0.9': {}
 
-  '@types/express-request-id@3.0.2':
-    dependencies:
-      express-request-id: 3.0.0
-
   '@types/express-serve-static-core@5.1.3':
     dependencies:
       '@types/node': 22.20.1
@@ -14891,10 +14874,6 @@ snapshots:
       ip-address: 10.7.3
     transitivePeerDependencies:
       - supports-color
-
-  express-request-id@3.0.0:
-    dependencies:
-      uuid: 9.0.1
 
   express@5.2.1(supports-color@10.2.2):
     dependencies:
@@ -18683,8 +18662,6 @@ snapshots:
   utils-merge@1.0.1: {}
 
   uuid@14.0.1: {}
-
-  uuid@9.0.1: {}
 
   v8-to-istanbul@9.3.0:
     dependencies:
