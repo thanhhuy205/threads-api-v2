@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   description: "See the latest posts from people you follow.",
 };
 
-export default async function RootHomePage() {
+export default async function HomeFeedPage() {
   const initialResponse = await getFeedsServer();
 
   return (

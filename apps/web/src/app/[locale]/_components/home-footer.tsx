@@ -1,0 +1,7 @@
+import { Separator } from "@/components/ui/separator";
+
+const footerColumns = [["Community", ["How it works", "Circles", "Stories"]], ["Company", ["About us", "Contact", "Careers"]], ["Legal", ["Privacy Policy", "Terms of Service", "Cookie Policy"]]] as const;
+
+export default function HomeFooter() {
+  return <footer className="border-t"><div className="mx-auto max-w-6xl px-4 py-14 sm:px-6"><div className="grid gap-10 md:grid-cols-[1.4fr_repeat(3,1fr)]"><div className="space-y-4"><a href="#top" className="flex items-center gap-2 font-semibold tracking-tight"><span className="grid size-8 place-items-center rounded-lg border bg-muted text-sm">CS</span>Community Social Business</a><p className="max-w-xs text-sm leading-6 text-muted-foreground">Connect people, ideas, and opportunities that move forward.</p><a href="mailto:hello@community.social" className="text-sm text-muted-foreground hover:text-foreground">hello@community.social</a></div>{footerColumns.map(([title, links]) => <div key={title} className="space-y-3"><p className="text-sm font-semibold">{title}</p><ul className="space-y-2 text-sm text-muted-foreground">{links.map((link) => <li key={link}><a href="#top" className="hover:text-foreground">{link}</a></li>)}</ul></div>)}</div><Separator className="my-8" /><div className="flex flex-col gap-2 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between"><span>© {new Date().getFullYear()} Community Social Business. All rights reserved.</span><a href="#top" className="hover:text-foreground">Back to top</a></div></div></footer>;
+}
