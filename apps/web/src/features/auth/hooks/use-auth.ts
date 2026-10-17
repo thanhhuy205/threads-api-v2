@@ -1,9 +1,9 @@
 "use client";
 
-import { useAuthContext } from "@/features/auth/components/AuthProvider";
+import { useAuthStore } from "@/features/auth/store/auth-store";
 
 export const useFetchCurrentUser = () => {
-  const { user } = useAuthContext();
+  const user = useAuthStore((state) => state.user);
   return {
     data: user ? { success: true, data: user } : undefined,
     isLoading: false,
@@ -12,11 +12,12 @@ export const useFetchCurrentUser = () => {
 };
 
 export const useCurrentUser = () => {
-  return useAuthContext().user;
+  return useAuthStore((state) => state.user);
 };
 
 export const useAuth = () => {
-  const { user, isAuthenticated } = useAuthContext();
+  const user = useAuthStore((state) => state.user);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   return {
     user,
