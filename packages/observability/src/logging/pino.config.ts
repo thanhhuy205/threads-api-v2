@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto";
 import { Params } from "nestjs-pino";
 
 export function createLoggerOptions(serviceName: string): Params {
@@ -9,6 +10,13 @@ export function createLoggerOptions(serviceName: string): Params {
                 environment:
                     process.env.NODE_ENV ?? 'development',
             }),
+            genReqId: (req, res) => {
+                const incoming = req.headers["x-request-id"];
+                const valid = typeof incoming === "string" && /^[A-Za-z0-9_-]{1,128}$/.test(incoming);
+                const requestId = valid ? incoming : randomUUID();
+                res.setHeader("X-Request-Id", requestId);
+                return requestId;
+            },
             transport: {
                 target: 'pino-pretty',
                 options: {

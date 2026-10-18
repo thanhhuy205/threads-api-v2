@@ -1,24 +1,22 @@
 "use client";
 
-import Logo from "@/app/[locale]/(main)/_components/common/Logo";
 import { ActivitySheet } from "@/components/activity-sheet";
 import { TeamSidebarSection } from "@/components/team-sidebar-section";
-import {
-  WorkspaceSwitcher,
-  type Workspace,
-} from "@/components/workspace-switcher";
 import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
-  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarSeparator,
 } from "@/components/ui/sidebar";
+import {
+  WorkspaceSwitcher,
+  type Workspace,
+} from "@/components/workspace-switcher";
 import {
   Activity,
   ChartNoAxesCombined,
@@ -29,8 +27,8 @@ import {
   UserRound,
   UsersRound,
 } from "lucide-react";
-import Link from "next/link";
 import { useLocale } from "next-intl";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import * as React from "react";
 
@@ -81,9 +79,7 @@ const navGroups = [
   },
 ];
 
-export function AppSidebar({
-  ...props
-}: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const locale = useLocale();
   const pathname = usePathname();
   const localizedPath = (path: string) =>
@@ -98,27 +94,11 @@ export function AppSidebar({
     <Sidebar
       collapsible="offcanvas"
       className="border-r border-[#f3f4f6]"
-      {...props}
-    >
-      <SidebarHeader className="h-[68px] justify-center border-b border-[#f3f4f6] px-5 py-0">
-        <Link
-          href={`/${locale}`}
-          className="flex items-center gap-2.5 text-[#0d121c]"
-          aria-label="PulseBoard"
-        >
-          <span className="flex size-8 items-center justify-center rounded-lg bg-[#0d121c] text-white">
-            <Logo className="size-[19px]" />
-          </span>
-          <span className="text-[17px] font-bold tracking-[-0.025em]">
-            PulseBoard
-          </span>
-        </Link>
-      </SidebarHeader>
+      {...props}>
       <SidebarContent className="gap-0 bg-white px-3 py-4">
         <div className="px-1 pb-4">
           <WorkspaceSwitcher workspaces={workspaces} />
         </div>
-        <SidebarSeparator className="mx-1 mb-2 bg-[#f3f4f6]" />
         {navGroups.map((group, groupIndex) => (
           <React.Fragment key={group.label}>
             <SidebarGroup className="px-1 py-2">
@@ -142,8 +122,7 @@ export function AppSidebar({
                         <SidebarMenuButton
                           isActive={isActive(item.path)}
                           render={<Link href={localizedPath(item.path)} />}
-                          className="h-10 rounded-lg px-3 text-[14px] text-[#1f2a37] hover:bg-[#f9fafb] hover:text-[#0d121c] data-active:bg-[#0d121c] data-active:font-medium data-active:text-white"
-                        >
+                          className="h-10 rounded-lg px-3 text-[14px] text-[#1f2a37] hover:bg-[#f9fafb] hover:text-[#0d121c] data-active:bg-[#0d121c] data-active:font-medium data-active:text-white">
                           <item.icon className="size-4" />
                           <span>{item.title}</span>
                         </SidebarMenuButton>

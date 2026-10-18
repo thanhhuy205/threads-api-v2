@@ -7,7 +7,6 @@ import {
 } from '@nestjs/swagger';
 import { POST_MESSAGE } from '@purse/common/constants';
 import {
-  ApiCursorPaginatedResponse,
   CursorPagination,
   GetUserId,
   IsPublic,
@@ -16,11 +15,6 @@ import {
 import type { CursorPagination as CursorPaginationParams } from '@purse/common/dto';
 import { NotFoundException } from '@purse/common/errors';
 import {
-  CursorPaginationQueryDto,
-  UsernameParamsDto,
-} from './dto/request';
-import { USER_READER, type UserReader } from '../../../application/ports/outbound/user-reader.port';
-import {
   POST_FEED_SERVICE,
   type PostFeedService,
 } from '../../../application/ports/inbound/post-feed.service';
@@ -28,6 +22,11 @@ import {
   POST_USER_SERVICE,
   type PostUserService,
 } from '../../../application/ports/inbound/post-user.service';
+import { USER_READER, type UserReader } from '../../../application/ports/outbound/user-reader.port';
+import {
+  CursorPaginationQueryDto,
+  UsernameParamsDto,
+} from './dto/request';
 
 type AuthenticatedRequest = {
   headers: { authorization?: string | string[] | undefined };
@@ -41,13 +40,12 @@ export class PostUserController {
     @Inject(POST_FEED_SERVICE) private readonly postFeedService: PostFeedService,
     @Inject(POST_USER_SERVICE) private readonly postUserService: PostUserService,
     @Inject(USER_READER) private readonly userReader: UserReader,
-  ) {}
+  ) { }
 
   @Get('me')
   @ApiBearerAuth('bearer')
   @Message(POST_MESSAGE.RETRIEVED)
   @ApiOperation({ summary: 'Get current user posts' })
-  @ApiCursorPaginatedResponse({ description: POST_MESSAGE.RETRIEVED })
   async getPostMe(
     @Query() _query: CursorPaginationQueryDto,
     @CursorPagination() cursor: CursorPaginationParams,
@@ -65,7 +63,6 @@ export class PostUserController {
   @ApiBearerAuth('bearer')
   @Message(POST_MESSAGE.REPLIES_RETRIEVED)
   @ApiOperation({ summary: 'Get current user replies' })
-  @ApiCursorPaginatedResponse({ description: POST_MESSAGE.REPLIES_RETRIEVED })
   async getRepliesMe(
     @Query() _query: CursorPaginationQueryDto,
     @CursorPagination() cursor: CursorPaginationParams,
@@ -106,7 +103,6 @@ export class PostUserController {
   @Message(POST_MESSAGE.RETRIEVED)
   @ApiOperation({ summary: 'Get posts by username' })
   @ApiParam({ name: 'username' })
-  @ApiCursorPaginatedResponse({ description: POST_MESSAGE.RETRIEVED })
   async getPostsByUser(
     @Param() params: UsernameParamsDto,
     @Query() _query: CursorPaginationQueryDto,
@@ -129,7 +125,6 @@ export class PostUserController {
   @Message(POST_MESSAGE.REPLIES_RETRIEVED)
   @ApiOperation({ summary: 'Get replies by username' })
   @ApiParam({ name: 'username' })
-  @ApiCursorPaginatedResponse({ description: POST_MESSAGE.REPLIES_RETRIEVED })
   async getRepliesByUser(
     @Param() params: UsernameParamsDto,
     @Query() _query: CursorPaginationQueryDto,

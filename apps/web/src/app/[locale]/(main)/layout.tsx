@@ -1,5 +1,4 @@
-import AuthProvider from "@/features/auth/components/AuthProvider";
-import { verifySession } from "@/features/auth/server/session";
+import { KeycloakProvider } from "@/components/layout/KeycloakProvider";
 import type { ReactNode } from "react";
 import MainLayoutClient from "./layout.client";
 
@@ -8,11 +7,9 @@ export default async function MainLayout({
 }: {
   children: ReactNode;
 }) {
-  const user = await verifySession();
-
   return (
-    <AuthProvider initialUser={user}>
+    <KeycloakProvider>
       <MainLayoutClient>{children}</MainLayoutClient>
-    </AuthProvider>
+    </KeycloakProvider>
   );
 }

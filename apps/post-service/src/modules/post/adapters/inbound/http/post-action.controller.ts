@@ -16,7 +16,6 @@ import {
 } from '@nestjs/swagger';
 import { POST_MESSAGE } from '@purse/common/constants';
 import {
-  ApiCursorPaginatedResponse,
   CursorPagination,
   GetUserId,
   IsPublic,
@@ -54,7 +53,6 @@ export class PostActionController {
   @Message(POST_MESSAGE.REPLIES_RETRIEVED)
   @ApiOperation({ summary: 'Get replies to a post' })
   @ApiParam({ name: 'publicId' })
-  @ApiCursorPaginatedResponse({ description: POST_MESSAGE.REPLIES_RETRIEVED })
   async getReplies(
     @Param() params: PublicIdParamsDto,
     @Query() _query: CursorPaginationQueryDto,

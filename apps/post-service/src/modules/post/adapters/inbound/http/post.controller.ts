@@ -17,7 +17,6 @@ import {
 } from '@nestjs/swagger';
 import { POST_MESSAGE } from '@purse/common/constants';
 import {
-  ApiCursorPaginatedResponse,
   CursorPagination,
   GetUserId,
   IsPublic,
@@ -27,13 +26,13 @@ import {
 import type { CursorPagination as CursorPaginationParams } from '@purse/common/dto';
 import { NotFoundException } from '@purse/common/errors';
 import {
-  POST_SEARCH_SERVICE,
-  type PostSearchService,
-} from '../../../application/ports/inbound/post-search.service';
-import {
   POST_FEED_SERVICE,
   type PostFeedService,
 } from '../../../application/ports/inbound/post-feed.service';
+import {
+  POST_SEARCH_SERVICE,
+  type PostSearchService,
+} from '../../../application/ports/inbound/post-search.service';
 import { POST_SERVICE, type PostService } from '../../../application/ports/inbound/post.service';
 import {
   CreatePostDto,
@@ -62,7 +61,6 @@ export class PostController {
   @IsPublic()
   @Message(POST_MESSAGE.RETRIEVED)
   @ApiOperation({ summary: 'Get the news feed' })
-  @ApiCursorPaginatedResponse({ description: POST_MESSAGE.RETRIEVED })
   async getNewsFeed(
     @Query() query: NewsFeedQueryDto,
     @CursorPagination() cursor: CursorPaginationParams,

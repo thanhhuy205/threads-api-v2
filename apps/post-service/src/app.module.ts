@@ -2,14 +2,15 @@ import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
-import { configurationFactory } from '@purse/common/config';
 import { AppAuthGuard, GrpcGatewayAuthStrategy } from '@purse/auth';
-import { RedisModule } from '@purse/redis';
+import { configurationFactory } from '@purse/common/config';
 import { createLoggerOptions, LoggerModule } from '@purse/observability/logging';
+import { RedisModule } from '@purse/redis';
 import { databaseConfiguration, validate } from './config';
 import { PostModule } from './modules/post/post.module';
 // MAINTENANCE: import { PollModule } from './modules/poll/poll.module';
 // MAINTENANCE: import { TopicModule } from './modules/topic/topic.module';
+import { AppController } from './app.controller';
 import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
@@ -41,6 +42,7 @@ import { PrismaModule } from './prisma/prisma.module';
     // MAINTENANCE: TopicModule,
     PostModule,
   ],
+  controllers: [AppController],
   providers: [
     GrpcGatewayAuthStrategy,
     { provide: APP_GUARD, useClass: AppAuthGuard },
